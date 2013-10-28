@@ -1,0 +1,7 @@
+Unittests fpr PCP.
+
+Execute 'make test' here or from the top level directory
+to run the unit tests. Usually all tests shall succeed.
+
+Execute 'make stresstest' to run a longer stresstest. It
+generates lots of keys and takes some time.

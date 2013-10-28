@@ -1,0 +1,11 @@
+0.1.1   changed output format of encrypted keys. now we
+        encode it properly with the Z85 encoding and add
+        a header and footer to it:
+
+         -----BEGN CURVE25519 SECRET KEY-----
+         0q<1MspXp=x>mBZsUJF:2#)o*!.nTKR8SK}0IfuMBmC1a&*?)JD4%$%I5<J2jj%m/k&$?lck
+         EIKTfhPnSR8Vvcu9i7Znf/v+ZvU<}K#v@+t#5]i{9FGgJT$Lu*i+<-we&P9+)6LjN=NW(PLYt
+         EU]wBzf{UrCgBNSHcGBT
+         -----END CURVE25519 SECRET KEY-----
+
+0.0.1   initial version

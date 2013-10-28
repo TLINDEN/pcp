@@ -1,0 +1,106 @@
+
+=head1 PCP1 KEYS
+
+B<pcp1> keys are stored in a binary file, called B<the vault>.
+It's by default located in B<~/.pcpvault> but you can of course
+specify another location using the B<-V> option.
+
+There are two kinds of keys: secret and public keys. In reality
+a secret key always includes its public key. Both types of keys
+can be exported to files and transfered to other people who can
+then import them. You should usually only do this with public keys
+though.
+
+There is a primary secret key which will always used for operations
+when no keyid has been specified. However, you may have as many
+secret keys in your vault as you like.
+
+Each key can be identified using its B<keyid> which looks like this:
+
+ 0xD49119E85266509F
+
+A public key exported from a secret key will have the same keyid
+as the secret key. When using for encryption, the keyid will be
+added to the message so that the receiver knows who was the
+sender of the message (B<This might change in the future. As of
+this writing I'm not sure if this was a good idea>).
+
+If you just want to know details about a key or the vault, use the
+B<-t> option.
+
+=head1 INTERNALS
+
+FIXME.
+
+=head1 Z85 ENCODING
+
+B<pcp1> uses Z85 to encode exported keys and encrypted messages.
+Therefore it includes a Z85 utility mode:
+
+B<pcp1> can be used to encode and decode strings to Z85 encoding.
+
+The option B<-z> encodes B<to> Z85, the option B<-Z> does the opposite
+and decodes B<from> Z85.
+
+If no input file have been specified using B<-I>, B<pcp1> expects the
+input to come from B<STDIN>, otherwise it reads the contents
+of B<file>.
+
+Encoded or decoded output will be written to B<STDOUT> unless an
+output file has been specified using the option B<-O>.
+
+=head2 EXAMPLES
+
+To encode a given file to Z85 and write the output to another:
+
+ pcp1 -z myfile.bin > myfile.z85
+
+To decode the file created above and restore the original:
+
+ pcp1 -Z -d myfile.z85 > myfile.bin
+
+To encode something from stdin to Z85:
+
+ ps axuw | pcp1 -z > pslist.z85
+
+To decode the above and print to stdout:
+
+ pcp1 -Z -d pslist.z85
+
+=head2 BACKGROUND
+
+The Z85 encoding format is described here: B<http://rfc.zeromq.org/spec:32>.
+It's part of ZeroMQ (B<http://zeromq.org>). Z85 is based on ASCII85 with
+a couple of modifications (portability, readability etc).
+
+To fulfil the requirements of the ZeroMQ Z85 functions, B<pcp1>
+does some additional preparations of raw input before actually doing the 
+encoding, since the input for zmq_z85_encode() must be divisible by 4:
+
+Expand the input so that the resulting size is divisible by 4.
+
+Fill the added bytes with zeroes.
+
+Prepend the input with a one byte value which holds the number of zeroes
+added in the previous step.
+
+Example:
+
+Raw input:
+
+ hello\0
+
+Here, the input size is 6, which is insufficient, therefore it has to be expanded
+to be 8. After the process the input looks like this:
+
+ 1hello\0\0
+
+So, we padded the input with 1 zero (makes 7 bytes) and preprended it with the
+value 1 (the number of zeros added): makes 8 bytes total.
+
+After decoding Z85 input the process will be reversed.
+
+B<Trying to use another tool to decode an Z85 encoded string produced
+by z85, might not work therefore, unless the tool takes the padding scheme
+outlined above into account>.
+

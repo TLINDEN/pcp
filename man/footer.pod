@@ -1,0 +1,55 @@
+
+=head1 COPYRIGHT
+
+Copyright (c) 2013 by T.Linden <tom AT cpan DOT org>
+
+=head1 ADDITIONAL COPYRIGHTS
+
+=over
+
+=item B<ZeroMQ Z85 encoding routine>
+
+ Copyright (c) 2007-2013 iMatix Corporation
+ Copyright (c) 2009-2011 250bpm s.r.o.
+ Copyright (c) 2010-2011 Miru Limited
+ Copyright (c) 2011 VMware, Inc.
+ Copyright (c) 2012 Spotify AB
+
+=item B<Tarsnap readpass helpers>
+
+ Copyright 2009 Colin Percival
+
+=item B<jen_hash() hash algorithm>
+
+ Bob Jenkins, Public Domain.
+
+=item B<UTHASH hashing macros>
+
+ Copyright (c) 2003-2013, Troy D. Hanson
+
+=item B<Random art image from OpenSSH keygen>
+
+ Copyright (c) 2000, 2001 Markus Friedl.  All rights reserved.
+
+ Comitted by Alexander von Gernler in rev 1.7.
+
+=back
+
+Every incorporated source code is opensource and licensed
+under the B<GPL> as well.
+
+=head1 AUTHORS
+
+I<T.Linden <tom AT cpan DOT org>>
+
+=head1 LICENSE
+
+Licensed under the  GNU GENERAL PUBLIC LICENSE version 3.
+
+=head1 HOME
+
+The homepage of Pretty Curved Privacy can be found on
+http://www.daemon.de/PrettyCurvedPrivacy. The source is
+on Github: https://github.com/TLINDEN/pcp
+
+=cut

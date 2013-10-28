@@ -1,0 +1,134 @@
+DESCRIPTION
+    Pretty Curved Privacy (pcp1) is a commandline utility which can be used
+    to encrypt files. pcp1 uses eliptc curve cryptography for encryption
+    (CURVE25519 by Dan J. Bernstein). While CURVE25519 is no worldwide
+    accepted standard it hasn't been compromised by the NSA - which might be
+    better, depending on your point of view.
+
+    Caution: since CURVE25519 is no accepted standard, pcp1 has to be
+    considered as experimental software. In fact, I wrote it just to learn
+    about the curve and see how it works.
+
+    Beside some differences it works like GNUPG. So, if you already know how
+    to use gpg, you'll feel almost home.
+
+QUICKSTART
+    Lets say, Alicia and Bobby want to exchange encrypted messages. Here's
+    what the've got to do.
+
+    First, both have create a secret key:
+
+     Alicia                             Bobby
+     pcp1 -k                            pcp1 -k
+
+    After entering their name, email address and a passphrase to protect the
+    key, it will be stored in their vault file (by default ~/.pcpvault).
+
+    Now, both of them have to export the public key part of their key:
+
+     Alicia                             Bobby
+     pcp1 -p -O alicia.pub              pcp1 -p -O bobby.pub
+
+    They've to exchange the public key somehow (which is not my problem at
+    the moment, use ssh, encrypted mail, whatever). Once exchanged, they
+    have to import it:
+
+     Alicia                             Bobby
+     pcp1 -P -I bobby.pub               pcp1 -P -I alicia.pub
+
+    They will see a response as this when done:
+
+     key 0x29A323A2C295D391 added to .pcpvault.
+
+    Now, Alicia finally writes the secret message, encrypts it and sends it
+    to Bobby, who in turn decrypts it:
+
+     Alicia                             Bobby
+     echo "Love you, honey" > letter
+     pcp1 -e -i 0x29A323A2C295D391 -I letter -O letter.z85
+     cat letter.z85 | mail bobby@foo.bar
+
+                                        pcp1 -d -I letter.z85 | less
+
+    And that's it.
+
+    Please note the big difference to GPG though: both Alicia AND Bobby have
+    to enter the passphrase for their secret key! That's the way CURVE25519
+    works: you encrypt a message using your secret key and the recipients
+    public key and the recipient does the opposite, he uses his secret key
+    and your public key to actually decrypt the message.
+
+    Oh - and if you're wondering why I named them Alicia and Bobby: I was
+    just sick of Alice and Bob. We're running NSA-free, so we're using other
+    sample names as well.
+
+INSTALLATION
+    There are currently no packages available, so pcp has to be compiled
+    from source. Follow these steps:
+
+    First, you will need libsodium:
+
+     git clone git://github.com/jedisct1/libsodium.git
+     cd libsodium
+     ./autogen.sh
+     ./configure && make check
+     sudo make install
+     sudo ldconfig
+     cd ..
+
+    Next, pcp:
+
+     git clone git://github.com/tlinden/pcp.git
+     cd pcp
+     ./configure
+     sudo make install
+     cd ..
+
+    Optionally, you might run the unit tests:
+
+     make test
+
+DOCUMENTATION
+    To learn how to use pcp, read the manpage:
+
+     man pcp1
+
+COPYRIGHT
+    Copyright (c) 2013 by T.Linden <tom AT cpan DOT org>
+
+ADDITIONAL COPYRIGHTS
+    ZeroMQ Z85 encoding routine
+         Copyright (c) 2007-2013 iMatix Corporation
+         Copyright (c) 2009-2011 250bpm s.r.o.
+         Copyright (c) 2010-2011 Miru Limited
+         Copyright (c) 2011 VMware, Inc.
+         Copyright (c) 2012 Spotify AB
+
+    Tarsnap readpass helpers
+         Copyright 2009 Colin Percival
+
+    jen_hash() hash algorithm
+         Bob Jenkins, Public Domain.
+
+    UTHASH hashing macros
+         Copyright (c) 2003-2013, Troy D. Hanson
+
+    Random art image from OpenSSH keygen
+         Copyright (c) 2000, 2001 Markus Friedl.  All rights reserved.
+
+         Comitted by Alexander von Gernler in rev 1.7.
+
+    Every incorporated source code is opensource and licensed under the GPL
+    as well.
+
+AUTHORS
+    *T.Linden <tom AT cpan DOT org*>
+
+LICENSE
+    Licensed under the GNU GENERAL PUBLIC LICENSE version 3.
+
+HOME
+    The homepage of Pretty Curved Privacy can be found on
+    http://www.daemon.de/PrettyCurvedPrivacy. The source is on Github:
+    https://github.com/TLINDEN/pcp
+

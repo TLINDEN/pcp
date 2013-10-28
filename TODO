@@ -1,0 +1,2 @@
+- always save vault to tmp, then validate it and copy if ok
+- replace sys/endian.h by portable / configure

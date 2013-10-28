@@ -1,0 +1,99 @@
+# -*-cperl-*-
+
+=head1 NAME
+
+z85 - encode and decode strings to Z85 encoding.
+
+=head1 SYNOPSIS
+
+ Usage: z85 [options] [<file>]
+
+ Options:
+  -e              encode input to Z85
+  -d              decode input from Z85
+  -h              print this help message
+  -v              print program version
+
+=head1 DESCRIPTION
+
+B<z85> can be used to encode and decode strings to Z85 encoding.
+
+The option B<-e> encodes B<to> Z85, which is the default if
+no option have been specified. The option B<-d> does the opposite
+and decodes b<from> Z85.
+
+If no input file have been specified, B<z85> expects the
+input to come from B<STDIN>, otherwise it reads the contents
+of B<file>.
+
+Encoded or decoded output will always be written to B<STDOUT>.
+
+=head1 EXAMPLES
+
+To encode a given file to Z85 and write the output to another:
+
+ z85 -e myfile.bin > myfile.z85
+
+To decode the file created above and restore the original:
+
+ z85 -d myfile.z85 > myfile.bin
+
+To encode something from stdin to Z85:
+
+ ps axuw | z85 > pslist.z85
+
+To decode the above and print to stdout:
+
+ z85 -d pslist.z85
+
+=head1 BACKGROUND
+
+The Z85 encoding format is described here: L<http://rfc.zeromq.org/spec:32>.
+It's part of ZeroMQ (L<http://zeromq.org>). Z85 is based on ASCII85 with
+a couple of modifications (portability, readability etc).
+
+To fulfil the requirements of the ZeroMQ Z85 functions, the B<z85> utility
+does some additional preparations of raw input before actually doing the 
+encoding, since the input for zmq_z85_encode() must be divisible by 4:
+
+Expand the input so that the resulting size is divisible by 4.
+
+Fill the added bytes with zeroes.
+
+Prepend the input with a one byte value which holds the number of zeroes
+added in the previous step.
+
+Example:
+
+Raw input:
+
+ hello\0
+
+Here, the input size is 6, which is insufficient, therefore it has to be expanded
+to be 8. After the process the input looks like this:
+
+ 1hello\0\0
+
+So, we padded the input with 1 zero (makes 7 bytes) and preprended it with the
+value 1 (the number of zeros added): makes 8 bytes total.
+
+After decoding Z85 input the process will be reversed.
+
+B<Trying to use another tool to decode an Z85 encoded string produced
+by z85, might not work therefore, unless the tool takes the padding scheme
+outlined above into account>.
+
+=head1 COPYRIGHT
+
+Copyright (c) 2013 by T.Linden <tom AT cpan DOT org>
+
+=head1 AUTHORS
+
+I<T.Linden <tom AT cpan DOT org>>
+
+=head1 LICENSE
+
+Licensed under the  GNU GENERAL PUBLIC LICENSE version 3.
+
+=cut
+

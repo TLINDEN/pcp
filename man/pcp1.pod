@@ -1,0 +1,306 @@
+=head1 NAME
+
+Pretty Curved Privacy - File encryption using eliptic curve cryptography.
+
+=head1 SYNOPSIS
+
+
+  
+  Usage: pcp1 [options]
+  
+  General Options:
+  -V --vault <vaultfile>    Specify an alternate vault file.
+                            The deault vault is ~/.pcpvault.
+  -O --outfile <file>       Output file. If not specified, stdout
+                            will be used.
+  -I --infile <file>        Input file. If not specified, stdin
+                            will be used.
+  -i --keyid <id>           Specify a key id to import/export.
+  -t --text                 Print textual representation of some
+                            item. Either -V or -i must be specified
+                            as well.
+  -h --help                 Print this help message.
+  -v --version              Print program version.
+  -D --debug                Enable debug output.
+  
+  Keymanagement Options:
+  -k --keygen               Generate a CURVE25519 secret key. If
+                            the generated key is the first one in
+                            your vault, it will become the primary
+                            secret key.
+  -l --listkeys             List all keys currently stored in your
+                            vault. Only the key id's and some info
+                            about the keys will be printed, not the
+                            actual keys.
+  -r --remove-key           Remove a key from the vault. Requires
+                            option -i <keyid>.
+  -s --export-secret        Export a secret key. If your vault only
+                            contains one secret key, this one will
+                            be exported. If a key id have been
+                            specified (-i), this one will be used.
+                            If there are more than one secret keys
+                            in the vault and no key id has been
+                            given, export the primary secret key.
+                            Use -O to export to a file.
+  -p --export-public        Export a public key. If no key id have
+                            been specified, the public part of your
+                            primary secret key will be exported.
+                            Use -O to export to a file.
+  -S --import-secret        Import a secret key. Use -I to import
+                            from a file.
+  -P --import-public        Import a public key. Use -I to import
+                            from a file.
+  
+  Encryption Options:
+  -e --encrypt              Encrypt a message. Read from stdin or
+                            specified via -I. A keyid (-i) of the
+                            public key of the receipient must be
+                            specified. Output to stdout or written
+                            to the file specified via -O.
+  -d --decrypt              Decrypt a message. Read from stdin or
+                            specified via -I. Output to stdout or
+                            written to the file specified via -O.
+                            The primary secret key will be used for
+                            decryption, if there is no primary and
+                            just one secret key in the vault, this
+                            one will be used. Otherwise you'll have
+                            to specify the keyid (-i) of the key.
+  
+  Encoding Options:
+  -z --z85-encode           Encode something to Z85 encoding. Use
+                            -I and -O respectively, otherwise it
+                            stdin/stdout.
+  -Z --z85-decode           Decode something from Z85 encoding. Use
+                            -I and -O respectively, otherwise it
+                            stdin/stdout
+  
+  
+=head1 DESCRIPTION
+
+B<Pretty Curved Privacy> (pcp1) is a commandline utility which can
+be used to encrypt files. B<pcp1> uses eliptc curve cryptography
+for encryption (CURVE25519 by Dan J. Bernstein). While CURVE25519
+is no worldwide accepted standard it hasn't been compromised by
+the NSA - which might be better, depending on your point of view.
+
+B<Caution>: since CURVE25519 is no accepted standard, B<pcp1> has
+to be considered as experimental software. In fact, I wrote it just
+to learn about the curve and see how it works.
+
+Beside some differences it works like B<GNUPG>. So, if you already
+know how to use gpg, you'll feel almost home.
+
+=head1 QUICKSTART
+
+Lets say, Alicia and Bobby want to exchange encrypted messages.
+Here's what the've got to do.
+
+First, both have create a secret key:
+
+ Alicia                             Bobby
+ pcp1 -k                            pcp1 -k
+
+After entering their name, email address and a passphrase to protect
+the key, it will be stored in their B<vault file> (by default ~/.pcpvault).
+
+Now, both of them have to export the public key part of their key:
+
+ Alicia                             Bobby
+ pcp1 -p -O alicia.pub              pcp1 -p -O bobby.pub
+
+They've to exchange the public key somehow (which is not my
+problem at the moment, use ssh, encrypted mail, whatever). Once exchanged,
+they have to import it:
+
+
+ Alicia                             Bobby
+ pcp1 -P -I bobby.pub               pcp1 -P -I alicia.pub
+
+They will see a response as this when done:
+
+ key 0x29A323A2C295D391 added to .pcpvault.
+
+Now, Alicia finally writes the secret message, encrypts it and
+sends it to Bobby, who in turn decrypts it:
+
+ Alicia                             Bobby
+ echo "Love you, honey" > letter
+ pcp1 -e -i 0x29A323A2C295D391 -I letter -O letter.z85
+ cat letter.z85 | mail bobby@foo.bar
+
+                                    pcp1 -d -I letter.z85 | less
+
+And that's it.
+
+Please note the big difference to B<GPG> though: both Alicia
+AND Bobby have to enter the passphrase for their secret key!
+That's the way CURVE25519 works: you encrypt a message using
+your secret key and the recipients public key and the recipient
+does the opposite, he uses his secret key and your public key
+to actually decrypt the message.
+
+Oh - and if you're wondering why I named them Alicia and Bobby:
+I was just sick of Alice and Bob. We're running NSA-free, so we're
+using other sample names as well.
+
+
+=head1 PCP1 KEYS
+
+B<pcp1> keys are stored in a binary file, called B<the vault>.
+It's by default located in B<~/.pcpvault> but you can of course
+specify another location using the B<-V> option.
+
+There are two kinds of keys: secret and public keys. In reality
+a secret key always includes its public key. Both types of keys
+can be exported to files and transfered to other people who can
+then import them. You should usually only do this with public keys
+though.
+
+There is a primary secret key which will always used for operations
+when no keyid has been specified. However, you may have as many
+secret keys in your vault as you like.
+
+Each key can be identified using its B<keyid> which looks like this:
+
+ 0xD49119E85266509F
+
+A public key exported from a secret key will have the same keyid
+as the secret key. When using for encryption, the keyid will be
+added to the message so that the receiver knows who was the
+sender of the message (B<This might change in the future. As of
+this writing I'm not sure if this was a good idea>).
+
+If you just want to know details about a key or the vault, use the
+B<-t> option.
+
+=head1 INTERNALS
+
+FIXME.
+
+=head1 Z85 ENCODING
+
+B<pcp1> uses Z85 to encode exported keys and encrypted messages.
+Therefore it includes a Z85 utility mode:
+
+B<pcp1> can be used to encode and decode strings to Z85 encoding.
+
+The option B<-z> encodes B<to> Z85, the option B<-Z> does the opposite
+and decodes B<from> Z85.
+
+If no input file have been specified using B<-I>, B<pcp1> expects the
+input to come from B<STDIN>, otherwise it reads the contents
+of B<file>.
+
+Encoded or decoded output will be written to B<STDOUT> unless an
+output file has been specified using the option B<-O>.
+
+=head2 EXAMPLES
+
+To encode a given file to Z85 and write the output to another:
+
+ pcp1 -z myfile.bin > myfile.z85
+
+To decode the file created above and restore the original:
+
+ pcp1 -Z -d myfile.z85 > myfile.bin
+
+To encode something from stdin to Z85:
+
+ ps axuw | pcp1 -z > pslist.z85
+
+To decode the above and print to stdout:
+
+ pcp1 -Z -d pslist.z85
+
+=head2 BACKGROUND
+
+The Z85 encoding format is described here: B<http://rfc.zeromq.org/spec:32>.
+It's part of ZeroMQ (B<http://zeromq.org>). Z85 is based on ASCII85 with
+a couple of modifications (portability, readability etc).
+
+To fulfil the requirements of the ZeroMQ Z85 functions, B<pcp1>
+does some additional preparations of raw input before actually doing the 
+encoding, since the input for zmq_z85_encode() must be divisible by 4:
+
+Expand the input so that the resulting size is divisible by 4.
+
+Fill the added bytes with zeroes.
+
+Prepend the input with a one byte value which holds the number of zeroes
+added in the previous step.
+
+Example:
+
+Raw input:
+
+ hello\0
+
+Here, the input size is 6, which is insufficient, therefore it has to be expanded
+to be 8. After the process the input looks like this:
+
+ 1hello\0\0
+
+So, we padded the input with 1 zero (makes 7 bytes) and preprended it with the
+value 1 (the number of zeros added): makes 8 bytes total.
+
+After decoding Z85 input the process will be reversed.
+
+B<Trying to use another tool to decode an Z85 encoded string produced
+by z85, might not work therefore, unless the tool takes the padding scheme
+outlined above into account>.
+
+
+=head1 COPYRIGHT
+
+Copyright (c) 2013 by T.Linden <tom AT cpan DOT org>
+
+=head1 ADDITIONAL COPYRIGHTS
+
+=over
+
+=item B<ZeroMQ Z85 encoding routine>
+
+ Copyright (c) 2007-2013 iMatix Corporation
+ Copyright (c) 2009-2011 250bpm s.r.o.
+ Copyright (c) 2010-2011 Miru Limited
+ Copyright (c) 2011 VMware, Inc.
+ Copyright (c) 2012 Spotify AB
+
+=item B<Tarsnap readpass helpers>
+
+ Copyright 2009 Colin Percival
+
+=item B<jen_hash() hash algorithm>
+
+ Bob Jenkins, Public Domain.
+
+=item B<UTHASH hashing macros>
+
+ Copyright (c) 2003-2013, Troy D. Hanson
+
+=item B<Random art image from OpenSSH keygen>
+
+ Copyright (c) 2000, 2001 Markus Friedl.  All rights reserved.
+
+ Comitted by Alexander von Gernler in rev 1.7.
+
+=back
+
+Every incorporated source code is opensource and licensed
+under the B<GPL> as well.
+
+=head1 AUTHORS
+
+I<T.Linden <tom AT cpan DOT org>>
+
+=head1 LICENSE
+
+Licensed under the  GNU GENERAL PUBLIC LICENSE version 3.
+
+=head1 HOME
+
+The homepage of Pretty Curved Privacy can be found on
+http://www.daemon.de/PrettyCurvedPrivacy. The source is
+on Github: https://github.com/TLINDEN/pcp
+
+=cut

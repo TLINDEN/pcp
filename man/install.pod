@@ -1,0 +1,33 @@
+=head1 INSTALLATION
+
+There are currently no packages available, so B<pcp> has to be
+compiled from source. Follow these steps:
+
+First, you will need libsodium:
+
+ git clone git://github.com/jedisct1/libsodium.git
+ cd libsodium
+ ./autogen.sh
+ ./configure && make check
+ sudo make install
+ sudo ldconfig
+ cd ..
+
+Next, pcp:
+
+ git clone git://github.com/tlinden/pcp.git
+ cd pcp
+ ./configure
+ sudo make install
+ cd ..
+
+Optionally, you might run the unit tests:
+
+ make test
+
+=head1 DOCUMENTATION
+
+To learn how to use B<pcp>, read the manpage:
+
+ man pcp1
+

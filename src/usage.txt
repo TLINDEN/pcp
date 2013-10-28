@@ -1,0 +1,70 @@
+
+Usage: pcp1 [options]
+
+General Options:
+-V --vault <vaultfile>    Specify an alternate vault file.
+                          The deault vault is ~/.pcpvault.
+-O --outfile <file>       Output file. If not specified, stdout
+                          will be used.
+-I --infile <file>        Input file. If not specified, stdin
+                          will be used.
+-i --keyid <id>           Specify a key id to import/export.
+-t --text                 Print textual representation of some
+                          item. Either -V or -i must be specified
+                          as well.
+-h --help                 Print this help message.
+-v --version              Print program version.
+-D --debug                Enable debug output.
+
+Keymanagement Options:
+-k --keygen               Generate a CURVE25519 secret key. If
+                          the generated key is the first one in
+                          your vault, it will become the primary
+                          secret key.
+-l --listkeys             List all keys currently stored in your
+                          vault. Only the key id's and some info
+                          about the keys will be printed, not the
+                          actual keys.
+-r --remove-key           Remove a key from the vault. Requires
+                          option -i <keyid>.
+-s --export-secret        Export a secret key. If your vault only
+                          contains one secret key, this one will
+                          be exported. If a key id have been
+                          specified (-i), this one will be used.
+                          If there are more than one secret keys
+                          in the vault and no key id has been
+                          given, export the primary secret key.
+                          Use -O to export to a file.
+-p --export-public        Export a public key. If no key id have
+                          been specified, the public part of your
+                          primary secret key will be exported.
+                          Use -O to export to a file.
+-S --import-secret        Import a secret key. Use -I to import
+                          from a file.
+-P --import-public        Import a public key. Use -I to import
+                          from a file.
+
+Encryption Options:
+-e --encrypt              Encrypt a message. Read from stdin or
+                          specified via -I. A keyid (-i) of the
+                          public key of the receipient must be
+                          specified. Output to stdout or written
+                          to the file specified via -O.
+-d --decrypt              Decrypt a message. Read from stdin or
+                          specified via -I. Output to stdout or
+                          written to the file specified via -O.
+                          The primary secret key will be used for
+                          decryption, if there is no primary and
+                          just one secret key in the vault, this
+                          one will be used. Otherwise you'll have
+                          to specify the keyid (-i) of the key.
+
+Encoding Options:
+-z --z85-encode           Encode something to Z85 encoding. Use
+                          -I and -O respectively, otherwise it
+                          stdin/stdout.
+-Z --z85-decode           Decode something from Z85 encoding. Use
+                          -I and -O respectively, otherwise it
+                          stdin/stdout
+
+

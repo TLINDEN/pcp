@@ -235,7 +235,7 @@ void pcppubkey_printshortinfo(pcp_pubkey_t *key) {
   int i;
   printf("        Key-ID: 0x%s\n", key->id);
   printf("         Owner: %s\n", key->owner);
-  char *r = pcpkey_get_art(key);
+  char *r = pcppubkey_get_art(key);
   printf(" Random Art ID: ");
   for (i=0; i<strlen(r); ++i) {
     if(r[i] == '\n') {

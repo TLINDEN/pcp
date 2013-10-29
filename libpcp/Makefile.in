@@ -97,7 +97,7 @@ am__uninstall_files_from_dir = { \
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libpcp1_la_LIBADD =
-am_libpcp1_la_OBJECTS = mac.lo mem.lo pad.lo version.lo warn.lo z85.lo \
+am_libpcp1_la_OBJECTS = mac.lo mem.lo pad.lo version.lo z85.lo \
 	zmq_z85.lo key.lo randomart.lo vault.lo fatal.lo jenhash.lo \
 	digital_crc32.lo crypto.lo
 libpcp1_la_OBJECTS = $(am_libpcp1_la_OBJECTS)
@@ -240,7 +240,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CFLAGS = -I../libpcp -Wall -g
 lib_LTLIBRARIES = libpcp1.la
-libpcp1_la_SOURCES = mac.c mem.c pad.c version.c warn.c \
+libpcp1_la_SOURCES = mac.c mem.c pad.c version.c \
 		    z85.c zmq_z85.c key.c randomart.c \
 		    vault.c fatal.c jenhash.c digital_crc32.c \
                     crypto.c
@@ -350,7 +350,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/randomart.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vault.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/version.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/warn.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/z85.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/zmq_z85.Plo@am__quote@
 

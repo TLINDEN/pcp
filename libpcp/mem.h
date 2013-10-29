@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <err.h>
+#include "platform.h"
 
 // simple malloc()  wrapper 
 // behaves like calloc(), which

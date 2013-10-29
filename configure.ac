@@ -6,7 +6,7 @@ AC_CONFIG_MACRO_DIR(config)
 
 AC_CONFIG_HEADER(libpcp/config.h)
 AM_INIT_AUTOMAKE
-
+LT_INIT
 
 ORIG_CFLAGS="${CFLAGS:-none}"
 
@@ -18,26 +18,6 @@ AC_PROG_SED
 AC_PROG_AWK
 AC_PROG_INSTALL
 
-# Allow user to specify flags
-AC_ARG_WITH([cflags],
-        [  --with-cflags           Specify additional flags to pass to compiler],
-        [
-                if test -n "$withval"  &&  test "x$withval" != "xno"  &&  \
-                    test "x${withval}" != "xyes"; then
-                        CFLAGS="$CFLAGS $withval"
-                fi
-        ]
-)
-
-AC_ARG_WITH([ldflags],
-        [  --with-ldflags          Specify additional flags to pass to linker],
-        [
-                if test -n "$withval"  &&  test "x$withval" != "xno"  &&  \
-                    test "x${withval}" != "xyes"; then
-                        LDFLAGS="$LDFLAGS $withval"
-                fi
-        ]
-)
 
 
 
@@ -47,13 +27,14 @@ AC_CANONICAL_HOST
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS(errno.h err.h stdlib.h string.h unistd.h stdio.h getopt.h\
-                 limits.h stddef.h stdint.h sys/types.h sys/stat.h termios.h)
+                 limits.h stddef.h stdint.h sys/types.h sys/stat.h endian.h sys/endian.h termios.h)
 
 AC_TYPE_SIZE_T
 
 # Checks for library functions.
 AC_CHECK_FUNCS( \
     arc4random_buf \
+    bzero \
     fread \
     fopen \
     free \
@@ -71,6 +52,8 @@ AC_CHECK_FUNCS( \
     strtol \
     sizeof \
     tcgetattr \
+    be32toh \
+    htobe32 \
     umask
 )
 
@@ -83,6 +66,65 @@ AC_RUN_IFELSE([AC_LANG_PROGRAM([[ #include <stdio.h> ]], [[ exit(0); ]])],
         ],
         [       AC_MSG_WARN([cross compiling: not checking compiler sanity]) ]
 )
+
+_havenacl=no
+_ldlib=""
+
+AC_ARG_WITH([libsodium],
+            [AS_HELP_STRING([--with-libsodium],
+                            [Specify libsodium prefix])],
+            [search_libsodium="yes"],
+            [])
+
+if test "x$search_libsodium" = "xyes"; then
+    if test -r "${with_libsodium}/include/sodium.h"; then
+        CFLAGS="-I${with_libsodium}/include ${CFLAGS}"
+        LDFLAGS="-L${with_libsodium}/lib ${LDFLAGS}"
+        _havenacl=yes
+	_ldlib="${with_libsodium}/lib"
+    fi
+fi
+
+AC_ARG_WITH([libsodium-include-dir],
+            [AS_HELP_STRING([--with-libsodium-include-dir],
+                            [Specify libsodium include prefix])],
+            [search_libsodium_include="yes"],
+            [])
+
+if test "x$search_libsodium_include" = "xyes"; then
+    if test -r "${with_libsodium_include_dir}/sodium.h"; then
+        CFLAGS="-I${with_libsodium_include_dir}/include ${CFLAGS}"
+	_havenacl=yes
+    fi
+fi
+
+AC_ARG_WITH([libsodium_lib_dir],
+            [AS_HELP_STRING([--with-libsodium-lib-dir],
+                            [Specify libsodium library prefix])],
+            [search_libsodium_lib="yes"],
+            [])
+
+if test "x$search_libsodium_lib" = "xyes"; then
+    if test -r "${with_libsodium_lib_dir}/libsodium.{a|so|dylib}"; then
+        LDFLAGS="-L${with_libsodium}/lib ${LDFLAGS}"
+	_havenacl=yes
+	_ldlib="${with_libsodium}/lib"
+    fi
+fi
+
+if test "x${_havenacl}" = "xno"; then
+	AC_MSG_CHECKING([pkg-config for libsodium])
+	if pkg-config --exists libsodium; then
+		# found it
+		LDFLAGS=`pkg-config --libs libsodium`
+		CFLAGS=`pkg-config --cflags libsodium`
+		_ldlib=`pkg-config --libs libsodium | cut -d ' ' -f 1 | cut -d L -f 2`
+		AC_MSG_RESULT([yes])
+	else
+		AC_MSG_RESULT([no])
+	fi
+fi
+
 
 
 # Check for some target-specific stuff
@@ -127,6 +169,10 @@ esac
 
 AC_CHECK_LIB(sodium, sodium_init, , [AC_MSG_ERROR([cannot link with -lsodium, install libsodium.])])
 
+if test -n "$_ldlib"; then
+	export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${_ldlib}"
+	 AC_MSG_RESULT([LD_LIBRARY_PATH: $LD_LIBRARY_PATH])
+fi
 AC_MSG_CHECKING([is libsodium compiled correctly])
 AC_RUN_IFELSE([
 AC_LANG_PROGRAM([[

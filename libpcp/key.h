@@ -9,9 +9,9 @@ extern "C" {
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
-#include <sys/endian.h> // FIXME: put portable thing from scrypt here
 
 #include "defines.h"
+#include "platform.h"
 #include "mem.h"
 #include "mac.h"
 #include "randomart.h"

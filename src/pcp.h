@@ -1,7 +1,9 @@
 #ifndef _HAVE_PCP_H
 #define _HAVE_PCP_H
 
+#ifndef _BSD_SOURCE
 #define _BSD_SOURCE
+#endif
 
 #include <unistd.h>
 #include <stdio.h>

@@ -8,6 +8,7 @@
 #include <unistd.h>
 
 #include "defines.h"
+#include "platform.h"
 #include "mem.h"
 #include "key.h"
 #include "uthash.h"

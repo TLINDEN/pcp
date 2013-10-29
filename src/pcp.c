@@ -9,7 +9,7 @@ void usage() {
 }
 
 void version() {
-  fprintf(stderr, "pcp version %d.%d.%d\n",
+  fprintf(stderr, "pcp version %d.%d.%d, use --help to learn how to use.\n",
 	  PCP_VERSION_MAJOR, PCP_VERSION_MINOR, PCP_VERSION_PATCH);
   exit(0);
 }
@@ -167,6 +167,11 @@ int main (int argc, char **argv)  {
   argc -= optind;
   argv += optind;
 
+
+  if(mode == 0) {
+    version();
+    return 1;
+  }
 
   if(usevault == 1) {
     pcp_inithashes();
@@ -327,7 +332,7 @@ int main (int argc, char **argv)  {
 
     default:
       // mode params mixed
-      fatal("Sorry, invalid combinatin of commandline parameters!\n");
+      fatal("Sorry, invalid combination of commandline parameters!\n");
       break;  
     }
   }

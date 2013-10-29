@@ -5,6 +5,7 @@
 extern "C" {
 #endif
 
+#include <endian.h>
 #include <err.h>
 #include <errno.h>
 #include <inttypes.h>   /* uint32_t */
@@ -19,7 +20,6 @@ extern "C" {
 #include <string.h>   /* memcmp,strlen */
 #include <strings.h>
 #include <sys/endian.h>
-#include <sys/endian.h> // FIXME: put portable thing from scrypt here
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <termios.h>
@@ -340,6 +340,66 @@ void pcp_pad_remove(unsigned char **unpadded, unsigned char *padded,
 #error Need either CONFIG_H_FILE or HAVE_CONFIG_H defined.
 #endif
 
+#ifdef HAVE_ENDIAN_H
+#else
+#ifdef HAVE_SYS_ENDIAN_H
+#else
+#ifdef HAVE_BETOH32
+// openbsd, use aliases
+#define be32toh betoh32
+#define htobe32 hto32be
+#else
+
+#if __BYTE_ORDER == __BIG_ENDIAN
+// Copyright (c) 1999 Joseph Samuel Myers. bsd-games
+#define be32toh(x)	((void)0)
+#define htobe32(x)	((void)0)
+#else
+#define be32toh(x)	((u_int32_t)ntohl((u_int32_t)(x)))
+#define htobe32(x)	((u_int32_t)htonl((u_int32_t)(x)))
+#endif
+
+#endif // HAVE_BETOH32
+#endif // HAVE_SYS_ENDIAN_H
+#endif // HAVE_ENDIAN_H
+
+
+#ifndef HAVE_ARC4RANDOM_BUF
+// shitty OS. we've got to use other stuff
+
+
+static inline FILE *__getranddev() {
+  FILE *R;
+  if((R = fopen("/dev/urandom", "rb")) == NULL) {
+    // not even this is here! what a shame
+    if((R = fopen("/dev/random", "rb")) == NULL) {
+      // not available or depleted. that's too bad
+      fprintf(stderr, "ERROR: /dev/urandom not available, /dev/random is depleted.\n");
+      fprintf(stderr, "That's horrible for you but a nightmare for me. I die. Bye.\n");
+      exit(2);
+    }
+  }
+  return R;
+}
+
+static inline u_int32_t arc4random() {
+  uint32_t x;
+  FILE *R = __getranddev();
+  fread(&x, sizeof(uint32_t), 1, R);
+  fclose(R);
+  return x;
+}
+
+static inline void arc4random_buf(void *buf, size_t nbytes) {
+  FILE *R = __getranddev();
+  fread(buf, nbytes, 1, R);
+  fclose(R);
+}
+
+
+#endif
+
+
 
 
 // +++ from libpcp/randomart.h: +++
@@ -460,18 +520,6 @@ vault_item_header_t * ih2native(vault_item_header_t *h);
     PCP_MAKE_VERSION(PCP_VERSION_MAJOR, PCP_VERSION_MINOR, PCP_VERSION_PATCH)
 
 int pcp_version();
-
-
-// +++ from libpcp/warn.h: +++
-
-
-#ifdef HAVE_ERR_H
-#else
-#define NEED_WARN_PROGNAME
-const char * warn_progname;
-void warn(const char *, ...);
-void warnx(const char *, ...);
-#endif
 
 
 // +++ from libpcp/z85.h: +++

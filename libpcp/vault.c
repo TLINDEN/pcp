@@ -124,7 +124,7 @@ int pcpvault_additem(vault_t *vault, void *item, size_t itemsize, uint8_t type, 
   fwrite(header, sizeof(vault_item_header_t), 1, vault->fd);
   fwrite(saveitem, itemsize, 1, vault->fd);
 
-  bzero(saveitem, itemsize);
+  memset(saveitem, 0, itemsize);
   free(saveitem);
 
   if(do_hash == 1) {
@@ -223,7 +223,7 @@ unsigned char *pcpvault_create_checksum(vault_t *vault) {
 
   crypto_hash_sha256(checksum, data, datasize);
 
-  bzero(data, datasize);
+  memset(data, 0, datasize);
   free(data);
 
   return checksum;

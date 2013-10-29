@@ -11,7 +11,7 @@ unsigned char *pcp_padfour(unsigned char *src, size_t srclen, size_t *dstlen) {
   dst = (unsigned char*)ucmalloc(outlen);
   dst[0] = zerolen;             // add the number of zeros we add
   memcpy(&dst[1], src, srclen); // add the original
-  bzero(&dst[srclen+1], zerolen); // pad with zeroes 
+  memset(&dst[srclen+1], 0, zerolen); // pad with zeroes 
 
   *dstlen = outlen;
 

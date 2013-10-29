@@ -11,7 +11,7 @@ void *ucmalloc(size_t s) {
     exit(-1);
   }
 
-  bzero (value, size);
+  memset (value, 0, size);
 
   //printf("allocated %d bytes at %p\n", (int)size, value);
 

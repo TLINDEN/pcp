@@ -34,8 +34,8 @@ unsigned char *pcp_derivekey(char *passphrase) {
 
   memcpy(key, xor, crypto_secretbox_KEYBYTES);
 
-  bzero(passphrase, plen);
-  bzero(temp, crypto_hash_BYTES);
+  memset(passphrase, 0, plen);
+  memset(temp, 0, crypto_hash_BYTES);
   free(passphrase);
   free(temp);
   free(xor);

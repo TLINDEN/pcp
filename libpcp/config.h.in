@@ -9,9 +9,6 @@
 /* Define to 1 if you have the `be32toh' function. */
 #undef HAVE_BE32TOH
 
-/* Define to 1 if you have the `bzero' function. */
-#undef HAVE_BZERO
-
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 

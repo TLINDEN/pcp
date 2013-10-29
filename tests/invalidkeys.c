@@ -50,7 +50,7 @@ void mkinvv(const char *name, int type) {
 
   header->fileid = PCP_VAULT_ID;
   header->version = PCP_VAULT_VERSION;
-  bzero(header->checksum, 32);
+  memset(header->checksum, 0, 32);
 
   item->version = PCP_KEY_VERSION;
   item->type = PCP_KEY_TYPE_SECRET;

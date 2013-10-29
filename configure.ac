@@ -35,7 +35,6 @@ AC_TYPE_SIZE_T
 # Checks for library functions.
 AC_CHECK_FUNCS( \
     arc4random_buf \
-    bzero \
     fread \
     fopen \
     free \
@@ -172,7 +171,6 @@ AC_CHECK_LIB(sodium, sodium_init, , [AC_MSG_ERROR([cannot link with -lsodium, in
 
 if test -n "$_ldlib"; then
 	export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${_ldlib}"
-	 AC_MSG_RESULT([LD_LIBRARY_PATH: $LD_LIBRARY_PATH])
 fi
 
 AC_MSG_CHECKING([is libsodium compiled correctly])

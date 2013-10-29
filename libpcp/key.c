@@ -52,7 +52,7 @@ pcp_key_t *pcpkey_encrypt(pcp_key_t *key, char *passphrase) {
 
   es = pcp_sodium_mac(&encrypted, key->secret, 32, key->nonce, encryptkey);
 
-  bzero(encryptkey, 32);
+  memset(encryptkey, 0, 32);
   free(encryptkey);
 
   if(es == 48) {
@@ -77,7 +77,7 @@ pcp_key_t *pcpkey_decrypt(pcp_key_t *key, char *passphrase) {
   
   es = pcp_sodium_verify_mac(&decrypted, key->encrypted, 48, key->nonce, encryptkey);
 
-  bzero(encryptkey, 32);
+  memset(encryptkey, 0, 32);
   free(encryptkey);
 
   if(es == 0) {
@@ -140,7 +140,7 @@ void pcp_cleanhashes() {
     pcp_key_t *current_key, *tmp;
     HASH_ITER(hh, pcpkey_hash, current_key, tmp) {
       HASH_DEL(pcpkey_hash,current_key);
-      bzero(current_key, sizeof(pcp_key_t));
+      memset(current_key, 0, sizeof(pcp_key_t));
       free(current_key); // FIXME: coredumps here after n-th secret keys has been added
     }
   }
@@ -149,7 +149,7 @@ void pcp_cleanhashes() {
     pcp_pubkey_t *current_pub, *ptmp;
     HASH_ITER(hh, pcppubkey_hash, current_pub, ptmp) {
       HASH_DEL(pcppubkey_hash,current_pub);
-      bzero(current_pub, sizeof(pcp_pubkey_t));
+      memset(current_pub, 0, sizeof(pcp_pubkey_t));
       free(current_pub);
     }
   }

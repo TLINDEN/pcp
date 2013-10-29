@@ -12561,6 +12561,7 @@ if test -n "$_ldlib"; then
 	 { $as_echo "$as_me:${as_lineno-$LINENO}: result: LD_LIBRARY_PATH: $LD_LIBRARY_PATH" >&5
 $as_echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH" >&6; }
 fi
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking is libsodium compiled correctly" >&5
 $as_echo_n "checking is libsodium compiled correctly... " >&6; }
 if test "$cross_compiling" = yes; then :
@@ -12601,6 +12602,52 @@ rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
   conftest.$ac_objext conftest.beam conftest.$ac_ext
 fi
 
+
+
+# check endianess
+# program returns 0 on little and 1 on big endian systems
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking are we on a big endian system" >&5
+$as_echo_n "checking are we on a big endian system... " >&6; }
+if test "$cross_compiling" = yes; then :
+  { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error $? "cannot run test program while cross compiling
+See \`config.log' for more details" "$LINENO" 5; }
+else
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+
+int
+main ()
+{
+long one= 1; exit(!(*((char *)(&one))));
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_run "$LINENO"; then :
+
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+	bigendian=""
+
+else
+
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+	bigendian=1
+
+
+fi
+rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+  conftest.$ac_objext conftest.beam conftest.$ac_ext
+fi
+
+
+if test -n "$bigendian"; then
+    CFLAGS="$CFLAGS -D__BYTE_ORDER=__BIG_ENDIAN"
+fi
 
 # Specify output files
 ac_config_files="$ac_config_files Makefile libpcp/Makefile src/Makefile man/Makefile tests/Makefile"

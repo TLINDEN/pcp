@@ -173,6 +173,7 @@ if test -n "$_ldlib"; then
 	export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${_ldlib}"
 	 AC_MSG_RESULT([LD_LIBRARY_PATH: $LD_LIBRARY_PATH])
 fi
+
 AC_MSG_CHECKING([is libsodium compiled correctly])
 AC_RUN_IFELSE([
 AC_LANG_PROGRAM([[
@@ -188,6 +189,26 @@ AC_LANG_PROGRAM([[
 	AC_MSG_ERROR([no. please check your libsodium installation, consider re-installing])
     ]
 )
+
+
+# check endianess
+# program returns 0 on little and 1 on big endian systems
+AC_MSG_CHECKING([are we on a big endian system])
+AC_RUN_IFELSE([
+AC_LANG_PROGRAM([[]],[[long one= 1; exit(!(*((char *)(&one)))); ]])],
+    [
+	AC_MSG_RESULT([no])
+	bigendian=""
+    ],
+    [
+	AC_MSG_RESULT([yes])
+	bigendian=1
+    ]
+)
+
+if test -n "$bigendian"; then
+    CFLAGS="$CFLAGS -D__BYTE_ORDER=__BIG_ENDIAN"
+fi
 
 # Specify output files
 AC_CONFIG_FILES([Makefile libpcp/Makefile src/Makefile man/Makefile tests/Makefile])

@@ -5,7 +5,6 @@
 extern "C" {
 #endif
 
-#include <endian.h>
 #include <err.h>
 #include <errno.h>
 #include <inttypes.h>   /* uint32_t */
@@ -19,7 +18,6 @@ extern "C" {
 #include <string.h>
 #include <string.h>   /* memcmp,strlen */
 #include <strings.h>
-#include <sys/endian.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <termios.h>
@@ -341,26 +339,33 @@ void pcp_pad_remove(unsigned char **unpadded, unsigned char *padded,
 #endif
 
 #ifdef HAVE_ENDIAN_H
-#else
-#ifdef HAVE_SYS_ENDIAN_H
-#else
-#ifdef HAVE_BETOH32
-// openbsd, use aliases
-#define be32toh betoh32
-#define htobe32 hto32be
-#else
-
-#if __BYTE_ORDER == __BIG_ENDIAN
-// Copyright (c) 1999 Joseph Samuel Myers. bsd-games
-#define be32toh(x)	((void)0)
-#define htobe32(x)	((void)0)
-#else
-#define be32toh(x)	((u_int32_t)ntohl((u_int32_t)(x)))
-#define htobe32(x)	((u_int32_t)htonl((u_int32_t)(x)))
-#endif
-
-#endif // HAVE_BETOH32
-#endif // HAVE_SYS_ENDIAN_H
+# include <endian.h>
+#else // no endian.h
+# ifdef HAVE_SYS_ENDIAN_H
+#   include <sys/endian.h>
+#   ifdef HAVE_BETOH32
+      // openbsd, use aliases
+#     define be32toh betoh32
+#     define htobe32 hto32be
+#   endif
+# else // no sys/endian.h
+#   if __BYTE_ORDER == __BIG_ENDIAN
+#     define be32toh(x)	((void)0)
+#     define htobe32(x)	((void)0)
+#   else
+#     ifdef HAVE_ARPA_INET_H
+#       include <arpa/inet.h>
+#     else
+#       ifdef HAVE_NETINET_IN_H
+#         include <netinet/in.h>
+#       else
+#         error Need either netinet/in.h or arpa/inet.h for ntohl() and htonl()
+#       endif
+#     endif
+#     define be32toh(x)	((u_int32_t)ntohl((u_int32_t)(x)))
+#     define htobe32(x)	((u_int32_t)htonl((u_int32_t)(x)))
+#   endif
+#  endif // HAVE_SYS_ENDIAN_H
 #endif // HAVE_ENDIAN_H
 
 

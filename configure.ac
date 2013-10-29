@@ -27,7 +27,8 @@ AC_CANONICAL_HOST
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS(errno.h err.h stdlib.h string.h unistd.h stdio.h getopt.h\
-                 limits.h stddef.h stdint.h sys/types.h sys/stat.h endian.h sys/endian.h termios.h)
+                 limits.h stddef.h stdint.h sys/types.h sys/stat.h endian.h \
+                 sys/endian.h termios.h arpa/inet.h netinet/in.h)
 
 AC_TYPE_SIZE_T
 

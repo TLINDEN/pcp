@@ -3,6 +3,9 @@
 /* Define to 1 if you have the `arc4random_buf' function. */
 #undef HAVE_ARC4RANDOM_BUF
 
+/* Define to 1 if you have the <arpa/inet.h> header file. */
+#undef HAVE_ARPA_INET_H
+
 /* Define to 1 if you have the `be32toh' function. */
 #undef HAVE_BE32TOH
 
@@ -71,6 +74,9 @@
 
 /* Define to 1 if you have the `memset' function. */
 #undef HAVE_MEMSET
+
+/* Define to 1 if you have the <netinet/in.h> header file. */
+#undef HAVE_NETINET_IN_H
 
 /* Define to 1 if you have the `perror' function. */
 #undef HAVE_PERROR

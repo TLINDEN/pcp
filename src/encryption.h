@@ -13,6 +13,6 @@
 #include "keyprint.h"
 
 int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd);
-int pcpencrypt(char *id, char *infile, char *outfile, char *passwd);
+int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, char *recipient);
 
 #endif // _HAVE_ENCRYPTION_H

@@ -49,7 +49,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-check_PROGRAMS = col$(EXEEXT) invalidkeys$(EXEEXT)
+check_PROGRAMS = col$(EXEEXT) invalidkeys$(EXEEXT) pwhashes$(EXEEXT)
 subdir = tests
 DIST_COMMON = README $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/config/depcomp
@@ -71,6 +71,9 @@ col_DEPENDENCIES = ../libpcp/.libs/libpcp1.a
 am_invalidkeys_OBJECTS = invalidkeys.$(OBJEXT)
 invalidkeys_OBJECTS = $(am_invalidkeys_OBJECTS)
 invalidkeys_DEPENDENCIES = ../libpcp/.libs/libpcp1.a ../src/keyprint.o
+am_pwhashes_OBJECTS = pwhashes.$(OBJEXT)
+pwhashes_OBJECTS = $(am_pwhashes_OBJECTS)
+pwhashes_DEPENDENCIES = ../libpcp/.libs/libpcp1.a
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/libpcp
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__depfiles_maybe = depfiles
@@ -84,8 +87,9 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(col_SOURCES) $(invalidkeys_SOURCES)
-DIST_SOURCES = $(col_SOURCES) $(invalidkeys_SOURCES)
+SOURCES = $(col_SOURCES) $(invalidkeys_SOURCES) $(pwhashes_SOURCES)
+DIST_SOURCES = $(col_SOURCES) $(invalidkeys_SOURCES) \
+	$(pwhashes_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -212,6 +216,8 @@ col_LDADD = ../libpcp/.libs/libpcp1.a
 col_SOURCES = collisions.c
 invalidkeys_LDADD = ../libpcp/.libs/libpcp1.a ../src/keyprint.o
 invalidkeys_SOURCES = invalidkeys.c
+pwhashes_LDADD = ../libpcp/.libs/libpcp1.a
+pwhashes_SOURCES = pwhashes.c
 AM_CPPFLAGS = -I$(top_builddir)/src
 all: all-am
 
@@ -262,6 +268,9 @@ col$(EXEEXT): $(col_OBJECTS) $(col_DEPENDENCIES) $(EXTRA_col_DEPENDENCIES)
 invalidkeys$(EXEEXT): $(invalidkeys_OBJECTS) $(invalidkeys_DEPENDENCIES) $(EXTRA_invalidkeys_DEPENDENCIES) 
 	@rm -f invalidkeys$(EXEEXT)
 	$(LINK) $(invalidkeys_OBJECTS) $(invalidkeys_LDADD) $(LIBS)
+pwhashes$(EXEEXT): $(pwhashes_OBJECTS) $(pwhashes_DEPENDENCIES) $(EXTRA_pwhashes_DEPENDENCIES) 
+	@rm -f pwhashes$(EXEEXT)
+	$(LINK) $(pwhashes_OBJECTS) $(pwhashes_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -271,6 +280,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/collisions.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/invalidkeys.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pwhashes.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -519,7 +529,9 @@ uninstall-am:
 
 
 test: check
-	./unittests.pl unittests.cfg
+	rm -f test* v* stresstest/*
+	./unittests.pl unittests.cfg $(CHECK)
+	@echo "To run a single test only, type: 'make test CHECK=testname'"
 
 stresstest: check
 	./unittests.pl stresstests.cfg

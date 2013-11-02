@@ -1,4 +1,20 @@
-0.1.1   changed output format of encrypted keys. now we
+0.1.2   Fixed bug in pcp_derivekey() which derives encryption
+	keys. it generated collisions due coding error, e.g.
+	passphase 'a' resulted in the same encryptionkey as
+	passphase 'r'. Now uses SHA256 witout the xor stuff,
+	which was the cause for the bug. This also fixes a
+	segmentation fault which occured invariably by entering
+	an invalid passphrase.
+
+	Added support for derived public keys using the -R
+	option, which allows two peers to encrypt messages
+	without the need to reveal their primary public keys.
+	That way each peer will have another public key of
+	the same source.
+
+	Added more unit tests to reflect the above changes.
+
+0.1.1   Changed output format of encrypted keys. now we
         encode it properly with the Z85 encoding and add
         a header and footer to it:
 
@@ -8,4 +24,4 @@
          EU]wBzf{UrCgBNSHcGBT
          -----END CURVE25519 SECRET KEY-----
 
-0.0.1   initial version
+0.0.1   Initial version

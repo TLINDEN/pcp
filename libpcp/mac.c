@@ -2,49 +2,6 @@
 
 
 
-
-
-unsigned char *pcp_derivekey(char *passphrase) {
-  unsigned char *hash64 = ucmalloc(crypto_hash_BYTES);
-  unsigned char *xor = ucmalloc(crypto_secretbox_KEYBYTES);
-  unsigned char *key = ucmalloc(crypto_secretbox_KEYBYTES);
-
-  size_t plen = strnlen(passphrase, 255);
-  unsigned char *temp = ucmalloc(crypto_hash_BYTES);
-  int i;
-
-  // make a hash from the passphrase and then HCYCLES times from the result
-  memcpy(temp, passphrase, plen);
-  for(i=0; i<HCYCLES; ++i) {
-    if(crypto_hash(hash64, temp, plen) == 0) {
-      memcpy(temp, hash64, crypto_hash_BYTES);
-    }
-  }
-
-  // xor the first half of the hash with the latter to get
-  // a 32 byte array
-  for(i=0; i<crypto_secretbox_KEYBYTES; ++i) {
-    xor[i] = hash64[i] ^ hash64[i + crypto_secretbox_KEYBYTES];
-  }
-
-  // turn the 32byte hash into a secret key
-  xor[0]  &= 248;
-  xor[31] &= 127;
-  xor[31] |= 64;
-
-  memcpy(key, xor, crypto_secretbox_KEYBYTES);
-
-  memset(passphrase, 0, plen);
-  memset(temp, 0, crypto_hash_BYTES);
-  free(passphrase);
-  free(temp);
-  free(xor);
-  free(hash64);
-
-  return key;
-}
-
-
 size_t pcp_sodium_mac(unsigned char **cipher,
 		unsigned char *cleartext,
 		size_t clearsize,

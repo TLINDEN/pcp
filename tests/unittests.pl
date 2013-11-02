@@ -10,7 +10,10 @@ use Data::Dumper;
 sub run;
 sub execute;
 
-my $config = shift @ARGV || die "usage: $0 <config>\n";
+my ($config, $check) = @ARGV;
+if (! $config) {
+  die "usage: $0 <config>\n";
+}
 
 my %cfg = ParseConfig(-ConfigFile => $config,
 		      -InterPolateVars => 1,
@@ -22,11 +25,22 @@ if (exists $cfg{confirm}) {
   my $cont = <STDIN>;
 }
 
-foreach my $test (keys %{$cfg{test}}) {
-  my $name = "$test ($cfg{test}->{$test}->{cmd})";
-  &runtest($cfg{test}->{$test}, $name);
+if ($check) {
+  if (exists $cfg{test}->{$check}) {
+    &runtest($cfg{test}->{$check}, $check);
+  }
 }
-
+else {
+  my $continue = 1;
+  foreach my $test (keys %{$cfg{test}}) {
+    if ($continue) {
+      $continue = &runtest($cfg{test}->{$test}, $test);
+      if (!$continue) {
+	print "Last failed check: $test\n";
+      }
+    }
+  }
+}
 
 
 sub runtest {
@@ -46,10 +60,23 @@ sub runtest {
   if (exists $cfg->{test}) {
     foreach my $test (keys %{$cfg->{test}}) {
       my $name = "$test ($cfg->{test}->{$test}->{cmd})";
-      &runtest($cfg->{test}->{$test}, $name);
+      if (&runtest($cfg->{test}->{$test}, $name) == 0) {
+	return 0;
+      }
     }
-    return;
+    return 1;
   }
+
+  $cfg->{cmd} =~ s/%\{([^\}]*)\}/
+    my $N = $1; my $o;
+    if (exists $cfg->{$N}) {
+      $o = `$cfg->{$N}`;
+      chomp $o;
+    }
+    $o;
+  /gex;
+
+  print STDERR "\n$cfg->{cmd}\n      ";
 
   my $ret = run($cfg->{cmd},
 		$cfg->{input},
@@ -63,10 +90,10 @@ sub runtest {
 
   if (exists $cfg->{expect}) {
     if ($cfg->{expect} =~ /^\//) {
-      like($output, $cfg->{expect}, "$name") or last;
+      like($output, $cfg->{expect}, "$name") or return 0;
     }
     else {
-      is($output, $cfg->{expect}, "$name") or last;
+      is($output, $cfg->{expect}, "$name") or return 0;
     }
   }
 
@@ -75,7 +102,7 @@ sub runtest {
     if (-s $cfg->{"expect-file"}) {
       $e = 1;
     }
-    is($e, 1, "$name") or last;
+    is($e, 1, "$name") or return 0;
   }
 
   elsif (exists $cfg->{"expect-file-contains"}) {
@@ -84,28 +111,30 @@ sub runtest {
     if (-s $file) {
       $e = 1;
     }
-    is($e, 1, "$name") or last;
+    is($e, 1, "$name") or return 0;
     if (open F, "<$file") {
       my $content = join '', <F>;
       close F;
-      like($content, qr/$expect/s, "$name") or last;
+      like($content, qr/$expect/s, "$name") or return 0;
     }
     else {
       fail($test);
-      last;
+      return 0;
     }
   }
 
   elsif (exists $cfg->{exit}) {
-    is($ret, $cfg->{exit}, "$name") or last;
+    is($ret, $cfg->{exit}, "$name") or return 0;
   }
 
   else {
-    diag("invalid test spec for $test") or last;
+    diag("invalid test spec for $test");
     fail($test);
+    return 0;
   }
-}
 
+  return 1;
+}
 
 done_testing;
 

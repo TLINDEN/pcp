@@ -745,7 +745,7 @@ uninstall-am:
 
 
 test:
-	cd tests && make test
+	cd tests && make test $(CHECK)
 
 stresstest:
 	cd tests && make stresstest

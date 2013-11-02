@@ -47,4 +47,7 @@ void fatal(const char * fmt, ...);
 // fetch error
 void fatals_ifany();
 
+// reset
+void fatals_reset();
+
 #endif // _DEFINES_H

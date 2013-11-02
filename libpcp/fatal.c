@@ -17,6 +17,10 @@ void fatal(const char * fmt, ...) {
   PCP_ERRSET = 1;
 }
 
+void fatals_reset() {
+  PCP_ERRSET = 0;
+}
+
 void fatals_ifany() {
   if(PCP_ERRSET == 1) {
     fprintf(stderr, PCP_ERR);

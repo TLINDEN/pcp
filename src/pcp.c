@@ -22,13 +22,14 @@ char *default_vault() {
 }
 
 int main (int argc, char **argv)  {
-  int opt, mode, usevault, useid;
+  int opt, mode, usevault, useid, userec;
   char *vaultfile = default_vault();
   char *outfile = NULL;
   char *infile = NULL;
   char *keyid = NULL;
   char *id = NULL;
   char *xpass = NULL;
+  char *recipient = NULL;
   FILE *in;
 
   PCP_EXIT = 0;
@@ -37,6 +38,7 @@ int main (int argc, char **argv)  {
   mode = 0;
   usevault = 0;
   useid = 0;
+  userec = 0;
 
   static struct option longopts[] = {
     // generics
@@ -46,6 +48,7 @@ int main (int argc, char **argv)  {
     { "keyid",         required_argument, NULL,           'i' },
     { "text",          required_argument, NULL,           't' },
     { "xpass",         required_argument, NULL,           'x' },
+    { "recipient",     required_argument, NULL,           'R' },
 
     // key management
     { "keygen",        no_argument,       NULL,           'k' },
@@ -72,7 +75,7 @@ int main (int argc, char **argv)  {
     { NULL,            0,                 NULL,            0 }
   };
 
-  while ((opt = getopt_long(argc, argv, "klV:vdehsO:i:I:pSPrtEx:DzZ",
+  while ((opt = getopt_long(argc, argv, "klV:vdehsO:i:I:pSPrtEx:DzZR:",
 			    longopts, NULL)) != -1) {
 
     switch (opt)  {
@@ -150,7 +153,11 @@ int main (int argc, char **argv)  {
 	xpass = ucmalloc(strlen(optarg)+1);
 	strncpy(xpass, optarg, strlen(optarg)+1);
 	break;
-
+      case 'R':
+	recipient = ucmalloc(strlen(optarg)+1);
+	strncpy(recipient, optarg, strlen(optarg)+1);
+	userec = 1;
+	break;
 
       case 'D':
 	debug = 1;
@@ -204,14 +211,14 @@ int main (int argc, char **argv)  {
       case PCP_MODE_EXPORT_PUBLIC:
 	if(useid) {
 	  id = pcp_normalize_id(keyid);
-	  if(id != NULL) {
-	    pcp_exportpublic(id, useid, outfile);
-	    free(id);
-	  }
+	  if(id == NULL)
+	    break;
 	}
-	else {
-	  pcp_exportpublic(NULL, useid, outfile);
-	}
+	pcp_exportpublic(id, recipient, xpass, outfile);
+	if(xpass != NULL)
+	  free(xpass);
+	if(recipient != NULL)
+	  free(recipient);
 	break;
 
       case PCP_MODE_IMPORT_PUBLIC:
@@ -283,10 +290,12 @@ int main (int argc, char **argv)  {
 	if(useid) {
 	  id = pcp_normalize_id(keyid);
 	  if(id != NULL) {
-	    pcpencrypt(id, infile, outfile, xpass);
+	    pcpencrypt(id, infile, outfile, xpass, recipient);
 	    free(id);
 	    if(xpass != NULL)
 	      free(xpass);
+	    if(recipient != NULL)
+	      free(recipient);
 	  }
 	}
 	else {

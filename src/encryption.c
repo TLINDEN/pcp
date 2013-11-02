@@ -67,14 +67,22 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd) {
   if(combined == NULL)
     goto errde1;
 
-  char *senderid = ucmalloc(17);
-  memcpy(senderid, combined, 16);
-  senderid[16] = '\0';
+  unsigned char *hash = ucmalloc(crypto_hash_BYTES);
+  unsigned char *check = ucmalloc(crypto_hash_BYTES);
+  memcpy(hash, combined, crypto_hash_BYTES);
 
-  HASH_FIND_STR(pcppubkey_hash, senderid, public);
+  for(public=pcppubkey_hash;
+      public != NULL;
+      public=(pcp_pubkey_t*)(public->hh.next)) {
+    crypto_hash(check, (unsigned char*)public->id, 16);
+    if(memcmp(check, hash, crypto_hash_BYTES) == 0) {
+      // found one
+      break;
+    }
+  }
   if(public == NULL) {
-    fatal("Could not find a public key with id 0x%s in vault %s!\n",
-	  senderid, vault->filename);
+    fatal("Could not find a usable public key in vault %s!\n",
+	  vault->filename);
     goto errde0;
   }
 
@@ -85,29 +93,52 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd) {
     pcppubkey_printshortinfo(public);
   }
 
-  unsigned char *encrypted = ucmalloc(clen - 16);
-  memcpy(encrypted, &combined[16], clen - 16);
+  unsigned char *encrypted = ucmalloc(clen - crypto_hash_BYTES);
+  memcpy(encrypted, &combined[crypto_hash_BYTES], clen - crypto_hash_BYTES);
 
   size_t dlen;
   unsigned char *decrypted = pcp_box_decrypt(secret, public,
-					     encrypted, clen - 16, &dlen);
+					     encrypted,
+					     clen - crypto_hash_BYTES, &dlen);
+
+  if(decrypted == NULL) {
+    // try it with a derived secret from the sender id
+    pcp_key_t *s = pcp_derive_pcpkey(secret, public->id);
+    decrypted = pcp_box_decrypt(s, public,
+				encrypted,
+				clen - crypto_hash_BYTES, &dlen);
+    if(decrypted == NULL) {
+      // now try the senders key mail address
+      s = pcp_derive_pcpkey(secret, public->mail);
+      decrypted = pcp_box_decrypt(s, public,
+				  encrypted,
+				  clen - crypto_hash_BYTES, &dlen);
+      if(decrypted == NULL) {
+	// try the name
+	s = pcp_derive_pcpkey(secret, public->owner);
+	decrypted = pcp_box_decrypt(s, public,
+				    encrypted,
+				    clen - crypto_hash_BYTES, &dlen);
+      }
+    }
+  }
 
   if(decrypted != NULL) {
+    fatals_reset();
     fwrite(decrypted, dlen, 1, out);
     fclose(out);
     if(ferror(out) != 0) {
       fatal("Failed to write decrypted output!\n");
     }
     free(decrypted);
-  }
 
-  fprintf(stderr, "Decrypted %d bytes from 0x%s successfully\n",
-	  (int)dlen, senderid);
+    fprintf(stderr, "Decrypted %d bytes from 0x%s successfully\n",
+	    (int)dlen, public->id);
+  }
 
   free(encrypted);
 
  errde0:
-  free(senderid);
   free(combined);
 
  errde1:
@@ -121,7 +152,7 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd) {
 
 
 
-int pcpencrypt(char *id, char *infile, char *outfile, char *passwd) {
+int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, char *recipient) {
   FILE *in = NULL;
   FILE *out = NULL;
   pcp_pubkey_t *public = NULL;
@@ -175,6 +206,12 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd) {
       goto erren2;
   }
 
+  if(recipient != NULL) {
+    pcp_key_t *derived = pcp_derive_pcpkey(secret, recipient);
+    memcpy(secret, derived, sizeof(pcp_key_t));
+    free(derived);
+  }
+
   if(debug) {
     fprintf(stderr, "Using secret key:\n");
     pcpkey_printshortinfo(secret);
@@ -208,10 +245,12 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd) {
     goto erren1;
 
   size_t zlen;
-  size_t clen = ciphersize + 16;
+  size_t clen = ciphersize + crypto_hash_BYTES;
   unsigned char *combined = ucmalloc(clen);
-  memcpy(combined, secret->id, 16);
-  memcpy(&combined[16], cipher, clen - 16);
+  unsigned char *hash = ucmalloc(crypto_hash_BYTES);
+  crypto_hash(hash, (unsigned char*)secret->id, 16);
+  memcpy(combined, hash, crypto_hash_BYTES);
+  memcpy(&combined[crypto_hash_BYTES], cipher, clen - crypto_hash_BYTES);
 
   // combined consists of:
   // keyid|nonce|cipher

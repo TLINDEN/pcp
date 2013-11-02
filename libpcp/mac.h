@@ -47,24 +47,7 @@ int pcp_sodium_verify_mac(unsigned char **cleartext,
                           unsigned char *nonce,
                           unsigned char *key);
 
-// generate a nonce from random source arc4random().
-// allocates memory for the returned nonce and
-// it is up to the user to free it after use.
-void pcp_makenonce(unsigned char **nonce);
 
-// proprietary key derivation function. derives an
-// secure encryption key from the given passphrase by
-// calculating a SALSA20 hash from it HCYCLES times.
-// 
-// turns the result into a proper CURVE25519 secret
-// key. allocates memory for key and it is up to the
-// user to free it after use.
-// 
-// deprecation warning: maybe removed once the libsodium
-// developers incorporated some key derivation function
-// into libsodium. so far, there's none but word goes
-// that perhaps something like scrypt() from the star
-// distribution may be added in the future.
-unsigned char *pcp_derivekey(char *passphrase);
+
 
 #endif // _HAVE_PCP_MAC

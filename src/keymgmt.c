@@ -1,14 +1,13 @@
 #include "keymgmt.h"
 
 
-
 char *pcp_getstdin(const char *prompt) {
-  char line[1024];
+  char line[255];
   char *out;
 
   fprintf(stderr, "%s: ", prompt);
 
-  if (fgets(line, 1024, stdin) == NULL) {
+  if (fgets(line, 255, stdin) == NULL) {
     fatal("Cannot read from stdin");
     goto errgst;
   }
@@ -25,7 +24,6 @@ char *pcp_getstdin(const char *prompt) {
  errgst:
   return NULL;
 }
-
 
 int pcp_storekey (pcp_key_t *key) {
   if(vault->isnew == 1 || HASH_COUNT(pcpkey_hash) == 0) {
@@ -207,10 +205,46 @@ void pcp_exportsecret(char *keyid, int useid, char *outfile) {
 }
 
 
-void pcp_exportpublic(char *keyid, int useid, char *outfile) {
-  pcp_pubkey_t *key = NULL;
+pcp_key_t *pcp_getrsk(pcp_key_t *s, char *recipient, char *passwd) {
+  if(recipient != NULL) {
+    if(s->secret[0] == 0) {
+      // encrypted, decrypt it
+      char *passphrase;
+      if(passwd == NULL) {
+	pcp_readpass(&passphrase,
+		     "Enter passphrase to decrypt your secret key", NULL, 1);
+      }
+      else {
+	passphrase = ucmalloc(strlen(passwd)+1);
+	strncpy(passphrase, passwd, strlen(passwd)+1);
+      }
+      s = pcpkey_decrypt(s, passphrase);
+      if(s == NULL)
+	goto errrsk1;
+    }
+    pcp_key_t *tmp;
+    tmp = pcp_derive_pcpkey(s, recipient);
+    return tmp;
+  }
 
-  if(useid == 1) {
+  return s;
+
+ errrsk1:
+  return NULL;
+}
+
+/*
+  if id given, look if it is already a public and export this,
+  else we look for a secret key with that id. without a given
+  keyid we use the primary key. if we start with a secret key
+  and a recipient have been given, we use a derived secret key
+  and export the public component from that. without recipient
+  just export the public component of the found secret key.
+ */
+void pcp_exportpublic(char *keyid, char *recipient, char *passwd, char *outfile) {
+  pcp_pubkey_t *key = NULL;
+  
+  if(keyid != NULL) {
     // look if we've got that one
     HASH_FIND_STR(pcppubkey_hash, keyid, key);
     if(key == NULL) {
@@ -222,7 +256,9 @@ void pcp_exportpublic(char *keyid, int useid, char *outfile) {
 	free(s);
       }
       else {
-	key = pcpkey_pub_from_secret(s); 
+	s = pcp_getrsk(s, recipient, passwd);
+	if(s != NULL)
+	  key = pcpkey_pub_from_secret(s); 
       }
     }
   }
@@ -235,7 +271,10 @@ void pcp_exportpublic(char *keyid, int useid, char *outfile) {
       free(s);
     }
     else {
-      key = pcpkey_pub_from_secret(s);
+      pcp_key_t *t = NULL;
+      t = pcp_getrsk(s, recipient, passwd);
+      if(t != NULL)
+	key = pcpkey_pub_from_secret(t); 
     }
   }
 

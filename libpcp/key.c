@@ -1,5 +1,40 @@
 #include "key.h"
 
+
+unsigned char *pcp_derivekey(char *passphrase) {
+  unsigned char *hash32 = ucmalloc(crypto_hash_sha256_BYTES);
+  unsigned char *key = ucmalloc(crypto_secretbox_KEYBYTES);
+
+  size_t plen = strnlen(passphrase, 255);
+  unsigned char *temp = ucmalloc(crypto_hash_sha256_BYTES);
+  int i;
+
+  // make a hash from the passphrase and then HCYCLES times from the result
+  crypto_hash_sha256(temp, passphrase, plen);
+
+  for(i=0; i<HCYCLES; ++i) {
+    if(crypto_hash_sha256(hash32, temp, crypto_hash_sha256_BYTES) == 0) {
+      memcpy(temp, hash32, crypto_hash_sha256_BYTES);
+    }
+  }
+
+  // turn the 32byte hash into a secret key
+  temp[0]  &= 248;
+  temp[31] &= 127;
+  temp[31] |= 64;
+
+  memcpy(key, temp, crypto_secretbox_KEYBYTES);
+
+  memset(passphrase, 0, plen);
+  memset(temp, 0, crypto_hash_sha256_BYTES);
+  free(passphrase);
+  free(temp);
+  free(hash32);
+
+  return key;
+}
+
+
 char *pcp_getkeyid(pcp_key_t *k) {
   uint32_t s, p;
   p = jen_hash(k->public, 32, JEN_PSALT);
@@ -196,4 +231,58 @@ pcp_pubkey_t *pubkey2native(pcp_pubkey_t *k) {
   return k;
 }
 
+pcp_key_t *pcp_derive_pcpkey (pcp_key_t *ours, char *theirs) {
+  size_t thlen = strnlen(theirs, 255);
+  size_t inlen = 32 + thlen;
+  unsigned char *both = ucmalloc(inlen);
+  unsigned char *hash = ucmalloc(crypto_hash_BYTES);
 
+  memcpy(both, ours->secret, 32);
+  memcpy(&both[32], theirs, thlen);
+
+  if(crypto_hash(hash, both, inlen) != 0) {
+    fatal("Failed to generate a hash of our pub key and recipient id!\n");
+    goto errdp1;
+  }
+
+  unsigned char *xor    = ucmalloc(crypto_secretbox_KEYBYTES);
+  unsigned char *secret = ucmalloc(crypto_secretbox_KEYBYTES);
+  int i;
+
+  for(i=0; i<crypto_secretbox_KEYBYTES; ++i) {
+    xor[i] = hash[i] ^ hash[i + crypto_secretbox_KEYBYTES];
+  }
+
+  xor[0]  &= 248;
+  xor[31] &= 127;
+  xor[31] |= 64;
+
+  memcpy(secret, xor, crypto_secretbox_KEYBYTES);
+
+  pcp_key_t * tmp = pcpkey_new ();
+  
+  memcpy(tmp->secret, secret, 32);
+
+  // calculate pub from secret
+  crypto_scalarmult_curve25519_base(tmp->public, tmp->secret); 
+
+  memcpy(tmp->owner, ours->owner, 255);
+  memcpy(tmp->mail, ours->mail, 255);
+  memcpy(tmp->id, pcp_getkeyid(tmp), 17);
+
+  memset(both, 0, inlen);
+  memset(xor, 0, crypto_secretbox_KEYBYTES);
+  memset(hash, 0, crypto_hash_BYTES);
+
+  free(both);
+  free(xor);
+  free(hash);
+
+  return tmp;
+
+ errdp1:
+  memset(both, 0, inlen);
+  free(both);
+  
+  return NULL;
+}

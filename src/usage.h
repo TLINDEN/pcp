@@ -11,6 +11,8 @@
 "-I --infile <file>        Input file. If not specified, stdin\n" \
 "                          will be used.\n" \
 "-i --keyid <id>           Specify a key id to import/export.\n" \
+"-R --recipient <string>   Specify a recpipient, used for public\n" \
+"                          key export and encryption.\n" \
 "-t --text                 Print textual representation of some\n" \
 "                          item. Either -V or -i must be specified\n" \
 "                          as well.\n" \

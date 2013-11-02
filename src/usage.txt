@@ -9,6 +9,8 @@ General Options:
 -I --infile <file>        Input file. If not specified, stdin
                           will be used.
 -i --keyid <id>           Specify a key id to import/export.
+-R --recipient <string>   Specify a recpipient, used for public
+                          key export and encryption.
 -t --text                 Print textual representation of some
                           item. Either -V or -i must be specified
                           as well.

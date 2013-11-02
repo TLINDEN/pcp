@@ -1,0 +1,3 @@
+#!/usr/bin/perl
+my $rounds = shift;
+foreach (0 .. $rounds) {print "$_\n";}

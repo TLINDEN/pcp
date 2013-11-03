@@ -49,7 +49,7 @@ void pcp_keygen(char *passwd) {
   memcpy(k->owner, owner, strlen(owner) + 1);
 
   char *mail = pcp_getstdin("Enter the email address of the key owner");
-  memcpy(k->mail, mail, strlen(mail) + 1);
+  memcpy(k->mail, _lc(mail), strlen(mail) + 1);
 
   if(debug)
       pcp_dumpkey(k);
@@ -550,6 +550,7 @@ void pcpedit_key(char *keyid) {
 char *pcp_find_id_byrec(char *recipient) {
   pcp_pubkey_t *p;
   char *id = NULL;
+  _lc(recipient);
   for(p=pcppubkey_hash; p != NULL; p=(pcp_pubkey_t*)(p->hh.next)) {
     if(strncmp(p->owner, recipient, 255) == 0) {
       id = ucmalloc(17);
@@ -563,4 +564,12 @@ char *pcp_find_id_byrec(char *recipient) {
     }
   }
   return id;
+}
+
+char *_lc(char *in) {
+  size_t len = strlen(in);
+  int i;
+  for(i=0; i<len; ++i)
+    in[i] = towlower(in[i]);
+  return in;
 }

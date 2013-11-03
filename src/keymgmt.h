@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <wctype.h>
 
 #include "randomart.h"
 #include "mac.h"
@@ -32,5 +33,6 @@ int pcp_importsecret (vault_t *vault, FILE *in);
 int pcp_sanitycheck_key(pcp_key_t *key);
 void pcpdelete_key(char *keyid);
 char *pcp_find_id_byrec(char *recipient);
+char *_lc(char *in);
 
 #endif // _HAVE_KEYMGMT_H

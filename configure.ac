@@ -28,7 +28,7 @@ AC_CANONICAL_HOST
 AC_HEADER_STDC
 AC_CHECK_HEADERS(errno.h err.h stdlib.h string.h unistd.h stdio.h getopt.h\
                  limits.h stddef.h stdint.h sys/types.h sys/stat.h endian.h \
-                 sys/endian.h termios.h arpa/inet.h netinet/in.h)
+                 sys/endian.h termios.h arpa/inet.h netinet/in.h wctype.h)
 
 AC_TYPE_SIZE_T
 
@@ -54,7 +54,8 @@ AC_CHECK_FUNCS( \
     tcgetattr \
     be32toh \
     htobe32 \
-    umask
+    umask \
+    towlower
 )
 
 AC_MSG_CHECKING([compiler and flags for sanity])

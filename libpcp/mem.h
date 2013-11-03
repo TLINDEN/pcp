@@ -1,7 +1,7 @@
 #ifndef _HAVE_PCP_MEM
 #define _HAVE_PCP_MEM
 
-#include <strings.h>
+#include <string.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <err.h>

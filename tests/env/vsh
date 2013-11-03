@@ -1,0 +1,24 @@
+#!/bin/sh
+
+# simple virtual env to do manual tests of pcp
+# using different users.
+
+user=$1
+
+if test -z "$user"; then
+    echo "usage: $0 <user>"
+    exit
+fi
+
+user=`echo "$user" | sed 's/\///g'`
+
+if ! test -d "$user"; then
+    echo "there's no directory for $user"
+    exit
+fi
+
+
+cur=`pwd`
+home="$cur/$user"
+
+exec env PCP="$cur/../../src/pcp1" USER=$user HOME=$home bash --rcfile "$cur/bashrc"

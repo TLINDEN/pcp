@@ -48,7 +48,7 @@ int main (int argc, char **argv)  {
     { "keyid",         required_argument, NULL,           'i' },
     { "text",          required_argument, NULL,           't' },
     { "xpass",         required_argument, NULL,           'x' },
-    { "recipient",     required_argument, NULL,           'R' },
+    { "recipient",     required_argument, NULL,           'r' },
 
     // key management
     { "keygen",        no_argument,       NULL,           'k' },
@@ -57,7 +57,7 @@ int main (int argc, char **argv)  {
     { "export-public", no_argument,       NULL,           'p' },
     { "import-secret", no_argument,       NULL,           'S' },
     { "import-public", no_argument,       NULL,           'P' },
-    { "remove-key",    no_argument,       NULL,           'r' },
+    { "remove-key",    no_argument,       NULL,           'R' },
     { "edit-key",      no_argument,       NULL,           'E' },    
 
     // crypto
@@ -75,7 +75,7 @@ int main (int argc, char **argv)  {
     { NULL,            0,                 NULL,            0 }
   };
 
-  while ((opt = getopt_long(argc, argv, "klV:vdehsO:i:I:pSPrtEx:DzZR:",
+  while ((opt = getopt_long(argc, argv, "klV:vdehsO:i:I:pSPRtEx:DzZr:",
 			    longopts, NULL)) != -1) {
 
     switch (opt)  {
@@ -105,7 +105,7 @@ int main (int argc, char **argv)  {
 	mode += PCP_MODE_IMPORT_SECRET;
 	usevault = 1;
 	break;
-      case 'r':
+      case 'R':
 	mode += PCP_MODE_DELETE_KEY;
 	usevault = 1;
 	break;
@@ -153,7 +153,7 @@ int main (int argc, char **argv)  {
 	xpass = ucmalloc(strlen(optarg)+1);
 	strncpy(xpass, optarg, strlen(optarg)+1);
 	break;
-      case 'R':
+      case 'r':
 	recipient = ucmalloc(strlen(optarg)+1);
 	strncpy(recipient, optarg, strlen(optarg)+1);
 	userec = 1;
@@ -289,17 +289,20 @@ int main (int argc, char **argv)  {
       case PCP_MODE_ENCRYPT:
 	if(useid) {
 	  id = pcp_normalize_id(keyid);
-	  if(id != NULL) {
-	    pcpencrypt(id, infile, outfile, xpass, recipient);
-	    free(id);
-	    if(xpass != NULL)
-	      free(xpass);
-	    if(recipient != NULL)
-	      free(recipient);
-	  }
+	}
+	if(useid == 0 && userec == 1) {
+	  id = pcp_find_id_byrec(recipient);
+	}
+	if(id != NULL) {
+	  pcpencrypt(id, infile, outfile, xpass, recipient);
+	  free(id);
+	  if(xpass != NULL)
+	    free(xpass);
+	  if(recipient != NULL)
+	    free(recipient);
 	}
 	else {
-	  fatal("You need to specify a key id (--keyid)!\n");
+	  fatal("You need to specify a key id (--keyid) or a recipient (--recipient)!\n");
 	}
 	break;
 

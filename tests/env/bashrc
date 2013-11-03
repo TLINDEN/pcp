@@ -1,0 +1,21 @@
+alias pcp=$PCP
+
+alias ll='ls -l'
+alias la='ls -la'
+alias l='ls -alF'
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+alias md='mkdir -p'
+alias less='less -i -P "?f%f:Standard input. %lb / %L ?e(END):>"'
+
+
+DATE () {
+    echo -e "[`date +%d.%b" "%H:%M:%S`]"
+}
+
+export PROMPT_COMMAND="PS1='\[\033]0;\u@\h:\w\007\]
+\$(DATE) --- [\w] ---
+$USER@\h: % '"
+
+cd

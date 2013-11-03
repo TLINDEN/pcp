@@ -16,7 +16,7 @@ Pretty Curved Privacy - File encryption using eliptic curve cryptography.
   -I --infile <file>        Input file. If not specified, stdin
                             will be used.
   -i --keyid <id>           Specify a key id to import/export.
-  -R --recipient <string>   Specify a recpipient, used for public
+  -r --recipient <string>   Specify a recpipient, used for public
                             key export and encryption.
   -t --text                 Print textual representation of some
                             item. Either -V or -i must be specified
@@ -34,7 +34,7 @@ Pretty Curved Privacy - File encryption using eliptic curve cryptography.
                             vault. Only the key id's and some info
                             about the keys will be printed, not the
                             actual keys.
-  -r --remove-key           Remove a key from the vault. Requires
+  -R --remove-key           Remove a key from the vault. Requires
                             option -i <keyid>.
   -s --export-secret        Export a secret key. If your vault only
                             contains one secret key, this one will

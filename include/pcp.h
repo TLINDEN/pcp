@@ -516,8 +516,8 @@ vault_item_header_t * ih2native(vault_item_header_t *h);
 
 
 #define PCP_VERSION_MAJOR 0
-#define PCP_VERSION_MINOR 0
-#define PCP_VERSION_PATCH 1
+#define PCP_VERSION_MINOR 1
+#define PCP_VERSION_PATCH 2
 
 #define PCP_MAKE_VERSION(major, minor, patch) \
     ((major) * 10000 + (minor) * 100 + (patch))

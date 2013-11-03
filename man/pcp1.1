@@ -124,7 +124,7 @@
 .\" ========================================================================
 .\"
 .IX Title "PCP1 1"
-.TH PCP1 1 "2013-11-01" "PCP 0.0.1" "USER CONTRIBUTED DOCUMENTATION"
+.TH PCP1 1 "2013-11-03" "PCP 0.1.2" "USER CONTRIBUTED DOCUMENTATION"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -144,7 +144,7 @@ Pretty Curved Privacy \- File encryption using eliptic curve cryptography.
 \&  \-I \-\-infile <file>        Input file. If not specified, stdin
 \&                            will be used.
 \&  \-i \-\-keyid <id>           Specify a key id to import/export.
-\&  \-R \-\-recipient <string>   Specify a recpipient, used for public
+\&  \-r \-\-recipient <string>   Specify a recpipient, used for public
 \&                            key export and encryption.
 \&  \-t \-\-text                 Print textual representation of some
 \&                            item. Either \-V or \-i must be specified
@@ -162,7 +162,7 @@ Pretty Curved Privacy \- File encryption using eliptic curve cryptography.
 \&                            vault. Only the key id\*(Aqs and some info
 \&                            about the keys will be printed, not the
 \&                            actual keys.
-\&  \-r \-\-remove\-key           Remove a key from the vault. Requires
+\&  \-R \-\-remove\-key           Remove a key from the vault. Requires
 \&                            option \-i <keyid>.
 \&  \-s \-\-export\-secret        Export a secret key. If your vault only
 \&                            contains one secret key, this one will

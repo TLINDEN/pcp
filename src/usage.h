@@ -11,7 +11,7 @@
 "-I --infile <file>        Input file. If not specified, stdin\n" \
 "                          will be used.\n" \
 "-i --keyid <id>           Specify a key id to import/export.\n" \
-"-R --recipient <string>   Specify a recpipient, used for public\n" \
+"-r --recipient <string>   Specify a recpipient, used for public\n" \
 "                          key export and encryption.\n" \
 "-t --text                 Print textual representation of some\n" \
 "                          item. Either -V or -i must be specified\n" \
@@ -29,7 +29,7 @@
 "                          vault. Only the key id's and some info\n" \
 "                          about the keys will be printed, not the\n" \
 "                          actual keys.\n" \
-"-r --remove-key           Remove a key from the vault. Requires\n" \
+"-R --remove-key           Remove a key from the vault. Requires\n" \
 "                          option -i <keyid>.\n" \
 "-s --export-secret        Export a secret key. If your vault only\n" \
 "                          contains one secret key, this one will\n" \

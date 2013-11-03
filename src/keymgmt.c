@@ -547,3 +547,20 @@ void pcpedit_key(char *keyid) {
 }
 
 
+char *pcp_find_id_byrec(char *recipient) {
+  pcp_pubkey_t *p;
+  char *id = NULL;
+  for(p=pcppubkey_hash; p != NULL; p=(pcp_pubkey_t*)(p->hh.next)) {
+    if(strncmp(p->owner, recipient, 255) == 0) {
+      id = ucmalloc(17);
+      strncpy(id, p->id, 17);
+      break;
+    }
+    if(strncmp(p->mail, recipient, 255) == 0) {
+      id = ucmalloc(17);
+      strncpy(id, p->id, 17);
+      break;
+    }
+  }
+  return id;
+}

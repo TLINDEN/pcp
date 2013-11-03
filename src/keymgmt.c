@@ -73,8 +73,6 @@ void pcp_keygen(char *passwd) {
       pcpkey_printshortinfo(key);
     }
   }
-
-  free(k);
   free(mail);
   free(owner);
 }

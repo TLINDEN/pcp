@@ -25,14 +25,12 @@ void pcptext_vault(vault_t *vault) {
   printf("     Checksum: ");
 
   int i;
-  unsigned char *hash = vault->checksum;
-  for ( i = 0;i <15 ;++i) printf("%02X:",(unsigned int) hash[i]);
-  printf("%02X", hash[15]);
+  for ( i = 0;i <15 ;++i) printf("%02X:",(unsigned int) vault->checksum[i]);
+  printf("%02X", vault->checksum[15]);
   printf("\n               ");
-  for ( i = 16;i <31 ;++i) printf("%02X:",(unsigned int) hash[i]);
-  printf("%02X", hash[31]);
+  for ( i = 16;i <31 ;++i) printf("%02X:",(unsigned int) vault->checksum[i]);
+  printf("%02X", vault->checksum[31]);
   printf("\n");
-  free(hash);
 
   printf("  Secret keys: %d\n", HASH_COUNT(pcpkey_hash));
   printf("  Public keys: %d\n",  HASH_COUNT(pcppubkey_hash));

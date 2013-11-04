@@ -322,6 +322,8 @@ int pcp_importsecret (vault_t *vault, FILE *in) {
 
   // all good now
   pcp_key_t *key = (pcp_key_t *)z85decoded;
+  key2native(key);
+
   if(debug)
     pcp_dumpkey(key);
 
@@ -371,6 +373,8 @@ int pcp_importpublic (vault_t *vault, FILE *in) {
 
   // all good now
   pcp_pubkey_t *pub = (pcp_pubkey_t *)z85decoded;
+  pubkey2native(pub);
+
   if(debug)
     pcp_dumppubkey(pub);
   if(pcp_sanitycheck_pub(pub) == 0) {

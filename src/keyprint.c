@@ -62,7 +62,9 @@ void pcppubkey_printlineinfo(pcp_pubkey_t *key) {
 
 void pcpkey_print(pcp_key_t *key, FILE* out) {
   size_t zlen;
+  key2be(key);
   char *z85encoded = pcp_z85_encode((unsigned char*)key, sizeof(pcp_key_t), &zlen);
+  key2native(key);
 
   struct tm *c;
   time_t t = (time_t)key->ctime;
@@ -94,7 +96,9 @@ void pcpkey_print(pcp_key_t *key, FILE* out) {
 
 void pcppubkey_print(pcp_pubkey_t *key, FILE* out) {
   size_t zlen;
+  pubkey2be(key);
   char *z85encoded = pcp_z85_encode((unsigned char*)key, sizeof(pcp_pubkey_t), &zlen);
+  pubkey2native(key);
 
   struct tm *c;
   time_t t = (time_t)key->ctime;

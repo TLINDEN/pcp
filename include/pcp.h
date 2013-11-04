@@ -27,6 +27,28 @@ extern "C" {
 
 // +++ from libpcp/crypto.h: +++
 
+/*
+    This file is part of Pretty Curved Privacy (pcp1).
+
+    Copyright (C) 2013 T.Linden.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    You can contact me by mail: <tlinden AT cpan DOT org>.
+*/
+
+
 
 
 
@@ -69,6 +91,28 @@ char *pcp_get_passphrase(char *prompt);
 
 
 // +++ from libpcp/key.h: +++
+
+/*
+    This file is part of Pretty Curved Privacy (pcp1).
+
+    Copyright (C) 2013 T.Linden.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    You can contact me by mail: <tlinden AT cpan DOT org>.
+*/
+
 
 
 #ifdef __cplusplus
@@ -194,6 +238,28 @@ pcp_key_t *pcp_derive_pcpkey (pcp_key_t *ours, char *theirs);
 
 // +++ from libpcp/mac.h: +++
 
+/*
+    This file is part of Pretty Curved Privacy (pcp1).
+
+    Copyright (C) 2013 T.Linden.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    You can contact me by mail: <tlinden AT cpan DOT org>.
+*/
+
+
 
 
 
@@ -241,6 +307,28 @@ int pcp_sodium_verify_mac(unsigned char **cleartext,
 
 // +++ from libpcp/mem.h: +++
 
+/*
+    This file is part of Pretty Curved Privacy (pcp1).
+
+    Copyright (C) 2013 T.Linden.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    You can contact me by mail: <tlinden AT cpan DOT org>.
+*/
+
+
 
 
 // simple malloc()  wrapper 
@@ -260,6 +348,28 @@ void *ucfree(void *ptr);
 
 
 // +++ from libpcp/pad.h: +++
+
+/*
+    This file is part of Pretty Curved Privacy (pcp1).
+
+    Copyright (C) 2013 T.Linden.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    You can contact me by mail: <tlinden AT cpan DOT org>.
+*/
+
 
 
 
@@ -330,6 +440,28 @@ void pcp_pad_remove(unsigned char **unpadded, unsigned char *padded,
 
 
 // +++ from libpcp/platform.h: +++
+
+/*
+    This file is part of Pretty Curved Privacy (pcp1).
+
+    Copyright (C) 2013 T.Linden.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    You can contact me by mail: <tlinden AT cpan DOT org>.
+*/
+
 
 
 #if defined(CONFIG_H_FILE)
@@ -461,6 +593,28 @@ char *key_fingerprint_randomart(unsigned char *dgst_raw, unsigned int dgst_raw_l
 
 // +++ from libpcp/vault.h: +++
 
+/*
+    This file is part of Pretty Curved Privacy (pcp1).
+
+    Copyright (C) 2013 T.Linden.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    You can contact me by mail: <tlinden AT cpan DOT org>.
+*/
+
+
 
 
 
@@ -514,6 +668,28 @@ vault_item_header_t * ih2native(vault_item_header_t *h);
 
 // +++ from libpcp/version.h: +++
 
+/*
+    This file is part of Pretty Curved Privacy (pcp1).
+
+    Copyright (C) 2013 T.Linden.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    You can contact me by mail: <tlinden AT cpan DOT org>.
+*/
+
+
 
 #define PCP_VERSION_MAJOR 0
 #define PCP_VERSION_MINOR 1
@@ -528,6 +704,28 @@ int pcp_version();
 
 
 // +++ from libpcp/z85.h: +++
+
+/*
+    This file is part of Pretty Curved Privacy (pcp1).
+
+    Copyright (C) 2013 T.Linden.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    You can contact me by mail: <tlinden AT cpan DOT org>.
+*/
+
 
 // from https://github.com/tlinden/curve-keygen/
 

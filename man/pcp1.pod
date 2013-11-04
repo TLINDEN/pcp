@@ -105,10 +105,13 @@ First, both have create a secret key:
 After entering their name, email address and a passphrase to protect
 the key, it will be stored in their B<vault file> (by default ~/.pcpvault).
 
-Now, both of them have to export the public key part of their key:
+Now, both of them have to export the public key, which has to be
+imported by the other one. With B<pcp> you can export the public
+part of your primary key, but the better solution is to export
+a derived public key especially for the recipient:
 
  Alicia                             Bobby
- pcp1 -p -O alicia.pub              pcp1 -p -O bobby.pub
+ pcp1 -p -r Bobby -O alicia.pub     pcp1 -p -r Alicia -O bobby.pub
 
 They've to exchange the public key somehow (which is not my
 problem at the moment, use ssh, encrypted mail, whatever). Once exchanged,
@@ -174,6 +177,20 @@ this writing I'm not sure if this was a good idea>).
 
 If you just want to know details about a key or the vault, use the
 B<-t> option.
+
+=head2 Derived Public Keys
+
+In the real world you would not use your primary key to encrypt
+messages, because this would require to send the public key part
+to your recipient in one way or another. The much better and more
+secure way is to use a B<Derived Public Key>:
+
+Such a key will be dynamically generated from a hash of your
+primary secret key and the recipient (an email address, name or key id).
+The public part of this dynamic key will be exported and sent to
+the recipient. A public key generated this way will only be usable
+by the recipient (and yourself) and each recipient will have a different
+public key from you (and vice versa).
 
 =head1 INTERNALS
 

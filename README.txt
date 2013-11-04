@@ -24,10 +24,13 @@ QUICKSTART
     After entering their name, email address and a passphrase to protect the
     key, it will be stored in their vault file (by default ~/.pcpvault).
 
-    Now, both of them have to export the public key part of their key:
+    Now, both of them have to export the public key, which has to be
+    imported by the other one. With pcp you can export the public part of
+    your primary key, but the better solution is to export a derived public
+    key especially for the recipient:
 
      Alicia                             Bobby
-     pcp1 -p -O alicia.pub              pcp1 -p -O bobby.pub
+     pcp1 -p -r Bobby -O alicia.pub     pcp1 -p -r Alicia -O bobby.pub
 
     They've to exchange the public key somehow (which is not my problem at
     the moment, use ssh, encrypted mail, whatever). Once exchanged, they

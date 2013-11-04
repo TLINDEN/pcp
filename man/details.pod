@@ -28,6 +28,20 @@ this writing I'm not sure if this was a good idea>).
 If you just want to know details about a key or the vault, use the
 B<-t> option.
 
+=head2 Derived Public Keys
+
+In the real world you would not use your primary key to encrypt
+messages, because this would require to send the public key part
+to your recipient in one way or another. The much better and more
+secure way is to use a B<Derived Public Key>:
+
+Such a key will be dynamically generated from a hash of your
+primary secret key and the recipient (an email address, name or key id).
+The public part of this dynamic key will be exported and sent to
+the recipient. A public key generated this way will only be usable
+by the recipient (and yourself) and each recipient will have a different
+public key from you (and vice versa).
+
 =head1 INTERNALS
 
 FIXME.

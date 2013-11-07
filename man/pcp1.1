@@ -415,7 +415,7 @@ Users have to find other means to exchange keys. That's a pity
 since with Curve25519 you can't just publish your public key
 to some key server because in order to encrypt a message, both
 the recipient \s-1AND\s0 the sender need to have the public key of
-each other. It would be possible to publich public keys,
+each other. It would be possible to publish public keys,
 and attach the senders public key to the encrypted message, but
 I'm not sure if such an aproach would be secure enough.
 .IP "\fBCurve25519 not widely adopted\fR" 4
@@ -449,8 +449,8 @@ of \fBfile\fR.
 .PP
 Encoded or decoded output will be written to \fB\s-1STDOUT\s0\fR unless an
 output file has been specified using the option \fB\-O\fR.
-.SS "\s-1EXAMPLES\s0"
-.IX Subsection "EXAMPLES"
+.SS "Z85 \s-1EXAMPLES\s0"
+.IX Subsection "Z85 EXAMPLES"
 To encode a given file to Z85 and write the output to another:
 .PP
 .Vb 1
@@ -474,8 +474,8 @@ To decode the above and print to stdout:
 .Vb 1
 \& pcp1 \-Z \-d pslist.z85
 .Ve
-.SS "\s-1BACKGROUND\s0"
-.IX Subsection "BACKGROUND"
+.SS "Z85 \s-1BACKGROUND\s0"
+.IX Subsection "Z85 BACKGROUND"
 The Z85 encoding format is described here: \fBhttp://rfc.zeromq.org/spec:32\fR.
 It's part of ZeroMQ (\fBhttp://zeromq.org\fR). Z85 is based on \s-1ASCII85\s0 with
 a couple of modifications (portability, readability etc).

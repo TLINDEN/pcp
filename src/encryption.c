@@ -103,9 +103,20 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd) {
     }
   }
   if(public == NULL) {
-    fatal("Could not find a usable public key in vault %s!\n",
+    // maybe self encryption, try secrets
+    pcp_key_t *s = NULL;
+    for(s=pcpkey_hash; s != NULL; s=(pcp_key_t*)(s->hh.next)) {
+      crypto_hash(check, (unsigned char*)s->id, 16);
+      if(memcmp(check, hash, crypto_hash_BYTES) == 0) {
+        // matching secret
+        public = pcpkey_pub_from_secret(s);
+      }
+    }
+    if(public == NULL) {
+      fatal("Could not find a usable public key in vault %s!\n",
 	  vault->filename);
-    goto errde0;
+      goto errde0;
+    }
   }
 
   if(debug) {
@@ -183,9 +194,17 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, char *recipi
   // look if we've got that key
   HASH_FIND_STR(pcppubkey_hash, id, public);
   if(public == NULL) {
-    fatal("Could not find a public key with id 0x%s in vault %s!\n",
+    // self-encryption: look if its a secret one
+    pcp_key_t *s = NULL;
+    HASH_FIND_STR(pcpkey_hash, id, s);
+    if(s != NULL) {
+      public = pcpkey_pub_from_secret(s);
+    }
+    else {
+      fatal("Could not find a public key with id 0x%s in vault %s!\n",
 	  id, vault->filename);
-    goto erren3;
+      goto erren3;
+    }
   }
 
   secret = pcp_find_primary_secret();

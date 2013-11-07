@@ -42,6 +42,118 @@ the recipient. A public key generated this way will only be usable
 by the recipient (and yourself) and each recipient will have a different
 public key from you (and vice versa).
 
+=head1 ENCRYPTION
+
+There are 3 modi for encryption available in pcp1:
+
+=over
+
+=item B<Standard public key encryption>
+
+In this mode, which is the default, a public key as specified
+with B<-i> and the primary secret key will be used for encryption.
+The public key in question maybe a derived public key, which
+is transparent for the sender however.
+
+If you don't use derived keys, you will have to transfer
+the public key part of your primary keypair to the recipient,
+which is considered insecure if the transfer channel itself
+uses untrusted transports or if the transferred public key
+ends up on a public system (a shared server, a workstation
+at your employer or the like). You should avoid this encryption
+mode in such cases and use derived keys instead.
+
+Example command:
+
+ pcp1 -e -i 0x2BD734B15CE2722D -I message.txt -O cipher.z85
+
+Here we didn't specify a recipient. Therefore the public
+key given with -i will be used directly.
+
+=item B<Derived public key encryption>
+
+Derived keys will be generated dynamically at runtime
+(see B<Derived Public Keys> above). Therefore an exported
+derived public key is unique for the sender AND recipient.
+
+This mode can be considered the most secure. If such a key
+gets lost (or into the wrong hands), only this specific
+communication channel will be compromised.
+
+Example command:
+
+ pcp1 -e -r bobby@local -I message.txt -O cipher.z85
+
+We specified a recipient. pcp1 searches the vault for a
+matching public key and generates a derived keypair for
+encryption. You need to have a public key installed from
+the recipient anyway, it won't work without one. You may
+also specify a key id (-i) as well to make sure, the right
+key will be used for derivation.
+
+=item B<Self encryption mode>
+
+Pretty Curved Privacy doesn't provide symetric file encryption.
+However there are cases when you need to encrypt a file just
+for yourself. In such a case the file will be encrypted using
+the public key part of your primary secret key and the secret
+key itself (thanks to the wonders of ECC this works like a charm).
+
+The file can be decrypted using the primary key pair.
+
+While this works, the security of it totally depends on the
+strength of your password, especially if the primary secret 
+used for this kind of encryption is stored in a vault on the
+same system.
+
+Example command:
+
+ pcp1 -e -I message.txt -O cipher.z85
+
+As you can see we didn't specify -i or -r and therefore pcp1
+tries to use the primary keypair for encryption.
+
+=back
+
+
+=head1 VULNERABILITIES
+
+Currently there are a couple of problems which are not
+addressed. These are usually protocol problems, which are
+not caused by pcp1.
+
+=over
+
+=item B<No secure native key exchange for store-and-forward systems>
+
+Pretty Curved Privacy is a store-and-forward system, it works
+on files and can't use any cool key exchange protocols therefore.
+For example there would be B<CurveCP> which guarantees a
+secure key exchange. But CurveCP cannot be used offline.
+
+Users have to find other means to exchange keys. That's a pity
+since with Curve25519 you can't just publish your public key
+to some key server because in order to encrypt a message, both
+the recipient AND the sender need to have the public key of
+each other. It would be possible to publich public keys,
+and attach the senders public key to the encrypted message, but
+I'm not sure if such an aproach would be secure enough.
+
+=item B<Curve25519 not widely adopted>
+
+At the time of this writing the ECC algorithm Curve25519
+is only rarely used, in most cases by experimental software
+(such as Pretty Curved Privacy). As far as I know there haven't
+been done the kind of exessive crypto analysis as with other
+ECC algorithms.
+
+While I, as the author of pcp1 totally trust D.J.Bernstein, this
+may not be the case for you.
+
+In short, I'd suggest not to use it on critical systems yet.
+
+=back
+
 =head1 INTERNALS
 
 FIXME.

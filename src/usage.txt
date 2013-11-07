@@ -48,10 +48,13 @@ Keymanagement Options:
 
 Encryption Options:
 -e --encrypt              Encrypt a message. Read from stdin or
-                          specified via -I. A keyid (-i) of the
-                          public key of the receipient must be
-                          specified. Output to stdout or written
-                          to the file specified via -O.
+                          specified via -I. If a keyid (-i) has been
+                          given, use that public key for encryption.
+                          If a recipient (-r) has been given, use
+                          a derived public key. If none of -i or
+                          -r has been given, use the primary
+                          secret key and the public part of it
+                          for encrytion (self-encryption mode).
 -d --decrypt              Decrypt a message. Read from stdin or
                           specified via -I. Output to stdout or
                           written to the file specified via -O.

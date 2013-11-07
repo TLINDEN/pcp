@@ -315,6 +315,11 @@ int main (int argc, char **argv)  {
 	if(useid == 0 && userec == 1) {
 	  id = pcp_find_id_byrec(recipient);
 	}
+        if(useid == 0 && userec == 0) {
+          pcp_key_t *k = pcp_find_primary_secret();
+	  id = ucmalloc(17);
+          memcpy(id, k->id, 17);
+        }
 	if(id != NULL) {
 	  pcpencrypt(id, infile, outfile, xpass, recipient);
 	  free(id);

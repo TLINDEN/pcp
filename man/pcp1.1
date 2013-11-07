@@ -183,10 +183,13 @@ Pretty Curved Privacy \- File encryption using eliptic curve cryptography.
 \&  
 \&  Encryption Options:
 \&  \-e \-\-encrypt              Encrypt a message. Read from stdin or
-\&                            specified via \-I. A keyid (\-i) of the
-\&                            public key of the receipient must be
-\&                            specified. Output to stdout or written
-\&                            to the file specified via \-O.
+\&                            specified via \-I. If a keyid (\-i) has been
+\&                            given, use that public key for encryption.
+\&                            If a recipient (\-r) has been given, use
+\&                            a derived public key. If none of \-i or
+\&                            \-r has been given, use the primary
+\&                            secret key and the public part of it
+\&                            for encrytion (self\-encryption mode).
 \&  \-d \-\-decrypt              Decrypt a message. Read from stdin or
 \&                            specified via \-I. Output to stdout or
 \&                            written to the file specified via \-O.
@@ -325,6 +328,108 @@ The public part of this dynamic key will be exported and sent to
 the recipient. A public key generated this way will only be usable
 by the recipient (and yourself) and each recipient will have a different
 public key from you (and vice versa).
+.SH "ENCRYPTION"
+.IX Header "ENCRYPTION"
+There are 3 modi for encryption available in pcp1:
+.IP "\fBStandard public key encryption\fR" 4
+.IX Item "Standard public key encryption"
+In this mode, which is the default, a public key as specified
+with \fB\-i\fR and the primary secret key will be used for encryption.
+The public key in question maybe a derived public key, which
+is transparent for the sender however.
+.Sp
+If you don't use derived keys, you will have to transfer
+the public key part of your primary keypair to the recipient,
+which is considered insecure if the transfer channel itself
+uses untrusted transports or if the transferred public key
+ends up on a public system (a shared server, a workstation
+at your employer or the like). You should avoid this encryption
+mode in such cases and use derived keys instead.
+.Sp
+Example command:
+.Sp
+.Vb 1
+\& pcp1 \-e \-i 0x2BD734B15CE2722D \-I message.txt \-O cipher.z85
+.Ve
+.Sp
+Here we didn't specify a recipient. Therefore the public
+key given with \-i will be used directly.
+.IP "\fBDerived public key encryption\fR" 4
+.IX Item "Derived public key encryption"
+Derived keys will be generated dynamically at runtime
+(see \fBDerived Public Keys\fR above). Therefore an exported
+derived public key is unique for the sender \s-1AND\s0 recipient.
+.Sp
+This mode can be considered the most secure. If such a key
+gets lost (or into the wrong hands), only this specific
+communication channel will be compromised.
+.Sp
+Example command:
+.Sp
+.Vb 1
+\& pcp1 \-e \-r bobby@local \-I message.txt \-O cipher.z85
+.Ve
+.Sp
+We specified a recipient. pcp1 searches the vault for a
+matching public key and generates a derived keypair for
+encryption. You need to have a public key installed from
+the recipient anyway, it won't work without one. You may
+also specify a key id (\-i) as well to make sure, the right
+key will be used for derivation.
+.IP "\fBSelf encryption mode\fR" 4
+.IX Item "Self encryption mode"
+Pretty Curved Privacy doesn't provide symetric file encryption.
+However there are cases when you need to encrypt a file just
+for yourself. In such a case the file will be encrypted using
+the public key part of your primary secret key and the secret
+key itself (thanks to the wonders of \s-1ECC\s0 this works like a charm).
+.Sp
+The file can be decrypted using the primary key pair.
+.Sp
+While this works, the security of it totally depends on the
+strength of your password, especially if the primary secret 
+used for this kind of encryption is stored in a vault on the
+same system.
+.Sp
+Example command:
+.Sp
+.Vb 1
+\& pcp1 \-e \-I message.txt \-O cipher.z85
+.Ve
+.Sp
+As you can see we didn't specify \-i or \-r and therefore pcp1
+tries to use the primary keypair for encryption.
+.SH "VULNERABILITIES"
+.IX Header "VULNERABILITIES"
+Currently there are a couple of problems which are not
+addressed. These are usually protocol problems, which are
+not caused by pcp1.
+.IP "\fBNo secure native key exchange for store-and-forward systems\fR" 4
+.IX Item "No secure native key exchange for store-and-forward systems"
+Pretty Curved Privacy is a store-and-forward system, it works
+on files and can't use any cool key exchange protocols therefore.
+For example there would be \fBCurveCP\fR which guarantees a
+secure key exchange. But CurveCP cannot be used offline.
+.Sp
+Users have to find other means to exchange keys. That's a pity
+since with Curve25519 you can't just publish your public key
+to some key server because in order to encrypt a message, both
+the recipient \s-1AND\s0 the sender need to have the public key of
+each other. It would be possible to publich public keys,
+and attach the senders public key to the encrypted message, but
+I'm not sure if such an aproach would be secure enough.
+.IP "\fBCurve25519 not widely adopted\fR" 4
+.IX Item "Curve25519 not widely adopted"
+At the time of this writing the \s-1ECC\s0 algorithm Curve25519
+is only rarely used, in most cases by experimental software
+(such as Pretty Curved Privacy). As far as I know there haven't
+been done the kind of exessive crypto analysis as with other
+\&\s-1ECC\s0 algorithms.
+.Sp
+While I, as the author of pcp1 totally trust D.J.Bernstein, this
+may not be the case for you.
+.Sp
+In short, I'd suggest not to use it on critical systems yet.
 .SH "INTERNALS"
 .IX Header "INTERNALS"
 \&\s-1FIXME\s0.

@@ -50,10 +50,13 @@
 "\n" \
 "Encryption Options:\n" \
 "-e --encrypt              Encrypt a message. Read from stdin or\n" \
-"                          specified via -I. A keyid (-i) of the\n" \
-"                          public key of the receipient must be\n" \
-"                          specified. Output to stdout or written\n" \
-"                          to the file specified via -O.\n" \
+"                          specified via -I. If a keyid (-i) has been\n" \
+"                          given, use that public key for encryption.\n" \
+"                          If a recipient (-r) has been given, use\n" \
+"                          a derived public key. If none of -i or\n" \
+"                          -r has been given, use the primary\n" \
+"                          secret key and the public part of it\n" \
+"                          for encrytion (self-encryption mode).\n" \
 "-d --decrypt              Decrypt a message. Read from stdin or\n" \
 "                          specified via -I. Output to stdout or\n" \
 "                          written to the file specified via -O.\n" \

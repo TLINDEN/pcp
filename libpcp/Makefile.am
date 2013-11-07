@@ -18,7 +18,7 @@
 #
 #    You can contact me by mail: <tlinden AT cpan DOT org>.
 #
-AM_CFLAGS = -I../libpcp -Wall -g
+AM_CFLAGS = -I../include/pcp -Wall -g
 
 lib_LTLIBRARIES      = libpcp1.la
 

@@ -19,7 +19,7 @@
 #    You can contact me by mail: <tlinden AT cpan DOT org>.
 #
 
-SUBDIRS = libpcp src man tests
+SUBDIRS = include libpcp src man tests
 ACLOCAL_AMFLAGS = -I config
 
 test:

@@ -20,11 +20,8 @@ set +x
 (echo "#ifndef _HAVE_PCP"; echo "#define _HAVE_PCP"; echo) > include/pcp.h
 (echo "#ifdef __cplusplus"; echo "extern \"C\" {"; echo "#endif"; echo) >> include/pcp.h
 
-egrep -h "^#include" libpcp/*.h | grep -v '"' | sort -u >> include/pcp.h
-
-egrep -l _PCP libpcp/*.h | while read include; do
-  (echo; echo "// +++ from $include: +++"; echo) >> include/pcp.h
-  grep -h -v _HAVE $include | egrep -v "^#include" >> include/pcp.h
+ls include/pcp/*.h | sed 's#include/##' | while read include; do
+  echo "#include \"$include\"" >> include/pcp.h
 done
 
 (echo "#ifdef __cplusplus"; echo "}"; echo "#endif"; echo) >> include/pcp.h
@@ -32,9 +29,9 @@ done
 
 
 # generate the version file
-maj=`egrep "#define PCP_VERSION_MAJOR" libpcp/version.h | awk '{print $3}'`
-min=`egrep "#define PCP_VERSION_MINOR" libpcp/version.h | awk '{print $3}'`
-pat=`egrep "#define PCP_VERSION_PATCH" libpcp/version.h | awk '{print $3}'`
+maj=`egrep "#define PCP_VERSION_MAJOR" include/pcp/version.h | awk '{print $3}'`
+min=`egrep "#define PCP_VERSION_MINOR" include/pcp/version.h | awk '{print $3}'`
+pat=`egrep "#define PCP_VERSION_PATCH" include/pcp/version.h | awk '{print $3}'`
 echo "$maj.$min.$pat" > VERSION
 
 # generate the manpage

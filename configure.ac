@@ -232,5 +232,5 @@ if test -n "$bigendian"; then
 fi
 
 # Specify output files
-AC_CONFIG_FILES([Makefile libpcp/Makefile src/Makefile man/Makefile tests/Makefile])
+AC_CONFIG_FILES([Makefile include/Makefile libpcp/Makefile src/Makefile man/Makefile tests/Makefile])
 AC_OUTPUT

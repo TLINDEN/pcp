@@ -19,9 +19,8 @@
 #    You can contact me by mail: <tlinden AT cpan DOT org>.
 #
 
-EXTRA_DIST = z85util.c 
 
-AM_CFLAGS = -I../libpcp -Wall -g
+AM_CFLAGS = -I../include/pcp -Wall -g
 
 bin_PROGRAMS = pcp1
 

@@ -32,7 +32,7 @@ unsigned char *pcp_derivekey(char *passphrase) {
   int i;
 
   // make a hash from the passphrase and then HCYCLES times from the result
-  crypto_hash_sha256(temp, passphrase, plen);
+  crypto_hash_sha256(temp, (unsigned char*)passphrase, plen);
 
   for(i=0; i<HCYCLES; ++i) {
     if(crypto_hash_sha256(hash32, temp, crypto_hash_sha256_BYTES) == 0) {

@@ -44,6 +44,7 @@
 #include "keymgmt.h"
 #include "usage.h"
 #include "encryption.h"
+#include "signature.h"
 
 // operation modi
 // perl -e '$x=0; while ($x<100000) { $x++; $x *= 1.7; printf "0x%08X: %d\n", $x, $x }'
@@ -60,10 +61,9 @@
 #define PCP_MODE_DECRYPT       0x0000033D
 #define PCP_MODE_ZENCODE       0x00000584
 #define PCP_MODE_ZDECODE       0x00000962
-
+#define PCP_MODE_SIGN          0x00000FF6
+#define PCP_MODE_VERIFY        0x00001B25
 /*
-0x00000962
-0x00000FF6
 0x00001B25
 0x00002E27
 0x00004E77

@@ -8,6 +8,7 @@ extern "C" {
 #include "pcp/crypto.h"
 #include "pcp/defines.h"
 #include "pcp/digital_crc32.h"
+#include "pcp/ed.h"
 #include "pcp/getpass.h"
 #include "pcp/jenhash.h"
 #include "pcp/key.h"

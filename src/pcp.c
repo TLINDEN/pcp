@@ -44,10 +44,11 @@ char *default_vault() {
 }
 
 int main (int argc, char **argv)  {
-  int opt, mode, usevault, useid, userec;
+  int opt, mode, usevault, useid, userec, lo;
   char *vaultfile = default_vault();
   char *outfile = NULL;
   char *infile = NULL;
+  char *sigfile = NULL;
   char *keyid = NULL;
   char *id = NULL;
   char *xpass = NULL;
@@ -64,43 +65,54 @@ int main (int argc, char **argv)  {
 
   static struct option longopts[] = {
     // generics
-    { "vault",         required_argument, NULL,           'V' },
-    { "outfile",       required_argument, NULL,           'O' },
-    { "infile",        required_argument, NULL,           'I' },
-    { "keyid",         required_argument, NULL,           'i' },
-    { "text",          required_argument, NULL,           't' },
-    { "xpass",         required_argument, NULL,           'x' },
-    { "recipient",     required_argument, NULL,           'r' },
+    { "vault",           required_argument, NULL,           'V' },
+    { "outfile",         required_argument, NULL,           'O' },
+    { "infile",          required_argument, NULL,           'I' },
+    { "keyid",           required_argument, NULL,           'i' },
+    { "text",            required_argument, NULL,           't' },
+    { "xpass",           required_argument, NULL,           'x' },
+    { "recipient",       required_argument, NULL,           'r' },
 
     // key management
-    { "keygen",        no_argument,       NULL,           'k' },
-    { "listkeys",      no_argument,       NULL,           'l' },
-    { "export-secret", no_argument,       NULL,           's' },
-    { "export-public", no_argument,       NULL,           'p' },
-    { "import-secret", no_argument,       NULL,           'S' },
-    { "import-public", no_argument,       NULL,           'P' },
-    { "remove-key",    no_argument,       NULL,           'R' },
-    { "edit-key",      no_argument,       NULL,           'E' },    
+    { "keygen",          no_argument,       NULL,           'k' },
+    { "listkeys",        no_argument,       NULL,           'l' },
+    { "export-secret",   no_argument,       NULL,           's' },
+    { "export-public",   no_argument,       NULL,           'p' },
+    { "import-secret",   no_argument,       NULL,           'S' },
+    { "import-public",   no_argument,       NULL,           'P' },
+    { "remove-key",      no_argument,       NULL,           'R' },
+    { "edit-key",        no_argument,       NULL,           'E' },    
 
     // crypto
-    {  "encrypt",      no_argument,       NULL,           'e' },
-    {  "decrypt",      no_argument,       NULL,           'd' },
+    {  "encrypt",        no_argument,       NULL,           'e' },
+    {  "decrypt",        no_argument,       NULL,           'd' },
 
     // encoding
-    {  "z85-encode",   no_argument,       NULL,           'z' },
-    {  "z85-decode",   no_argument,       NULL,           'Z' },
+    {  "z85-encode",     no_argument,       NULL,           'z' },
+    {  "z85-decode",     no_argument,       NULL,           'Z' },
 
     // globals
-    { "help",          no_argument,       NULL,           'h' },
-    { "version",       no_argument,       NULL,           'f' },
-    { "debug",         no_argument,       NULL,           'D' },
-    { NULL,            0,                 NULL,            0 }
+    { "help",            no_argument,       NULL,           'h' },
+    { "version",         no_argument,       NULL,           'f' },
+    { "debug",           no_argument,       NULL,           'D' },
+
+    // signing
+    { "sign",            no_argument,       NULL,           'g' }, 
+    { "check-signature", required_argument, NULL,           'c' }, 
+    { NULL,              0,                 NULL,            0 }
   };
 
-  while ((opt = getopt_long(argc, argv, "klV:vdehsO:i:I:pSPRtEx:DzZr:",
+  while ((opt = getopt_long(argc, argv, "klV:vdehsO:i:I:pSPRtEx:DzZr:gc:",
 			    longopts, NULL)) != -1) {
-
+  
     switch (opt)  {
+      case 0:
+	switch(lo) {
+	case 's':
+	  printf("sign\n");
+	  break;
+	}
+	break;
 
       case 'k':
         mode += PCP_MODE_KEYGEN;
@@ -153,7 +165,16 @@ int main (int argc, char **argv)  {
       case 'Z':
 	mode += PCP_MODE_ZDECODE;
 	break;
-
+      case 'g':
+	mode += PCP_MODE_SIGN;
+	usevault = 1;
+	break;
+      case 'c':
+	mode += PCP_MODE_VERIFY;
+	sigfile = ucmalloc(strlen(optarg)+1);
+	strncpy(sigfile, optarg, strlen(optarg)+1);
+	usevault = 1;
+	break;
 
       case 'V':
 	strncpy(vaultfile, optarg, 1024);
@@ -347,6 +368,16 @@ int main (int argc, char **argv)  {
 	if(xpass != NULL)
 	  free(xpass);
 	break;	
+
+      case PCP_MODE_SIGN:
+	pcpsign(infile, outfile, xpass);
+	break;
+
+      case PCP_MODE_VERIFY:
+	pcpverify(infile, sigfile);
+	break;
+
+	
 
       default:
  	// 

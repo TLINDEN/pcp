@@ -90,7 +90,8 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_pcp1_OBJECTS = pcp.$(OBJEXT) keymgmt.$(OBJEXT) keyprint.$(OBJEXT) \
-	readpass.$(OBJEXT) encryption.$(OBJEXT) z85util.$(OBJEXT)
+	readpass.$(OBJEXT) encryption.$(OBJEXT) z85util.$(OBJEXT) \
+	signature.$(OBJEXT)
 pcp1_OBJECTS = $(am_pcp1_OBJECTS)
 pcp1_DEPENDENCIES = ../libpcp/.libs/libpcp1.a
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/libpcp
@@ -231,7 +232,9 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CFLAGS = -I../include/pcp -Wall -g
 pcp1_LDADD = ../libpcp/.libs/libpcp1.a
-pcp1_SOURCES = pcp.c keymgmt.c keyprint.c readpass.c encryption.c z85util.c
+pcp1_SOURCES = pcp.c keymgmt.c keyprint.c readpass.c \
+               encryption.c z85util.c signature.c
+
 all: all-am
 
 .SUFFIXES:
@@ -327,6 +330,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/keyprint.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/readpass.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/signature.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/z85util.Po@am__quote@
 
 .c.o:

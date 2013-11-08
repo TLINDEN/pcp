@@ -40,6 +40,9 @@ typedef unsigned int    qbyte;          //  Quad byte = 32 bits
 #define PCP_ZFILE_HEADER "----- BEGIN Z85 ENCODED FILE -----"
 #define PCP_ZFILE_FOOTER "------ END Z85 ENCODED FILE ------"
 
+#define PCP_SIG_HEADER "----- BEGIN PCP SIGNATURE FILE -----"
+#define PCP_SIG_FOOTER "------ END PCP SIGNATURE FILE ------"
+
 #define PCP_ME "Pretty Curved Privacy"
 
 #define PCP_KEY_VERSION 0x00000001U
@@ -58,6 +61,9 @@ typedef unsigned int    qbyte;          //  Quad byte = 32 bits
 // vault id
 #define PCP_VAULT_ID 0xC4
 #define PCP_VAULT_VERSION 0x01
+
+// sigs
+#define PCP_SIG_VERSION 0x01
 
 char *PCP_ERR;
 byte PCP_ERRSET;

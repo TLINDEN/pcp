@@ -443,9 +443,141 @@ may not be the case for you.
 In short, I'd suggest not to use it on critical systems yet.
 .SH "INTERNALS"
 .IX Header "INTERNALS"
-\&\s-1FIXME\s0.
-.SH "Z85 ENCODING"
-.IX Header "Z85 ENCODING"
+.SS "\s-1VAULT\s0 \s-1FORMAT\s0"
+.IX Subsection "VAULT FORMAT"
+The vault file contains all public and secret keys. It's a portable
+binary file.
+.PP
+The file starts with a header:
+.PP
+.Vb 9
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+\& | Field        Size   Description           |
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+\& | File ID    |    1 | Vault Identifier 0xC4 |
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+\& | Version    |    4 | Big endian, version   |
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+\& | Checksum   |   32 | SHA256 Checksum       |
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+.Ve
+.PP
+The checksum is a checksum of all keys.
+.PP
+The header is followed by the keys. Each key is preceded by a
+key header which looks like this:
+.PP
+.Vb 11
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+\& | Field        Size   Description            |
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+\& | Type       |    1 | Key type (S,P,M)       |
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+\& | Size       |    4 | Big endian, keysize    |
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+\& | Version    |    4 | Big endian, keyversion |
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+\& | Checksum   |   32 | SHA256 Key Checksum    |
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+.Ve
+.PP
+Type can be one of:
+.PP
+.Vb 3
+\& PCP_KEY_TYPE_MAINSECRET 0x01
+\& PCP_KEY_TYPE_SECRET     0x02
+\& PCP_KEY_TYPE_PUBLIC     0x03
+.Ve
+.PP
+The key header is followed by the actual key, see below.
+.SS "\s-1SECRET\s0 \s-1KEY\s0 \s-1FORMAT\s0"
+.IX Subsection "SECRET KEY FORMAT"
+A secret key is a binary structure with the following format:
+.PP
+.Vb 10
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+\& | Field         Size      Description                     |
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-+\-\-\-\-\-\-\-\-+\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+\& | Public      |     32 | Curve25519 Public Key Part       |
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+\& | Secret      |     32 | Curve25519 Secret Key Unencrypted|
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+\& | ED25519 Pub |     32 | ED25519 Public Key Part          |
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+\& | Nonce       |     24 | Nonce for secret key encryption  |
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+\& | Encrypted   |     48 | Encrypted Curve25519 Secret Key  |
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+\& | Owner       |    255 | String, Name of Owner            |
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+\& | Mail        |    255 | String, Email Address            |
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+\& | ID          |     17 | String, Key ID                   |
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+\& | Ctime       |      4 | Creation time, sec since epoch   |
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+\& | Version     |      4 | Key version                      |
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+\& | Serial      |      4 | Serial Number                    |
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+\& | Type        |      1 | Key Type                         |
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-+\-\-\-\-\-\-\-\-+\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+.Ve
+.PP
+Some notes:
+.PP
+The secret key field will be filled with random data if the
+key is encrypted. The first byte of it will be set to 0 in that
+case.
+.PP
+The key id is a computed \s-1JEN\s0 Hash of the secret and public
+key concatenated, put into hex, as a string.
+.PP
+The key version is a static value, currently 0x2. If the key
+format changes in the future, this version number will be
+increased to distinguish old from new keys.
+.PP
+Exported keys will be encoded in Z85 encoding. When such an
+exported key is imported, only the actual Z85 encoded data
+will be used. Header lines and lines starting with whitespace
+will be ignored. They are only there for convenience.
+.SS "\s-1ENCRYPTED\s0 \s-1OUTPUT\s0 \s-1FORMAT\s0"
+.IX Subsection "ENCRYPTED OUTPUT FORMAT"
+Encrypted output will always be Z85 encoded and has the following
+format:
+.PP
+.Vb 7
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+\& | Field         Size      Description                     |
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-+\-\-\-\-\-\-\-\-+\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+\& | Hash        |     32 | Hash of the sender key id        |
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+\& | Encrypted   |      ~ | The actual encrypted data        |
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+.Ve
+.SS "\s-1SIGNATURE\s0 \s-1FORMAT\s0"
+.IX Subsection "SIGNATURE FORMAT"
+Signatures will always be Z85 encoded and have the following
+format:
+.PP
+.Vb 11
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+\& | Field         Size      Description                     |
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-+\-\-\-\-\-\-\-\-+\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+\& | Key ID      |     17 | Signers key id
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+\& | Ctime       |      4 | Creation time, sec since epoch   |
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+\& | Version     |      4 | Signature version                |
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+\& | Signature   |     96 | ED25519 signature of SHA256 Hash |
+\& +\-\-\-\-\-\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-|\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-+
+.Ve
+.PP
+The actual signature is not a signature over the whole content
+of an input file but of a \s-1SHA256\s0 hash of the content.
+.SS "Z85 \s-1ENCODING\s0"
+.IX Subsection "Z85 ENCODING"
 \&\fBpcp1\fR uses Z85 to encode exported keys and encrypted messages.
 Therefore it includes a Z85 utility mode:
 .PP
@@ -460,8 +592,10 @@ of \fBfile\fR.
 .PP
 Encoded or decoded output will be written to \fB\s-1STDOUT\s0\fR unless an
 output file has been specified using the option \fB\-O\fR.
-.SS "Z85 \s-1EXAMPLES\s0"
+.PP
+\fIZ85 \s-1EXAMPLES\s0\fR
 .IX Subsection "Z85 EXAMPLES"
+.PP
 To encode a given file to Z85 and write the output to another:
 .PP
 .Vb 1
@@ -485,8 +619,10 @@ To decode the above and print to stdout:
 .Vb 1
 \& pcp1 \-Z \-d pslist.z85
 .Ve
-.SS "Z85 \s-1BACKGROUND\s0"
+.PP
+\fIZ85 \s-1BACKGROUND\s0\fR
 .IX Subsection "Z85 BACKGROUND"
+.PP
 The Z85 encoding format is described here: \fBhttp://rfc.zeromq.org/spec:32\fR.
 It's part of ZeroMQ (\fBhttp://zeromq.org\fR). Z85 is based on \s-1ASCII85\s0 with
 a couple of modifications (portability, readability etc).

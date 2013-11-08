@@ -1,3 +1,28 @@
+0.1.3   Added signature support using ED25519.
+
+	Key format has changed it now contains the ed25519
+	public key part as well, required for signing. Key
+	version is now 0x2 and vault version 0x2. There's
+	no backwards compatibility, since this is still beta.
+
+	Re-organized header files.
+
+	Added support for self encryption using the users
+	own key pair for encryption and decryption.
+
+	Backport of issue https://github.com/zeromq/zeromq4-x/issues/29
+
+	Fixed key export, now uses big endianess as well.
+
+	Updated POD documentation.
+
+	Fixed a couple of minor bugs which lead to crashes.
+
+	Options -r and -R exchanged: -R = remove key, -r =
+	recipient.
+
+	Added support for derived keys (using -r).
+
 0.1.2   Fixed bug in pcp_derivekey() which derives encryption
 	keys. it generated collisions due coding error, e.g.
 	passphase 'a' resulted in the same encryptionkey as

@@ -26,14 +26,16 @@
 void pcptext_key(char *keyid) {
   pcp_key_t *s = pcpkey_exists(keyid);
   if(s != NULL) {
+    if(debug)
+      pcp_dumpkey(s);
     pcpkey_print(s, stdout);
-    free(s);
   }
   else {
     pcp_pubkey_t *p = pcppubkey_exists(keyid);
     if(p != NULL) {
+      if(debug)
+	pcp_dumppubkey(p);
       pcppubkey_print(p, stdout);
-      free(p);
     }
     else {
       fatal("No key with id 0x%s found!\n", keyid);
@@ -191,6 +193,10 @@ void pcp_dumpkey(pcp_key_t *k) {
   for ( i = 0;i < 32;++i) printf("%02x",(unsigned int) k->secret[i]);
   printf("\n");
 
+  printf("    edpub: ");
+  for ( i = 0;i < 32;++i) printf("%02x",(unsigned int) k->edpub[i]);
+  printf("\n");
+
   printf("    nonce: ");
   for ( i = 0;i < 24;++i) printf("%02x",(unsigned int) k->nonce[i]);
   printf("\n");
@@ -220,6 +226,10 @@ void pcp_dumppubkey(pcp_pubkey_t *k) {
   printf("Dumping pcp_pubkey_t raw values:\n");
   printf("   public: ");
   for ( i = 0;i < 32;++i) printf("%02x",(unsigned int) k->public[i]);
+  printf("\n");
+
+  printf("    edpub: ");
+  for ( i = 0;i < 32;++i) printf("%02x",(unsigned int) k->edpub[i]);
   printf("\n");
 
   printf("    owner: %s\n", k->owner);

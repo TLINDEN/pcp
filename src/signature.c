@@ -23,7 +23,7 @@
 #include "signature.h"
 #include "defines.h"
 
-int pcpsign(char *infile, char *outfile, char *passwd) {
+int pcpsign(char *infile, char *outfile, char *recipient, char *passwd) {
   FILE *in = NULL;
   FILE *out = NULL;
   pcp_key_t *secret = NULL;
@@ -32,6 +32,10 @@ int pcpsign(char *infile, char *outfile, char *passwd) {
   if(secret == NULL) {
     fatal("Could not find a secret key in vault %s!\n", vault->filename);
     goto errs1;
+  }
+  
+  if(recipient != NULL) {
+    secret = pcp_derive_pcpkey(secret, recipient);
   }
 
   if(infile == NULL)
@@ -205,7 +209,6 @@ int pcpverify(char *infile, char *sigfile) {
 
   free(decoded);
   free(encoded);
-  free(sig);
   free(input);
   return 0;
 
@@ -214,7 +217,6 @@ int pcpverify(char *infile, char *sigfile) {
 
  errv3:
   free(decoded);
-  free(sig);
 
  errv2:
   //  free(encoded); why???

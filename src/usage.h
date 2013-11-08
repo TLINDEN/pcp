@@ -66,6 +66,17 @@
 "                          one will be used. Otherwise you'll have\n" \
 "                          to specify the keyid (-i) of the key.\n" \
 "\n" \
+"Signature Options:\n" \
+"-g --sign                 Create a signature of file specified with\n" \
+"                          -I (or from stdin) using your primary\n" \
+"                          secret key. If -r has been given, a derived\n" \
+"                          secret key will be used for signing.\n" \
+"\n" \
+"-c --check-signature <file> Verify a signature in file <file> against\n" \
+"                          the file specified with -I (or stdin).\n" \
+"                          The public key required for this must\n" \
+"                          exist in your vault file.\n" \
+"\n" \
 "Encoding Options:\n" \
 "-z --z85-encode           Encode something to Z85 encoding. Use\n" \
 "                          -I and -O respectively, otherwise it\n" \

@@ -37,6 +37,7 @@ if (! $config) {
 
 my %cfg = ParseConfig(-ConfigFile => $config,
 		      -InterPolateVars => 1,
+		      -UseApacheInclude => 1,
 		      -Tie => "Tie::IxHash" );
 my $verbose = $cfg{verbose};
 

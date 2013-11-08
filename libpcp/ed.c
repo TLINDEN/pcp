@@ -27,7 +27,7 @@ int pcp_ed_verify(unsigned char *input, size_t inputlen, pcp_sig_t *sig, pcp_pub
   unsigned char *check = ucmalloc(crypto_hash_sha256_BYTES); // from file
   size_t mlen = 0;
 
-  if(crypto_sign_open(hash, &mlen, sig->edsig, crypto_hash_sha256_BYTES + crypto_sign_BYTES, p->public) != 0) {
+  if(crypto_sign_open(hash, &mlen, sig->edsig, crypto_hash_sha256_BYTES + crypto_sign_BYTES, p->edpub) != 0) {
     fatal("Failed to open the signature using the public key 0x%s!\n", p->id);
     goto errve1;
   }
@@ -50,13 +50,18 @@ int pcp_ed_verify(unsigned char *input, size_t inputlen, pcp_sig_t *sig, pcp_pub
 }
 
 pcp_sig_t *pcp_ed_sign(unsigned char *message, size_t messagesize, pcp_key_t *s) {
+  byte edpub[32] = { 0 };
+  byte edsec[64] = { 0 };
+
+  crypto_sign_seed_keypair(edpub, edsec, s->secret);
+
   unsigned char *hash = ucmalloc(crypto_hash_sha256_BYTES);
   size_t slen = crypto_hash_sha256_BYTES + crypto_sign_BYTES;
   unsigned char *signature = ucmalloc(slen);
 
   crypto_hash_sha256(hash, message, messagesize);
 
-  crypto_sign(signature, &slen, hash, crypto_hash_sha256_BYTES, s->secret);
+  crypto_sign(signature, &slen, hash, crypto_hash_sha256_BYTES, edsec);
 
   pcp_sig_t *sig = pcp_ed_newsig(signature, s->id);
 

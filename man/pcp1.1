@@ -124,7 +124,7 @@
 .\" ========================================================================
 .\"
 .IX Title "PCP1 1"
-.TH PCP1 1 "2013-11-08" "PCP 0.1.2" "USER CONTRIBUTED DOCUMENTATION"
+.TH PCP1 1 "2013-11-08" "PCP 0.1.3" "USER CONTRIBUTED DOCUMENTATION"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -198,6 +198,17 @@ Pretty Curved Privacy \- File encryption using eliptic curve cryptography.
 \&                            just one secret key in the vault, this
 \&                            one will be used. Otherwise you\*(Aqll have
 \&                            to specify the keyid (\-i) of the key.
+\&  
+\&  Signature Options:
+\&  \-g \-\-sign                 Create a signature of file specified with
+\&                            \-I (or from stdin) using your primary
+\&                            secret key. If \-r has been given, a derived
+\&                            secret key will be used for signing.
+\&  
+\&  \-c \-\-check\-signature <file> Verify a signature in file <file> against
+\&                            the file specified with \-I (or stdin).
+\&                            The public key required for this must
+\&                            exist in your vault file.
 \&  
 \&  Encoding Options:
 \&  \-z \-\-z85\-encode           Encode something to Z85 encoding. Use

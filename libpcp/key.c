@@ -69,6 +69,9 @@ char *pcp_getkeyid(pcp_key_t *k) {
 pcp_key_t * pcpkey_new () {
   byte public[32] = { 0 };
   byte secret[32] = { 0 };
+  byte edpub[32] = { 0 };
+  byte edsec[64] = { 0 };
+
 
   // generate curve 25519 keypair
   if(crypto_box_keypair (public, secret) != 0) {
@@ -76,11 +79,15 @@ pcp_key_t * pcpkey_new () {
     return NULL;
   }
 
+  // generate ed25519 keypair from box secret
+  crypto_sign_seed_keypair(edpub, edsec, secret);
+
   // fill in our struct
   pcp_key_t *key = urmalloc(sizeof(pcp_key_t));
   memcpy (key->public, public, 32);
   memcpy (key->secret, secret, 32);
   memcpy (key->id, pcp_getkeyid(key), 17);
+  memcpy (key->edpub, edpub, 32);
   
   key->ctime = (long)time(0);
 
@@ -154,6 +161,7 @@ pcp_pubkey_t *pcpkey_pub_from_secret(pcp_key_t *key) {
   //pcp_dumpkey(key);
   pcp_pubkey_t *pub = urmalloc(sizeof (pcp_pubkey_t));
   memcpy(pub->public, key->public, 32);
+  memcpy(pub->edpub, key->edpub, 32);
   memcpy(pub->owner, key->owner, 255);
   memcpy(pub->mail, key->mail, 255);
   memcpy(pub->id, key->id, 17);
@@ -254,6 +262,8 @@ pcp_pubkey_t *pubkey2native(pcp_pubkey_t *k) {
 }
 
 pcp_key_t *pcp_derive_pcpkey (pcp_key_t *ours, char *theirs) {
+  byte edpub[32] = { 0 };
+  byte edsec[64] = { 0 };
   size_t thlen = strnlen(theirs, 255);
   size_t inlen = 32 + thlen;
   unsigned char *both = ucmalloc(inlen);
@@ -288,9 +298,13 @@ pcp_key_t *pcp_derive_pcpkey (pcp_key_t *ours, char *theirs) {
   // calculate pub from secret
   crypto_scalarmult_curve25519_base(tmp->public, tmp->secret); 
 
+  // generate ed25519 keypair from box secret
+  crypto_sign_seed_keypair(edpub, edsec, tmp->secret);
+
   memcpy(tmp->owner, ours->owner, 255);
   memcpy(tmp->mail, ours->mail, 255);
   memcpy(tmp->id, pcp_getkeyid(tmp), 17);
+  memcpy(tmp->edpub, edpub, 32);
 
   memset(both, 0, inlen);
   memset(xor, 0, crypto_secretbox_KEYBYTES);

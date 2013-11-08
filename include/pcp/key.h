@@ -79,6 +79,7 @@ extern "C" {
 struct _pcp_key_t {
   byte public[32];
   byte secret[32];
+  byte edpub[32];
   byte nonce[24];
   byte encrypted[48];
   char owner[255];
@@ -93,6 +94,7 @@ struct _pcp_key_t {
 
 struct _pcp_pubkey_t {
   byte public[32];
+  byte edpub[32];
   char owner[255];
   char mail[255];
   char id[17];

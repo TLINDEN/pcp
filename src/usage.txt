@@ -64,6 +64,17 @@ Encryption Options:
                           one will be used. Otherwise you'll have
                           to specify the keyid (-i) of the key.
 
+Signature Options:
+-g --sign                 Create a signature of file specified with
+                          -I (or from stdin) using your primary
+                          secret key. If -r has been given, a derived
+                          secret key will be used for signing.
+
+-c --check-signature <file> Verify a signature in file <file> against
+                          the file specified with -I (or stdin).
+                          The public key required for this must
+                          exist in your vault file.
+
 Encoding Options:
 -z --z85-encode           Encode something to Z85 encoding. Use
                           -I and -O respectively, otherwise it

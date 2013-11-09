@@ -29,6 +29,9 @@ use Data::Dumper;
 
 sub run;
 sub execute;
+sub final;
+
+my $output;
 
 my ($config, $check) = @ARGV;
 if (! $config) {
@@ -103,18 +106,17 @@ sub runtest {
 		$cfg->{input},
 		\$out, \$error, 5, 0, undef);
 
-  my $output = $out . $error;
+  $output = $out . $error;
   
-
   $output =~ s/^\s*//;
   $output =~ s/\s*$//;
 
   if (exists $cfg->{expect}) {
     if ($cfg->{expect} =~ /^\//) {
-      like($output, $cfg->{expect}, "$name") or return 0;
+      like($output, $cfg->{expect}, "$name") or return final 0;
     }
     else {
-      is($output, $cfg->{expect}, "$name") or return 0;
+      is($output, $cfg->{expect}, "$name") or return final 0;
     }
   }
 
@@ -123,7 +125,7 @@ sub runtest {
     if (-s $cfg->{"expect-file"}) {
       $e = 1;
     }
-    is($e, 1, "$name") or return 0;
+    is($e, 1, "$name") or return final 0;
   }
 
   elsif (exists $cfg->{"expect-file-contains"}) {
@@ -132,32 +134,51 @@ sub runtest {
     if (-s $file) {
       $e = 1;
     }
-    is($e, 1, "$name") or return 0;
+    is($e, 1, "$name") or return final 0;
     if (open F, "<$file") {
       my $content = join '', <F>;
       close F;
-      like($content, qr/$expect/s, "$name") or return 0;
+      like($content, qr/$expect/s, "$name") or return final 0;
     }
     else {
       fail($test);
-      return 0;
+      return final 0;
     }
   }
 
   elsif (exists $cfg->{exit}) {
-    is($ret, $cfg->{exit}, "$name") or return 0;
+    is($ret, $cfg->{exit}, "$name") or return final 0;
   }
 
   else {
     diag("invalid test spec for $test");
     fail($test);
-    return 0;
+    return final 0;
   }
 
-  return 1;
+  
+
+  return final 1;
 }
 
 done_testing;
+
+
+sub final {
+  my $ret = shift;
+  if ($output =~ /(segmentation fault|bus error)/i || -s "pcp1.core") {
+    # override $ret
+    $ret = 0;
+    diag("Abnormal program termination");
+    # if there is a coredump, extract a backtrace
+    if (-s "pcp1.core") {
+      # print a backtrace
+      system("gdb -x .gdb -batch $cfg{pcp} pcp1.core");
+      unlink "pcp1.core";
+    }
+  }
+  return $ret;
+}
 
 sub run {
   # open3 wrapper. catch stderr, stdout, errno; add timeout and kill

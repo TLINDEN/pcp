@@ -47,7 +47,9 @@
 "                          from a file.\n" \
 "-P --import-public        Import a public key. Use -I to import\n" \
 "                          from a file.\n" \
-"\n" \
+"-y --export-yaml          Export all keys stored in your vault\n" \
+"                          as YAML formatted text. Use -O to put\n" \
+"                          the export into a file.\n" \
 "Encryption Options:\n" \
 "-e --encrypt              Encrypt a message. Read from stdin or\n" \
 "                          specified via -I. If a keyid (-i) has been\n" \

@@ -283,3 +283,72 @@ void pcppubkey_printshortinfo(pcp_pubkey_t *key) {
   printf("\n");
   free(r);
 }
+
+void pcpexport_yaml(char *outfile) {
+  FILE *out;
+
+  if(outfile == NULL) {
+    out = stdout;
+  }
+  else {
+    if((out = fopen(outfile, "wb+")) == NULL) {
+      fatal("Could not create output file %s", outfile);
+      out = NULL;
+    }
+  }
+
+  if(out != NULL) {
+    pcp_key_t *s;
+    pcp_pubkey_t *p;
+
+    struct tm *c;
+    time_t t = time(0);
+    c = localtime(&t);
+
+    fprintf(out, "#\n# YAML export of vault %s.\n", vault->filename);
+    fprintf(out, "# Generated on: %04d-%02d-%02dT%02d:%02d:%02d\n",
+	    c->tm_year+1900, c->tm_mon+1, c->tm_mday,
+	    c->tm_hour, c->tm_min, c->tm_sec);
+    fprintf(out, "---\n");
+    fprintf(out, "secret-keys:\n");
+
+    for(s=pcpkey_hash; s != NULL; s=(pcp_key_t*)(s->hh.next)) {
+      fprintf(out, "-\n");
+      fprintf(out, "         id: %s\n", s->id);
+      fprintf(out, "      owner: %s\n", s->owner);
+      fprintf(out, "       mail: %s\n", s->mail);
+      fprintf(out, "      ctime: %ld\n", s->ctime);
+      fprintf(out, "    version: %08x\n", s->version);
+      fprintf(out, "     serial: %08x\n", s->serial);
+      fprintf(out, "       type: %s\n",
+	      (s->type ==  PCP_KEY_TYPE_MAINSECRET) ? "primary" : " secret");
+      fprintf(out, "     public: "); pcpprint_bin(out, s->public, 32); fprintf(out, "\n");
+      fprintf(out, "     secret: "); pcpprint_bin(out, s->secret, 32); fprintf(out, "\n");
+      fprintf(out, "      edpub: "); pcpprint_bin(out, s->edpub, 32); fprintf(out, "\n");
+      fprintf(out, "      nonce: "); pcpprint_bin(out, s->nonce, 24); fprintf(out, "\n");
+      fprintf(out, "  encrypted: "); pcpprint_bin(out, s->encrypted, 48); fprintf(out, "\n");
+      fprintf(out, "\n");
+    }
+    
+    fprintf(out, "public-keys:\n");
+    for(p=pcppubkey_hash; p != NULL; p=(pcp_pubkey_t*)(p->hh.next)) {
+      fprintf(out, "-\n");
+      fprintf(out, "         id: %s\n", p->id);
+      fprintf(out, "      owner: %s\n", p->owner);
+      fprintf(out, "       mail: %s\n", p->mail);
+      fprintf(out, "      ctime: %ld\n", p->ctime);
+      fprintf(out, "    version: %08x\n", p->version);
+      fprintf(out, "     serial: %08x\n", p->serial);
+      fprintf(out, "       type: public\n");
+      fprintf(out, "     public: "); pcpprint_bin(out, p->public, 32); fprintf(out, "\n");
+      fprintf(out, "      edpub: "); pcpprint_bin(out, p->edpub, 32); fprintf(out, "\n");
+      fprintf(out, "\n");
+    }
+  }
+}
+
+void pcpprint_bin(FILE *out, unsigned char *data, size_t len) {
+  int i;
+  for ( i = 0;i < len;++i)
+    fprintf(out, "%02x", (unsigned int) data[i]);
+}

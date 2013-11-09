@@ -82,6 +82,7 @@ int main (int argc, char **argv)  {
     { "import-public",   no_argument,       NULL,           'P' },
     { "remove-key",      no_argument,       NULL,           'R' },
     { "edit-key",        no_argument,       NULL,           'E' },    
+    { "export-yaml",     no_argument,       NULL,           'y' },
 
     // crypto
     {  "encrypt",        no_argument,       NULL,           'e' },
@@ -102,7 +103,7 @@ int main (int argc, char **argv)  {
     { NULL,              0,                 NULL,            0 }
   };
 
-  while ((opt = getopt_long(argc, argv, "klV:vdehsO:i:I:pSPRtEx:DzZr:gc:",
+  while ((opt = getopt_long(argc, argv, "klV:vdehsO:i:I:pSPRtEx:DzZr:gc:y",
 			    longopts, NULL)) != -1) {
   
     switch (opt)  {
@@ -173,6 +174,10 @@ int main (int argc, char **argv)  {
 	mode += PCP_MODE_VERIFY;
 	sigfile = ucmalloc(strlen(optarg)+1);
 	strncpy(sigfile, optarg, strlen(optarg)+1);
+	usevault = 1;
+	break;
+      case 'y':
+	mode += PCP_MODE_YAML;
 	usevault = 1;
 	break;
 
@@ -377,7 +382,9 @@ int main (int argc, char **argv)  {
 	pcpverify(infile, sigfile);
 	break;
 
-	
+      case PCP_MODE_YAML:
+	pcpexport_yaml(outfile);
+	break;
 
       default:
  	// 

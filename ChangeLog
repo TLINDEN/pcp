@@ -23,6 +23,12 @@
 
 	Added support for derived keys (using -r).
 
+	Added more precautions when writing to the vault,
+	we now always use a tmp vault for writing and if that
+	works, we copy it back. In case something fails on
+	the way, the tmp file will be retained or the original
+	vault will not be altered.
+
 0.1.2   Fixed bug in pcp_derivekey() which derives encryption
 	keys. it generated collisions due coding error, e.g.
 	passphase 'a' resulted in the same encryptionkey as

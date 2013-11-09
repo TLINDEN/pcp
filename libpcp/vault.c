@@ -46,24 +46,25 @@ vault_t *pcpvault_new(char *filename, int is_tmp) {
   vault_t *vault = ucmalloc(sizeof(vault_t));
   FILE *fd;
   struct stat stat_buf;
+  vault->filename = ucmalloc(1024);
 
   if(is_tmp) {
-    filename = ucmalloc(1024);
     uint32_t a,b;
     while (1) {
       a = arc4random();
       b = arc4random();
-      snprintf(filename, 1024, "%s/.pcpvault-%08x%08x", getenv("HOME"), a, b);
-       if (stat (filename, &stat_buf) != 0)
+      snprintf(vault->filename, 1024, "%s-%08x%08x", filename, a, b);
+       if (stat (vault->filename, &stat_buf) != 0)
 	 break;
     }
-    unlink(filename);
+    unlink(vault->filename);
     vault->size = 0;
     vault->modified = 0;
     vault->mode = 0;
   }
   else {
-    if (stat (filename, &stat_buf) == 0) {
+    strncpy(vault->filename, filename, 1024);
+    if (stat (vault->filename, &stat_buf) == 0) {
       vault->size = stat_buf.st_size;
       vault->modified = stat_buf.st_mtime;
       vault->mode = stat_buf.st_mode;
@@ -78,22 +79,21 @@ vault_t *pcpvault_new(char *filename, int is_tmp) {
   if(vault->size == 0) {
     vault->isnew = 1;
     mode_t old_mask = umask (S_IWGRP | S_IWOTH | S_IRGRP | S_IROTH);
-    if((fd = fopen(filename, "wb+")) == NULL) {
-      fatal("Could not create vault file %s", filename);
+    if((fd = fopen(vault->filename, "wb+")) == NULL) {
+      fatal("Could not create vault file %s", vault->filename);
       umask (old_mask);
       goto errn;
     }
     umask (old_mask);
   }
   else {
-    if((fd = fopen(filename, "rb+")) == NULL) {
-      fatal("Could not open vault file %s", filename);
+    if((fd = fopen(vault->filename, "rb+")) == NULL) {
+      fatal("Could not open vault file %s", vault->filename);
       goto errn;
     }
   }
 
   vault->fd = fd;
-  vault->filename = filename;
   vault->unsafed = 0;
 
   return vault;
@@ -170,10 +170,38 @@ int pcpvault_additem(vault_t *vault, void *item, size_t itemsize, uint8_t type, 
   vault->unsafed = 0;
 
   return 0;
+
+}
+
+int pcpvault_addkey(vault_t *vault, void *item, size_t itemsize, uint8_t type) {
+  vault_t *tmp = pcpvault_new(vault->filename, 1);
+  if(tmp != NULL) {
+    if(pcpvault_copy(vault, tmp) != 0)
+      goto errak1;
+    if(pcpvault_additem(tmp, item, itemsize, type, 1) != 0)
+      goto errak1;
+    pcpvault_update_checksum(tmp);
+    if(pcpvault_copy(tmp, vault) == 0) {
+      pcpvault_unlink(tmp);
+    }
+    else {
+      fprintf(stderr, "Keeping tmp vault %s\n", tmp->filename);
+      goto errak1;
+    }
+    free(tmp);
+    return 0;
+  }
+  return 1;
+
+ errak1:
+  if(tmp != NULL) {
+    free(tmp);
+  }
+  return 1;
 }
 
 int pcpvault_writeall(vault_t *vault) {
-  vault_t *tmp = pcpvault_new(NULL, 1); // FIXME
+  vault_t *tmp = pcpvault_new(vault->filename, 1);
   if(tmp != NULL) {
     if(pcpvault_create(tmp) == 0) {
       pcp_key_t *k, *kt = NULL;
@@ -187,9 +215,15 @@ int pcpvault_writeall(vault_t *vault) {
 	  goto errwa;
       }
       pcpvault_update_checksum(tmp);
-      pcpvault_copy(tmp, vault);
+      if(pcpvault_copy(tmp, vault) == 0) {
+	pcpvault_unlink(tmp);
+      }
+      free(tmp);
+      return 0;
     }
   }
+
+  return 1;
 
  errwa:
   if(tmp != NULL) {
@@ -252,7 +286,7 @@ unsigned char *pcpvault_create_checksum(vault_t *vault) {
 }
 
 
-void pcpvault_copy(vault_t *tmp, vault_t *vault) {
+int pcpvault_copy(vault_t *tmp, vault_t *vault) {
   // fetch tmp content
   fseek(tmp->fd, 0, SEEK_END);
   int tmpsize = ftell(tmp->fd);
@@ -260,9 +294,21 @@ void pcpvault_copy(vault_t *tmp, vault_t *vault) {
   unsigned char *in = ucmalloc(tmpsize);
   fread(in, tmpsize, 1, tmp->fd);
 
-  // and put it into the old file
+  // and put it into the new file
   vault->fd = freopen(vault->filename, "wb+", vault->fd);
-  fwrite(in, tmpsize, 1, vault->fd);
+  if(fwrite(in, tmpsize, 1, vault->fd) != 1) {
+    fatal("Failed to copy %s to %s (write) [keeping %s]\n",
+	  tmp->filename, vault->filename, tmp->filename);
+    return 1;
+  }
+
+  if(fflush(vault->fd) != 0) {
+    fatal("Failed to copy %s to %s (flush) [keeping %s]\n",
+	  tmp->filename, vault->filename, tmp->filename);
+    return 1;
+  }
+
+  return 0;
 }
 
 void pcpvault_unlink(vault_t *tmp) {

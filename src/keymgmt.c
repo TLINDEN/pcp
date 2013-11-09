@@ -52,14 +52,14 @@ int pcp_storekey (pcp_key_t *key) {
     key->type = PCP_KEY_TYPE_MAINSECRET;
   }
 
-  if(pcpvault_additem(vault, key, sizeof(pcp_key_t), key->type, 1) == 0) {
+  if(pcpvault_addkey(vault, key, sizeof(pcp_key_t), key->type) == 0) {
     if(vault->isnew)
       fprintf(stderr, "new vault created, ");
     fprintf(stderr, "key 0x%s added to %s.\n", key->id, vault->filename);
     return 0;
   }
   
-  return -1;
+  return 1;
 }
 
 
@@ -326,20 +326,20 @@ int pcp_importsecret (vault_t *vault, FILE *in) {
   char *z85 = pcp_readz85file(in);
 
   if(z85 == NULL)
-    return -1;
+    return 1;
 
   unsigned char *z85decoded = pcp_z85_decode((char *)z85, &clen);
   free(z85);
 
   if(z85decoded == NULL) {
     fatal("Error: could not decode input - it's probably not Z85.\n");
-    return -1;
+    return 1;
   }
 
   if(clen != sizeof(pcp_key_t)) {
     fatal("Error: decoded input didn't result to a proper sized key! (got %d bytes)\n", clen);
     free(z85decoded);
-    return -1;
+    return 1;
   }
 
   // all good now
@@ -361,14 +361,14 @@ int pcp_importsecret (vault_t *vault, FILE *in) {
     if(nkeys == 0)
       key->type = PCP_KEY_TYPE_MAINSECRET;
 
-    if(pcpvault_additem(vault, (void *)key, sizeof(pcp_key_t),
-			PCP_KEY_TYPE_SECRET, 1) == 0) {
+    if(pcpvault_addkey(vault, (void *)key, sizeof(pcp_key_t),
+			PCP_KEY_TYPE_SECRET) == 0) {
       fprintf(stderr, "key 0x%s added to %s.\n", key->id, vault->filename);
       return 0;
     }
   }
 
-  return -1;
+  return 1;
 }
 
 
@@ -377,20 +377,20 @@ int pcp_importpublic (vault_t *vault, FILE *in) {
   char *z85 = pcp_readz85file(in);
 
   if(z85 == NULL)
-    return -1;
+    return 1;
 
   unsigned char *z85decoded = pcp_z85_decode((char *)z85, &clen);
   free(z85);
 
   if(z85decoded == NULL) {
     fatal("Error: could not decode input - it's probably not Z85 (got %d bytes)\n", clen);
-    return -1;
+    return 1;
   }
 
   if(clen != sizeof(pcp_pubkey_t)) {
     fatal("Error: decoded input didn't result to a proper sized key!\n", clen);
     free(z85decoded);
-    return -1;
+    return 1;
   }
 
   // all good now
@@ -400,36 +400,36 @@ int pcp_importpublic (vault_t *vault, FILE *in) {
   if(debug)
     pcp_dumppubkey(pub);
   if(pcp_sanitycheck_pub(pub) == 0) {
-    if(pcpvault_additem(vault, (void *)pub, sizeof(pcp_pubkey_t),  PCP_KEY_TYPE_PUBLIC, 1) == 0) {
+    if(pcpvault_addkey(vault, (void *)pub, sizeof(pcp_pubkey_t),  PCP_KEY_TYPE_PUBLIC) == 0) {
       fprintf(stderr, "key 0x%s added to %s.\n", pub->id, vault->filename);
       return 0;
     }
   }
 
-  return -1;
+  return 1;
 }
 
 int pcp_sanitycheck_pub(pcp_pubkey_t *key) {
   if(key->public[0] == 0) {
     fatal("Pubkey sanity check: public key contained in key seems to be empty!\n");
-    return -1;
+    return 1;
   }
 
   if(key->type != PCP_KEY_TYPE_PUBLIC) {
     fatal("Pubkey sanity check: key type is not PUBLIC (expected: %02x, got: %02x)!\n",
 	  PCP_KEY_TYPE_PUBLIC, key->type);
-    return -1;
+    return 1;
   }
 
   if(key->version != PCP_KEY_VERSION) {
     fatal("Pubkey sanity check: unknown key version (expected: %08X, got: %08X)!\n",
 	  PCP_KEY_VERSION, key->version);
-    return -1;
+    return 1;
   }
   
   if(key->serial <= 0) {
     fatal("Pubkey sanity check: invalid serial number: %08X!\n", key->serial);
-    return -1;
+    return 1;
   }
 
   if(key->id[16] != '\0') {
@@ -438,7 +438,7 @@ int pcp_sanitycheck_pub(pcp_pubkey_t *key) {
     got[16] = '\0';
     fatal("Pubkey sanity check: invalid key id (expected 16 bytes, got: %s)!\n", got);
     free(got);
-    return -1;
+    return 1;
   }
 
   struct tm *c;
@@ -447,13 +447,13 @@ int pcp_sanitycheck_pub(pcp_pubkey_t *key) {
   if(c->tm_year <= 0 || c->tm_year > 1100) {
     // well, I'm perhaps overacting here :)
     fatal("Pubkey sanity check: invalid creation timestamp (got year %04d)!\n", c->tm_year + 1900);
-    return -1;
+    return 1;
   }
 
   pcp_pubkey_t *maybe = pcppubkey_exists(key->id);
   if(maybe != NULL) {
     fatal("Pubkey sanity check: there already exists a key with the id 0x%s\n", key->id);
-    return -1;
+    return 1;
   }
 
   return 0;
@@ -463,24 +463,24 @@ int pcp_sanitycheck_pub(pcp_pubkey_t *key) {
 int pcp_sanitycheck_key(pcp_key_t *key) {
   if(key->encrypted[0] == 0) {
     fatal("Secretkey sanity check: secret key contained in key seems to be empty!\n");
-    return -1;
+    return 1;
   }
 
   if(key->type != PCP_KEY_TYPE_SECRET && key->type != PCP_KEY_TYPE_MAINSECRET) {
     fatal("Secretkey sanity check: key type is not SECRET (expected: %02x, got: %02x)!\n",
 	  PCP_KEY_TYPE_SECRET, key->type);
-    return -1;
+    return 1;
   }
 
   if(key->version != PCP_KEY_VERSION) {
     fatal("Secretkey sanity check: unknown key version (expected: %08X, got: %08X)!\n",
 	  PCP_KEY_VERSION, key->version);
-    return -1;
+    return 1;
   }
   
   if(key->serial <= 0) {
     fatal("Secretkey sanity check: invalid serial number: %08X!\n", key->serial);
-    return -1;
+    return 1;
   }
 
   if(key->id[16] != '\0') {
@@ -489,7 +489,7 @@ int pcp_sanitycheck_key(pcp_key_t *key) {
     got[16] = '\0';
     fatal("Secretkey sanity check: invalid key id (expected 16 bytes, got: %s)!\n", got);
     free(got);
-    return -1;
+    return 1;
   }
 
   struct tm *c;
@@ -498,13 +498,13 @@ int pcp_sanitycheck_key(pcp_key_t *key) {
   if(c->tm_year <= 0 || c->tm_year > 1100) {
     // well, I'm perhaps overacting here :)
     fatal("Secretkey sanity check: invalid creation timestamp (got year %04d)!\n", c->tm_year + 1900);
-    return -1;
+    return 1;
   }
 
   pcp_key_t *maybe = pcpkey_exists(key->id);
   if(maybe != NULL) {
     fatal("Secretkey sanity check: there already exists a key with the id 0x%s\n", key->id);
-    return -1;
+    return 1;
   }
 
   return 0;

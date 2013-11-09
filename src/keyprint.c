@@ -36,6 +36,7 @@ void pcptext_key(char *keyid) {
       if(debug)
 	pcp_dumppubkey(p);
       pcppubkey_print(p, stdout);
+      free(p);
     }
     else {
       fatal("No key with id 0x%s found!\n", keyid);

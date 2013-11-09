@@ -34,10 +34,17 @@ pwhashes_SOURCES = pwhashes.c
 AM_CPPFLAGS = -I$(top_builddir)/src
 
 
+#
+# Note: some of these unit tests run only on freebsd.
+# required sudo settings:
+# %wheel ALL = NOPASSWD: /sbin/umount
+# %wheel ALL = NOPASSWD: /sbin/mdmfs 
+
 test: check
 	rm -f test* v* stresstest/*
 	./unittests.pl unittests.cfg $(CHECK)
 	@echo "To run a single test only, type: 'make test CHECK=testname'"
+	sudo umount -f env
 
 stresstest: check
 	./unittests.pl stresstests.cfg

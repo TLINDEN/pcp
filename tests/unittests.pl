@@ -104,7 +104,7 @@ sub runtest {
 
   my $ret = run($cfg->{cmd},
 		$cfg->{input},
-		\$out, \$error, 5, 0, undef);
+		\$out, \$error, 10, 0, undef);
 
   $output = $out . $error;
   

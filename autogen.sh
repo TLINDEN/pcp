@@ -76,6 +76,4 @@ if test -z "$clean"; then
   autoreconf --install --force --verbose -I config
 fi
 
-rm -rf autom4te.cache
-
-rm -f README
+rm -rf README libpcp/config.h.in~ libpcp/stamp-h1 autom4te.cache

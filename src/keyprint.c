@@ -323,10 +323,17 @@ void pcpexport_yaml(char *outfile) {
       fprintf(out, "       type: %s\n",
 	      (s->type ==  PCP_KEY_TYPE_MAINSECRET) ? "primary" : " secret");
       fprintf(out, "     public: "); pcpprint_bin(out, s->public, 32); fprintf(out, "\n");
-      fprintf(out, "     secret: "); pcpprint_bin(out, s->secret, 32); fprintf(out, "\n");
+      if(s->secret[0] == 0) {
+	fprintf(out, "  encrypted: yes\n");
+	fprintf(out, "      nonce: "); pcpprint_bin(out, s->nonce, 24); fprintf(out, "\n");
+	fprintf(out, "     secret: "); pcpprint_bin(out, s->encrypted, 48); fprintf(out, "\n");
+      }
+      else {
+	fprintf(out, "  encrypted: no\n");
+	fprintf(out, "     secret: "); pcpprint_bin(out, s->secret, 32); fprintf(out, "\n");
+      }
       fprintf(out, "      edpub: "); pcpprint_bin(out, s->edpub, 32); fprintf(out, "\n");
-      fprintf(out, "      nonce: "); pcpprint_bin(out, s->nonce, 24); fprintf(out, "\n");
-      fprintf(out, "  encrypted: "); pcpprint_bin(out, s->encrypted, 48); fprintf(out, "\n");
+  
       fprintf(out, "\n");
     }
     

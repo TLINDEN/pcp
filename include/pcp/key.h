@@ -46,9 +46,10 @@ extern "C" {
   PCP private key structure. Most fields are self explanatory.
   Some notes:
 
-  'encrypted' contains the encrypted secret key. If it's set,
+  'encrypted' contains the encrypted ed25519 secret key. If it's set,
   the field 'secret' which contains the clear secret key will
-  be zeroed with random values, the first byte will be 0.
+  be zeroed with random values, the first byte will be 0. Same
+  for the field 'edsecret'.
 
   'nonce' contains the nonce required to decrypt the encrypted
   secret, if set.
@@ -80,8 +81,9 @@ struct _pcp_key_t {
   byte public[32];
   byte secret[32];
   byte edpub[32];
+  byte edsecret[64];
   byte nonce[24];
-  byte encrypted[48];
+  byte encrypted[80];
   char owner[255];
   char mail[255];
   char id[17];
@@ -113,6 +115,9 @@ pcp_pubkey_t *pcppubkey_hash;
 
 void pcp_cleanhashes();
 pcp_key_t *pcpkey_new ();
+
+void pcp_keypairs(byte *csk, byte *cpk, byte *esk, byte *epk, byte *seed);
+void pcp_ed_keypairs(byte *csk, byte *esk);
 
 char *pcppubkey_get_art(pcp_pubkey_t *k);
 char *pcpkey_get_art(pcp_key_t *k);

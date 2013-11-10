@@ -164,6 +164,7 @@ Oh - and if you're wondering why I named them Alicia and Bobby:
 I was just sick of Alice and Bob. We're running NSA-free, so we're
 using other sample names as well.
 
+# -*-perl-*-
 
 =head1 PCP1 KEYS
 
@@ -378,6 +379,8 @@ A secret key is a binary structure with the following format:
  +-------------|--------|----------------------------------+
  | ED25519 Pub |     32 | ED25519 Public Key Part          |
  +-------------|--------|----------------------------------+
+ | ED25519 Sec |     64 | ED25519 Secret Key Unencrypted   |
+ +-------------|--------|----------------------------------+
  | Nonce       |     24 | Nonce for secret key encryption  |
  +-------------|--------|----------------------------------+
  | Encrypted   |     48 | Encrypted Curve25519 Secret Key  |
@@ -399,7 +402,7 @@ A secret key is a binary structure with the following format:
 
 Some notes:
 
-The secret key field will be filled with random data if the
+The secret key fields will be filled with random data if the
 key is encrypted. The first byte of it will be set to 0 in that
 case.
 
@@ -414,6 +417,36 @@ Exported keys will be encoded in Z85 encoding. When such an
 exported key is imported, only the actual Z85 encoded data
 will be used. Header lines and lines starting with whitespace
 will be ignored. They are only there for convenience.
+
+Key generation works like this:
+
+=over
+
+=item *
+
+Generate a random seed (32 bytes).
+
+=item *
+
+Generate a ED25519 keypair from that seed.
+
+=item *
+
+Take the first 32 bytes of the generated ED25519 secret
+and generate a SHA512 hash from it.
+
+=item *
+
+Clamp bytes 0 and 31 which turns it into a Curve25519 secret.
+
+=item *
+
+Do scalar multiplication from that secret to retrieve
+the matching public key.
+
+=back
+
+Take a look at the function B<pcp_keypairs()> for details. 
 
 =head2 ENCRYPTED OUTPUT FORMAT
 

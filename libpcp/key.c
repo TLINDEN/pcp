@@ -66,28 +66,54 @@ char *pcp_getkeyid(pcp_key_t *k) {
   return id;
 }
 
+void pcp_keypairs(byte *csk, byte *cpk, byte *esk, byte *epk, byte *seed) {
+  // generate ed25519 + curve25519 keypair from random seed
+  byte tmp[64];
+
+  crypto_sign_seed_keypair(epk, esk, seed);
+  crypto_hash_sha512(tmp, seed, 32);
+  tmp[0]  &= 248;
+  tmp[31] &= 63;
+  tmp[31] |= 64;
+  
+  memcpy(csk, tmp, 32);
+  crypto_scalarmult_curve25519_base(cpk, csk); 
+  memset(tmp, 0, 64);
+}
+
+void pcp_ed_keypairs(byte *csk, byte *esk) {
+  // re-generate (derive) curve25519 secret from ed25519 secret
+  // (1st half = seed, 2nd half = pub)
+  byte tmp[64];
+  byte seed[32];
+  memcpy(seed, esk, 32);
+
+  crypto_hash_sha512(tmp, seed, 32);
+  tmp[0]  &= 248;
+  tmp[31] &= 63;
+  tmp[31] |= 64;
+  
+  memcpy(csk, tmp, 32);
+  memset(tmp, 0, 64);
+}
+
 pcp_key_t * pcpkey_new () {
   byte public[32] = { 0 };
   byte secret[32] = { 0 };
   byte edpub[32] = { 0 };
   byte edsec[64] = { 0 };
 
+  byte *seed = urmalloc(32);
 
-  // generate curve 25519 keypair
-  if(crypto_box_keypair (public, secret) != 0) {
-    fatal("Failed to generate a CURVE25519 keypair!\n");
-    return NULL;
-  }
-
-  // generate ed25519 keypair from box secret
-  crypto_sign_seed_keypair(edpub, edsec, secret);
+  pcp_keypairs(secret, public, edsec, edpub, seed);
 
   // fill in our struct
   pcp_key_t *key = urmalloc(sizeof(pcp_key_t));
   memcpy (key->public, public, 32);
   memcpy (key->secret, secret, 32);
-  memcpy (key->id, pcp_getkeyid(key), 17);
   memcpy (key->edpub, edpub, 32);
+  memcpy (key->edsecret, edsec, 64);
+  memcpy (key->id, pcp_getkeyid(key), 17);
   
   key->ctime = (long)time(0);
 
@@ -114,16 +140,18 @@ pcp_key_t *pcpkey_encrypt(pcp_key_t *key, char *passphrase) {
   unsigned char *encrypted;
   size_t es;
 
-  es = pcp_sodium_mac(&encrypted, key->secret, 32, key->nonce, encryptkey);
+  es = pcp_sodium_mac(&encrypted, key->edsecret, 64, key->nonce, encryptkey);
 
   memset(encryptkey, 0, 32);
   free(encryptkey);
 
-  if(es == 48) {
+  if(es == 80) {
     // success
-    memcpy(key->encrypted, encrypted, 48);
+    memcpy(key->encrypted, encrypted, 80);
     arc4random_buf(key->secret, 32);
+    arc4random_buf(key->edsecret, 64);
     key->secret[0] = 0;
+    key->edsecret[0] = 0;
   }
   else {
     fatal("failed to encrypt the secret key!\n");
@@ -139,14 +167,18 @@ pcp_key_t *pcpkey_decrypt(pcp_key_t *key, char *passphrase) {
   unsigned char *decrypted;
   size_t es;
   
-  es = pcp_sodium_verify_mac(&decrypted, key->encrypted, 48, key->nonce, encryptkey);
+  es = pcp_sodium_verify_mac(&decrypted, key->encrypted, 80, key->nonce, encryptkey);
 
   memset(encryptkey, 0, 32);
   free(encryptkey);
 
   if(es == 0) {
     // success
-    memcpy(key->secret, decrypted, 32);
+    byte secret[32] = { 0 };
+    byte edsec[64] = { 0 };
+    pcp_ed_keypairs(secret, decrypted);
+    memcpy(key->secret, secret, 32);
+    memcpy(key->edsecret, decrypted, 64);
   }
   else {
     fatal("failed to decrypt the secret key (got %d, expected 32)!\n", es);
@@ -264,55 +296,41 @@ pcp_pubkey_t *pubkey2native(pcp_pubkey_t *k) {
 pcp_key_t *pcp_derive_pcpkey (pcp_key_t *ours, char *theirs) {
   byte edpub[32] = { 0 };
   byte edsec[64] = { 0 };
+  byte public[32] = { 0 };
+  byte secret[32] = { 0 };
+
+  byte *seed = ucmalloc(32);
+
   size_t thlen = strnlen(theirs, 255);
-  size_t inlen = 32 + thlen;
+  size_t inlen = 64 + thlen;
   unsigned char *both = ucmalloc(inlen);
-  unsigned char *hash = ucmalloc(crypto_hash_BYTES);
 
-  memcpy(both, ours->secret, 32);
-  memcpy(&both[32], theirs, thlen);
+  memcpy(both, ours->edsecret, 64);
+  memcpy(&both[64], theirs, thlen);
 
-  if(crypto_hash(hash, both, inlen) != 0) {
+  if(crypto_hash(seed, both, inlen) != 0) {
     fatal("Failed to generate a hash of our pub key and recipient id!\n");
     goto errdp1;
   }
 
-  unsigned char *xor    = ucmalloc(crypto_secretbox_KEYBYTES);
-  unsigned char *secret = ucmalloc(crypto_secretbox_KEYBYTES);
-  int i;
-
-  for(i=0; i<crypto_secretbox_KEYBYTES; ++i) {
-    xor[i] = hash[i] ^ hash[i + crypto_secretbox_KEYBYTES];
-  }
-
-  xor[0]  &= 248;
-  xor[31] &= 127;
-  xor[31] |= 64;
-
-  memcpy(secret, xor, crypto_secretbox_KEYBYTES);
+  pcp_keypairs(secret, public, edsec, edpub, seed);
 
   pcp_key_t * tmp = pcpkey_new ();
   
   memcpy(tmp->secret, secret, 32);
-
-  // calculate pub from secret
-  crypto_scalarmult_curve25519_base(tmp->public, tmp->secret); 
-
-  // generate ed25519 keypair from box secret
-  crypto_sign_seed_keypair(edpub, edsec, tmp->secret);
-
+  memcpy(tmp->edpub, edpub, 32);
+  memcpy(tmp->edsecret, edsec, 64);
+  memcpy(tmp->public, public, 32);
+  
   memcpy(tmp->owner, ours->owner, 255);
   memcpy(tmp->mail, ours->mail, 255);
   memcpy(tmp->id, pcp_getkeyid(tmp), 17);
-  memcpy(tmp->edpub, edpub, 32);
 
   memset(both, 0, inlen);
-  memset(xor, 0, crypto_secretbox_KEYBYTES);
-  memset(hash, 0, crypto_hash_BYTES);
+  memset(seed, 0, 32);
 
   free(both);
-  free(xor);
-  free(hash);
+  free(seed);
 
   return tmp;
 

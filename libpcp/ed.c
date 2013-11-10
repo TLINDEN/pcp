@@ -22,48 +22,48 @@
 #include "ed.h"
 
 int pcp_ed_verify(unsigned char *input, size_t inputlen, pcp_sig_t *sig, pcp_pubkey_t *p) {
-  
-  unsigned char *hash = ucmalloc(crypto_hash_sha256_BYTES + crypto_sign_BYTES); // from sig
-  unsigned char *check = ucmalloc(crypto_hash_sha256_BYTES); // from file
+  unsigned char *message = ucmalloc(inputlen);
+  unsigned char *tmpsig  = ucmalloc(inputlen + crypto_sign_BYTES); // from sig
   size_t mlen = 0;
 
-  if(crypto_sign_open(hash, &mlen, sig->edsig, crypto_hash_sha256_BYTES + crypto_sign_BYTES, p->edpub) != 0) {
+  memcpy(tmpsig, sig->edsig, crypto_sign_BYTES);
+  memcpy(&tmpsig[crypto_sign_BYTES], input, inputlen);
+
+  if(crypto_sign_open(message, &mlen, tmpsig, inputlen + crypto_sign_BYTES, p->edpub) != 0) {
     fatal("Failed to open the signature using the public key 0x%s!\n", p->id);
     goto errve1;
   }
 
-  crypto_hash_sha256(check, input, inputlen);
-
-  if(memcmp(check, hash, crypto_hash_sha256_BYTES) != 0) {
-    fatal("Failed to verify the signature, hashes differ!\n");
+  if(memcmp(message, input, inputlen) != 0) {
+    fatal("Failed to verify the signature, signed messages differ!\n");
     goto errve1;
   }
 
-  free(hash);
-  free(check);
+  free(tmpsig);
+  free(message);
   return 0;
 
  errve1:
-  free(hash);
-  free(check);
+  free(message);
+  free(tmpsig);
   return 1;
 }
 
+
+
 pcp_sig_t *pcp_ed_sign(unsigned char *message, size_t messagesize, pcp_key_t *s) {
-  byte edpub[32] = { 0 };
-  byte edsec[64] = { 0 };
+  size_t mlen = messagesize + crypto_sign_BYTES;
+  unsigned char *tmp = ucmalloc(mlen);
+  unsigned char *signature = ucmalloc(crypto_sign_BYTES);
 
-  crypto_sign_seed_keypair(edpub, edsec, s->secret);
+  crypto_sign(tmp, &mlen, message, messagesize, s->edsecret);
 
-  unsigned char *hash = ucmalloc(crypto_hash_sha256_BYTES);
-  size_t slen = crypto_hash_sha256_BYTES + crypto_sign_BYTES;
-  unsigned char *signature = ucmalloc(slen);
-
-  crypto_hash_sha256(hash, message, messagesize);
-
-  crypto_sign(signature, &slen, hash, crypto_hash_sha256_BYTES, edsec);
+  memcpy(signature, tmp, crypto_sign_BYTES);
 
   pcp_sig_t *sig = pcp_ed_newsig(signature, s->id);
+
+  memset(tmp, 0, mlen);
+  free(tmp);
 
   return sig;
 }

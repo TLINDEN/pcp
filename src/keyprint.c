@@ -198,6 +198,10 @@ void pcp_dumpkey(pcp_key_t *k) {
   for ( i = 0;i < 32;++i) printf("%02x",(unsigned int) k->edpub[i]);
   printf("\n");
 
+  printf(" edsecret: ");
+  for ( i = 0;i < 64;++i) printf("%02x",(unsigned int) k->edsecret[i]);
+  printf("\n");
+
   printf("    nonce: ");
   for ( i = 0;i < 24;++i) printf("%02x",(unsigned int) k->nonce[i]);
   printf("\n");
@@ -326,11 +330,12 @@ void pcpexport_yaml(char *outfile) {
       if(s->secret[0] == 0) {
 	fprintf(out, "  encrypted:  yes\n");
 	fprintf(out, "  nonce:      "); pcpprint_bin(out, s->nonce, 24); fprintf(out, "\n");
-	fprintf(out, "  secret:     "); pcpprint_bin(out, s->encrypted, 48); fprintf(out, "\n");
+	fprintf(out, "  secret:     "); pcpprint_bin(out, s->encrypted, 80); fprintf(out, "\n");
       }
       else {
 	fprintf(out, "  encrypted:  no\n");
 	fprintf(out, "  secret:     "); pcpprint_bin(out, s->secret, 32); fprintf(out, "\n");
+	fprintf(out, "  edsecret:   "); pcpprint_bin(out, s->edsecret, 64); fprintf(out, "\n");
       }
       fprintf(out, "  edpub:      "); pcpprint_bin(out, s->edpub, 32); fprintf(out, "\n");
     }

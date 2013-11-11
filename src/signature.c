@@ -34,9 +34,7 @@ int pcpsign(char *infile, char *outfile, char *recipient, char *passwd) {
     goto errs1;
   }
   
-  if(recipient != NULL) {
-    secret = pcp_derive_pcpkey(secret, recipient);
-  }
+
 
   if(infile == NULL)
     in = stdin;
@@ -71,6 +69,10 @@ int pcpsign(char *infile, char *outfile, char *recipient, char *passwd) {
     secret = pcpkey_decrypt(secret, passphrase);
     if(secret == NULL)
       goto errs3;
+  }
+
+  if(recipient != NULL) {
+    secret = pcp_derive_pcpkey(secret, recipient);
   }
 
   unsigned char *input = NULL;

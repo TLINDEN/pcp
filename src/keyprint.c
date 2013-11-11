@@ -207,7 +207,7 @@ void pcp_dumpkey(pcp_key_t *k) {
   printf("\n");
 
   printf("encrypted: ");
-  for ( i = 0;i < 48;++i) printf("%02x",(unsigned int) k->encrypted[i]);
+  for ( i = 0;i < 80;++i) printf("%02x",(unsigned int) k->encrypted[i]);
   printf("\n");
 
   printf("    owner: %s\n", k->owner);

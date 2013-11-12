@@ -45,6 +45,7 @@ int pcp_storekey (pcp_key_t *key);
 void pcp_keygen();
 void pcp_listkeys();
 void pcp_exportsecret(char *keyid, int useid, char *outfile);
+void pcp_exportsecretkey(pcp_key_t *key, char *outfile);
 pcp_key_t *pcp_getrsk(pcp_key_t *s, char *recipient, char *passwd);
 void pcp_exportpublic(char *keyid, char *recipient, char *passwd, char *outfile);
 char *pcp_normalize_id(char *keyid);

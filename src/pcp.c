@@ -234,7 +234,7 @@ int main (int argc, char **argv)  {
     if(vault != NULL) {
       switch (mode) {
       case  PCP_MODE_KEYGEN:
-	pcp_keygen(xpass);
+	pcp_keygen(xpass, outfile);
 	if(xpass != NULL)
 	  free(xpass);
 	break;
@@ -309,8 +309,11 @@ int main (int argc, char **argv)  {
 	break;
 
       case PCP_MODE_TEXT:
-	if(! useid) {
+	if(! useid && infile == NULL) {
 	  pcptext_vault(vault);
+	}
+	else if(infile != NULL) {
+	  pcptext_infile(infile);
 	}
 	else {
 	  id = pcp_normalize_id(keyid);

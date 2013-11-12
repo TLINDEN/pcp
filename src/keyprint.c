@@ -23,6 +23,122 @@
 #include "keyprint.h"
 
 
+int pcptext_infile(char *infile) {
+  FILE *in;
+  int insize;
+
+  if((in = fopen(infile, "rb")) == NULL) {
+    fatal("Could not open input file %s\n", infile);
+    goto errtinf1;
+  }
+  
+  fseek(in, 0, SEEK_END);
+  insize = ftell(in);
+  fseek(in, 0, SEEK_SET);
+
+  if(insize == 40) {
+    fprintf(stdout, "%s seems to be an empty vault file\n", infile);
+    goto tdone;
+  }
+
+  // maybe a vault?
+  vault_t *v = pcpvault_init(infile);
+  if(v != NULL) {
+    fprintf(stdout, "%s is a vault file\n", infile);
+    pcptext_vault(v);
+    goto tdone;
+  }
+
+  // try z85ing it
+  char *z85 = pcp_readz85file(in);
+  if(z85 == NULL) {
+      fprintf(stdout, "Can't handle %s - unknown file type.\n", infile); 
+      goto errtinf1;
+  }
+
+  size_t clen;
+  unsigned char *bin = pcp_z85_decode((char *)z85, &clen);
+  free(z85);
+  
+  if(bin == NULL) {
+    fprintf(stdout, "%s isn't properly Z85 encoded - unknown file type.\n", infile);
+    goto errtinf1;
+  }
+
+  if(clen == sizeof(pcp_key_t)) {
+    // secret key?
+    pcp_key_t *key = (pcp_key_t *)bin;
+    key2native(key);
+    if(pcp_sanitycheck_key(key) == 0) {
+      fprintf(stdout, "%s is a secret key file:\n", infile);
+      pcpkey_print(key, stdout);
+      free(key);
+      goto tdone;
+    }
+    else {
+      fprintf(stdout, "%s looks like a secret key but failed sanity checking.\n", infile);
+      free(key);
+      goto errtinf1;
+    }
+  }
+
+  if(clen  == sizeof(pcp_pubkey_t)) {
+    // public key?
+    pcp_pubkey_t *key = (pcp_pubkey_t *)bin;
+    pubkey2native(key);
+    if(pcp_sanitycheck_pub(key) == 0) {
+      fprintf(stdout, "%s is a public key file:\n", infile);
+      pcppubkey_print(key, stdout);
+      free(key);
+      goto tdone;
+    }
+    else {
+      fprintf(stdout, "%s looks like a publickey but failed sanity checking.\n", infile);
+      free(key);
+      goto errtinf1;
+    }
+  }
+
+  if(clen  == sizeof(pcp_sig_t)) {
+    // a signature?
+    pcp_sig_t *sig = (pcp_sig_t *)bin;
+    sig2native(sig);
+    if(sig->version == PCP_SIG_VERSION) {
+      // looks valid
+      fprintf(stdout, "%s is an ed25519 signature file:\n", infile);
+      struct tm *c;
+      time_t t = (time_t)sig->ctime;
+      c = localtime(&t);
+      fprintf(stdout, "Signed by key: 0x%s\n", sig->id);
+      fprintf(stdout, "Creation Time: %04d-%02d-%02dT%02d:%02d:%02d\n",
+	      c->tm_year+1900, c->tm_mon+1, c->tm_mday,
+	      c->tm_hour, c->tm_min, c->tm_sec);
+      fprintf(stdout, "    Signature: ");
+      pcpprint_bin(stdout, sig->edsig, crypto_sign_BYTES);
+      fprintf(stdout, "\n");
+      free(sig);
+      goto tdone;
+    }
+    else {
+      fprintf(stdout, "%s looks like a ed255 signature but failed sanity checking.\n", infile);
+      free(sig);
+      goto errtinf1;
+    }
+  }
+
+  // still there?
+  fprintf(stdout, "%s looks Z85 encoded but otherwise unknown and is possibly encrypted.\n", infile);
+
+ tdone:
+  fatals_reset();
+  return 0;
+
+ errtinf1:
+  fatals_reset();
+  return 1;
+}
+
+
 void pcptext_key(char *keyid) {
   pcp_key_t *s = pcpkey_exists(keyid);
   if(s != NULL) {

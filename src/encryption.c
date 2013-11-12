@@ -255,9 +255,9 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, char *recipi
 
   if(debug) {
     fprintf(stderr, "Using secret key:\n");
-    pcpkey_printshortinfo(secret);
+    pcp_dumpkey(secret);
     fprintf(stderr, "Using publickey:\n");
-    pcppubkey_printshortinfo(public);
+    pcp_dumppubkey(public);
   }
 
   unsigned char *input = NULL;

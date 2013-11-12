@@ -42,6 +42,7 @@ void pcppubkey_printlineinfo(pcp_pubkey_t *key);
 
 void pcptext_key(char *keyid);
 void pcptext_vault(vault_t *vault);
+int pcptext_infile(char *infile);
 
 void pcpexport_yaml(char *outfile);
 void pcpprint_bin(FILE *out, unsigned char *data, size_t len);

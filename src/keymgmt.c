@@ -64,9 +64,9 @@ int pcp_storekey (pcp_key_t *key) {
 
 
 
-void pcp_keygen(char *passwd) {
+void pcp_keygen(char *passwd, char *outfile) {
   pcp_key_t *k = pcpkey_new ();
-  pcp_key_t *key;
+  pcp_key_t *key = NULL;
 
   char *owner =  pcp_getstdin("Enter the name of the key owner");
   memcpy(k->owner, owner, strlen(owner) + 1);
@@ -102,9 +102,18 @@ void pcp_keygen(char *passwd) {
   }
 
   if(key != NULL) {
-    if(pcp_storekey(key) == 0) {
-      fprintf(stderr, "Generated new secret key:\n");
+    fprintf(stderr, "Generated new secret key:\n");
+    if(outfile != NULL) {
+      pcp_exportsecretkey(key, outfile);
       pcpkey_printshortinfo(key);
+      fprintf(stderr, "key stored to file %s, vault unaltered\n", outfile);
+      memset(key, 0, sizeof(pcp_key_t));
+      free(key);
+    }
+    else {
+      if(pcp_storekey(key) == 0) {
+	pcpkey_printshortinfo(key);
+      }
     }
   }
 
@@ -216,28 +225,29 @@ void pcp_exportsecret(char *keyid, int useid, char *outfile) {
   }
 
   if(key != NULL) {
-    FILE *out;
-    if(outfile == NULL) {
-      out = stdout;
-    }
-    else {
-      if((out = fopen(outfile, "wb+")) == NULL) {
-	fatal("Could not create output file %s", outfile);
-	out = NULL;
-      }
-    }
-
-    if(out != NULL) {
-      if(debug)
-	pcp_dumpkey(key);
-      else
-	pcpkey_print(key, out);
-    }
-
-    free(key);
+    pcp_exportsecretkey(key, outfile);
   }
 }
 
+void pcp_exportsecretkey(pcp_key_t *key, char *outfile) {
+  FILE *out;
+  if(outfile == NULL) {
+    out = stdout;
+  }
+  else {
+    if((out = fopen(outfile, "wb+")) == NULL) {
+      fatal("Could not create output file %s", outfile);
+      out = NULL;
+    }
+  }
+  
+  if(out != NULL) {
+    if(debug)
+      pcp_dumpkey(key);
+    else
+      pcpkey_print(key, out);
+  }
+}
 
 pcp_key_t *pcp_getrsk(pcp_key_t *s, char *recipient, char *passwd) {
   if(recipient != NULL) {

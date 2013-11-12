@@ -1,10 +1,43 @@
+0.1.5   Fixed a segmentation fault when using pcp1 -t on a
+	public key. I added a double free() there by purpose
+	to test segfault catching I added in unittest.pl
+	and forgot to remove it. The good news is, that
+	I found the double free() immediately thanks to the
+	segfault catching of unittest.pl :)
+
+	Fixed use of unencrypted secret keys, added proper
+	unittests for this case. Note: a secret key will
+	be stored unencrypted if the user doesn't enter
+	a password when asked. In addition to the fix I
+	added a question if the user is sure about what
+	he does.
+
+	Moved config.h to include/pcp/ so it will be
+	installed as well. Removed the conditional include
+	of config.h in platform.h, that was stupid.
+
+	Added generation of a pkg-config configuration
+	in libpcp/libpcp1.pc.in.
+
+	Added -O support to -k. So now you can generate
+	a new secret key and export it directly into a
+	file. In this case the key will not be stored to
+	the vault.
+
+	The -t option now accepts an inputfile (-I) and
+	determines what kind of file that might be and
+	if it finds out, prints some info about it to
+	stdout. Useful if you've got a z85 encoded file
+	without headers and comments and don't know what
+	it is.
+
 0.1.4   Changed key format (again), now the main secret
 	is the ED25519 secret key, which will be encrypted.
 	Everything else will be derived from that. Thanks
 	to S.Neives and "CodesInChaos" from the libsodium
 	mailinglist for clarifying it and helping me to
 	understand it.
-	
+
 0.1.3   Added signature support using ED25519.
 
 	Key format has changed it now contains the ed25519

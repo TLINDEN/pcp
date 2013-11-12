@@ -25,7 +25,8 @@ check_PROGRAMS = col invalidkeys pwhashes
 col_LDADD = ../libpcp/.libs/libpcp1.a
 col_SOURCES = collisions.c
 
-invalidkeys_LDADD = ../libpcp/.libs/libpcp1.a ../src/keyprint.o
+invalidkeys_LDADD = ../libpcp/.libs/libpcp1.a \
+		    ../src/keyprint.o ../src/keymgmt.o ../src/readpass.o
 invalidkeys_SOURCES = invalidkeys.c
 
 pwhashes_LDADD = ../libpcp/.libs/libpcp1.a

@@ -1,22 +1,48 @@
 #!/bin/sh
 pcp="../src/pcp1 -V vxxx"
 
-(echo Alicia; echo alicia@local) | $pcp -k -x a
-(echo Bobby;  echo bobby@local)  | $pcp -k -x b
-(echo Bart;   echo bart@local)   | $pcp -k -x a
+gen() {
+    owner=$1
+    mail=$2
+    pass=$3
+    z=$4
+    pub=$5
+    sec=$6
+
+    (echo $owner; echo $mail) | $pcp -k -x $pass > /dev/null 2>&1
+
+    id=`$pcp -l | grep $owner | awk '{print $1}'`
 
 
-ida=`$pcp -l | grep Alicia | awk '{print $1}'`
-idb=`$pcp -l | grep Bobby  | awk '{print $1}'`
-ids=`$pcp -l | grep Bart   | awk '{print $1}'`
+    if test -n "$pub"; then
+	if test "x$z" = "xy"; then
+	    $pcp -p -i $id | egrep -v "^ " | egrep -v -- "----" | grep . > $pub
+	else
+	    $pcp -p -O $pub -i $id > /dev/null 2>&1
+	fi
+    fi
 
-$pcp -p -O key-alicia-pub -i $ida
-$pcp -s -O key-alicia-sec -i $ida
-$pcp -p -O key-bobby-pub -i $idb
-$pcp -s -O key-bobby-sec -i $idb
-$pcp -p -O bart.pub -i $ids
+    if test -n "$sec"; then
+	if test "x$z" = "xy"; then
+	    $pcp -s -i $id | egrep -v "^ " | egrep -v -- "----" | grep . > $sec
+	else
+	    $pcp -s -O $sec -i $id > /dev/null 2>&1
+	fi
+    fi
 
+    echo $id
+}
+
+
+ida=`gen Alicia alicia@local a n key-alicia-pub key-alicia-sec`
+idb=`gen Bobby  bobby@local  b n key-bobby-pub key-bobby-sec`
+ids=`gen Bart   bart@local   a n bart.pub`
 ser=`grep Serial bart.pub | awk '{print $3}'`
+
+gen Niemand niemand@local n y unknown1 unknown2
+$pcp -V unknown3 -l
+echo hallo | $pcp -e -x a | egrep -v "^ " | egrep -v -- "----"  | grep . > unknown4
+echo blah | $pcp -g -x a | egrep -v "^ " | egrep -v -- "----"  | grep . > unknown5
 
 echo "bartid = $ids
 bartserial = $ser

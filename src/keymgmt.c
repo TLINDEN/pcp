@@ -90,8 +90,16 @@ void pcp_keygen(char *passwd) {
 
   if(strnlen(passphrase, 1024) > 0)
     key = pcpkey_encrypt(k, passphrase);
-  else
-    key = k;
+  else {
+    char *yes = pcp_getstdin("WARNING: secret key will be stored unencrypted. Are you sure [yes|NO]?");
+    if(strncmp(yes, "yes", 1024) == 0)
+      key = k;
+    else {
+      memset(key, 0, sizeof(pcp_key_t));
+      free(key);
+      goto errkg1;
+    }
+  }
 
   if(key != NULL) {
     if(pcp_storekey(key) == 0) {
@@ -99,6 +107,8 @@ void pcp_keygen(char *passwd) {
       pcpkey_printshortinfo(key);
     }
   }
+
+ errkg1:
   free(mail);
   free(owner);
 }

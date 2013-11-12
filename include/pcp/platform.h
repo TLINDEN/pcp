@@ -23,13 +23,7 @@
 #ifndef _HAVE_PCP_PLATFORM_H
 #define _HAVE_PCP_PLATFORM_H
 
-#if defined(CONFIG_H_FILE)
-#include CONFIG_H_FILE
-#elif defined(HAVE_CONFIG_H)
 #include "config.h"
-#else
-#error Need either CONFIG_H_FILE or HAVE_CONFIG_H defined.
-#endif
 
 #ifdef HAVE_ENDIAN_H
 # include <endian.h>

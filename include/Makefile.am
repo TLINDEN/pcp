@@ -1,5 +1,6 @@
 PCPEXPORT = pcp.h \
             pcp/crypto.h \
+            pcp/config.h \
             pcp/defines.h \
             pcp/digital_crc32.h \
             pcp/getpass.h \

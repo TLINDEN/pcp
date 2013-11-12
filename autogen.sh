@@ -32,7 +32,7 @@ done
 maj=`egrep "#define PCP_VERSION_MAJOR" include/pcp/version.h | awk '{print $3}'`
 min=`egrep "#define PCP_VERSION_MINOR" include/pcp/version.h | awk '{print $3}'`
 pat=`egrep "#define PCP_VERSION_PATCH" include/pcp/version.h | awk '{print $3}'`
-echo "$maj.$min.$pat" > VERSION
+echo -n "$maj.$min.$pat" > VERSION
 
 # generate the manpage
 echo "=head1 NAME
@@ -76,4 +76,4 @@ if test -z "$clean"; then
   autoreconf --install --force --verbose -I config
 fi
 
-rm -rf README libpcp/config.h.in~ libpcp/stamp-h1 autom4te.cache
+rm -rf README include/pcp/config.h.in~ libpcp/stamp-h1 autom4te.cache

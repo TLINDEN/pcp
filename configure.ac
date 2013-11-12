@@ -21,11 +21,14 @@
 #
 
 AC_PREREQ(2.61)
-AC_INIT(pcp, `cat VERSION`)
+
+define([pcpversion], esyscmd([sh -c "cat VERSION"]))dnl
+AC_INIT([pcp], [pcpversion], [pcp@daemon.de])
+#AC_INIT(pcp, `cat VERSION`)
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR(config)
 
-AC_CONFIG_HEADER(libpcp/config.h)
+AC_CONFIG_HEADER(include/pcp/config.h)
 AM_INIT_AUTOMAKE
 LT_INIT
 
@@ -231,6 +234,8 @@ if test -n "$bigendian"; then
     CFLAGS="$CFLAGS -D__BYTE_ORDER=__BIG_ENDIAN"
 fi
 
+AC_SUBST(PACKAGE_VERSION)
+
 # Specify output files
-AC_CONFIG_FILES([Makefile include/Makefile libpcp/Makefile src/Makefile man/Makefile tests/Makefile])
+AC_CONFIG_FILES([Makefile include/Makefile libpcp/Makefile src/Makefile man/Makefile tests/Makefile libpcp/libpcp1.pc])
 AC_OUTPUT

@@ -14,8 +14,11 @@
 "-r --recipient <string>   Specify a recpipient, used for public\n" \
 "                          key export and encryption.\n" \
 "-t --text                 Print textual representation of some\n" \
-"                          item. Either -V or -i must be specified\n" \
-"                          as well.\n" \
+"                          item. Specify -V to get info about a\n" \
+"			  vault, -i to get info about a key id\n" \
+"			  installed in the vault or -I in which\n" \
+"			  case it determines itself what kind of\n" \
+"			  file it is.\n" \
 "-h --help                 Print this help message.\n" \
 "-v --version              Print program version.\n" \
 "-D --debug                Enable debug output.\n" \
@@ -24,7 +27,13 @@
 "-k --keygen               Generate a CURVE25519 secret key. If\n" \
 "                          the generated key is the first one in\n" \
 "                          your vault, it will become the primary\n" \
-"                          secret key.\n" \
+"                          secret key. If an output file (-O) has\n" \
+"			  been specified, don't store the generated\n" \
+"			  key to the vault but export it to the\n" \
+"			  file instead. You will be asked for\n" \
+"			  an owner, mail and a passphrase. If you\n" \
+"			  leave the passphrase empty, the key will\n" \
+"			  be stored unencrypted.\n" \
 "-l --listkeys             List all keys currently stored in your\n" \
 "                          vault. Only the key id's and some info\n" \
 "                          about the keys will be printed, not the\n" \

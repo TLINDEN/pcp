@@ -19,8 +19,11 @@ Pretty Curved Privacy - File encryption using eliptic curve cryptography.
   -r --recipient <string>   Specify a recpipient, used for public
                             key export and encryption.
   -t --text                 Print textual representation of some
-                            item. Either -V or -i must be specified
-                            as well.
+                            item. Specify -V to get info about a
+  			  vault, -i to get info about a key id
+  			  installed in the vault or -I in which
+  			  case it determines itself what kind of
+  			  file it is.
   -h --help                 Print this help message.
   -v --version              Print program version.
   -D --debug                Enable debug output.
@@ -29,7 +32,13 @@ Pretty Curved Privacy - File encryption using eliptic curve cryptography.
   -k --keygen               Generate a CURVE25519 secret key. If
                             the generated key is the first one in
                             your vault, it will become the primary
-                            secret key.
+                            secret key. If an output file (-O) has
+  			  been specified, don't store the generated
+  			  key to the vault but export it to the
+  			  file instead. You will be asked for
+  			  an owner, mail and a passphrase. If you
+  			  leave the passphrase empty, the key will
+  			  be stored unencrypted.
   -l --listkeys             List all keys currently stored in your
                             vault. Only the key id's and some info
                             about the keys will be printed, not the

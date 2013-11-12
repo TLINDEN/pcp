@@ -66,6 +66,7 @@ int pcp_storekey (pcp_key_t *key) {
 
 void pcp_keygen(char *passwd) {
   pcp_key_t *k = pcpkey_new ();
+  pcp_key_t *key;
 
   char *owner =  pcp_getstdin("Enter the name of the key owner");
   memcpy(k->owner, owner, strlen(owner) + 1);
@@ -87,7 +88,10 @@ void pcp_keygen(char *passwd) {
     strncpy(passphrase, passwd, strlen(passwd)+1);
   }
 
-  pcp_key_t *key = pcpkey_encrypt(k, passphrase);
+  if(strnlen(passphrase, 1024) > 0)
+    key = pcpkey_encrypt(k, passphrase);
+  else
+    key = k;
 
   if(key != NULL) {
     if(pcp_storekey(key) == 0) {

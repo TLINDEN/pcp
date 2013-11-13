@@ -12,6 +12,7 @@ extern "C" {
 #include "pcp/getpass.h"
 #include "pcp/jenhash.h"
 #include "pcp/key.h"
+#include "pcp/keyhash.h"
 #include "pcp/mac.h"
 #include "pcp/mem.h"
 #include "pcp/pad.h"

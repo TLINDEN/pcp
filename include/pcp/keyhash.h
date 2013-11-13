@@ -19,23 +19,45 @@
     You can contact me by mail: <tlinden AT cpan DOT org>.
 */
 
+#ifndef _HAVE_KEYHASH_H
+#define _HAVE_KEYHASH_H
 
-#ifndef _HAVE_ENCRYPTION_H
-#define _HAVE_ENCRYPTION_H
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#include <stdio.h>
-#include <string.h>
-
-#include "defines.h"
-#include "key.h"
-#include "crypto.h"
-#include "pcp.h"
 #include "uthash.h"
-#include "z85.h"
-#include "keyprint.h"
-#include "keyhash.h"
+#include "key.h"
 
-int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd);
-int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, char *recipient);
+pcp_key_t *pcpkey_hash;
+pcp_pubkey_t *pcppubkey_hash;
+pcp_key_t *__k;
+pcp_pubkey_t *__p;
 
-#endif // _HAVE_ENCRYPTION_H
+// wrapper for HASH_ITER
+#define pcphash_iterate(key) \
+  __k = NULL; \
+  HASH_ITER(hh, pcpkey_hash, key, __k)
+
+#define pcphash_iteratepub(key) \
+  __p = NULL; \
+  HASH_ITER(hh, pcppubkey_hash, key, __p)
+
+
+void pcphash_init();
+void pcphash_del(void *key, int type);
+void pcphash_clean();
+
+pcp_key_t *pcphash_keyexists(char *id);
+pcp_pubkey_t *pcphash_pubkeyexists(char *id);
+
+
+void pcphash_add(void *key, int type);
+int pcphash_count();
+int pcphash_countpub();
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // _HAVE_KEYHASH_H

@@ -28,6 +28,6 @@ pkgconfig_DATA = libpcp1.pc
 libpcp1_la_SOURCES = mac.c mem.c pad.c version.c \
 		    z85.c zmq_z85.c key.c randomart.c \
 		    vault.c fatal.c jenhash.c digital_crc32.c \
-                    crypto.c ed.c
+                    crypto.c ed.c keyhash.c
 
 include_HEADERS      = ../include/pcp.h

@@ -225,6 +225,7 @@ PCPEXPORT = pcp.h \
             pcp/getpass.h \
             pcp/jenhash.h \
             pcp/key.h \
+            pcp/keyhash.h \
             pcp/mac.h \
             pcp/mem.h \
             pcp/pad.h \

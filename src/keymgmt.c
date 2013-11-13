@@ -131,12 +131,12 @@ void pcp_listkeys() {
   if(nkeys > 0) {
     printf("Key ID               Type      Creation Time        Owner\n");
 
-    for(k=pcpkey_hash; k != NULL; k=(pcp_key_t*)(k->hh.next)) {
+    pcphash_iterate(k) {
       pcpkey_printlineinfo(k);
     }
 
     pcp_pubkey_t *p;
-    for(p=pcppubkey_hash; p != NULL; p=(pcp_pubkey_t*)(p->hh.next)) {
+    pcphash_iteratepub(p) {
       pcppubkey_printlineinfo(p);
     }
   }
@@ -184,7 +184,7 @@ char *pcp_normalize_id(char *keyid) {
 pcp_key_t *pcp_find_primary_secret() {
   pcp_key_t *key = NULL;
   pcp_key_t *k;
-  for(k=pcpkey_hash; k != NULL; k=(pcp_key_t*)(k->hh.next)) {
+  pcphash_iterate(k) {
     if(k->type == PCP_KEY_TYPE_MAINSECRET) {
       key = ucmalloc(sizeof(pcp_key_t));
       memcpy(key, k, sizeof(pcp_key_t));
@@ -195,7 +195,7 @@ pcp_key_t *pcp_find_primary_secret() {
   // no primary? whoops
   int nkeys = HASH_COUNT(pcpkey_hash);
   if(nkeys == 1) {
-    for(k=pcpkey_hash; k != NULL; k=(pcp_key_t*)(k->hh.next)) {
+    pcphash_iterate(k) {
       key = ucmalloc(sizeof(pcp_key_t));
       memcpy(key, k, sizeof(pcp_key_t));
       return key;
@@ -474,7 +474,7 @@ int pcp_sanitycheck_pub(pcp_pubkey_t *key) {
     return 1;
   }
 
-  pcp_pubkey_t *maybe = pcppubkey_exists(key->id);
+  pcp_pubkey_t *maybe = pcphash_pubkeyexists(key->id);
   if(maybe != NULL) {
     fatal("Pubkey sanity check: there already exists a key with the id 0x%s\n", key->id);
     return 1;
@@ -525,7 +525,7 @@ int pcp_sanitycheck_key(pcp_key_t *key) {
     return 1;
   }
 
-  pcp_key_t *maybe = pcpkey_exists(key->id);
+  pcp_key_t *maybe = pcphash_keyexists(key->id);
   if(maybe != NULL) {
     fatal("Secretkey sanity check: there already exists a key with the id 0x%s\n", key->id);
     return 1;
@@ -535,7 +535,7 @@ int pcp_sanitycheck_key(pcp_key_t *key) {
 }
 
 void pcpdelete_key(char *keyid) {
-  pcp_pubkey_t *p = pcppubkey_exists(keyid);
+  pcp_pubkey_t *p = pcphash_pubkeyexists(keyid);
   
   if(p != NULL) {
     // delete public
@@ -545,7 +545,7 @@ void pcpdelete_key(char *keyid) {
     fprintf(stderr, "Public key deleted.\n");
   }
   else {
-    pcp_key_t *s = pcpkey_exists(keyid);
+    pcp_key_t *s = pcphash_keyexists(keyid);
     if(s != NULL) {
       // delete secret
       HASH_DEL(pcpkey_hash, s);
@@ -560,7 +560,7 @@ void pcpdelete_key(char *keyid) {
 }
 
 void pcpedit_key(char *keyid) {
-  pcp_key_t *key = pcpkey_exists(keyid);
+  pcp_key_t *key = pcphash_keyexists(keyid);
   
   if(key != NULL) {
     if(key->secret[0] == 0) {
@@ -599,7 +599,7 @@ char *pcp_find_id_byrec(char *recipient) {
   pcp_pubkey_t *p;
   char *id = NULL;
   _lc(recipient);
-  for(p=pcppubkey_hash; p != NULL; p=(pcp_pubkey_t*)(p->hh.next)) {
+  pcphash_iteratepub(p) {
     if(strncmp(p->owner, recipient, 255) == 0) {
       id = ucmalloc(17);
       strncpy(id, p->id, 17);

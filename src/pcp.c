@@ -229,7 +229,7 @@ int main (int argc, char **argv)  {
   }
 
   if(usevault == 1) {
-    pcp_inithashes();
+    pcphash_init();
     vault = pcpvault_init(vaultfile);
     if(vault != NULL) {
       switch (mode) {
@@ -396,7 +396,7 @@ int main (int argc, char **argv)  {
       }
     }
     pcpvault_close(vault);
-    pcp_cleanhashes();
+    pcphash_clean();
     ucfree(vaultfile);
   }
   else {

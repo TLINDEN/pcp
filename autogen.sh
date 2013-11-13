@@ -8,12 +8,14 @@ find . -name Makefile.in -exec rm {} \;
 find . -name "*~"     -exec rm {} \;
 find . -name config.h -exec rm {} \;
 find . -name stamp.h  -exec rm {} \;
+find . -name stamp-h1  -exec rm {} \;
 find . -name .deps    -exec rm -rf {} \;
 find . -name .libs    -exec rm -rf {} \;
 find . -name .o    -exec rm -rf {} \;
 find . -name .lo    -exec rm -rf {} \;
 
-rm -rf configure config.* config autom4te.cache tests/test* tests/v* tests/stresstest/*
+rm -rf configure config.* config autom4te.cache tests/test* tests/v* tests/stresstest/* \
+    libpcp/libpcp1.pc
 set +x
 
 # generate the install include file

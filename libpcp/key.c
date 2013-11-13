@@ -21,7 +21,7 @@
 
 
 #include "key.h"
-
+#include "keyhash.h"
 
 unsigned char *pcp_derivekey(char *passphrase) {
   unsigned char *hash32 = ucmalloc(crypto_hash_sha256_BYTES);
@@ -175,7 +175,6 @@ pcp_key_t *pcpkey_decrypt(pcp_key_t *key, char *passphrase) {
   if(es == 0) {
     // success
     byte secret[32] = { 0 };
-    byte edsec[64] = { 0 };
     pcp_ed_keypairs(secret, decrypted);
     memcpy(key->secret, secret, 32);
     memcpy(key->edsecret, decrypted, 64);
@@ -225,45 +224,6 @@ unsigned char *pcpkey_getchecksum(pcp_key_t *k) {
   return hash;
 }
 
-
-
-void pcp_inithashes() {
-  pcpkey_hash = NULL;
-  pcppubkey_hash = NULL;
-}
-
-void pcp_cleanhashes() {
-  if(pcpkey_hash != NULL) {
-    pcp_key_t *current_key, *tmp;
-    HASH_ITER(hh, pcpkey_hash, current_key, tmp) {
-      HASH_DEL(pcpkey_hash,current_key);
-      memset(current_key, 0, sizeof(pcp_key_t));
-      free(current_key); // FIXME: coredumps here after n-th secret keys has been added
-    }
-  }
-
-  if(pcppubkey_hash != NULL) {
-    pcp_pubkey_t *current_pub, *ptmp;
-    HASH_ITER(hh, pcppubkey_hash, current_pub, ptmp) {
-      HASH_DEL(pcppubkey_hash,current_pub);
-      memset(current_pub, 0, sizeof(pcp_pubkey_t));
-      free(current_pub);
-    }
-  }
-  pcp_inithashes();
-}
-
-pcp_key_t *pcpkey_exists(char *id) {
-  pcp_key_t *key = NULL;
-  HASH_FIND_STR(pcpkey_hash, id, key);
-  return key; // maybe NULL!
-}
-
-pcp_pubkey_t *pcppubkey_exists(char *id) {
-  pcp_pubkey_t *key = NULL;
-  HASH_FIND_STR(pcppubkey_hash, id, key);
-  return key; // maybe NULL!
-}
 
 pcp_key_t * key2be(pcp_key_t *k) {
   k->version = htobe32(k->version);

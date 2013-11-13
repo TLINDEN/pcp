@@ -93,9 +93,7 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd) {
   unsigned char *check = ucmalloc(crypto_hash_BYTES);
   memcpy(hash, combined, crypto_hash_BYTES);
 
-  for(public=pcppubkey_hash;
-      public != NULL;
-      public=(pcp_pubkey_t*)(public->hh.next)) {
+  pcphash_iteratepub(public) {
     crypto_hash(check, (unsigned char*)public->id, 16);
     if(memcmp(check, hash, crypto_hash_BYTES) == 0) {
       // found one
@@ -105,7 +103,7 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd) {
   if(public == NULL) {
     // maybe self encryption, try secrets
     pcp_key_t *s = NULL;
-    for(s=pcpkey_hash; s != NULL; s=(pcp_key_t*)(s->hh.next)) {
+    pcphash_iterate(s) {
       crypto_hash(check, (unsigned char*)s->id, 16);
       if(memcmp(check, hash, crypto_hash_BYTES) == 0) {
         // matching secret

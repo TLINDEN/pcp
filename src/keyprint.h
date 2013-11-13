@@ -28,6 +28,7 @@
 #include "vault.h"
 #include "pcp.h"
 #include "keymgmt.h"
+#include "keyhash.h"
 
 void pcp_dumpkey(pcp_key_t *k);
 void pcp_dumppubkey(pcp_pubkey_t *k);

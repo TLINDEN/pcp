@@ -110,9 +110,6 @@ struct _pcp_pubkey_t {
 typedef struct _pcp_key_t pcp_key_t;
 typedef struct _pcp_pubkey_t pcp_pubkey_t;
 
-pcp_key_t *pcpkey_hash;
-pcp_pubkey_t *pcppubkey_hash;
-
 void pcp_cleanhashes();
 pcp_key_t *pcpkey_new ();
 

@@ -21,6 +21,7 @@
 
 
 #include "vault.h"
+#include "keyhash.h"
 
 vault_t *pcpvault_init(char *filename) {
   vault_t *vault = pcpvault_new(filename, 0);
@@ -151,14 +152,7 @@ int pcpvault_additem(vault_t *vault, void *item, size_t itemsize, uint8_t type, 
 
   if(do_hash == 1) {
     // we don't re-hash if it's a full update
-    if(type == PCP_KEY_TYPE_PUBLIC) {
-      pcp_pubkey_t *p = (pcp_pubkey_t *)item;
-      HASH_ADD_STR( pcppubkey_hash, id, p );
-    }
-    else {
-      pcp_key_t *s =  (pcp_key_t *)item;
-      HASH_ADD_STR( pcpkey_hash, id, s );
-    }
+    pcphash_add(item, type);
     pcpvault_update_checksum(vault);
   }
 
@@ -204,13 +198,13 @@ int pcpvault_writeall(vault_t *vault) {
   vault_t *tmp = pcpvault_new(vault->filename, 1);
   if(tmp != NULL) {
     if(pcpvault_create(tmp) == 0) {
-      pcp_key_t *k, *kt = NULL;
-      HASH_ITER(hh, pcpkey_hash, k, kt) {
+      pcp_key_t *k = NULL;
+      pcphash_iterate(k) {
 	if(pcpvault_additem(tmp, (void *)k, sizeof(pcp_key_t), PCP_KEY_TYPE_SECRET, 0) != 0)
 	  goto errwa;
       }
-      pcp_pubkey_t *p, *pt = NULL;
-      HASH_ITER(hh, pcppubkey_hash, p, pt) {
+      pcp_pubkey_t *p = NULL;
+      pcphash_iteratepub(p) {
 	if(pcpvault_additem(tmp, (void *)p, sizeof(pcp_pubkey_t), PCP_KEY_TYPE_PUBLIC, 0) != 0)
 	  goto errwa;
       }
@@ -253,24 +247,24 @@ unsigned char *pcpvault_create_checksum(vault_t *vault) {
   size_t skeysize = sizeof(pcp_key_t) - sizeof(UT_hash_handle);
   size_t pkeysize = sizeof(pcp_pubkey_t) - sizeof(UT_hash_handle);
 
-  int numskeys = HASH_COUNT(pcpkey_hash);
-  int numpkeys = HASH_COUNT(pcppubkey_hash);
+  int numskeys = pcphash_count();
+  int numpkeys = pcphash_countpub();
 
   size_t datasize = (skeysize * numskeys) + (pkeysize * numpkeys);
   unsigned char *data = ucmalloc(datasize);
   unsigned char *checksum = ucmalloc(32);
   size_t datapos = 0;
 
-  pcp_key_t *k, *kt = NULL;
-  HASH_ITER(hh, pcpkey_hash, k, kt) {
+  pcp_key_t *k = NULL;
+  pcphash_iterate(k) {
     key2be(k);
     memcpy(&data[datapos], k, skeysize);
     key2native(k);
     datapos += skeysize;
   }
 
-  pcp_pubkey_t *p, *pt = NULL;
-  HASH_ITER(hh, pcppubkey_hash, p, pt) {
+  pcp_pubkey_t *p = NULL;
+  pcphash_iteratepub(p) {
     pubkey2be(p);
     memcpy(&data[datapos], p, pkeysize);
     pubkey2native(p);
@@ -374,13 +368,13 @@ int pcpvault_fetchall(vault_t *vault) {
 
   if(header->fileid == PCP_VAULT_ID && header->version == PCP_VAULT_VERSION) {
     // loop over the file and slurp everything in
-    pcpkey_hash = NULL;
-    pcppubkey_hash = NULL;
     int readpos = 0;
     pcp_key_t *key;
     pcp_pubkey_t *pubkey;
     int bytesleft = 0;
     int ksize =  sizeof(pcp_pubkey_t); // smallest possbile item
+
+    pcphash_init();
 
     vault->version = header->version;
     memcpy(vault->checksum, header->checksum, 32);
@@ -405,14 +399,14 @@ int pcpvault_fetchall(vault_t *vault) {
 	      fread(key, sizeof(pcp_key_t), 1, vault->fd);
 	      key2native(key);
 	      //pcp_dumpkey(key);
-	      HASH_ADD_STR( pcpkey_hash, id, key ); 
+	      pcphash_add((void *)key, item->type);
 	    }
 	    else if(item->type == PCP_KEY_TYPE_PUBLIC) {
 	      // read a public key
 	      pubkey = ucmalloc(sizeof(pcp_pubkey_t));
 	      fread(pubkey, sizeof(pcp_pubkey_t), 1, vault->fd);
 	      pubkey2native(pubkey);
-	      HASH_ADD_STR( pcppubkey_hash, id, pubkey ); 
+	      pcphash_add((void *)pubkey, item->type);
 	    }
 	    else {
 	      fatal("Failed to read vault - invalid key type: %02X! at %d\n", item->type, readpos);
@@ -443,7 +437,7 @@ int pcpvault_fetchall(vault_t *vault) {
 
   unsigned char *checksum = NULL;
   checksum = pcpvault_create_checksum(vault);
-  if(HASH_COUNT(pcpkey_hash) + HASH_COUNT(pcppubkey_hash) > 0) {
+  if(pcphash_count() + pcphash_countpub() > 0) {
     // only validate the checksum if there are keys
     if(memcmp(checksum, vault->checksum, 32) != 0) {
       fatal("Error: the checksum of the key vault doesn't match its contents!\n");
@@ -459,7 +453,7 @@ int pcpvault_fetchall(vault_t *vault) {
  err:
   free(item);
   free(header);
-  pcp_cleanhashes();
+  //pcphash_clean();
 
   return -1;
 }

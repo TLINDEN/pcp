@@ -101,7 +101,7 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 libpcp1_la_LIBADD =
 am_libpcp1_la_OBJECTS = mac.lo mem.lo pad.lo version.lo z85.lo \
 	zmq_z85.lo key.lo randomart.lo vault.lo fatal.lo jenhash.lo \
-	digital_crc32.lo crypto.lo ed.lo
+	digital_crc32.lo crypto.lo ed.lo keyhash.lo
 libpcp1_la_OBJECTS = $(am_libpcp1_la_OBJECTS)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include/pcp
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
@@ -269,7 +269,7 @@ pkgconfig_DATA = libpcp1.pc
 libpcp1_la_SOURCES = mac.c mem.c pad.c version.c \
 		    z85.c zmq_z85.c key.c randomart.c \
 		    vault.c fatal.c jenhash.c digital_crc32.c \
-                    crypto.c ed.c
+                    crypto.c ed.c keyhash.c
 
 include_HEADERS = ../include/pcp.h
 all: all-am
@@ -357,6 +357,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fatal.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jenhash.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/key.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/keyhash.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mac.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mem.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pad.Plo@am__quote@

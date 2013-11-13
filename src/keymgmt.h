@@ -37,6 +37,7 @@
 #include "defines.h"
 #include "readpass.h"
 #include "keyprint.h"
+#include "keyhash.h"
 
 #define _WITH_GETLINE
 

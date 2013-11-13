@@ -140,14 +140,14 @@ int pcptext_infile(char *infile) {
 
 
 void pcptext_key(char *keyid) {
-  pcp_key_t *s = pcpkey_exists(keyid);
+  pcp_key_t *s = pcphash_keyexists(keyid);
   if(s != NULL) {
     if(debug)
       pcp_dumpkey(s);
     pcpkey_print(s, stdout);
   }
   else {
-    pcp_pubkey_t *p = pcppubkey_exists(keyid);
+    pcp_pubkey_t *p = pcphash_pubkeyexists(keyid);
     if(p != NULL) {
       if(debug)
 	pcp_dumppubkey(p);
@@ -431,7 +431,7 @@ void pcpexport_yaml(char *outfile) {
     fprintf(out, "---\n");
     fprintf(out, "secret-keys:\n");
 
-    for(s=pcpkey_hash; s != NULL; s=(pcp_key_t*)(s->hh.next)) {
+    pcphash_iterate(s) {
       fprintf(out, " -\n");
       fprintf(out, "  id:         %s\n", s->id);
       fprintf(out, "  owner:      %s\n", s->owner);
@@ -456,7 +456,7 @@ void pcpexport_yaml(char *outfile) {
     }
     
     fprintf(out, "public-keys:\n");
-    for(p=pcppubkey_hash; p != NULL; p=(pcp_pubkey_t*)(p->hh.next)) {
+    pcphash_iteratepub(p) {
       fprintf(out, " -\n");
       fprintf(out, "  id:      %s\n", p->id);
       fprintf(out, "  owner:   %s\n", p->owner);

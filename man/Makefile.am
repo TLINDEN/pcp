@@ -18,6 +18,5 @@
 #
 #    You can contact me by mail: <tlinden AT cpan DOT org>.
 #
-man_MANS = pcp1.1
-dist_man_MANS = $(man_MANS)
+dist_man_MANS = pcp1.1
 DATAROOTDIR = /usr

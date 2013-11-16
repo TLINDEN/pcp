@@ -268,7 +268,7 @@ pcp_key_t *pcp_derive_pcpkey (pcp_key_t *ours, char *theirs) {
   memcpy(both, ours->edsecret, 64);
   memcpy(&both[64], theirs, thlen);
 
-  if(crypto_hash(seed, both, inlen) != 0) {
+  if(crypto_hash_sha256(seed, both, inlen) != 0) {
     fatal("Failed to generate a hash of our pub key and recipient id!\n");
     goto errdp1;
   }

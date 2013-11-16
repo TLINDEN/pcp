@@ -45,10 +45,10 @@ test: check
 	rm -f test* v* stresstest/*
 	./unittests.pl unittests.cfg $(CHECK)
 	@echo "To run a single test only, type: 'make test CHECK=testname'"
-	sudo umount -f env
 
 stresstest: check
 	./unittests.pl stresstests.cfg
 
 iotest: check
 	./unittests.pl iotests.cfg
+	sudo umount -f env

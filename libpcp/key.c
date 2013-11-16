@@ -49,7 +49,7 @@ unsigned char *pcp_derivekey(char *passphrase) {
 
   memset(passphrase, 0, plen);
   memset(temp, 0, crypto_hash_sha256_BYTES);
-  free(passphrase);
+
   free(temp);
   free(hash32);
 
@@ -136,6 +136,7 @@ pcp_key_t *pcpkey_encrypt(pcp_key_t *key, char *passphrase) {
   }
 
   unsigned char *encryptkey = pcp_derivekey(passphrase);  
+  free(passphrase);
 
   unsigned char *encrypted;
   size_t es;
@@ -164,6 +165,8 @@ pcp_key_t *pcpkey_encrypt(pcp_key_t *key, char *passphrase) {
 
 pcp_key_t *pcpkey_decrypt(pcp_key_t *key, char *passphrase) {
   unsigned char *encryptkey = pcp_derivekey(passphrase);  
+  free(passphrase);
+
   unsigned char *decrypted;
   size_t es;
   

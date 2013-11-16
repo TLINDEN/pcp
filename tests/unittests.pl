@@ -19,6 +19,8 @@
 #
 #    You can contact me by mail: <tlinden AT cpan DOT org>.
 #
+use lib qw(lib);
+
 use Test::More;
 use IPC::Open3;
 use IO::Select;

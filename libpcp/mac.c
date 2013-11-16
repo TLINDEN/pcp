@@ -58,7 +58,7 @@ int pcp_sodium_verify_mac(unsigned char **cleartext, unsigned char* message,
 
   pcp_pad_prepend(&pad_cipher, message, crypto_secretbox_BOXZEROBYTES, messagesize);
 
-  pad_clear = (unsigned char *)ucmalloc((crypto_secretbox_BOXZEROBYTES + messagesize));
+  pad_clear = (unsigned char *)ucmalloc((crypto_secretbox_ZEROBYTES + messagesize));
 
   if (crypto_secretbox_open(pad_clear,
 			    pad_cipher,

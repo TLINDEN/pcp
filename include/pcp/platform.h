@@ -57,39 +57,16 @@
 
 
 #ifndef HAVE_ARC4RANDOM_BUF
-// shitty OS. we've got to use other stuff
+// shitty OS. we're using libsodium's implementation
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdint.h>
-
-static inline FILE *__getranddev() {
-  FILE *R;
-  if((R = fopen("/dev/urandom", "rb")) == NULL) {
-    // not even this is here! what a shame
-    if((R = fopen("/dev/random", "rb")) == NULL) {
-      // not available or depleted. that's too bad
-      fprintf(stderr, "ERROR: /dev/urandom not available, /dev/random is depleted.\n");
-      fprintf(stderr, "That's horrible for you but a nightmare for me. I die. Bye.\n");
-      exit(2);
-    }
-  }
-  return R;
-}
+#include <sodium.h>
 
 static inline u_int32_t arc4random() {
-  uint32_t x;
-  FILE *R = __getranddev();
-  fread(&x, sizeof(uint32_t), 1, R);
-  fclose(R);
-  return x;
+  return randombytes_random();
 }
 
 static inline void arc4random_buf(void *buf, size_t nbytes) {
-  FILE *R = __getranddev();
-  fread(buf, nbytes, 1, R);
-  fclose(R);
+  randombytes(buf, nbytes);
 }
 
 

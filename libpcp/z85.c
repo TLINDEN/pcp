@@ -63,7 +63,7 @@ unsigned char *pcp_z85_decode(char *z85block, size_t *dstlen) {
   size_t zlen, binlen, outlen; 
 
   zlen = strlen(z85block);
-  char *z85 = ucmalloc(zlen);
+  char *z85 = ucmalloc(zlen+1);
 
   // remove newlines
   pos = 0;

@@ -35,6 +35,14 @@
 	keyhash.c, so nowhere will be used any HASH*
 	macros directly.
 
+	Fixed various malloc/free errors. Found them on
+	the gcc compilefarm, thanks to the gcc guys
+	providing access to it.
+
+	Fixed alternate arc4random*() implementation in
+	platform.h, now we just use the random functions
+	of libsodium if they're not available.
+
 0.1.4   Changed key format (again), now the main secret
 	is the ED25519 secret key, which will be encrypted.
 	Everything else will be derived from that. Thanks

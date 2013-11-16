@@ -22,8 +22,8 @@
 #include "ed.h"
 
 int pcp_ed_verify(unsigned char *input, size_t inputlen, pcp_sig_t *sig, pcp_pubkey_t *p) {
-  unsigned char *message = ucmalloc(inputlen);
-  unsigned char *tmpsig  = ucmalloc(inputlen + crypto_sign_BYTES); // from sig
+  unsigned char *message = ucmalloc(inputlen+1);
+  unsigned char *tmpsig  = ucmalloc(inputlen+1 + crypto_sign_BYTES); // from sig
   size_t mlen = 0;
 
   memcpy(tmpsig, sig->edsig, crypto_sign_BYTES);

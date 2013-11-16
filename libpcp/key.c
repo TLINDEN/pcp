@@ -136,7 +136,6 @@ pcp_key_t *pcpkey_encrypt(pcp_key_t *key, char *passphrase) {
   }
 
   unsigned char *encryptkey = pcp_derivekey(passphrase);  
-  free(passphrase);
 
   unsigned char *encrypted;
   size_t es;
@@ -165,7 +164,6 @@ pcp_key_t *pcpkey_encrypt(pcp_key_t *key, char *passphrase) {
 
 pcp_key_t *pcpkey_decrypt(pcp_key_t *key, char *passphrase) {
   unsigned char *encryptkey = pcp_derivekey(passphrase);  
-  free(passphrase);
 
   unsigned char *decrypted;
   size_t es;

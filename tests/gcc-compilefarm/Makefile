@@ -16,8 +16,9 @@ CPANCFG  = http://search.cpan.org/CPAN/authors/id/T/TL/TLINDEN/$(GZCFG)
 CPANTIE  = http://search.cpan.org/CPAN/authors/id/C/CH/CHORNY/$(GZTIE)
 CPANYAM  = http://search.cpan.org/CPAN/authors/id/M/MS/MSTROUT/$(GZYAM)
 
-HAVEPERL = $(PREFIX)/share/perl/5.10.1/Config/General.pm
-HAVESODIUM = $(PREFIX)/lib/libsodium.a
+HAVEPERL = $(PREFIX)/_haveperl
+HAVESODIUM = $(PREFIX)/_havesodium
+
 SRCSODIUM = $(BUILD)/libsodium
 SRCPCP    = $(BUILD)/pcp
 
@@ -31,12 +32,13 @@ prepare:
 
 perl: prepare
 	if test ! -f $(HAVEPERL); then \
-		cd $(BUILD) && wget $(CPANCFG) && tar xvfz $(GZCFG); \
+		cd $(BUILD) && wget $(CPANCFG) && gunzip -c $(GZCFG) | tar -x -f -; \
 		cd $(BUILD)/$(DIRCFG) && perl Makefile.PL PREFIX=$(PREFIX) && make && make install; \
-		cd $(BUILD) && wget $(CPANTIE) && tar xvfz $(GZTIE); \
+		cd $(BUILD) && wget $(CPANTIE) && gunzip -c $(GZTIE) | tar -x -f -; \
 		cd $(BUILD)/$(DIRTIE) && perl Makefile.PL PREFIX=$(PREFIX) && make && make install; \
-		cd $(BUILD) && wget $(CPANYAM) && tar xvfz $(GZYAM); \
+		cd $(BUILD) && wget $(CPANYAM) && gunzip -c $(GZYAM) | tar -x -f -; \
 		cd $(BUILD)/$(DIRYAM) && perl Makefile.PL PREFIX=$(PREFIX) && make && make install; \
+		touch $(HAVEPERL); \
 	fi
 
 
@@ -56,6 +58,7 @@ config-sodium:
 	if test ! -f $(HAVESODIUM); then \
 		cd $(SRCSODIUM) && ./autogen.sh; \
 		cd $(SRCSODIUM) && ./configure --prefix=$(PREFIX); \
+		touch $(HAVESODIUM); \
 	fi
 
 config-pcp:

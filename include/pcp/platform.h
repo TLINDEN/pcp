@@ -31,14 +31,18 @@
 # ifdef HAVE_SYS_ENDIAN_H
 #   include <sys/endian.h>
 #   ifdef HAVE_BETOH32
-      // openbsd, use aliases
+#     // openbsd, use aliases
 #     define be32toh betoh32
 #     define htobe32 hto32be
+#     define be64toh betoh64
+#     define htobe64 hto64be
 #   endif
 # else // no sys/endian.h
 #   if __BYTE_ORDER == __BIG_ENDIAN
-#     define be32toh(x)	((void)0)
-#     define htobe32(x)	((void)0)
+#     define be32toh(x)	(x)
+#     define htobe32(x)	(x)
+#     define be64toh(x)	(x)
+#     define htobe64(x)	(x)
 #   else
 #     ifdef HAVE_ARPA_INET_H
 #       include <arpa/inet.h>
@@ -51,6 +55,8 @@
 #     endif
 #     define be32toh(x)	((u_int32_t)ntohl((u_int32_t)(x)))
 #     define htobe32(x)	((u_int32_t)htonl((u_int32_t)(x)))
+#     define be64toh(x)	((u_int64_t)ntohl((u_int64_t)(x)))
+#     define htobe64(x)	((u_int64_t)htonl((u_int64_t)(x)))
 #   endif
 #  endif // HAVE_SYS_ENDIAN_H
 #endif // HAVE_ENDIAN_H
@@ -71,6 +77,69 @@ static inline void arc4random_buf(void *buf, size_t nbytes) {
 
 
 #endif
+
+
+#ifndef HAVE_ERR_H
+
+#include <errno.h>
+#include <string.h>
+#include <stdarg.h>
+#include <stdio.h>
+
+static inline void err(int eval, const char *fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+  fprintf(stderr, "pcp1");
+  if (fmt != NULL) {
+    fprintf(stderr, ": ");
+    vfprintf(stderr, fmt, ap);
+  }
+  fprintf(stderr, ": %s\n", strerror(errno));
+  va_end(ap);
+}
+
+#else
+
+#include <errno.h>
+#include <err.h>
+
+#endif
+
+
+
+#ifndef HAVE_VASPRINTF
+
+#include <stdarg.h>
+static inline
+int vasprintf(char **ret, const char *format, va_list args) {
+  va_list copy;
+  va_copy(copy, args);
+
+  *ret = 0;
+
+  int count = vsnprintf(NULL, 0, format, args);
+  if (count >= 0) {
+    char* buffer = malloc(count + 1);
+    if (buffer != NULL) {
+      count = vsnprintf(buffer, count + 1, format, copy);
+      if (count < 0)
+	free(buffer);
+      else
+	*ret = buffer;
+    }
+  }
+  va_end(copy);  // Each va_start() or va_copy() needs a va_end()
+
+  return count;
+}
+
+#endif
+
+
+#ifdef _AIX_SOURCE
+#define _LINUX_SOURCE_COMPAT
+#endif
+
 
 
 #endif /* !_HAVE_PCP_PLATFORM_H */

@@ -79,3 +79,6 @@ if test -z "$clean"; then
 fi
 
 rm -rf README include/pcp/config.h.in~ libpcp/stamp-h1 autom4te.cache
+
+sleep 1
+touch Makefile.in configure */Makefile.in

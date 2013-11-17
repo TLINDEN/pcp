@@ -79,7 +79,9 @@ AC_CHECK_FUNCS( \
     be32toh \
     htobe32 \
     umask \
-    towlower
+    towlower \
+    getopt_long \
+    vasprintf
 )
 
 AC_MSG_CHECKING([compiler and flags for sanity])
@@ -151,11 +153,11 @@ if test "x${_havenacl}" = "xno"; then
 fi
 
 
-
 # Check for some target-specific stuff
 case "$host" in
-    *-*-aix*)
+    *aix*)
 	# libm is required as well
+	CFLAGS="$CFLAGS -D_AIX_SOURCE=1"
 	LDFLAGS="$LDFLAGS -lm"
 	;;
     *-*-android*) ;;

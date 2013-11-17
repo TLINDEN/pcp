@@ -30,7 +30,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <getopt.h>
+#include <compat_getopt.h>
 
 // lib
 #include "mem.h"

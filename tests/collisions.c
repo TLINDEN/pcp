@@ -13,7 +13,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <getopt.h>
+#include <compat_getopt.h>
 #include <sodium.h>
 #include <limits.h>
 

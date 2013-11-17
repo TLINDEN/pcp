@@ -12364,7 +12364,9 @@ for ac_func in \
     be32toh \
     htobe32 \
     umask \
-    towlower
+    towlower \
+    getopt_long \
+    vasprintf
 
 do :
   as_ac_var=`$as_echo "ac_cv_func_$ac_func" | $as_tr_sh`
@@ -12476,10 +12478,13 @@ $as_echo "no" >&6; }
 fi
 
 
-
 # Check for some target-specific stuff
 case "$host" in
-    *-*-aix*) ;;
+    *aix*)
+	# libm is required as well
+	CFLAGS="$CFLAGS -D_AIX_SOURCE=1"
+	LDFLAGS="$LDFLAGS -lm"
+	;;
     *-*-android*) ;;
     *-*-cygwin*) ;;
     *-*-dgux*) ;;

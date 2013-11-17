@@ -30,7 +30,6 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <getopt.h>
 
 #include "mem.h"
 #include "z85.h"

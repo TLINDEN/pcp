@@ -21,6 +21,7 @@
 
 
 #include "defines.h"
+#include "platform.h"
 
 #include <errno.h>
 #include <stdarg.h>

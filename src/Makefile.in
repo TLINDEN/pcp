@@ -91,7 +91,7 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_pcp1_OBJECTS = pcp.$(OBJEXT) keymgmt.$(OBJEXT) keyprint.$(OBJEXT) \
 	readpass.$(OBJEXT) encryption.$(OBJEXT) z85util.$(OBJEXT) \
-	signature.$(OBJEXT)
+	signature.$(OBJEXT) compat_getopt.$(OBJEXT)
 pcp1_OBJECTS = $(am_pcp1_OBJECTS)
 pcp1_DEPENDENCIES = ../libpcp/.libs/libpcp1.a
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include/pcp
@@ -233,7 +233,8 @@ top_srcdir = @top_srcdir@
 AM_CFLAGS = -I../include/pcp -Wall -g
 pcp1_LDADD = ../libpcp/.libs/libpcp1.a
 pcp1_SOURCES = pcp.c keymgmt.c keyprint.c readpass.c \
-               encryption.c z85util.c signature.c
+               encryption.c z85util.c signature.c \
+               compat_getopt.c
 
 all: all-am
 
@@ -325,6 +326,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/compat_getopt.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/encryption.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/keymgmt.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/keyprint.Po@am__quote@

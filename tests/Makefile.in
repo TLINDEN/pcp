@@ -86,7 +86,7 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/include/pcp/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-am_col_OBJECTS = collisions.$(OBJEXT)
+am_col_OBJECTS = collisions.$(OBJEXT) compat_getopt.$(OBJEXT)
 col_OBJECTS = $(am_col_OBJECTS)
 col_DEPENDENCIES = ../libpcp/.libs/libpcp1.a
 am_invalidkeys_OBJECTS = invalidkeys.$(OBJEXT)
@@ -235,7 +235,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CFLAGS = -I../include/pcp -Wall -g
 col_LDADD = ../libpcp/.libs/libpcp1.a
-col_SOURCES = collisions.c
+col_SOURCES = collisions.c ../src/compat_getopt.c
 invalidkeys_LDADD = ../libpcp/.libs/libpcp1.a \
 		    ../src/keyprint.o ../src/keymgmt.o ../src/readpass.o
 
@@ -303,6 +303,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/collisions.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/compat_getopt.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/invalidkeys.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pwhashes.Po@am__quote@
 
@@ -326,6 +327,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
+
+compat_getopt.o: ../src/compat_getopt.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT compat_getopt.o -MD -MP -MF $(DEPDIR)/compat_getopt.Tpo -c -o compat_getopt.o `test -f '../src/compat_getopt.c' || echo '$(srcdir)/'`../src/compat_getopt.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/compat_getopt.Tpo $(DEPDIR)/compat_getopt.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='../src/compat_getopt.c' object='compat_getopt.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o compat_getopt.o `test -f '../src/compat_getopt.c' || echo '$(srcdir)/'`../src/compat_getopt.c
+
+compat_getopt.obj: ../src/compat_getopt.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT compat_getopt.obj -MD -MP -MF $(DEPDIR)/compat_getopt.Tpo -c -o compat_getopt.obj `if test -f '../src/compat_getopt.c'; then $(CYGPATH_W) '../src/compat_getopt.c'; else $(CYGPATH_W) '$(srcdir)/../src/compat_getopt.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/compat_getopt.Tpo $(DEPDIR)/compat_getopt.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='../src/compat_getopt.c' object='compat_getopt.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o compat_getopt.obj `if test -f '../src/compat_getopt.c'; then $(CYGPATH_W) '../src/compat_getopt.c'; else $(CYGPATH_W) '$(srcdir)/../src/compat_getopt.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo

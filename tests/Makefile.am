@@ -23,7 +23,7 @@ AM_CFLAGS = -I../include/pcp -Wall -g
 check_PROGRAMS = col invalidkeys pwhashes
 
 col_LDADD = ../libpcp/.libs/libpcp1.a
-col_SOURCES = collisions.c
+col_SOURCES = collisions.c ../src/compat_getopt.c
 
 invalidkeys_LDADD = ../libpcp/.libs/libpcp1.a \
 		    ../src/keyprint.o ../src/keymgmt.o ../src/readpass.o

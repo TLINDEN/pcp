@@ -25,11 +25,14 @@
 
 
 void *ucmalloc(size_t s) {
+  if (s == 0)
+    return NULL;
+
   size_t size = s * sizeof(unsigned char);
   void *value = malloc (size);
 
   if (value == NULL) {
-    err(errno, "Cannot allocate memory");
+    err(errno, "Cannot allocate %d bytes of memory", (int)s);
     exit(-1);
   }
 

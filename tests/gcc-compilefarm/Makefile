@@ -17,7 +17,7 @@ CPANTIE  = http://search.cpan.org/CPAN/authors/id/C/CH/CHORNY/$(GZTIE)
 CPANYAM  = http://search.cpan.org/CPAN/authors/id/M/MS/MSTROUT/$(GZYAM)
 
 HAVEPERL = $(PREFIX)/share/perl/5.10.1/Config/General.pm
-
+HAVESODIUM = $(PREFIX)/lib/libsodium.a
 SRCSODIUM = $(BUILD)/libsodium
 SRCPCP    = $(BUILD)/pcp
 
@@ -53,20 +53,26 @@ fetch: prepare
 	fi
 
 config-sodium:
-	cd $(SRCSODIUM) && ./autogen.sh
-	cd $(SRCSODIUM) && ./configure --prefix=$(PREFIX)
+	if test ! -f $(HAVESODIUM); then \
+		cd $(SRCSODIUM) && ./autogen.sh; \
+		cd $(SRCSODIUM) && ./configure --prefix=$(PREFIX); \
+	fi
 
 config-pcp:
 	cd $(SRCPCP) && ./configure --prefix=$(PREFIX) --with-libsodium=$(PREFIX)
 
 compile-sodium:
-	cd $(SRCSODIUM) && make
+	if test ! -f $(HAVESODIUM); then \
+		cd $(SRCSODIUM) && make; \
+	fi
 
 compile-pcp:
 	cd $(SRCPCP) && make
 
 install-sodium:
-	cd $(SRCSODIUM) && make install
+	if test ! -f $(HAVESODIUM); then \
+		cd $(SRCSODIUM) && make install; \
+	fi
 
 install-pcp:
 	cd $(SRCPCP) && make install

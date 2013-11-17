@@ -154,7 +154,10 @@ fi
 
 # Check for some target-specific stuff
 case "$host" in
-    *-*-aix*) ;;
+    *-*-aix*)
+	# libm is required as well
+	LDFLAGS="$LDFLAGS -lm"
+	;;
     *-*-android*) ;;
     *-*-cygwin*) ;;
     *-*-dgux*) ;;

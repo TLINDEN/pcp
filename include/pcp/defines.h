@@ -45,12 +45,12 @@ typedef unsigned int    qbyte;          //  Quad byte = 32 bits
 
 #define PCP_ME "Pretty Curved Privacy"
 
-#define PCP_KEY_VERSION 0x00000003U
+#define PCP_KEY_VERSION 4
 #define PCP_KEY_PRIMITIVE "CURVE25519-ED25519-SALSA20-POLY1305"
 
-#define PCP_KEY_TYPE_MAINSECRET 0x01
-#define PCP_KEY_TYPE_SECRET     0x02
-#define PCP_KEY_TYPE_PUBLIC     0x03
+#define PCP_KEY_TYPE_MAINSECRET 1
+#define PCP_KEY_TYPE_SECRET     2
+#define PCP_KEY_TYPE_PUBLIC     3
 
 // how many times do we hash a passphrase
 #define HCYCLES 128000
@@ -59,11 +59,11 @@ typedef unsigned int    qbyte;          //  Quad byte = 32 bits
 #define PCP_ENCRYPT_PAD crypto_secretbox_ZEROBYTES + crypto_secretbox_NONCEBYTES
 
 // vault id
-#define PCP_VAULT_ID 0xC4
-#define PCP_VAULT_VERSION 0x02
+#define PCP_VAULT_ID 14
+#define PCP_VAULT_VERSION 2
 
 // sigs
-#define PCP_SIG_VERSION 0x01
+#define PCP_SIG_VERSION 1
 
 char *PCP_ERR;
 byte PCP_ERRSET;

@@ -87,10 +87,10 @@ struct _pcp_key_t {
   char owner[255];
   char mail[255];
   char id[17];
-  long ctime;
-  uint32_t version;
-  uint32_t serial;
   uint8_t type;
+  uint64_t ctime;   // 8
+  uint32_t version; // 4
+  uint32_t serial;  // 4
   UT_hash_handle hh;
 };
 
@@ -100,7 +100,7 @@ struct _pcp_pubkey_t {
   char owner[255];
   char mail[255];
   char id[17];
-  long ctime;
+  uint64_t ctime;
   uint32_t version;
   uint32_t serial;
   uint8_t type;
@@ -109,6 +109,9 @@ struct _pcp_pubkey_t {
 
 typedef struct _pcp_key_t pcp_key_t;
 typedef struct _pcp_pubkey_t pcp_pubkey_t;
+
+#define PCP_RAW_KEYSIZE    sizeof(pcp_key_t)    - sizeof(UT_hash_handle)
+#define PCP_RAW_PUBKEYSIZE sizeof(pcp_pubkey_t) - sizeof(UT_hash_handle)
 
 void pcp_cleanhashes();
 pcp_key_t *pcpkey_new ();
@@ -155,6 +158,10 @@ void pcpedit_key(char *keyid);
 unsigned char *pcp_derivekey(char *passphrase);
 
 pcp_key_t *pcp_derive_pcpkey (pcp_key_t *ours, char *theirs);
+
+void pcp_seckeyblob(void *blob, pcp_key_t *k);
+void pcp_pubkeyblob(void *blob, pcp_pubkey_t *k);
+void *pcp_keyblob(void *k, int type); // allocates blob
 
 #ifdef __cplusplus
 }

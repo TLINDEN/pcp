@@ -52,7 +52,7 @@ int pcp_storekey (pcp_key_t *key) {
     key->type = PCP_KEY_TYPE_MAINSECRET;
   }
 
-  if(pcpvault_addkey(vault, key, sizeof(pcp_key_t), key->type) == 0) {
+  if(pcpvault_addkey(vault, key, key->type) == 0) {
     if(vault->isnew)
       fprintf(stderr, "new vault created, ");
     fprintf(stderr, "key 0x%s added to %s.\n", key->id, vault->filename);
@@ -360,14 +360,15 @@ int pcp_importsecret (vault_t *vault, FILE *in) {
     return 1;
   }
 
-  if(clen != sizeof(pcp_key_t)) {
+  if(clen != PCP_RAW_KEYSIZE) {
     fatal("Error: decoded input didn't result to a proper sized key! (got %d bytes)\n", clen);
     free(z85decoded);
     return 1;
   }
 
-  // all good now
-  pcp_key_t *key = (pcp_key_t *)z85decoded;
+  // all good now, import the blob
+  pcp_key_t *key = ucmalloc(sizeof(pcp_key_t));
+  memcpy(key, z85decoded, PCP_RAW_KEYSIZE);
   key2native(key);
 
   if(debug)
@@ -385,8 +386,7 @@ int pcp_importsecret (vault_t *vault, FILE *in) {
     if(nkeys == 0)
       key->type = PCP_KEY_TYPE_MAINSECRET;
 
-    if(pcpvault_addkey(vault, (void *)key, sizeof(pcp_key_t),
-			PCP_KEY_TYPE_SECRET) == 0) {
+    if(pcpvault_addkey(vault, (void *)key, PCP_KEY_TYPE_SECRET) == 0) {
       fprintf(stderr, "key 0x%s added to %s.\n", key->id, vault->filename);
       return 0;
     }
@@ -411,20 +411,21 @@ int pcp_importpublic (vault_t *vault, FILE *in) {
     return 1;
   }
 
-  if(clen != sizeof(pcp_pubkey_t)) {
+  if(clen != PCP_RAW_PUBKEYSIZE) {
     fatal("Error: decoded input didn't result to a proper sized key!\n", clen);
     free(z85decoded);
     return 1;
   }
 
   // all good now
-  pcp_pubkey_t *pub = (pcp_pubkey_t *)z85decoded;
+  pcp_pubkey_t *pub = ucmalloc(sizeof(pcp_pubkey_t));
+  memcpy(pub, z85decoded, PCP_RAW_PUBKEYSIZE);
   pubkey2native(pub);
 
   if(debug)
     pcp_dumppubkey(pub);
   if(pcp_sanitycheck_pub(pub) == 0) {
-    if(pcpvault_addkey(vault, (void *)pub, sizeof(pcp_pubkey_t),  PCP_KEY_TYPE_PUBLIC) == 0) {
+    if(pcpvault_addkey(vault, (void *)pub,  PCP_KEY_TYPE_PUBLIC) == 0) {
       fprintf(stderr, "key 0x%s added to %s.\n", pub->id, vault->filename);
       return 0;
     }

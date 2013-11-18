@@ -59,13 +59,16 @@ int pcptext_infile(char *infile) {
   size_t clen;
   unsigned char *bin = pcp_z85_decode((char *)z85, &clen);
   free(z85);
-  
+
   if(bin == NULL) {
     fprintf(stdout, "%s isn't properly Z85 encoded - unknown file type.\n", infile);
     goto errtinf1;
   }
 
-  if(clen == sizeof(pcp_key_t)) {
+  //fprintf(stdout, "have: %d, secret: %d, public: %d, sig: %d, hh: %d\n", (int)clen,
+  //	  (int)sizeof(pcp_key_t), (int)sizeof(pcp_pubkey_t), (int)sizeof(pcp_sig_t), (int)sizeof(UT_hash_handle));
+
+  if(clen == PCP_RAW_KEYSIZE) {
     // secret key?
     pcp_key_t *key = (pcp_key_t *)bin;
     key2native(key);
@@ -82,7 +85,7 @@ int pcptext_infile(char *infile) {
     }
   }
 
-  if(clen  == sizeof(pcp_pubkey_t)) {
+  if(clen  == PCP_RAW_PUBKEYSIZE) {
     // public key?
     pcp_pubkey_t *key = (pcp_pubkey_t *)bin;
     pubkey2native(key);
@@ -203,8 +206,12 @@ void pcppubkey_printlineinfo(pcp_pubkey_t *key) {
 void pcpkey_print(pcp_key_t *key, FILE* out) {
   size_t zlen;
   key2be(key);
-  char *z85encoded = pcp_z85_encode((unsigned char*)key, sizeof(pcp_key_t), &zlen);
+  void *blob = ucmalloc(PCP_RAW_KEYSIZE);
+  pcp_seckeyblob(blob, key);
+  char *z85encoded = pcp_z85_encode((unsigned char*)blob, PCP_RAW_KEYSIZE, &zlen);
   key2native(key);
+
+  free(blob);
 
   struct tm *c;
   time_t t = (time_t)key->ctime;
@@ -237,8 +244,13 @@ void pcpkey_print(pcp_key_t *key, FILE* out) {
 void pcppubkey_print(pcp_pubkey_t *key, FILE* out) {
   size_t zlen;
   pubkey2be(key);
-  char *z85encoded = pcp_z85_encode((unsigned char*)key, sizeof(pcp_pubkey_t), &zlen);
+
+  void *blob = ucmalloc(PCP_RAW_PUBKEYSIZE);
+  pcp_pubkeyblob(blob, key);
+  char *z85encoded = pcp_z85_encode((unsigned char*)blob, PCP_RAW_PUBKEYSIZE, &zlen);
   pubkey2native(key);
+
+  free(blob);
 
   struct tm *c;
   time_t t = (time_t)key->ctime;
@@ -331,7 +343,7 @@ void pcp_dumpkey(pcp_key_t *k) {
 
   printf("       id: %s\n", k->id);
 
-  printf("    ctime: %ld\n", k->ctime);
+  printf("    ctime: %ld\n", (long int)k->ctime);
 
   printf("  version: 0x%08X\n", k->version);
 
@@ -358,7 +370,7 @@ void pcp_dumppubkey(pcp_pubkey_t *k) {
 
   printf("       id: %s\n", k->id);
 
-  printf("    ctime: %ld\n", k->ctime);
+  printf("    ctime: %ld\n", (long int)k->ctime);
 
   printf("  version: 0x%08X\n", k->version);
 
@@ -436,7 +448,7 @@ void pcpexport_yaml(char *outfile) {
       fprintf(out, "  id:         %s\n", s->id);
       fprintf(out, "  owner:      %s\n", s->owner);
       fprintf(out, "  mail:       %s\n", s->mail);
-      fprintf(out, "  ctime:      %ld\n", s->ctime);
+      fprintf(out, "  ctime:      %ld\n", (long int)s->ctime);
       fprintf(out, "  version:    %08x\n", s->version);
       fprintf(out, "  serial:     %08x\n", s->serial);
       fprintf(out, "  type:       %s\n",
@@ -461,7 +473,7 @@ void pcpexport_yaml(char *outfile) {
       fprintf(out, "  id:      %s\n", p->id);
       fprintf(out, "  owner:   %s\n", p->owner);
       fprintf(out, "  mail:    %s\n", p->mail);
-      fprintf(out, "  ctime:   %ld\n", p->ctime);
+      fprintf(out, "  ctime:   %ld\n", (long int)p->ctime);
       fprintf(out, "  version: %08x\n", p->version);
       fprintf(out, "  serial:  %08x\n", p->serial);
       fprintf(out, "  type:    public\n");

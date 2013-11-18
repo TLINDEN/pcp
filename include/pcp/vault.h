@@ -69,7 +69,7 @@ vault_t *pcpvault_init(char *filename);
 vault_t *pcpvault_new(char *filename, int is_tmp);
 int pcpvault_create(vault_t *vault);
 int pcpvault_additem(vault_t *vault, void *item, size_t itemsize, uint8_t type, uint8_t do_hash);
-int pcpvault_addkey(vault_t *vault, void *item, size_t itemsize, uint8_t type);
+int pcpvault_addkey(vault_t *vault, void *item, uint8_t type);
 int pcpvault_close(vault_t *vault);
 int pcpvault_fetchall(vault_t *vault);
 int pcpvault_writeall(vault_t *vault);

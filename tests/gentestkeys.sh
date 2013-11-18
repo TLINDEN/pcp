@@ -1,5 +1,8 @@
 #!/bin/sh
-pcp="../src/pcp1 -V vxxx"
+pcp1="../src/pcp1"
+pcp="$pcp1 -V vxxx"
+
+rm -f vxxx unknown*
 
 gen() {
     owner=$1
@@ -40,7 +43,7 @@ ids=`gen Bart   bart@local   a n bart.pub`
 ser=`grep Serial bart.pub | awk '{print $3}'`
 
 gen Niemand niemand@local n y unknown1 unknown2
-$pcp -V unknown3 -l
+$pcp1 -V unknown3 -l
 echo hallo | $pcp -e -x a | egrep -v "^ " | egrep -v -- "----"  | grep . > unknown4
 echo blah | $pcp -g -x a | egrep -v "^ " | egrep -v -- "----"  | grep . > unknown5
 

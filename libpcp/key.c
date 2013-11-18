@@ -227,9 +227,13 @@ unsigned char *pcpkey_getchecksum(pcp_key_t *k) {
 
 
 pcp_key_t * key2be(pcp_key_t *k) {
-  k->version = htobe32(k->version);
-  k->serial  = htobe32(k->serial);
-  k->ctime   = htobe64(k->ctime);
+  uint32_t version = k->version;
+  unsigned char* p = (unsigned char*)&version;
+  if(p[0] != 0) {
+    k->version = htobe32(k->version);
+    k->serial  = htobe32(k->serial);
+    k->ctime   = htobe64(k->ctime);
+  }
   return k;
 }
 
@@ -241,9 +245,13 @@ pcp_key_t *key2native(pcp_key_t *k) {
 }
 
 pcp_pubkey_t * pubkey2be(pcp_pubkey_t *k) {
-  k->version = htobe32(k->version);
-  k->serial  = htobe32(k->serial);
-  k->ctime   = htobe64(k->ctime);
+  uint32_t version = k->version;
+  unsigned char* p = (unsigned char*)&version;
+  if(p[0] != 0) {
+    k->version = htobe32(k->version);
+    k->serial  = htobe32(k->serial);
+    k->ctime   = htobe64(k->ctime);
+  }
   return k;
 }
 
@@ -300,4 +308,29 @@ pcp_key_t *pcp_derive_pcpkey (pcp_key_t *ours, char *theirs) {
   free(both);
   
   return NULL;
+}
+
+void pcp_seckeyblob(void *blob, pcp_key_t *k) {
+  memcpy(blob, k, PCP_RAW_KEYSIZE);
+  //printf("key (%d):\n", (int)sizeof(pcp_key_t));
+  //pcpprint_bin(stdout, k, sizeof(pcp_key_t));printf("\n");
+  //printf("blob (%d):\n", (int)(PCP_RAW_KEYSIZE));
+  //pcpprint_bin(stdout, blob, PCP_RAW_KEYSIZE);printf("\n");
+}
+
+void pcp_pubkeyblob(void *blob, pcp_pubkey_t *k) {
+  memcpy(blob, k, PCP_RAW_PUBKEYSIZE);
+}
+
+void *pcp_keyblob(void *k, int type) {
+  void *blob;
+  if(type == PCP_KEY_TYPE_PUBLIC) {
+    blob = ucmalloc(PCP_RAW_PUBKEYSIZE);
+    pcp_pubkeyblob(blob, (pcp_pubkey_t *)k);
+  }
+  else {
+    blob = ucmalloc(PCP_RAW_KEYSIZE);
+    pcp_seckeyblob(blob, (pcp_key_t *)k);
+  }
+  return blob;
 }

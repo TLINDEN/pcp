@@ -227,6 +227,9 @@ unsigned char *pcpkey_getchecksum(pcp_key_t *k) {
 
 
 pcp_key_t * key2be(pcp_key_t *k) {
+#ifdef __BIG_ENDIAN
+  return k;
+#else
   uint32_t version = k->version;
   unsigned char* p = (unsigned char*)&version;
   if(p[0] != 0) {
@@ -235,16 +238,24 @@ pcp_key_t * key2be(pcp_key_t *k) {
     k->ctime   = htobe64(k->ctime);
   }
   return k;
+#endif
 }
 
 pcp_key_t *key2native(pcp_key_t *k) {
+#ifdef __BIG_ENDIAN
+  return k;
+#else
   k->version = be32toh(k->version);
   k->serial  = be32toh(k->serial);
   k->ctime   = be64toh(k->ctime);
   return k;
+#endif
 }
 
 pcp_pubkey_t * pubkey2be(pcp_pubkey_t *k) {
+#ifdef __BIG_ENDIAN
+  return k;
+#else
   uint32_t version = k->version;
   unsigned char* p = (unsigned char*)&version;
   if(p[0] != 0) {
@@ -253,13 +264,18 @@ pcp_pubkey_t * pubkey2be(pcp_pubkey_t *k) {
     k->ctime   = htobe64(k->ctime);
   }
   return k;
+#endif
 }
 
 pcp_pubkey_t *pubkey2native(pcp_pubkey_t *k) {
+#ifdef __BIG_ENDIAN
+  return k;
+#else
   k->version = be32toh(k->version);
   k->serial  = be32toh(k->serial);
   k->ctime   = be64toh(k->ctime);
   return k;
+#endif
 }
 
 pcp_key_t *pcp_derive_pcpkey (pcp_key_t *ours, char *theirs) {
@@ -312,10 +328,6 @@ pcp_key_t *pcp_derive_pcpkey (pcp_key_t *ours, char *theirs) {
 
 void pcp_seckeyblob(void *blob, pcp_key_t *k) {
   memcpy(blob, k, PCP_RAW_KEYSIZE);
-  //printf("key (%d):\n", (int)sizeof(pcp_key_t));
-  //pcpprint_bin(stdout, k, sizeof(pcp_key_t));printf("\n");
-  //printf("blob (%d):\n", (int)(PCP_RAW_KEYSIZE));
-  //pcpprint_bin(stdout, blob, PCP_RAW_KEYSIZE);printf("\n");
 }
 
 void pcp_pubkeyblob(void *blob, pcp_pubkey_t *k) {

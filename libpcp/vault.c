@@ -128,7 +128,7 @@ int pcpvault_create(vault_t *vault) {
   return 0;
 }
 
-int pcpvault_additem(vault_t *vault, void *item, size_t itemsize, uint8_t type, uint8_t do_hash) {
+int pcpvault_additem(vault_t *vault, void *item, size_t itemsize, uint8_t type) {
   vault_item_header_t *header = ucmalloc(sizeof(vault_item_header_t));
   header->type = type;
   header->size = itemsize;
@@ -136,22 +136,8 @@ int pcpvault_additem(vault_t *vault, void *item, size_t itemsize, uint8_t type, 
   crypto_hash_sha256((unsigned char*)header->checksum, item, itemsize);
   ih2be(header);
 
-  void *saveitem = ucmalloc(itemsize);
-  memcpy(saveitem, item, itemsize);
-
-
-
   fwrite(header, sizeof(vault_item_header_t), 1, vault->fd);
-  fwrite(saveitem, itemsize, 1, vault->fd);
-
-  memset(saveitem, 0, itemsize);
-  free(saveitem);
-
-  if(do_hash == 1) {
-    // we don't re-hash if it's a full update
-    pcphash_add(item, type);
-    pcpvault_update_checksum(vault);
-  }
+  fwrite(item, itemsize, 1, vault->fd);
 
   if(ferror(vault->fd) != 0) {
     fatal("Failed to add an item to vault %s!\n", vault->filename);
@@ -168,14 +154,19 @@ int pcpvault_addkey(vault_t *vault, void *item, uint8_t type) {
   vault_t *tmp = pcpvault_new(vault->filename, 1);
   size_t itemsize;
 
+  void *saveitem;
+
   if(type == PCP_KEY_TYPE_PUBLIC) {
-    pubkey2be((pcp_pubkey_t *)item);
     itemsize = PCP_RAW_PUBKEYSIZE;
+    saveitem = ucmalloc(sizeof(pcp_pubkey_t));
+    memcpy(saveitem, item, sizeof(pcp_pubkey_t));
+    pubkey2be((pcp_pubkey_t *)item);
   }
   else {
-    //pcp_dumpkey((pcp_key_t *)item);
-    key2be((pcp_key_t *)item);
     itemsize = PCP_RAW_KEYSIZE;
+    saveitem = ucmalloc(sizeof(pcp_key_t));
+    memcpy(saveitem, item, sizeof(pcp_key_t));
+    key2be((pcp_key_t *)item);
   }
 
   void *blob = pcp_keyblob(item, type);
@@ -183,9 +174,12 @@ int pcpvault_addkey(vault_t *vault, void *item, uint8_t type) {
   if(tmp != NULL) {
     if(pcpvault_copy(vault, tmp) != 0)
       goto errak1;
-    if(pcpvault_additem(tmp, blob, itemsize, type, 1) != 0)
+    if(pcpvault_additem(tmp, blob, itemsize, type) != 0)
       goto errak1;
+
+    pcphash_add(saveitem, type);
     pcpvault_update_checksum(tmp);
+    
     if(pcpvault_copy(tmp, vault) == 0) {
       pcpvault_unlink(tmp);
     }
@@ -217,13 +211,13 @@ int pcpvault_writeall(vault_t *vault) {
       pcp_key_t *k = NULL;
       pcphash_iterate(k) {
 	pcp_seckeyblob(blob_s, k);
-	if(pcpvault_additem(tmp, blob_s, PCP_RAW_KEYSIZE, PCP_KEY_TYPE_SECRET, 0) != 0)
+	if(pcpvault_additem(tmp, blob_s, PCP_RAW_KEYSIZE, PCP_KEY_TYPE_SECRET) != 0)
 	  goto errwa;
       }
       pcp_pubkey_t *p = NULL;
       pcphash_iteratepub(p) {
 	pcp_pubkeyblob(blob_p, p);
-	if(pcpvault_additem(tmp, blob_p, PCP_RAW_PUBKEYSIZE, PCP_KEY_TYPE_PUBLIC, 0) != 0)
+	if(pcpvault_additem(tmp, blob_p, PCP_RAW_PUBKEYSIZE, PCP_KEY_TYPE_PUBLIC) != 0)
 	  goto errwa;
       }
       pcpvault_update_checksum(tmp);
@@ -357,25 +351,41 @@ int pcpvault_close(vault_t *vault) {
 }
 
 vault_header_t * vh2be(vault_header_t *h) {
+#ifdef __BIG_ENDIAN
+  return h;
+#else
   h->version = htobe32(h->version);
   return h;
+#endif
 }
 
 vault_header_t * vh2native(vault_header_t *h) {
+#ifdef __BIG_ENDIAN
+  return h;
+#else
   h->version = be32toh(h->version);
   return h;
+#endif
 }
 
 vault_item_header_t * ih2be(vault_item_header_t *h) {
+#ifdef __BIG_ENDIAN
+  return h;
+#else
   h->version = htobe32(h->version);
   h->size    = htobe32(h->size);
   return h;
+#endif
 }
 
 vault_item_header_t * ih2native(vault_item_header_t *h) {
+#ifdef __BIG_ENDIAN
+  return h;
+#else
   h->version = be32toh(h->version);
   h->size = be32toh(h->size);
   return h;
+#endif
 }
 
 

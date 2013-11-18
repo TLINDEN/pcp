@@ -62,8 +62,6 @@ int pcp_storekey (pcp_key_t *key) {
   return 1;
 }
 
-
-
 void pcp_keygen(char *passwd, char *outfile) {
   pcp_key_t *k = pcpkey_new ();
   pcp_key_t *key = NULL;
@@ -113,6 +111,8 @@ void pcp_keygen(char *passwd, char *outfile) {
     else {
       if(pcp_storekey(key) == 0) {
 	pcpkey_printshortinfo(key);
+	memset(key, 0, sizeof(pcp_key_t));
+	free(key);
       }
     }
   }
@@ -388,10 +388,12 @@ int pcp_importsecret (vault_t *vault, FILE *in) {
 
     if(pcpvault_addkey(vault, (void *)key, PCP_KEY_TYPE_SECRET) == 0) {
       fprintf(stderr, "key 0x%s added to %s.\n", key->id, vault->filename);
+      free(key);
       return 0;
     }
   }
 
+  free(key);
   return 1;
 }
 
@@ -427,10 +429,12 @@ int pcp_importpublic (vault_t *vault, FILE *in) {
   if(pcp_sanitycheck_pub(pub) == 0) {
     if(pcpvault_addkey(vault, (void *)pub,  PCP_KEY_TYPE_PUBLIC) == 0) {
       fprintf(stderr, "key 0x%s added to %s.\n", pub->id, vault->filename);
+      free(pub);
       return 0;
     }
   }
 
+  free(pub);
   return 1;
 }
 

@@ -1,3 +1,1 @@
-- key exports without hash handle (like I do in the vault),
-  checksum the same: without the handle as well.
-
+aix works now so far, but -R doesnt work

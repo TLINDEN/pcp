@@ -62,6 +62,7 @@ int main (int argc, char **argv)  {
   usevault = 0;
   useid = 0;
   userec = 0;
+  lo = 0;
 
   static struct option longopts[] = {
     // generics
@@ -146,7 +147,7 @@ int main (int argc, char **argv)  {
 	break;
       case 't':
 	mode += PCP_MODE_TEXT;
-	usevault = 1;
+	usevault = 0;
 	break;
       case 'E':
 	mode += PCP_MODE_EDIT;
@@ -308,22 +309,6 @@ int main (int argc, char **argv)  {
 	}
 	break;
 
-      case PCP_MODE_TEXT:
-	if(! useid && infile == NULL) {
-	  pcptext_vault(vault);
-	}
-	else if(infile != NULL) {
-	  pcptext_infile(infile);
-	}
-	else {
-	  id = pcp_normalize_id(keyid);
-	  if(id != NULL) {
-	    pcptext_key(id);
-	    free(id);
-	  }
-	}
-	break;
-
       case PCP_MODE_EDIT:
 	if(useid) {
 	  id = pcp_normalize_id(keyid);
@@ -409,6 +394,29 @@ int main (int argc, char **argv)  {
     case PCP_MODE_ZDECODE:
       pcpz85_decode(infile, outfile);
       break;
+
+      case PCP_MODE_TEXT:
+	if(infile != NULL) {
+	  pcptext_infile(infile);
+	}
+	else {
+	  pcphash_init();
+	  vault = pcpvault_init(vaultfile);
+	  if(! useid && infile == NULL) {
+	    pcptext_vault(vault);
+	  }
+	  else {
+	    id = pcp_normalize_id(keyid);
+	    if(id != NULL) {
+	      pcptext_key(id);
+	      free(id);
+	    }
+	  }
+	  pcpvault_close(vault);
+	  pcphash_clean();
+	  ucfree(vaultfile);
+	}
+	break;
 
     default:
       // mode params mixed

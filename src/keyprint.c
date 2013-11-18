@@ -243,6 +243,9 @@ void pcpkey_print(pcp_key_t *key, FILE* out) {
 
 void pcppubkey_print(pcp_pubkey_t *key, FILE* out) {
   size_t zlen;
+
+  //printf("version: %08x\n", key->version);
+
   pubkey2be(key);
 
   void *blob = ucmalloc(PCP_RAW_PUBKEYSIZE);

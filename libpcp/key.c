@@ -228,7 +228,7 @@ unsigned char *pcpkey_getchecksum(pcp_key_t *k) {
 
 
 pcp_key_t * key2be(pcp_key_t *k) {
-#ifdef __BIG_ENDIAN
+#ifdef __CPU_IS_BIG_ENDIAN
   return k;
 #else
   uint32_t version = k->version;
@@ -243,7 +243,7 @@ pcp_key_t * key2be(pcp_key_t *k) {
 }
 
 pcp_key_t *key2native(pcp_key_t *k) {
-#ifdef __BIG_ENDIAN
+#ifdef __CPU_IS_BIG_ENDIAN
   return k;
 #else
   k->version = be32toh(k->version);
@@ -254,7 +254,7 @@ pcp_key_t *key2native(pcp_key_t *k) {
 }
 
 pcp_pubkey_t * pubkey2be(pcp_pubkey_t *k) {
-#ifdef __BIG_ENDIAN
+#ifdef __CPU_IS_BIG_ENDIAN
   return k;
 #else
   uint32_t version = k->version;
@@ -269,7 +269,7 @@ pcp_pubkey_t * pubkey2be(pcp_pubkey_t *k) {
 }
 
 pcp_pubkey_t *pubkey2native(pcp_pubkey_t *k) {
-#ifdef __BIG_ENDIAN
+#ifdef __CPU_IS_BIG_ENDIAN
   return k;
 #else
   k->version = be32toh(k->version);

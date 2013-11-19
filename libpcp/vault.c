@@ -358,7 +358,7 @@ int pcpvault_close(vault_t *vault) {
 }
 
 vault_header_t * vh2be(vault_header_t *h) {
-#ifdef __BIG_ENDIAN
+#ifdef __CPU_IS_BIG_ENDIAN
   return h;
 #else
   h->version = htobe32(h->version);
@@ -367,7 +367,7 @@ vault_header_t * vh2be(vault_header_t *h) {
 }
 
 vault_header_t * vh2native(vault_header_t *h) {
-#ifdef __BIG_ENDIAN
+#ifdef __CPU_IS_BIG_ENDIAN
   return h;
 #else
   h->version = be32toh(h->version);
@@ -376,7 +376,7 @@ vault_header_t * vh2native(vault_header_t *h) {
 }
 
 vault_item_header_t * ih2be(vault_item_header_t *h) {
-#ifdef __BIG_ENDIAN
+#ifdef __CPU_IS_BIG_ENDIAN
   return h;
 #else
   h->version = htobe32(h->version);
@@ -386,7 +386,7 @@ vault_item_header_t * ih2be(vault_item_header_t *h) {
 }
 
 vault_item_header_t * ih2native(vault_item_header_t *h) {
-#ifdef __BIG_ENDIAN
+#ifdef __CPU_IS_BIG_ENDIAN
   return h;
 #else
   h->version = be32toh(h->version);

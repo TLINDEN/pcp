@@ -38,7 +38,7 @@
 #     define htobe64 hto64be
 #   endif
 # else // no sys/endian.h
-#   ifdef __BIG_ENDIAN
+#   ifdef __CPU_IS_BIG_ENDIAN
 #     define be32toh(x)	(x)
 #     define htobe32(x)	(x)
 #     define be64toh(x)	(x)

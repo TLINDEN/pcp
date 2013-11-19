@@ -85,7 +85,11 @@ unsigned char *pcp_box_encrypt(pcp_key_t *secret, pcp_pubkey_t *public,
 			       unsigned char *message, size_t messagesize,
 			       size_t *csize) {
 
-  unsigned char *nonce = pcp_gennonce();
+  //unsigned char *nonce = pcp_gennonce();
+
+  unsigned char *nonce = ucmalloc(crypto_secretbox_NONCEBYTES);
+  memset(nonce, 1, crypto_secretbox_NONCEBYTES);
+
   unsigned char *cipher;
 
   size_t es = pcp_sodium_box(&cipher, message, messagesize, nonce,
@@ -95,6 +99,12 @@ unsigned char *pcp_box_encrypt(pcp_key_t *secret, pcp_pubkey_t *public,
     fatal("failed to encrypt message!\n");
     goto errbec;
   }
+
+  // scip
+  //fprintf(stderr, "public: "); pcpprint_bin(stderr, public->public, 32); fprintf(stderr, "\n");
+  //fprintf(stderr, "secret: "); pcpprint_bin(stderr, secret->secret, 32); fprintf(stderr, "\n");
+  //fprintf(stderr, "cipher: "); pcpprint_bin(stderr, cipher, es); fprintf(stderr, "\n");
+  //fprintf(stderr, " nonce: "); pcpprint_bin(stderr, nonce, crypto_secretbox_NONCEBYTES); fprintf(stderr, "\n");
 
   // put nonce and cipher together
   unsigned char *combined = ucmalloc(es + crypto_secretbox_NONCEBYTES);

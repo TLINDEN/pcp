@@ -145,7 +145,7 @@ char *pcp_z85_encode(unsigned char *raw, size_t srclen, size_t *dstlen) {
   //fprintf(stderr, "z85block: <%s>\n", z85block);
 
   *dstlen = blocklen;
-  free(z85);
+  free(z85); 
   free(padded);
 
   return z85block;

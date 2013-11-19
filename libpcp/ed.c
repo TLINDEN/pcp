@@ -78,7 +78,7 @@ pcp_sig_t *pcp_ed_newsig(unsigned char *hash, char *id) {
 }
 
 pcp_sig_t *sig2native(pcp_sig_t *s) {
-#ifdef __BIG_ENDIAN
+#ifdef __CPU_IS_BIG_ENDIAN
   return s;
 #else
   s->version = be32toh(s->version);
@@ -88,7 +88,7 @@ pcp_sig_t *sig2native(pcp_sig_t *s) {
 }
 
 pcp_sig_t *sig2be(pcp_sig_t *s) {
-#ifdef __BIG_ENDIAN
+#ifdef __CPU_IS_BIG_ENDIAN
   return s;
 #else
   s->version = htobe32(s->version);

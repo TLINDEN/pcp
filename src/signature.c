@@ -97,6 +97,10 @@ int pcpsign(char *infile, char *outfile, char *recipient, char *passwd) {
   size_t zlen;
   pcp_sig_t *signature = pcp_ed_sign(input, inputBufSize, secret);
 
+  // scip
+  //printf("sigsize: %d\n", (int)sizeof(pcp_sig_t));
+  //pcp_dumpsig(signature);
+
   if(signature == NULL)
     goto errs5;
 
@@ -225,4 +229,16 @@ int pcpverify(char *infile, char *sigfile) {
 
  errv1:
   return 1;
+}
+
+void pcp_dumpsig(pcp_sig_t *sig) {
+  printf("     ed: ");
+  pcpprint_bin(stdout, sig->edsig, crypto_sign_BYTES);printf("\n");
+
+  printf("     id: %s\n", sig->id);
+
+  printf("  ctime: %ld\n", sig->ctime);
+
+  printf("version: %04x\n", sig->version);
+
 }

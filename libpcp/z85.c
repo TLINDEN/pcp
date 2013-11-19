@@ -102,22 +102,47 @@ char *pcp_z85_encode(unsigned char *raw, size_t srclen, size_t *dstlen) {
   char *z85 = ucmalloc(zlen);
   z85 = zmq_z85_encode(z85, padded, outlen);
 
+
   // make it a 72 chars wide block
-  blocklen = strlen(z85) + ((strlen(z85) / 72) * 2) + 1;
+  blocklen = (zlen + ((zlen / 72) * 2)) + 1;
   char *z85block = ucmalloc(blocklen);
 
+  //fprintf(stderr, "zlen: %d, outlen: %d, srclen: %d, blocklen: %d\n",
+  //	  zlen, outlen, srclen, blocklen);
+
   pos = b = 0;
+  /*
   for(i=0; i<zlen; ++i) {
     if(pos >= 71) {
-      z85block[b++] = '\r';
-      z85block[b++] = '\n';
+      *z85block++ = '\r';
+      *z85block++ = '\n';
       pos = 1;
     }
     else {
       pos++;
     }
-    z85block[b++] = z85[i];
+    *z85block++ = z85[i];
   }
+  */
+
+  char *z = &z85[0];
+  char *B = &z85block[0];
+
+  while(*z != '\0') {
+    if(pos >= 71) {
+      *B++ = '\r';
+      *B++ = '\n';
+      pos = 1;
+    }
+    else {
+      pos++;
+    }
+    *B++ = *z++;
+  }
+  *B = '\0';
+
+  //fprintf(stderr, "z85block len: %d\n", blocklen, strlen(z85block));
+  //fprintf(stderr, "z85block: <%s>\n", z85block);
 
   *dstlen = blocklen;
   free(z85);

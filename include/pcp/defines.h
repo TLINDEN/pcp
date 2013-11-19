@@ -63,7 +63,7 @@ typedef unsigned int    qbyte;          //  Quad byte = 32 bits
 #define PCP_VAULT_VERSION 2
 
 // sigs
-#define PCP_SIG_VERSION 1
+#define PCP_SIG_VERSION 2
 
 char *PCP_ERR;
 byte PCP_ERRSET;

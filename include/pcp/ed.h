@@ -37,10 +37,10 @@ extern "C" {
 #include "key.h"
 
 struct _pcp_sig_t {
+  byte edsig[crypto_sign_BYTES];
   char id[17];
-  long ctime;
+  uint64_t ctime;
   uint32_t version;
-  byte edsig[crypto_hash_sha256_BYTES + crypto_sign_BYTES];
 };
 
 typedef struct _pcp_sig_t pcp_sig_t;
@@ -54,6 +54,8 @@ pcp_sig_t *sig2native(pcp_sig_t *k);
 pcp_sig_t *sig2be(pcp_sig_t *k);
 
 pcp_sig_t *pcp_ed_newsig(unsigned char *hash, char *id);
+
+  void pcp_dumpsig(pcp_sig_t *sig);
 
 #ifdef __cplusplus
 }

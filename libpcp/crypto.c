@@ -32,7 +32,7 @@ size_t pcp_sodium_box(unsigned char **cipher,
   unsigned char *pad_clear;
   unsigned char *pad_cipher;
 
-  size_t ciphersize = (clearsize + crypto_box_ZEROBYTES) - crypto_box_BOXZEROBYTES; // $s + 32 -16
+  size_t ciphersize = (clearsize + crypto_box_ZEROBYTES) - crypto_box_BOXZEROBYTES;
 
   pad_cipher = ucmalloc(crypto_box_ZEROBYTES + clearsize);
   pcp_pad_prepend(&pad_clear, cleartext, crypto_box_ZEROBYTES, clearsize);

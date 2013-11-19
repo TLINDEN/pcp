@@ -72,20 +72,28 @@ pcp_sig_t *pcp_ed_newsig(unsigned char *hash, char *id) {
   pcp_sig_t *sig = ucmalloc(sizeof(pcp_sig_t));
   sig->version = PCP_SIG_VERSION;
   sig->ctime = (long)time(0);
-  memcpy(sig->edsig, hash, crypto_hash_sha256_BYTES + crypto_sign_BYTES);
+  memcpy(sig->edsig, hash, crypto_sign_BYTES);
   memcpy(sig->id, id, 17);
   return sig;
 }
 
 pcp_sig_t *sig2native(pcp_sig_t *s) {
+#ifdef __BIG_ENDIAN
+  return s;
+#else
   s->version = be32toh(s->version);
   s->ctime   = be64toh(s->ctime);
   return s;
+#endif
 }
 
 pcp_sig_t *sig2be(pcp_sig_t *s) {
+#ifdef __BIG_ENDIAN
+  return s;
+#else
   s->version = htobe32(s->version);
   s->ctime   = htobe64(s->ctime);
   return s;
+#endif
 }
 

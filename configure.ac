@@ -236,7 +236,7 @@ AC_LANG_PROGRAM([[]],[[long one= 1; exit(!(*((char *)(&one)))); ]])],
 )
 
 if test -n "$bigendian"; then
-    CFLAGS="$CFLAGS -D__BIG_ENDIAN=1"
+    CFLAGS="$CFLAGS -D__CPU_IS_BIG_ENDIAN=1"
 fi
 
 AC_SUBST(PACKAGE_VERSION)

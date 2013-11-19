@@ -100,10 +100,10 @@ struct _pcp_pubkey_t {
   char owner[255];
   char mail[255];
   char id[17];
+  uint8_t type;
   uint64_t ctime;
   uint32_t version;
   uint32_t serial;
-  uint8_t type;
   UT_hash_handle hh;
 };
 

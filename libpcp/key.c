@@ -199,7 +199,8 @@ pcp_pubkey_t *pcpkey_pub_from_secret(pcp_key_t *key) {
   memcpy(pub->id, key->id, 17);
   pub->version = key->version;
   pub->type    = PCP_KEY_TYPE_PUBLIC;
-  pub->ctime = key->ctime;
+  pub->ctime   = key->ctime;
+  pub->serial  = key->serial;
   return pub;
 }
 

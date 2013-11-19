@@ -161,6 +161,7 @@ int pcpvault_addkey(vault_t *vault, void *item, uint8_t type) {
     saveitem = ucmalloc(sizeof(pcp_pubkey_t));
     memcpy(saveitem, item, sizeof(pcp_pubkey_t));
     pubkey2be((pcp_pubkey_t *)item);
+    //pcp_dumppubkey((pcp_pubkey_t *)saveitem);
   }
   else {
     itemsize = PCP_RAW_KEYSIZE;
@@ -170,6 +171,10 @@ int pcpvault_addkey(vault_t *vault, void *item, uint8_t type) {
   }
 
   void *blob = pcp_keyblob(item, type);
+
+  // scip
+  //printf("BLOB (%d):\n", (int)itemsize);
+  //pcpprint_bin(stdout, saveitem, itemsize); printf("\n");
 
   if(tmp != NULL) {
     if(pcpvault_copy(vault, tmp) != 0)
@@ -277,13 +282,15 @@ unsigned char *pcpvault_create_checksum(vault_t *vault) {
 
   pcp_pubkey_t *p = NULL;
   pcphash_iteratepub(p) {
+    //pcp_dumppubkey(p);
     pubkey2be(p);
     memcpy(&data[datapos], p, PCP_RAW_PUBKEYSIZE);
     pubkey2native(p);
     datapos += PCP_RAW_PUBKEYSIZE;
   }
 
-  //printf("DATA (%d) (s: %d, p: %d): ", (int)datasize, numskeys, numpkeys);
+  // scip
+  //printf("DATA (%d) (s: %d, p: %d):\n", (int)datasize, numskeys, numpkeys);
   //pcpprint_bin(stdout, data, datasize); printf("\n");
 
   crypto_hash_sha256(checksum, data, datasize);

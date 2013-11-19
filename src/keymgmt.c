@@ -246,6 +246,9 @@ void pcp_exportsecretkey(pcp_key_t *key, char *outfile) {
       pcp_dumpkey(key);
     else
       pcpkey_print(key, out);
+    // scip
+    //printf("EXPORT:\n");
+    // pcpprint_bin(stdout, key, PCP_RAW_KEYSIZE); printf("\n");
   }
 }
 
@@ -335,6 +338,9 @@ void pcp_exportpublic(char *keyid, char *recipient, char *passwd, char *outfile)
     }
 
     if(out != NULL) {
+      // scip
+      //printf("EXPORT:\n");
+      //pcpprint_bin(stdout, key, PCP_RAW_PUBKEYSIZE); printf("\n");
       pcppubkey_print(key, out);
       fprintf(stderr, "public key exported.\n");
     }
@@ -414,7 +420,7 @@ int pcp_importpublic (vault_t *vault, FILE *in) {
   }
 
   if(clen != PCP_RAW_PUBKEYSIZE) {
-    fatal("Error: decoded input didn't result to a proper sized key!\n", clen);
+    fatal("Error: decoded input didn't result to a proper sized key (got %d, expected %d)!\n", clen, PCP_RAW_PUBKEYSIZE);
     free(z85decoded);
     return 1;
   }

@@ -85,10 +85,7 @@ unsigned char *pcp_box_encrypt(pcp_key_t *secret, pcp_pubkey_t *public,
 			       unsigned char *message, size_t messagesize,
 			       size_t *csize) {
 
-  //unsigned char *nonce = pcp_gennonce();
-
-  unsigned char *nonce = ucmalloc(crypto_secretbox_NONCEBYTES);
-  memset(nonce, 1, crypto_secretbox_NONCEBYTES);
+  unsigned char *nonce = pcp_gennonce();
 
   unsigned char *cipher;
 

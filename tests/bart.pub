@@ -3,33 +3,33 @@
         Cipher: CURVE25519-ED25519-SALSA20-POLY1305
          Owner: Bart
           Mail: bart@local
-        Key-ID: 0x9AD180B48F2746E7
-    Public-Key: 0$U$)i[>V06d$n&N6ehq2.#]UW$MQy8-MrNt!j/uu&Qfb
- Creation Time: 2013-11-19T14:56:12
-      Checksum: 06:95:B5:78:15:E4:F7:DB:34:B2:02:ED:B5:3F:C9:6D
-                4F:20:1F:94:19:27:32:31:7C:E2:8F:A4:C4:30:29:12
- Serial Number: 0xEBBF8898
+        Key-ID: 0x8C26BF8A5F2C72E8
+    Public-Key: 1gxyGI2IKAa=A*)lJG78tgkw350bPzBaCtxH%G6ZbldYz
+ Creation Time: 2013-11-24T19:39:00
+      Checksum: FE:EC:88:38:A1:4F:7E:1B:BB:05:95:5E:81:58:DF:24
+                2F:CA:8A:61:EE:6B:F4:13:AE:53:5C:BC:68:AC:AC:E5
+ Serial Number: 0xB0E778FA
    Key Version: 0x00000004
  Random Art ID: +----------------+
-                |      o         |
-                |     . +        |
-                |. . . . .       |
-                | o .   .        |
-                |= . .   .       |
-                | * o .          |
-                |. . .           |
                 |                |
+                |                |
+                |                |
+                |       . .      |
+                | . .  . + .     |
+                |. . .. + o      |
+                |.  .o o o       |
+                | ..o.. .        |
                 +----------------+
 
-0$U$)i[>V06d$n&N6ehq2.#]UW$MQy8-MrNt!j/uu]Y@S75-O9Mv]$?.q^!NtEu4[3ULQ*3
-Vo-nB)uSVbsk*VBo0GfGcp5NMsb^MqUj3:(i<P.9.n&LRzz{w]Q?f9-PYZCwtWU21oZaNa=
-j^kQei@&!=*NpwtOrV-QzR1zND=Egb92!@t(IDpLVbnaV*dHm*b{rFgz45&oWV9=#/{jqI0
-cV2.>8nz(cq3H6.w60rb<yn)?!OWkT9TDJx[)GF3AmGjOAvnQ*nz]bMa5/{00gk2NW.gXF*
-3tKEn0S.s{H(+w>[8w#)?kG=ixxk.XFGa/pI9%^px=>Gl+ou22k)0+pTT*S6#IoIK3Ix#)L
-Pr3<4W!(KgAU5yvR/Ep]g.t):??2QC*!fRka&uG!ojG2zvQTq0kX$vGvqC}NxLDX7cR3T@/
-ldGZoc+WNkcGX0k}d2Kh?H.ra6J=^vMW(p>Fy}FnM)ce@b>E*/EsTFQ}C4J&mpjX.KU7#?j
-OZKaHWA76Y>1VHsv0H9BV?cKr9J.r3*r9ps<S5@}>$j-9>p1t6I=F3*xOLyH*K2Y7sL-vBz
-It/w[a<NuL1jpypjWP3GyZHZUi$+ns!)DnD(raKG^%R}SO)G0jf9EX}O2p<EA#nl<mT<TVz
-JC$}A)+lZWm4P.w]/Z$EO[H0STPtumZ8w&Q)Ai9&j]55oJoBh:(iud<gmkEvQOb]Z.eD]Ve
-.=p^SSp(@Ck$0B!fHvPQmLV[VhBPL80@@r308!.(}#uY%1NA*UM&E9^
+1gxyGI2IKAa=A*)lJG78tgkw350bPzBaCtxH%G6ZbFH2!uP]vMhKFj6gldkUZcd%$g+^M[J
+hj]eN6g9@eKA(^Bo5dCk(2m^n2SL^O*p?](fdGuF^@zqPuoJ3jHD)Vd^GqNMs*fRHWcT3Pe
+0v5=Kbj}!K#W1z3Qqx(m{B8M/Gma<lOS$S#u^wK1lGqctK3sqXNvncbegBTh}cvN9{JYw8&
+s!E?C9Yosz}yP/$a>U0$Q]IkMbwwfEPN-vrd/sM/HXLSfDlHA<nclmppD8VN{u5dZYs^sOO
+FDfo^.dQ{7}oM5^1l$hJy-.3ToZ+X%[?!!e23Gyj8o^s{tMvJ]/:HeI!ZY-mA}Q^47HuC*9
+G4ccB9jJ.q<#z9p3Xc2EjWcUv^Rdv8n66HII>MJyes5iOvQTq0kX$vGvqC}CVj<L?bbiE#W
+SaVJ6q.O3l&%A=jUpi=y*/1=-fQdqE#qi0w%LPdvNDGXpi>3!OnvaP.R<cwUQK@WU%uTXXA
+whBpbL[@>ui86&vy^lU9sE^G$1&-]iQ@Q^T$TB{h}79MD!oL}&9:5wc/]4ZwHW}r0g>/t&v
+^2Ic+6Cpm-0QxL*QeL[q#CLn!g9{<Ez&@q:AAWpBu1y0fjH5[?/0=<<-78K={i.q9O%HEn-
+gp<cL&9Jj%yMiLeXI3=qJ:f7gO5Z?MK@2rj=MSKG)B!UcHL)ny@+/Y}k]G+D/ZLU({^WNTR
+V{a(u^RJwLlOZL^mMrW>mLWs&gdse50@@r308!$I.#G=q1Hd6l}tZG}
 ------ END PCP PUBLICKEY ------

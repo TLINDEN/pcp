@@ -70,7 +70,8 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-check_PROGRAMS = col$(EXEEXT) invalidkeys$(EXEEXT) pwhashes$(EXEEXT)
+check_PROGRAMS = col$(EXEEXT) invalidkeys$(EXEEXT) pwhashes$(EXEEXT) \
+	gencheader$(EXEEXT) statictest$(EXEEXT)
 subdir = tests
 DIST_COMMON = README $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/config/depcomp
@@ -89,6 +90,9 @@ CONFIG_CLEAN_VPATH_FILES =
 am_col_OBJECTS = collisions.$(OBJEXT) compat_getopt.$(OBJEXT)
 col_OBJECTS = $(am_col_OBJECTS)
 col_DEPENDENCIES = ../libpcp/.libs/libpcp1.a
+am_gencheader_OBJECTS = gencheader.$(OBJEXT)
+gencheader_OBJECTS = $(am_gencheader_OBJECTS)
+gencheader_DEPENDENCIES = ../libpcp/.libs/libpcp1.a
 am_invalidkeys_OBJECTS = invalidkeys.$(OBJEXT)
 invalidkeys_OBJECTS = $(am_invalidkeys_OBJECTS)
 invalidkeys_DEPENDENCIES = ../libpcp/.libs/libpcp1.a ../src/keyprint.o \
@@ -96,6 +100,9 @@ invalidkeys_DEPENDENCIES = ../libpcp/.libs/libpcp1.a ../src/keyprint.o \
 am_pwhashes_OBJECTS = pwhashes.$(OBJEXT)
 pwhashes_OBJECTS = $(am_pwhashes_OBJECTS)
 pwhashes_DEPENDENCIES = ../libpcp/.libs/libpcp1.a
+am_statictest_OBJECTS = statictest.$(OBJEXT)
+statictest_OBJECTS = $(am_statictest_OBJECTS)
+statictest_DEPENDENCIES = ../libpcp/.libs/libpcp1.a
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include/pcp
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__depfiles_maybe = depfiles
@@ -109,9 +116,11 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(col_SOURCES) $(invalidkeys_SOURCES) $(pwhashes_SOURCES)
-DIST_SOURCES = $(col_SOURCES) $(invalidkeys_SOURCES) \
-	$(pwhashes_SOURCES)
+SOURCES = $(col_SOURCES) $(gencheader_SOURCES) $(invalidkeys_SOURCES) \
+	$(pwhashes_SOURCES) $(statictest_SOURCES)
+DIST_SOURCES = $(col_SOURCES) $(gencheader_SOURCES) \
+	$(invalidkeys_SOURCES) $(pwhashes_SOURCES) \
+	$(statictest_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -234,6 +243,10 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CFLAGS = -I../include/pcp -Wall -g
+gencheader_LDADD = ../libpcp/.libs/libpcp1.a
+gencheader_SOURCES = gencheader.c
+statictest_LDADD = ../libpcp/.libs/libpcp1.a
+statictest_SOURCES = statictest.c
 col_LDADD = ../libpcp/.libs/libpcp1.a
 col_SOURCES = collisions.c ../src/compat_getopt.c
 invalidkeys_LDADD = ../libpcp/.libs/libpcp1.a \
@@ -289,12 +302,18 @@ clean-checkPROGRAMS:
 col$(EXEEXT): $(col_OBJECTS) $(col_DEPENDENCIES) $(EXTRA_col_DEPENDENCIES) 
 	@rm -f col$(EXEEXT)
 	$(LINK) $(col_OBJECTS) $(col_LDADD) $(LIBS)
+gencheader$(EXEEXT): $(gencheader_OBJECTS) $(gencheader_DEPENDENCIES) $(EXTRA_gencheader_DEPENDENCIES) 
+	@rm -f gencheader$(EXEEXT)
+	$(LINK) $(gencheader_OBJECTS) $(gencheader_LDADD) $(LIBS)
 invalidkeys$(EXEEXT): $(invalidkeys_OBJECTS) $(invalidkeys_DEPENDENCIES) $(EXTRA_invalidkeys_DEPENDENCIES) 
 	@rm -f invalidkeys$(EXEEXT)
 	$(LINK) $(invalidkeys_OBJECTS) $(invalidkeys_LDADD) $(LIBS)
 pwhashes$(EXEEXT): $(pwhashes_OBJECTS) $(pwhashes_DEPENDENCIES) $(EXTRA_pwhashes_DEPENDENCIES) 
 	@rm -f pwhashes$(EXEEXT)
 	$(LINK) $(pwhashes_OBJECTS) $(pwhashes_LDADD) $(LIBS)
+statictest$(EXEEXT): $(statictest_OBJECTS) $(statictest_DEPENDENCIES) $(EXTRA_statictest_DEPENDENCIES) 
+	@rm -f statictest$(EXEEXT)
+	$(LINK) $(statictest_OBJECTS) $(statictest_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -304,8 +323,10 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/collisions.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/compat_getopt.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gencheader.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/invalidkeys.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pwhashes.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/statictest.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

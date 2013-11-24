@@ -20,7 +20,15 @@
 #
 
 AM_CFLAGS = -I../include/pcp -Wall -g
-check_PROGRAMS = col invalidkeys pwhashes
+check_PROGRAMS = col invalidkeys pwhashes gencheader statictest
+
+gencheader_LDADD = ../libpcp/.libs/libpcp1.a
+gencheader_SOURCES = gencheader.c
+
+statictest_LDADD = ../libpcp/.libs/libpcp1.a
+statictest_SOURCES = statictest.c
+
+
 
 col_LDADD = ../libpcp/.libs/libpcp1.a
 col_SOURCES = collisions.c ../src/compat_getopt.c

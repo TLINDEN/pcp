@@ -54,4 +54,6 @@ idalicia = $ida
 mailbobby = bobby@local
 mailalicia = alicia@local" > keys.cfg
 
+./gencheader > static.h
+
 rm -f vxxx

@@ -58,7 +58,6 @@ config-sodium:
 	if test ! -f $(HAVESODIUM); then \
 		cd $(SRCSODIUM) && ./autogen.sh; \
 		cd $(SRCSODIUM) && ./configure --prefix=$(PREFIX); \
-		touch $(HAVESODIUM); \
 	fi
 
 config-pcp:
@@ -75,6 +74,7 @@ compile-pcp:
 install-sodium:
 	if test ! -f $(HAVESODIUM); then \
 		cd $(SRCSODIUM) && make install; \
+		touch $(HAVESODIUM); \
 	fi
 
 install-pcp:

@@ -18,12 +18,9 @@
 #
 #    You can contact me by mail: <tlinden AT cpan DOT org>.
 #
+AM_CXXFLAGS = -I../../include -Wall -g
 
-SUBDIRS = include libpcp src man tests bindings/cpp
-ACLOCAL_AMFLAGS = -I config
+lib_LTLIBRARIES      = libpcp1++.la
 
-test:
-	cd tests && make test $(CHECK)
-
-stresstest:
-	cd tests && make stresstest
+libpcp1___la_SOURCES = pcp++.h key.cpp
+include_HEADERS      = pcp++.h

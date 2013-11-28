@@ -35,6 +35,9 @@ LT_INIT
 ORIG_CFLAGS="${CFLAGS:-none}"
 
 # Checks for programs
+AC_PROG_CXX
+AC_PROG_CXXCPP
+
 AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_LIBTOOL
@@ -239,8 +242,10 @@ if test -n "$bigendian"; then
     CFLAGS="$CFLAGS -D__CPU_IS_BIG_ENDIAN=1"
 fi
 
+CXXFLAGS="$CFLAGS"
+
 AC_SUBST(PACKAGE_VERSION)
 
 # Specify output files
-AC_CONFIG_FILES([Makefile include/Makefile libpcp/Makefile src/Makefile man/Makefile tests/Makefile libpcp/libpcp1.pc])
+AC_CONFIG_FILES([Makefile include/Makefile libpcp/Makefile src/Makefile man/Makefile tests/Makefile libpcp/libpcp1.pc bindings/cpp/Makefile])
 AC_OUTPUT

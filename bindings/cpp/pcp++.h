@@ -43,7 +43,7 @@ namespace pcp {
 	msg = PCP_ERR;
       }
       if(errno) {
-	msg += "\nError: " + strerror(errno) + "\n";
+	msg += std::string("\nError: ") + std::string(strerror(errno)) + std::string("\n");
       }
       return msg;
     }
@@ -51,6 +51,40 @@ namespace pcp {
     exception(const std::string & msg) : runtime_error(msg) { }
   exception() : runtime_error(getfatals()) { }
   };
+
+
+
+
+
+  class PubKey {
+  private:
+    pcp_pubkey_t *K;
+    bool stored;
+
+  public:
+    // constructors
+    PubKey();
+    PubKey(const PubKey &k);
+    PubKey(pcp_pubkey_t *k);
+
+    // destructors
+    ~PubKey();
+
+    // operators
+    PubKey& operator = (const PubKey &k);
+
+
+    std::string get_id();
+    std::string get_owner();
+    std::string get_mail();
+    pcp_pubkey_t *get_key();
+    void is_stored(bool s);
+    bool is_stored();
+  };
+
+  std::istream& operator>>(std::istream& input, PubKey& k);
+  std::ostream& operator<<(std::ostream& output, PubKey& k);
+
 
 
   class Key {
@@ -67,15 +101,14 @@ namespace pcp {
 	const std::string& owner,
 	const std::string& mail);
     Key(const Key &k);
-    Key(const pcp_key_t *k);
+    Key(pcp_key_t *k);
 
     // destructors
     ~Key();
 
     // operators
-    const Key& operator = (const Key &k);
-    std::istream& operator>>(std::istream& input, Key& k); // import
-    std::ostream& operator<<(std::ostream& output, Key& k); // export
+    Key& operator = (const Key &k);
+
 
     // methods
     void encrypt(const std::string& passphrase);
@@ -93,33 +126,9 @@ namespace pcp {
     bool is_encrypted();
   };
 
-
-  class PubKey {
-  private:
-    pcp_pubkey_t *K;
-    bool stored;
-
-  public:
-    // constructors
-    PubKey();
-    PubKey(const PubKey &k);
-    PubKey(const pcp_pubkey_t *k);
-
-    // destructors
-    ~PubKey();
-
-    // operators
-    const PubKey& operator = (const PubKey &k);
-    std::istream& operator>>(std::istream& input, PubKey& k); // import
-    std::ostream& operator<<(std::ostream& output, PubKey& k); // export
-
-    std::string get_id();
-    std::string get_owner();
-    std::string get_mail();
-    pcp_pubkey_t *get_key();
-    void is_stored(bool s);
-    bool is_stored();
-  };
+  // << and >> operators
+  std::istream& operator>>(std::istream& input, Key& k);
+  std::ostream& operator<<(std::ostream& output, Key& k);
 
 };
 

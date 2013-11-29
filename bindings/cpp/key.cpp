@@ -37,25 +37,25 @@ Key::Key(bool generate) {
 Key::Key(const string& passphrase) {
   stored = false;
   K = pcpkey_new();
-  K = pcpkey_encrypt(K, passphrase.c_str());
+  K = pcpkey_encrypt(K, (char *)passphrase.c_str());
 }
 
 Key::Key(const string& passphrase,
 	 const string& owner,
 	 const string& mail) {
   stored = false;
-  _k = pcpkey_new();
-  K = pcpkey_encrypt(_K, passphrase.c_str());
-  free(_k);
+  pcp_key_t *_K = pcpkey_new();
+  K = pcpkey_encrypt(_K, (char *)passphrase.c_str());
   memcpy(K->owner, owner.c_str(), owner.length()+1);
   memcpy(K->mail, mail.c_str(), mail.length()+1);
+  free(_K);
 }
 
-Key::(const Key &k) {
+Key::Key(const Key &k) {
   K = k.K;
 }
 
-Key::Key(const pcp_key_t *k) {
+Key::Key(pcp_key_t *k) {
   stored = false;
   K = k;
 }
@@ -66,7 +66,7 @@ Key::~Key() {
   }
 }
 
-const Key::Key& operator = (const Key &k) {
+Key::Key& Key::operator = (const Key &k) {
   K = k.K;
   return *this;
 }
@@ -76,32 +76,33 @@ istream& operator>>(istream& input, Key& k) {
   input >> z85;
   
   if(z85.length() == 0)
-    throw exception("Error: zero length input");
+    throw pcp::exception("Error: zero length input");
 
   size_t clen;
-  unsigned char *z85decoded = pcp_z85_decode(z85.c_str(), &clen);
+  unsigned char *z85decoded = pcp_z85_decode((char *)z85.c_str(), &clen);
 
   if(z85decoded == NULL)
-    throw exception("Error: could not decode input - it's probably not Z85.\n");
+    throw pcp::exception("Error: could not decode input - it's probably not Z85.\n");
 
   if(clen != PCP_RAW_KEYSIZE) {
-    free(z85decoded);    
-    throw exception("Error: decoded input didn't result to a proper sized key!"
-		    + "(got " + clen + " bytes)\n");
+    free(z85decoded);
+    char m[256];
+    sprintf(m, "Error: decoded input didn't result to a proper sized key (got %ld bytes)!\n", clen);
+    throw pcp::exception(string(m));
   }
 
   // all good now, import the blob
-  pcp_key_t *key = ucmalloc(sizeof(pcp_key_t));
+  pcp_key_t *key = (pcp_key_t *)ucmalloc(sizeof(pcp_key_t));
   memcpy(key, z85decoded, PCP_RAW_KEYSIZE);
   key2native(key);
 
   if(pcp_sanitycheck_key(key) != 0) {
     free(key);
     free(z85decoded);
-    throw exception();
+    throw pcp::exception();
   }
 
-  k.K = key;
+  k = Key(key);
   free(key);
 
   return input;
@@ -110,7 +111,7 @@ istream& operator>>(istream& input, Key& k) {
 
 ostream& operator<<(ostream& output, Key& k) {
   size_t zlen;
-  pcp_key_t *key = k.K;
+  pcp_key_t *key = k.get_key();
 
   key2be(key);
   void *blob = ucmalloc(PCP_RAW_KEYSIZE);
@@ -118,7 +119,7 @@ ostream& operator<<(ostream& output, Key& k) {
   char *z85encoded = pcp_z85_encode((unsigned char*)blob, PCP_RAW_KEYSIZE, &zlen);
 
   if(PCP_ERRSET == 1)
-    throw exception();
+    throw pcp::exception();
 
   key2native(key);
 
@@ -128,7 +129,7 @@ ostream& operator<<(ostream& output, Key& k) {
   time_t t = (time_t)key->ctime;
   c = localtime(&t);
 
-  char *out = ucmalloc(2048);
+  char *out = (char *)ucmalloc(2048);
 
   sprintf(out, "%s\n", PCP_KEY_HEADER);
   output << out;
@@ -167,13 +168,13 @@ ostream& operator<<(ostream& output, Key& k) {
 }
 
 void Key::encrypt(const string& passphrase) {
-  K = pcpkey_encrypt(K, passphrase.c_str());
+  K = pcpkey_encrypt(K, (char *)passphrase.c_str());
   if(PCP_ERRSET == 1)
     throw exception();
 }
 
 void Key::decrypt(const string& passphrase) {
-  K = pcpkey_decrypt(K, passphrase.c_str());
+  K = pcpkey_decrypt(K, (char *)passphrase.c_str());
   if(PCP_ERRSET == 1)
     throw exception();
 }
@@ -183,17 +184,17 @@ PubKey Key::get_public() {
 }
 
 string Key::get_id() {
-  string id = K.id;
+  string id = K->id;
   return id;
 }
 
 string Key::get_owner() {
-  string o = K.owner;
+  string o = K->owner;
   return o;
 }
 
 string Key::get_mail() {
-  string m = K.mail;
+  string m = K->mail;
   return m;
 }
 
@@ -239,11 +240,11 @@ PubKey::PubKey() {
   K = NULL;
 }
 
-PubKey::(const PubKey &k) {
+PubKey::PubKey(const PubKey &k) {
   K = k.K;
 }
 
-PubKey::PubKey(const pcp_pubkey_t *k) {
+PubKey::PubKey(pcp_pubkey_t *k) {
   stored = false;
   K = k;
 }
@@ -254,7 +255,7 @@ PubKey::~PubKey() {
   }
 }
 
-const PubKey::PubKey& operator = (const PubKey &k) {
+PubKey::PubKey& PubKey::operator = (const PubKey &k) {
   K = k.K;
   return *this;
 }
@@ -264,32 +265,33 @@ istream& operator>>(istream& input, PubKey& k) {
   input >> z85;
   
   if(z85.length() == 0)
-    throw exception("Error: zero length input");
+    throw pcp::exception("Error: zero length input");
 
   size_t clen;
-  unsigned char *z85decoded = pcp_z85_decode(z85.c_str(), &clen);
+  unsigned char *z85decoded = pcp_z85_decode((char *)z85.c_str(), &clen);
 
   if(z85decoded == NULL)
-    throw exception("Error: could not decode input - it's probably not Z85.\n");
+    throw pcp::exception("Error: could not decode input - it's probably not Z85.\n");
 
   if(clen != PCP_RAW_PUBKEYSIZE) {
-    free(z85decoded);    
-    throw exception("Error: decoded input didn't result to a proper sized key!"
-		    + "(got " + clen + " bytes)\n");
+    free(z85decoded);
+    char m[256];
+    sprintf(m, "Error: decoded input didn't result to a proper sized key (got %ld bytes)!\n", clen);
+    throw pcp::exception(string(m));
   }
 
   // all good now, import the blob
-  pcp_pubkey_t *key = ucmalloc(sizeof(pcp_pubkey_t));
+  pcp_pubkey_t *key = (pcp_pubkey_t *)ucmalloc(sizeof(pcp_pubkey_t));
   memcpy(key, z85decoded, PCP_RAW_PUBKEYSIZE);
   pubkey2native(key);
 
   if(pcp_sanitycheck_pub(key) != 0) {
     free(key);
     free(z85decoded);
-    throw exception();
+    throw pcp::exception();
   }
 
-  k.K = key;
+  k = PubKey(key);
   free(key);
 
   return input;
@@ -298,7 +300,7 @@ istream& operator>>(istream& input, PubKey& k) {
 
 ostream& operator<<(ostream& output, PubKey& k) {
   size_t zlen;
-  pcp_pubkey_t *key = k.K;
+  pcp_pubkey_t *key = k.get_key();
 
   pubkey2be(key);
   void *blob = ucmalloc(PCP_RAW_PUBKEYSIZE);
@@ -306,7 +308,7 @@ ostream& operator<<(ostream& output, PubKey& k) {
   char *z85encoded = pcp_z85_encode((unsigned char*)blob, PCP_RAW_PUBKEYSIZE, &zlen);
 
   if(PCP_ERRSET == 1)
-    throw exception();
+    throw pcp::exception();
 
   pubkey2native(key);
 
@@ -316,7 +318,7 @@ ostream& operator<<(ostream& output, PubKey& k) {
   time_t t = (time_t)key->ctime;
   c = localtime(&t);
 
-  char *out = ucmalloc(2048);
+  char *out = (char *)ucmalloc(2048);
 
   sprintf(out, "%s\n", PCP_PUBKEY_HEADER);
   output << out;
@@ -364,8 +366,9 @@ ostream& operator<<(ostream& output, PubKey& k) {
   
   char *r = pcppubkey_get_art(key);
   output << " Random Art ID: ";
+  int rlen = strlen(r);
 
-  for (i=0; i<strlen(r); ++i) {
+  for (i=0; i<rlen; ++i) {
     if(r[i] == '\n') {
       output << "\n                ";
     }
@@ -388,17 +391,17 @@ ostream& operator<<(ostream& output, PubKey& k) {
 }
 
 string PubKey::get_id() {
-  string id = K.id;
+  string id = K->id;
   return id;
 }
 
 string PubKey::get_owner() {
-  string o = K.owner;
+  string o = K->owner;
   return o;
 }
 
 string PubKey::get_mail() {
-  string m = K.mail;
+  string m = K->mail;
   return m;
 }
 

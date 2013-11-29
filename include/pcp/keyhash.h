@@ -22,10 +22,6 @@
 #ifndef _HAVE_KEYHASH_H
 #define _HAVE_KEYHASH_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "uthash.h"
 #include "key.h"
 
@@ -55,9 +51,5 @@ pcp_pubkey_t *pcphash_pubkeyexists(char *id);
 void pcphash_add(void *key, int type);
 int pcphash_count();
 int pcphash_countpub();
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif // _HAVE_KEYHASH_H

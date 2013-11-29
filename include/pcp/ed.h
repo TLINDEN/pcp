@@ -22,10 +22,6 @@
 #ifndef _HAVE_PCP_ED_H
 #define _HAVE_PCP_ED_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <sodium.h>
 #include <string.h>
 #include <stdio.h>
@@ -56,9 +52,5 @@ pcp_sig_t *sig2be(pcp_sig_t *k);
 pcp_sig_t *pcp_ed_newsig(unsigned char *hash, char *id);
 
   void pcp_dumpsig(pcp_sig_t *sig);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif // _HAVE_PCP_ED_H

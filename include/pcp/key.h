@@ -23,10 +23,6 @@
 #ifndef _HAVE_PCP_KEYPAIR_H
 #define _HAVE_PCP_KEYPAIR_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <sodium.h>
 #include <string.h>
 #include <stdio.h>
@@ -162,9 +158,5 @@ pcp_key_t *pcp_derive_pcpkey (pcp_key_t *ours, char *theirs);
 void pcp_seckeyblob(void *blob, pcp_key_t *k);
 void pcp_pubkeyblob(void *blob, pcp_pubkey_t *k);
 void *pcp_keyblob(void *k, int type); // allocates blob
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif // _HAVE_PCP_KEYPAIR_H

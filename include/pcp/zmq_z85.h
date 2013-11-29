@@ -25,15 +25,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 uint8_t *zmq_z85_decode (uint8_t *dest, char *string);
 char *zmq_z85_encode (char *dest, uint8_t *data, size_t size);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

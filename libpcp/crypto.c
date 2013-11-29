@@ -27,7 +27,7 @@ size_t pcp_sodium_box(unsigned char **cipher,
 		      size_t clearsize,
 		      unsigned char *nonce,
 		      unsigned char *secret,
-		      unsigned char *public) {
+		      unsigned char *pub) {
 
   unsigned char *pad_clear;
   unsigned char *pad_cipher;
@@ -39,7 +39,7 @@ size_t pcp_sodium_box(unsigned char **cipher,
   
   // crypto_box(c,m,mlen,n,pk,sk);
   crypto_box(pad_cipher, pad_clear,
-	     clearsize + crypto_box_ZEROBYTES, nonce, public, secret);
+	     clearsize + crypto_box_ZEROBYTES, nonce, pub, secret);
 
   pcp_pad_remove(cipher, pad_cipher, crypto_secretbox_BOXZEROBYTES, ciphersize);
 
@@ -54,7 +54,7 @@ size_t pcp_sodium_box(unsigned char **cipher,
 
 int pcp_sodium_verify_box(unsigned char **cleartext, unsigned char* message,
 			  size_t messagesize, unsigned char *nonce,
-			  unsigned char *secret, unsigned char *public) {
+			  unsigned char *secret, unsigned char *pub) {
   // verify/decrypt the box
   unsigned char *pad_cipher;
   unsigned char *pad_clear;
@@ -66,7 +66,7 @@ int pcp_sodium_verify_box(unsigned char **cleartext, unsigned char* message,
   // crypto_box_open(m,c,clen,n,pk,sk);
   if (crypto_box_open(pad_clear, pad_cipher,
 		      messagesize + crypto_box_BOXZEROBYTES,
-		      nonce, public, secret) == 0) {
+		      nonce, pub, secret) == 0) {
     success = 0;
   }
 
@@ -81,7 +81,7 @@ int pcp_sodium_verify_box(unsigned char **cleartext, unsigned char* message,
 
 
 
-unsigned char *pcp_box_encrypt(pcp_key_t *secret, pcp_pubkey_t *public,
+unsigned char *pcp_box_encrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
 			       unsigned char *message, size_t messagesize,
 			       size_t *csize) {
 
@@ -90,7 +90,7 @@ unsigned char *pcp_box_encrypt(pcp_key_t *secret, pcp_pubkey_t *public,
   unsigned char *cipher;
 
   size_t es = pcp_sodium_box(&cipher, message, messagesize, nonce,
-		 secret->secret, public->public);
+		 secret->secret, pub->pub);
 
   if(es <= messagesize) {
     fatal("failed to encrypt message!\n");
@@ -98,7 +98,7 @@ unsigned char *pcp_box_encrypt(pcp_key_t *secret, pcp_pubkey_t *public,
   }
 
   // scip
-  //fprintf(stderr, "public: "); pcpprint_bin(stderr, public->public, 32); fprintf(stderr, "\n");
+  //fprintf(stderr, "public: "); pcpprint_bin(stderr, pub->pub, 32); fprintf(stderr, "\n");
   //fprintf(stderr, "secret: "); pcpprint_bin(stderr, secret->secret, 32); fprintf(stderr, "\n");
   //fprintf(stderr, "cipher: "); pcpprint_bin(stderr, cipher, es); fprintf(stderr, "\n");
   //fprintf(stderr, " nonce: "); pcpprint_bin(stderr, nonce, crypto_secretbox_NONCEBYTES); fprintf(stderr, "\n");
@@ -124,7 +124,7 @@ unsigned char *pcp_box_encrypt(pcp_key_t *secret, pcp_pubkey_t *public,
 }
 
 
-unsigned char *pcp_box_decrypt(pcp_key_t *secret, pcp_pubkey_t *public,
+unsigned char *pcp_box_decrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
 			       unsigned char *cipher, size_t ciphersize,
 			       size_t *dsize) {
 
@@ -139,7 +139,7 @@ unsigned char *pcp_box_decrypt(pcp_key_t *secret, pcp_pubkey_t *public,
 
   if(pcp_sodium_verify_box(&message, cipheronly,
 			   ciphersize - crypto_secretbox_NONCEBYTES,
-			   nonce, secret->secret, public->public) != 0){
+			   nonce, secret->secret, pub->pub) != 0){
     fatal("failed to decrypt message!\n");
     goto errbed;
   }

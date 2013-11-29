@@ -38,17 +38,17 @@ size_t pcp_sodium_box(unsigned char **cipher,
                       size_t clearsize,
                       unsigned char *nonce,
                       unsigned char *secret,
-                      unsigned char *public);
+                      unsigned char *pub);
 
 int pcp_sodium_verify_box(unsigned char **cleartext, unsigned char* message,
                           size_t messagesize, unsigned char *nonce,
-                          unsigned char *secret, unsigned char *public);
+                          unsigned char *secret, unsigned char *pub);
 
-unsigned char *pcp_box_encrypt(pcp_key_t *secret, pcp_pubkey_t *public,
+unsigned char *pcp_box_encrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
                                unsigned char *message, size_t messagesize,
 			       size_t *csize);
 
-unsigned char *pcp_box_decrypt(pcp_key_t *secret, pcp_pubkey_t *public,
+unsigned char *pcp_box_decrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
                                unsigned char *cipher, size_t ciphersize,
 			       size_t *dsize);
 

@@ -74,7 +74,7 @@
 
  */
 struct _pcp_key_t {
-  byte public[32];
+  byte pub[32];
   byte secret[32];
   byte edpub[32];
   byte edsecret[64];
@@ -91,7 +91,7 @@ struct _pcp_key_t {
 };
 
 struct _pcp_pubkey_t {
-  byte public[32];
+  byte pub[32];
   byte edpub[32];
   char owner[255];
   char mail[255];
@@ -158,5 +158,9 @@ pcp_key_t *pcp_derive_pcpkey (pcp_key_t *ours, char *theirs);
 void pcp_seckeyblob(void *blob, pcp_key_t *k);
 void pcp_pubkeyblob(void *blob, pcp_pubkey_t *k);
 void *pcp_keyblob(void *k, int type); // allocates blob
+
+int pcp_sanitycheck_pub(pcp_pubkey_t *key);
+int pcp_sanitycheck_key(pcp_key_t *key);
+
 
 #endif // _HAVE_PCP_KEYPAIR_H

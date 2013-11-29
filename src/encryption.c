@@ -25,7 +25,7 @@
 int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd) {
   FILE *in = NULL;
   FILE *out = NULL;
-  pcp_pubkey_t *public = NULL;
+  pcp_pubkey_t *pub = NULL;
   pcp_key_t *secret = NULL;
 
   if(useid) {
@@ -93,24 +93,24 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd) {
   unsigned char *check = ucmalloc(crypto_hash_BYTES);
   memcpy(hash, combined, crypto_hash_BYTES);
 
-  pcphash_iteratepub(public) {
-    crypto_hash(check, (unsigned char*)public->id, 16);
+  pcphash_iteratepub(pub) {
+    crypto_hash(check, (unsigned char*)pub->id, 16);
     if(memcmp(check, hash, crypto_hash_BYTES) == 0) {
       // found one
       break;
     }
   }
-  if(public == NULL) {
+  if(pub == NULL) {
     // maybe self encryption, try secrets
     pcp_key_t *s = NULL;
     pcphash_iterate(s) {
       crypto_hash(check, (unsigned char*)s->id, 16);
       if(memcmp(check, hash, crypto_hash_BYTES) == 0) {
         // matching secret
-        public = pcpkey_pub_from_secret(s);
+        pub = pcpkey_pub_from_secret(s);
       }
     }
-    if(public == NULL) {
+    if(pub == NULL) {
       fatal("Could not find a usable public key in vault %s!\n",
 	  vault->filename);
       goto errde0;
@@ -121,33 +121,33 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd) {
     fprintf(stderr, "Using secret key:\n");
     pcpkey_printshortinfo(secret);
     fprintf(stderr, "Using publickey:\n");
-    pcppubkey_printshortinfo(public);
+    pcppubkey_printshortinfo(pub);
   }
 
   unsigned char *encrypted = ucmalloc(clen - crypto_hash_BYTES);
   memcpy(encrypted, &combined[crypto_hash_BYTES], clen - crypto_hash_BYTES);
 
   size_t dlen;
-  unsigned char *decrypted = pcp_box_decrypt(secret, public,
+  unsigned char *decrypted = pcp_box_decrypt(secret, pub,
 					     encrypted,
 					     clen - crypto_hash_BYTES, &dlen);
 
   if(decrypted == NULL) {
     // try it with a derived secret from the sender id
-    pcp_key_t *s = pcp_derive_pcpkey(secret, public->id);
-    decrypted = pcp_box_decrypt(s, public,
+    pcp_key_t *s = pcp_derive_pcpkey(secret, pub->id);
+    decrypted = pcp_box_decrypt(s, pub,
 				encrypted,
 				clen - crypto_hash_BYTES, &dlen);
     if(decrypted == NULL) {
       // now try the senders key mail address
-      s = pcp_derive_pcpkey(secret, public->mail);
-      decrypted = pcp_box_decrypt(s, public,
+      s = pcp_derive_pcpkey(secret, pub->mail);
+      decrypted = pcp_box_decrypt(s, pub,
 				  encrypted,
 				  clen - crypto_hash_BYTES, &dlen);
       if(decrypted == NULL) {
 	// try the name
-	s = pcp_derive_pcpkey(secret, public->owner);
-	decrypted = pcp_box_decrypt(s, public,
+	s = pcp_derive_pcpkey(secret, pub->owner);
+	decrypted = pcp_box_decrypt(s, pub,
 				    encrypted,
 				    clen - crypto_hash_BYTES, &dlen);
       }
@@ -164,7 +164,7 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd) {
     free(decrypted);
 
     fprintf(stderr, "Decrypted %d bytes from 0x%s successfully\n",
-	    (int)dlen, public->id);
+	    (int)dlen, pub->id);
   }
 
   free(encrypted);
@@ -186,17 +186,17 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd) {
 int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, char *recipient) {
   FILE *in = NULL;
   FILE *out = NULL;
-  pcp_pubkey_t *public = NULL;
+  pcp_pubkey_t *pub = NULL;
   pcp_key_t *secret = NULL;
 
   // look if we've got that key
-  HASH_FIND_STR(pcppubkey_hash, id, public);
-  if(public == NULL) {
+  HASH_FIND_STR(pcppubkey_hash, id, pub);
+  if(pub == NULL) {
     // self-encryption: look if its a secret one
     pcp_key_t *s = NULL;
     HASH_FIND_STR(pcpkey_hash, id, s);
     if(s != NULL) {
-      public = pcpkey_pub_from_secret(s);
+      pub = pcpkey_pub_from_secret(s);
     }
     else {
       fatal("Could not find a public key with id 0x%s in vault %s!\n",
@@ -255,7 +255,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, char *recipi
     fprintf(stderr, "Using secret key:\n");
     pcp_dumpkey(secret);
     fprintf(stderr, "Using publickey:\n");
-    pcp_dumppubkey(public);
+    pcp_dumppubkey(pub);
   }
 
   unsigned char *input = NULL;
@@ -278,7 +278,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, char *recipi
   }
 
   size_t ciphersize;
-  unsigned char *cipher = pcp_box_encrypt(secret, public, input,
+  unsigned char *cipher = pcp_box_encrypt(secret, pub, input,
 					  inputBufSize, &ciphersize);
   if(cipher == NULL)
     goto erren1;

@@ -147,7 +147,7 @@ int pcpsign(char *infile, char *outfile, char *recipient, char *passwd) {
 int pcpverify(char *infile, char *sigfile) {
   FILE *in = NULL;
   FILE *sigin = NULL;
-  pcp_pubkey_t *public = NULL;
+  pcp_pubkey_t *pub = NULL;
 
   if(infile == NULL)
     in = stdin;
@@ -181,9 +181,9 @@ int pcpverify(char *infile, char *sigfile) {
   pcp_sig_t *sig = (pcp_sig_t *)decoded;
   sig2native(sig);
 
-  HASH_FIND_STR(pcppubkey_hash, sig->id, public);
+  HASH_FIND_STR(pcppubkey_hash, sig->id, pub);
  
-  if(public == NULL) {
+  if(pub == NULL) {
     fatal("Could not find a usable public key in vault %s!\n",
 	  vault->filename);
       goto errv3;
@@ -209,7 +209,7 @@ int pcpverify(char *infile, char *sigfile) {
   }
 
  
-  if(pcp_ed_verify(input, inputBufSize, sig, public) == 0) {
+  if(pcp_ed_verify(input, inputBufSize, sig, pub) == 0) {
     fprintf(stderr, "Signature verified.\n");
   }
 

@@ -270,7 +270,7 @@ void pcppubkey_print(pcp_pubkey_t *key, FILE* out) {
   fprintf(out, "          Mail: %s\n", key->mail);
 
   fprintf(out, "        Key-ID: 0x%s\n", key->id);
-  fprintf(out, "    Public-Key: %s\n", pcp_z85_encode(key->public, 32, &zlen));
+  fprintf(out, "    Public-Key: %s\n", pcp_z85_encode(key->pub, 32, &zlen));
 
   //2004-06-14T23:34:30.
   fprintf(out, " Creation Time: %04d-%02d-%02dT%02d:%02d:%02d\n",
@@ -317,7 +317,7 @@ void pcp_dumpkey(pcp_key_t *k) {
 
   printf("Dumping pcp_key_t raw values:\n");
   printf("   public: ");
-  for ( i = 0;i < 32;++i) printf("%02x",(unsigned int) k->public[i]);
+  for ( i = 0;i < 32;++i) printf("%02x",(unsigned int) k->pub[i]);
   printf("\n");
 
   printf("   secret: ");
@@ -360,7 +360,7 @@ void pcp_dumppubkey(pcp_pubkey_t *k) {
   int i;
   printf("Dumping pcp_pubkey_t raw values:\n");
   printf("   public: ");
-  for ( i = 0;i < 32;++i) printf("%02x",(unsigned int) k->public[i]);
+  for ( i = 0;i < 32;++i) printf("%02x",(unsigned int) k->pub[i]);
   printf("\n");
 
   printf("    edpub: ");
@@ -456,7 +456,7 @@ void pcpexport_yaml(char *outfile) {
       fprintf(out, "  serial:     %08x\n", s->serial);
       fprintf(out, "  type:       %s\n",
 	      (s->type ==  PCP_KEY_TYPE_MAINSECRET) ? "primary" : " secret");
-      fprintf(out, "  public:     "); pcpprint_bin(out, s->public, 32); fprintf(out, "\n");
+      fprintf(out, "  public:     "); pcpprint_bin(out, s->pub, 32); fprintf(out, "\n");
       if(s->secret[0] == 0) {
 	fprintf(out, "  encrypted:  yes\n");
 	fprintf(out, "  nonce:      "); pcpprint_bin(out, s->nonce, 24); fprintf(out, "\n");
@@ -480,7 +480,7 @@ void pcpexport_yaml(char *outfile) {
       fprintf(out, "  version: %08x\n", p->version);
       fprintf(out, "  serial:  %08x\n", p->serial);
       fprintf(out, "  type:    public\n");
-      fprintf(out, "  public:  "); pcpprint_bin(out, p->public, 32); fprintf(out, "\n");
+      fprintf(out, "  public:  "); pcpprint_bin(out, p->pub, 32); fprintf(out, "\n");
       fprintf(out, "  edpub:   "); pcpprint_bin(out, p->edpub, 32); fprintf(out, "\n");
     }
   }

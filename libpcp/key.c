@@ -59,7 +59,7 @@ unsigned char *pcp_derivekey(char *passphrase) {
 
 char *pcp_getkeyid(pcp_key_t *k) {
   uint32_t s, p;
-  p = jen_hash(k->public, 32, JEN_PSALT);
+  p = jen_hash(k->pub, 32, JEN_PSALT);
   s = jen_hash(k->secret, 32, JEN_SSALT);
   char *id = ucmalloc(17);
   snprintf(id, 17, "%08X%08X", p, s);
@@ -98,18 +98,18 @@ void pcp_ed_keypairs(byte *csk, byte *esk) {
 }
 
 pcp_key_t * pcpkey_new () {
-  byte public[32] = { 0 };
+  byte pub[32] = { 0 };
   byte secret[32] = { 0 };
   byte edpub[32] = { 0 };
   byte edsec[64] = { 0 };
 
   byte *seed = urmalloc(32);
 
-  pcp_keypairs(secret, public, edsec, edpub, seed);
+  pcp_keypairs(secret, pub, edsec, edpub, seed);
 
   // fill in our struct
   pcp_key_t *key = urmalloc(sizeof(pcp_key_t));
-  memcpy (key->public, public, 32);
+  memcpy (key->pub, pub, 32);
   memcpy (key->secret, secret, 32);
   memcpy (key->edpub, edpub, 32);
   memcpy (key->edsecret, edsec, 64);
@@ -192,7 +192,7 @@ pcp_key_t *pcpkey_decrypt(pcp_key_t *key, char *passphrase) {
 pcp_pubkey_t *pcpkey_pub_from_secret(pcp_key_t *key) {
   //pcp_dumpkey(key);
   pcp_pubkey_t *pub = urmalloc(sizeof (pcp_pubkey_t));
-  memcpy(pub->public, key->public, 32);
+  memcpy(pub->pub, key->pub, 32);
   memcpy(pub->edpub, key->edpub, 32);
   memcpy(pub->owner, key->owner, 255);
   memcpy(pub->mail, key->mail, 255);
@@ -205,24 +205,24 @@ pcp_pubkey_t *pcpkey_pub_from_secret(pcp_key_t *key) {
 }
 
 char *pcppubkey_get_art(pcp_pubkey_t *k) {
-  char *r = key_fingerprint_randomart(k->public, sizeof(k));
+  char *r = key_fingerprint_randomart(k->pub, sizeof(k));
   return r;
 }
 
 char *pcpkey_get_art(pcp_key_t *k) {
-  char *r = key_fingerprint_randomart(k->public, sizeof(k));
+  char *r = key_fingerprint_randomart(k->pub, sizeof(k));
   return r;
 }
 
 unsigned char *pcppubkey_getchecksum(pcp_pubkey_t *k) {
   unsigned char *hash = ucmalloc(32);
-  crypto_hash_sha256(hash, k->public, 32);
+  crypto_hash_sha256(hash, k->pub, 32);
   return hash;
 }
 
 unsigned char *pcpkey_getchecksum(pcp_key_t *k) {
   unsigned char *hash = ucmalloc(32);
-  crypto_hash_sha256(hash, k->public, 32);
+  crypto_hash_sha256(hash, k->pub, 32);
   return hash;
 }
 
@@ -282,7 +282,7 @@ pcp_pubkey_t *pubkey2native(pcp_pubkey_t *k) {
 pcp_key_t *pcp_derive_pcpkey (pcp_key_t *ours, char *theirs) {
   byte edpub[32] = { 0 };
   byte edsec[64] = { 0 };
-  byte public[32] = { 0 };
+  byte pub[32] = { 0 };
   byte secret[32] = { 0 };
 
   byte *seed = ucmalloc(32);
@@ -299,14 +299,14 @@ pcp_key_t *pcp_derive_pcpkey (pcp_key_t *ours, char *theirs) {
     goto errdp1;
   }
 
-  pcp_keypairs(secret, public, edsec, edpub, seed);
+  pcp_keypairs(secret, pub, edsec, edpub, seed);
 
   pcp_key_t * tmp = pcpkey_new ();
   
   memcpy(tmp->secret, secret, 32);
   memcpy(tmp->edpub, edpub, 32);
   memcpy(tmp->edsecret, edsec, 64);
-  memcpy(tmp->public, public, 32);
+  memcpy(tmp->pub, pub, 32);
   
   memcpy(tmp->owner, ours->owner, 255);
   memcpy(tmp->mail, ours->mail, 255);
@@ -346,4 +346,106 @@ void *pcp_keyblob(void *k, int type) {
     pcp_seckeyblob(blob, (pcp_key_t *)k);
   }
   return blob;
+}
+
+
+int pcp_sanitycheck_pub(pcp_pubkey_t *key) {
+  if(key->pub[0] == 0) {
+    fatal("Pubkey sanity check: public key contained in key seems to be empty!\n");
+    return 1;
+  }
+
+  if(key->type != PCP_KEY_TYPE_PUBLIC) {
+    fatal("Pubkey sanity check: key type is not PUBLIC (expected: %02x, got: %02x)!\n",
+	  PCP_KEY_TYPE_PUBLIC, key->type);
+    return 1;
+  }
+
+  if(key->version != PCP_KEY_VERSION) {
+    fatal("Pubkey sanity check: unknown key version (expected: %08X, got: %08X)!\n",
+	  PCP_KEY_VERSION, key->version);
+    return 1;
+  }
+  
+  if(key->serial <= 0) {
+    fatal("Pubkey sanity check: invalid serial number: %08X!\n", key->serial);
+    return 1;
+  }
+
+  if(key->id[16] != '\0') {
+    char *got = ucmalloc(17);
+    memcpy(got, key->id, 17);
+    got[16] = '\0';
+    fatal("Pubkey sanity check: invalid key id (expected 16 bytes, got: %s)!\n", got);
+    free(got);
+    return 1;
+  }
+
+  struct tm *c;
+  time_t t = (time_t)key->ctime;
+  c = localtime(&t);
+  if(c->tm_year <= 0 || c->tm_year > 1100) {
+    // well, I'm perhaps overacting here :)
+    fatal("Pubkey sanity check: invalid creation timestamp (got year %04d)!\n", c->tm_year + 1900);
+    return 1;
+  }
+
+  pcp_pubkey_t *maybe = pcphash_pubkeyexists(key->id);
+  if(maybe != NULL) {
+    fatal("Pubkey sanity check: there already exists a key with the id 0x%s\n", key->id);
+    return 1;
+  }
+
+  return 0;
+}
+
+
+int pcp_sanitycheck_key(pcp_key_t *key) {
+  if(key->encrypted[0] == 0) {
+    fatal("Secretkey sanity check: secret key contained in key seems to be empty!\n");
+    return 1;
+  }
+
+  if(key->type != PCP_KEY_TYPE_SECRET && key->type != PCP_KEY_TYPE_MAINSECRET) {
+    fatal("Secretkey sanity check: key type is not SECRET (expected: %02x, got: %02x)!\n",
+	  PCP_KEY_TYPE_SECRET, key->type);
+    return 1;
+  }
+
+  if(key->version != PCP_KEY_VERSION) {
+    fatal("Secretkey sanity check: unknown key version (expected: %08X, got: %08X)!\n",
+	  PCP_KEY_VERSION, key->version);
+    return 1;
+  }
+  
+  if(key->serial <= 0) {
+    fatal("Secretkey sanity check: invalid serial number: %08X!\n", key->serial);
+    return 1;
+  }
+
+  if(key->id[16] != '\0') {
+    char *got = ucmalloc(17);
+    memcpy(got, key->id, 17);
+    got[16] = '\0';
+    fatal("Secretkey sanity check: invalid key id (expected 16 bytes, got: %s)!\n", got);
+    free(got);
+    return 1;
+  }
+
+  struct tm *c;
+  time_t t = (time_t)key->ctime;
+  c = localtime(&t);
+  if(c->tm_year <= 0 || c->tm_year > 1100) {
+    // well, I'm perhaps overacting here :)
+    fatal("Secretkey sanity check: invalid creation timestamp (got year %04d)!\n", c->tm_year + 1900);
+    return 1;
+  }
+
+  pcp_key_t *maybe = pcphash_keyexists(key->id);
+  if(maybe != NULL) {
+    fatal("Secretkey sanity check: there already exists a key with the id 0x%s\n", key->id);
+    return 1;
+  }
+
+  return 0;
 }

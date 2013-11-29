@@ -25,9 +25,9 @@ int main() {
   memcpy(n, c, 24);
 
   pr("secret_a", a->secret, 32);
-  pr("public_a", a->public, 32);
+  pr("public_a", a->pub, 32);
   pr("secret_b", b->secret, 32);
-  pr("public_b", b->public, 32);
+  pr("public_b", b->pub, 32);
   pr("message", m, 12);
   pr("nonce", n, 24);
   pr("cipher", &c[24], clen - 24);

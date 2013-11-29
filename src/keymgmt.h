@@ -52,9 +52,7 @@ void pcp_exportpublic(char *keyid, char *recipient, char *passwd, char *outfile)
 char *pcp_normalize_id(char *keyid);
 pcp_key_t *pcp_find_primary_secret();
 int pcp_importpublic (vault_t *vault, FILE *in);
-int pcp_sanitycheck_pub(pcp_pubkey_t *key);
 int pcp_importsecret (vault_t *vault, FILE *in);
-int pcp_sanitycheck_key(pcp_key_t *key);
 void pcpdelete_key(char *keyid);
 char *pcp_find_id_byrec(char *recipient);
 char *_lc(char *in);

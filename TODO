@@ -1,3 +1,6 @@
 aix works now so far, but -R doesnt work - now it does but decryption fails for some unknown reason.
 
 libpcp/z85.c:148 free(z85) leads to coredump on aix sometimes
+
+add more abstract en+de-cryption() functions to libpcp/crypto, which
+work with already en+de-coded in+out-put.

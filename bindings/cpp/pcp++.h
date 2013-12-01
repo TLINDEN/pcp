@@ -24,10 +24,9 @@
 #define _HAVE_PCPPP_H
 
 #include <pcp.h>
-
+#include <vector>
 #include <string>
 #include <sstream>
-#include <vector>
 #include <map>
 #include <stdexcept>
 #include <iostream>
@@ -54,18 +53,29 @@ namespace pcp {
 
 
 
+  class ResultSet {
+  public:
+    std::string String;
+    std::vector<unsigned char> Vector;
+    unsigned char *Uchar;
+    size_t Size;
+
+    ~ResultSet() { free(Uchar); }
+  };
 
 
   class PubKey {
   private:
-    pcp_pubkey_t *K;
     bool stored;
 
   public:
+    pcp_pubkey_t *K;
+
     // constructors
     PubKey();
-    PubKey(const PubKey &k);
     PubKey(pcp_pubkey_t *k);
+    PubKey(pcp_pubkey_t *k, bool store);
+    PubKey(std::string &z85encoded);
 
     // destructors
     ~PubKey();
@@ -73,13 +83,14 @@ namespace pcp {
     // operators
     PubKey& operator = (const PubKey &k);
 
-
     std::string get_id();
     std::string get_owner();
     std::string get_mail();
-    pcp_pubkey_t *get_key();
+
     void is_stored(bool s);
     bool is_stored();
+
+    std::string to_text();
   };
 
   std::istream& operator>>(std::istream& input, PubKey& k);
@@ -89,10 +100,12 @@ namespace pcp {
 
   class Key {
   private:
-    pcp_key_t *K;
     bool stored;
 
   public:
+    // make access to the underlying struct easier
+    pcp_key_t *K;
+
     // constructors
     Key();
     Key(bool generate);
@@ -100,15 +113,15 @@ namespace pcp {
     Key(const std::string& passphrase,
 	const std::string& owner,
 	const std::string& mail);
-    Key(const Key &k);
     Key(pcp_key_t *k);
+    Key(pcp_key_t *k, bool store);
+    Key(std::string &z85encoded);
 
-    // destructors
+    // destructor
     ~Key();
 
     // operators
     Key& operator = (const Key &k);
-
 
     // methods
     void encrypt(const std::string& passphrase);
@@ -117,18 +130,63 @@ namespace pcp {
     std::string get_id();
     std::string get_owner();
     std::string get_mail();
-    pcp_key_t *get_key();
 
     void set_owner(const std::string& owner);
     void set_mail(const std::string& mail);
     void is_stored(bool s);
     bool is_stored();
     bool is_encrypted();
+    bool is_primary();
+
+    std::string to_text();
+
+    std::string encrypt(PubKey &recipient, std::vector<unsigned char> message);
+    std::string encrypt(PubKey &recipient, std::string message);
+    std::string encrypt(PubKey &recipient, unsigned char *message, size_t mlen);
+
+    ResultSet decrypt(PubKey &sender, std::string cipher);
   };
 
   // << and >> operators
   std::istream& operator>>(std::istream& input, Key& k);
   std::ostream& operator<<(std::ostream& output, Key& k);
+
+
+  typedef std::map<std::string, Key> KeyMap;
+  typedef std::map<std::string, PubKey> PubKeyMap;
+
+  typedef std::map<std::string,Key>::iterator KeyIterator;
+  typedef std::map<std::string,PubKey>::iterator PubKeyIterator;
+
+  // the vault
+  class Vault {
+  private:
+    vault_t *V;
+
+  public:
+    // constructors
+    Vault();
+    Vault(std::string filename);
+
+    // destructor
+    ~Vault();
+
+    // methods
+    KeyMap keys();
+    PubKeyMap pubkeys();
+
+    bool key_exists(std::string &id);
+    bool pubkey_exists(std::string &id);
+
+    int key_count();
+    int pubkey_count();
+
+    void key_add(Key &key);
+    void pubkey_add(PubKey &key);
+
+    void key_delete(std::string &id);
+  };
+
 
 };
 

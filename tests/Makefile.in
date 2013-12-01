@@ -71,7 +71,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 check_PROGRAMS = col$(EXEEXT) invalidkeys$(EXEEXT) pwhashes$(EXEEXT) \
-	gencheader$(EXEEXT) statictest$(EXEEXT)
+	gencheader$(EXEEXT) statictest$(EXEEXT) cpptest$(EXEEXT)
 subdir = tests
 DIST_COMMON = README $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/config/depcomp
@@ -90,6 +90,10 @@ CONFIG_CLEAN_VPATH_FILES =
 am_col_OBJECTS = collisions.$(OBJEXT) compat_getopt.$(OBJEXT)
 col_OBJECTS = $(am_col_OBJECTS)
 col_DEPENDENCIES = ../libpcp/.libs/libpcp1.a
+am_cpptest_OBJECTS = cpptest.$(OBJEXT)
+cpptest_OBJECTS = $(am_cpptest_OBJECTS)
+cpptest_DEPENDENCIES = ../bindings/cpp/.libs/libpcp1++.a \
+	../libpcp/.libs/libpcp1.a
 am_gencheader_OBJECTS = gencheader.$(OBJEXT)
 gencheader_OBJECTS = $(am_gencheader_OBJECTS)
 gencheader_DEPENDENCIES = ../libpcp/.libs/libpcp1.a
@@ -116,9 +120,19 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(col_SOURCES) $(gencheader_SOURCES) $(invalidkeys_SOURCES) \
-	$(pwhashes_SOURCES) $(statictest_SOURCES)
-DIST_SOURCES = $(col_SOURCES) $(gencheader_SOURCES) \
+CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+LTCXXCOMPILE = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+	--mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+CXXLD = $(CXX)
+CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+SOURCES = $(col_SOURCES) $(cpptest_SOURCES) $(gencheader_SOURCES) \
+	$(invalidkeys_SOURCES) $(pwhashes_SOURCES) \
+	$(statictest_SOURCES)
+DIST_SOURCES = $(col_SOURCES) $(cpptest_SOURCES) $(gencheader_SOURCES) \
 	$(invalidkeys_SOURCES) $(pwhashes_SOURCES) \
 	$(statictest_SOURCES)
 am__can_run_installinfo = \
@@ -247,7 +261,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AM_CFLAGS = -I../include/pcp -Wall -g
+AM_CFLAGS = -I../include/pcp -I../src -Wall -g
 gencheader_LDADD = ../libpcp/.libs/libpcp1.a
 gencheader_SOURCES = gencheader.c
 statictest_LDADD = ../libpcp/.libs/libpcp1.a
@@ -260,11 +274,13 @@ invalidkeys_LDADD = ../libpcp/.libs/libpcp1.a \
 invalidkeys_SOURCES = invalidkeys.c
 pwhashes_LDADD = ../libpcp/.libs/libpcp1.a
 pwhashes_SOURCES = pwhashes.c
-AM_CPPFLAGS = -I$(top_builddir)/src
+AM_CXXFLAGS = -I../include -I../bindings/cpp -Wall -g
+cpptest_LDADD = ../bindings/cpp/.libs/libpcp1++.a ../libpcp/.libs/libpcp1.a
+cpptest_SOURCES = cpptest.cpp
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .c .lo .o .obj
+.SUFFIXES: .c .cpp .lo .o .obj
 $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -307,6 +323,9 @@ clean-checkPROGRAMS:
 col$(EXEEXT): $(col_OBJECTS) $(col_DEPENDENCIES) $(EXTRA_col_DEPENDENCIES) 
 	@rm -f col$(EXEEXT)
 	$(LINK) $(col_OBJECTS) $(col_LDADD) $(LIBS)
+cpptest$(EXEEXT): $(cpptest_OBJECTS) $(cpptest_DEPENDENCIES) $(EXTRA_cpptest_DEPENDENCIES) 
+	@rm -f cpptest$(EXEEXT)
+	$(CXXLINK) $(cpptest_OBJECTS) $(cpptest_LDADD) $(LIBS)
 gencheader$(EXEEXT): $(gencheader_OBJECTS) $(gencheader_DEPENDENCIES) $(EXTRA_gencheader_DEPENDENCIES) 
 	@rm -f gencheader$(EXEEXT)
 	$(LINK) $(gencheader_OBJECTS) $(gencheader_LDADD) $(LIBS)
@@ -328,6 +347,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/collisions.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/compat_getopt.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpptest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gencheader.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/invalidkeys.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pwhashes.Po@am__quote@
@@ -367,6 +387,27 @@ compat_getopt.obj: ../src/compat_getopt.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='../src/compat_getopt.c' object='compat_getopt.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o compat_getopt.obj `if test -f '../src/compat_getopt.c'; then $(CYGPATH_W) '../src/compat_getopt.c'; else $(CYGPATH_W) '$(srcdir)/../src/compat_getopt.c'; fi`
+
+.cpp.o:
+@am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ $<
+
+.cpp.obj:
+@am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+
+.cpp.lo:
+@am__fastdepCXX_TRUE@	$(LTCXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LTCXXCOMPILE) -c -o $@ $<
 
 mostlyclean-libtool:
 	-rm -f *.lo

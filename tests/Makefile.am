@@ -19,8 +19,8 @@
 #    You can contact me by mail: <tlinden AT cpan DOT org>.
 #
 
-AM_CFLAGS = -I../include/pcp -Wall -g
-check_PROGRAMS = col invalidkeys pwhashes gencheader statictest
+AM_CFLAGS = -I../include/pcp -I../src -Wall -g
+check_PROGRAMS = col invalidkeys pwhashes gencheader statictest cpptest
 
 gencheader_LDADD = ../libpcp/.libs/libpcp1.a
 gencheader_SOURCES = gencheader.c
@@ -40,8 +40,9 @@ invalidkeys_SOURCES = invalidkeys.c
 pwhashes_LDADD = ../libpcp/.libs/libpcp1.a
 pwhashes_SOURCES = pwhashes.c
 
-AM_CPPFLAGS = -I$(top_builddir)/src
-
+AM_CXXFLAGS = -I../include -I../bindings/cpp -Wall -g
+cpptest_LDADD = ../bindings/cpp/.libs/libpcp1++.a ../libpcp/.libs/libpcp1.a
+cpptest_SOURCES = cpptest.cpp
 
 #
 # Note: some of these unit tests run only on freebsd.

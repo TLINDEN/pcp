@@ -25,10 +25,10 @@
 #include "uthash.h"
 #include "key.h"
 
-pcp_key_t *pcpkey_hash;
-pcp_pubkey_t *pcppubkey_hash;
-pcp_key_t *__k;
-pcp_pubkey_t *__p;
+extern pcp_key_t *pcpkey_hash;
+extern pcp_pubkey_t *pcppubkey_hash;
+extern pcp_key_t *__k;
+extern pcp_pubkey_t *__p;
 
 // wrapper for HASH_ITER
 #define pcphash_iterate(key) \

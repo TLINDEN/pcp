@@ -29,6 +29,10 @@
 #include <string.h>
 #include <stdlib.h>
 
+char *PCP_ERR;
+byte PCP_ERRSET;
+int PCP_EXIT;
+
 void fatal(const char * fmt, ...) {
   va_list ap;
   va_start(ap, fmt);

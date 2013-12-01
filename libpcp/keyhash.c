@@ -22,6 +22,11 @@
 
 #include "keyhash.h"
 
+pcp_key_t *pcpkey_hash;
+pcp_pubkey_t *pcppubkey_hash;
+pcp_key_t *__k;
+pcp_pubkey_t *__p;
+
 void pcphash_init() {
   pcpkey_hash = NULL;
   pcppubkey_hash = NULL;

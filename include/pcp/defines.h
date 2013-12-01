@@ -65,9 +65,9 @@ typedef unsigned int    qbyte;          //  Quad byte = 32 bits
 // sigs
 #define PCP_SIG_VERSION 2
 
-char *PCP_ERR;
-byte PCP_ERRSET;
-int PCP_EXIT;
+extern char *PCP_ERR;
+extern byte PCP_ERRSET;
+extern int PCP_EXIT;
 
 //set error
 void fatal(const char * fmt, ...);

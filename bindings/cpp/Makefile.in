@@ -96,7 +96,7 @@ am__uninstall_files_from_dir = { \
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libpcp1___la_LIBADD =
-am_libpcp1___la_OBJECTS = key.lo vault.lo
+am_libpcp1___la_OBJECTS = key.lo vault.lo crypto.lo
 libpcp1___la_OBJECTS = $(am_libpcp1___la_OBJECTS)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include/pcp
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
@@ -272,7 +272,7 @@ top_srcdir = @top_srcdir@
 #
 AM_CXXFLAGS = -I../../include -Wall -g
 lib_LTLIBRARIES = libpcp1++.la
-libpcp1___la_SOURCES = pcp++.h key.cpp vault.cpp
+libpcp1___la_SOURCES = pcp++.h key.cpp vault.cpp crypto.cpp
 include_HEADERS = pcp++.h
 all: all-am
 
@@ -351,6 +351,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/crypto.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/key.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vault.Plo@am__quote@
 

@@ -20,20 +20,42 @@
 */
 
 
-#ifndef _HAVE_PCPPP_H
-#define _HAVE_PCPPP_H
+#ifndef _HAVE_PCPPP_CRYPTO_H
+#define _HAVE_PCPPP_CRYPTO_H
 
 #include <pcp.h>
-#include <vector>
 #include <string>
-#include <sstream>
-#include <map>
-#include <stdexcept>
 #include <iostream>
 
-#include "key++.h"
 #include "vault++.h"
-#include "crypto++.h"
+#include "key++.h"
 #include "helpers++.h"
 
-#endif // _HAVE_PCPPP_H
+namespace pcp {
+
+  class Crypto {
+  private:
+    bool havevault;
+
+  public:
+    PubKey P;
+    Key S;
+    Vault vault;
+
+    // constructors
+    Crypto(Key &skey, PubKey &pkey);
+    Crypto(Vault &v, Key &skey, PubKey &pkey);
+
+    // PK encryption methods
+    // sender pubkey is P
+    std::string encrypt(std::vector<unsigned char> message);
+    std::string encrypt(std::string message);
+    std::string encrypt(unsigned char *message, size_t mlen);
+
+    // decrypt using P or use vault if defined
+    ResultSet decrypt(std::string cipher);
+  };
+};
+
+
+#endif // _HAVE_PCPPP_CRYPTO_H

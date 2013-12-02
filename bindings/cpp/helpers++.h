@@ -20,20 +20,50 @@
 */
 
 
-#ifndef _HAVE_PCPPP_H
-#define _HAVE_PCPPP_H
+#ifndef _HAVE_PCPPP_HELPERS_H
+#define _HAVE_PCPPP_HELPERS_H
 
 #include <pcp.h>
 #include <vector>
 #include <string>
 #include <sstream>
-#include <map>
 #include <stdexcept>
 #include <iostream>
 
-#include "key++.h"
-#include "vault++.h"
-#include "crypto++.h"
-#include "helpers++.h"
+namespace pcp {
+  
+  class exception : public std::runtime_error {
+  private:
+    std::string getfatals() {
+      std::string msg;
+      if(PCP_ERRSET == 1) {
+	msg = PCP_ERR;
+      }
+      if(errno) {
+	msg += std::string("\nError: ")
+	    + std::string(strerror(errno))
+	    + std::string("\n");
+      }
+      return msg;
+    }
+  public:
+    exception(const std::string & msg) : runtime_error(msg) { }
+  exception() : runtime_error(getfatals()) { }
+  };
 
-#endif // _HAVE_PCPPP_H
+
+
+  class ResultSet {
+  public:
+    std::string String;
+    std::vector<unsigned char> Vector;
+    unsigned char *Uchar;
+    size_t Size;
+
+    ~ResultSet() { free(Uchar); }
+  };
+
+};
+
+
+#endif // _HAVE_PCPPP_HELPERS_H

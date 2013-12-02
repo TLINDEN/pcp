@@ -20,8 +20,8 @@
 */
 
 
-#ifndef _HAVE_PCPPP_H
-#define _HAVE_PCPPP_H
+#ifndef _HAVE_PCPPP_VAULT_H
+#define _HAVE_PCPPP_VAULT_H
 
 #include <pcp.h>
 #include <vector>
@@ -32,8 +32,46 @@
 #include <iostream>
 
 #include "key++.h"
-#include "vault++.h"
-#include "crypto++.h"
-#include "helpers++.h"
 
-#endif // _HAVE_PCPPP_H
+namespace pcp {
+  
+  typedef std::map<std::string, Key> KeyMap;
+  typedef std::map<std::string, PubKey> PubKeyMap;
+
+  typedef std::map<std::string,Key>::iterator KeyIterator;
+  typedef std::map<std::string,PubKey>::iterator PubKeyIterator;
+
+
+  // the vault
+  class Vault {
+  private:
+    vault_t *V;
+
+  public:
+    // constructors
+    Vault();
+    Vault(std::string filename);
+
+    // destructor
+    ~Vault();
+
+    // methods
+    KeyMap keys();
+    PubKeyMap pubkeys();
+
+    bool key_exists(std::string &id);
+    bool pubkey_exists(std::string &id);
+
+    int key_count();
+    int pubkey_count();
+
+    void key_add(Key &key);
+    void pubkey_add(PubKey &key);
+
+    void key_delete(std::string &id);
+  };
+
+
+};
+
+#endif // _HAVE_PCPPP_VAULT_H

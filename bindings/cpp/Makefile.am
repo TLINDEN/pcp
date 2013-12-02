@@ -22,5 +22,5 @@ AM_CXXFLAGS = -I../../include -Wall -g
 
 lib_LTLIBRARIES      = libpcp1++.la
 
-libpcp1___la_SOURCES = pcp++.h key.cpp vault.cpp
+libpcp1___la_SOURCES = pcp++.h key.cpp vault.cpp crypto.cpp
 include_HEADERS      = pcp++.h

@@ -19,7 +19,8 @@
     You can contact me by mail: <tlinden AT cpan DOT org>.
 */
 
-#include "pcp++.h"
+#include "vault++.h"
+#include "key++.h"
 
 using namespace std;
 using namespace pcp;
@@ -166,17 +167,16 @@ string Key::to_text() {
   return z85;
 }
 
-istream& pcp::operator>>(istream& input, Key& k) {
-  string z85;
-  input >> z85;
-  Key t = new Key(z85); // use the import constructor, FIXME: use a method
-  k.K = t.K;
-  return input;
-}
-
 ostream& pcp::operator<<(ostream& output, Key& k) {
   output << k.to_text();
   return output;
+}
+
+bool pcp::operator!(Key& k) {
+  if(k.K == NULL)
+    return true;
+  else
+    return false;
 }
 
 void Key::encrypt(const string& passphrase) {
@@ -233,81 +233,7 @@ bool Key::is_encrypted() {
     return false;
 }
 
-string Key::encrypt(PubKey &recipient, string message) {
-  unsigned char *m = (unsigned char *)ucmalloc(message.size() + 1);
-  memcpy(m, message.c_str(), message.size());
-  return Key::encrypt(recipient, m, message.size() + 1);
-}
-
-string Key::encrypt(PubKey &recipient, vector<unsigned char> message) {
-  unsigned char *m = (unsigned char *)ucmalloc(message.size());
-  for(size_t i=0; i<message.size(); ++i)
-    m[i] = message[i];
-  return Key::encrypt(recipient, m, message.size());
-}
-
-string Key::encrypt(PubKey &recipient, unsigned char *message, size_t mlen) {
-  size_t clen, zlen, rlen;
-  unsigned char *cipher;
-
-  cipher = pcp_box_encrypt(K, recipient.K, message, mlen, &clen);
-
-  if(cipher == NULL)
-    throw exception();
-
-  rlen = clen + crypto_hash_BYTES;
-  unsigned char *combined = (unsigned char *)ucmalloc(rlen);
-  unsigned char *hash = (unsigned char *)ucmalloc(crypto_hash_BYTES);
-
-  crypto_hash(hash, (unsigned char*)K->id, 16);
-  memcpy(combined, hash, crypto_hash_BYTES);
-  memcpy(&combined[crypto_hash_BYTES], cipher, clen);
-
-  // combined consists of:
-  // keyid|nonce|cipher
-  char *encoded = pcp_z85_encode(combined, rlen, &zlen);
-
-  if(encoded == NULL)
-    throw exception();
-
-  return string((char *)encoded);
-}
-
-ResultSet Key::decrypt(PubKey &sender, std::string cipher) {
-
-  size_t clen;
-  unsigned char *combined = pcp_z85_decode((char *)cipher.c_str(), &clen);
-
-  if(combined == NULL)
-    throw exception();
-
-  unsigned char *encrypted = (unsigned char*)ucmalloc(clen - crypto_hash_BYTES);
-  memcpy(encrypted, &combined[crypto_hash_BYTES], clen - crypto_hash_BYTES);
-
-  size_t dlen;
-  unsigned char *decrypted = (unsigned char*)pcp_box_decrypt(K, sender.K,
-                                             encrypted,
-                                             clen - crypto_hash_BYTES, &dlen);
-
-  if(decrypted == NULL) {
-    free(combined);
-    throw exception();
-  }
-
-  ResultSet r;
-  r.Uchar  = decrypted;
-  r.String = string((char *)decrypted);
-  r.Size   = dlen;
-
-  for(size_t i=0; i<dlen; ++i)
-    r.Vector.push_back(decrypted[i]);
-
-  return r;
-}
-
-
-
-
+// class Key ends here.
 
 
 
@@ -334,8 +260,13 @@ PubKey::PubKey(string &z85encoded) {
   if(z85encoded.length() == 0)
     throw pcp::exception("Error: zero length input");
 
+
   size_t clen;
-  unsigned char *z85decoded = pcp_z85_decode((char *)z85encoded.c_str(), &clen);
+  unsigned char *z85decoded =
+    pcp_z85_decode(
+		   pcp_readz85string((unsigned char *)z85encoded.c_str(),
+				     z85encoded.length()),
+		   &clen); // FIXME: too complicated, must be more wrapperish
 
   if(z85decoded == NULL)
     throw pcp::exception("Error: could not decode input - it's probably not Z85.\n");
@@ -358,8 +289,7 @@ PubKey::PubKey(string &z85encoded) {
     throw pcp::exception();
   }
 
-  *this = PubKey(key);
-  free(key);  
+  K = key;
 }
 
 PubKey::~PubKey() {
@@ -466,17 +396,18 @@ string PubKey::to_text() {
   return z85;
 }
 
-istream& pcp::operator>>(istream& input, PubKey& k) {
-  string z85;
-  input >> z85;
-  k = PubKey(z85);
-  return input;
-}
-
-
 ostream& pcp::operator<<(ostream& output, PubKey& k) {
   output << k.to_text();
   return output;
+}
+
+bool pcp::operator!(PubKey& k) {
+  if(k.K == NULL) {
+    return true;
+  }
+  else {
+    return false;
+  }
 }
 
 string PubKey::get_id() {

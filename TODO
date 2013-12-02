@@ -4,3 +4,7 @@ libpcp/z85.c:148 free(z85) leads to coredump on aix sometimes
 
 add more abstract en+de-cryption() functions to libpcp/crypto, which
 work with already en+de-coded in+out-put.
+
+Bug: pcp_z85_decode() segfaults at z85.c:83 if input consists of "-----" only.
+
+Bug: pcp_z85_decode() fails if after end marker follows something, even whitespaces

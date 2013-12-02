@@ -91,7 +91,7 @@ unsigned char *pcp_z85_decode(char *z85block, size_t *dstlen) {
 }
 
 char *pcp_z85_encode(unsigned char *raw, size_t srclen, size_t *dstlen) {
-  int i, pos, b;
+  int pos, b;
   size_t outlen, blocklen, zlen;
 
   // make z85 happy (size % 4)
@@ -154,15 +154,9 @@ char *pcp_z85_encode(unsigned char *raw, size_t srclen, size_t *dstlen) {
 
 char *pcp_readz85file(FILE *infile) {
   unsigned char *input = NULL;
-  unsigned char *out = NULL;
   unsigned char *tmp = NULL;
-  char *ret;
-  char *line;
-  unsigned char byte[1];
-  int i, outsize, lpos, x;
   size_t bufsize = 0;
-  lpos = outsize = 0;
-  size_t MAXLINE = 1024;
+  unsigned char byte[1];
 
   while(!feof(infile)) {
     if(!fread(&byte, 1, 1, infile))
@@ -175,11 +169,21 @@ char *pcp_readz85file(FILE *infile) {
 
   if(bufsize == 0) {
     fatal("Input file is empty!\n");
-    goto rferrx;
+    free(tmp);
+    return NULL;
   }
 
-  out = ucmalloc(bufsize);
-  line = ucmalloc(MAXLINE);
+  return pcp_readz85string(input, bufsize);
+}
+
+char *pcp_readz85string(unsigned char *input, size_t bufsize) {
+  char *ret;
+  int i, outsize, lpos, x;
+  lpos = outsize = 0;
+  size_t MAXLINE = 1024;
+
+  unsigned char *out = ucmalloc(bufsize);
+  char *line = ucmalloc(MAXLINE);
 
   for(i=0; i<bufsize; ++i) {
     if(lpos > MAXLINE) {
@@ -210,7 +214,6 @@ char *pcp_readz85file(FILE *infile) {
   ret = ucmalloc(outsize+1);
   memcpy(ret, out, outsize+1);
 
-  free(tmp);
   free(out);
   free(line);
 
@@ -219,7 +222,6 @@ char *pcp_readz85file(FILE *infile) {
  rferr:
   free(out);
   free(line);
- rferrx:
-  free(tmp);
+
   return NULL;
 }

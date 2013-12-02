@@ -41,5 +41,6 @@ unsigned char *pcp_z85_decode(char *z85block, size_t *dstlen);
 char *pcp_z85_encode(unsigned char *raw, size_t srclen, size_t *dstlen);
 
 char *pcp_readz85file(FILE *infile);
+char *pcp_readz85string(unsigned char *input, size_t bufsize);
 
 #endif // _HAVE_PCP_Z85_H

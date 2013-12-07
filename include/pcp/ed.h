@@ -41,7 +41,8 @@ struct _pcp_sig_t {
 
 typedef struct _pcp_sig_t pcp_sig_t;
 
-int pcp_ed_verify(unsigned char *input, size_t inputlen, pcp_sig_t *sig, pcp_pubkey_t *p);
+int pcp_ed_verify(unsigned char *input, size_t inputlen,
+		  pcp_sig_t *sig, pcp_pubkey_t *p);
 
 pcp_sig_t *pcp_ed_sign(unsigned char *message,
 			   size_t messagesize, pcp_key_t *s);
@@ -50,7 +51,5 @@ pcp_sig_t *sig2native(pcp_sig_t *k);
 pcp_sig_t *sig2be(pcp_sig_t *k);
 
 pcp_sig_t *pcp_ed_newsig(unsigned char *hash, char *id);
-
-  void pcp_dumpsig(pcp_sig_t *sig);
 
 #endif // _HAVE_PCP_ED_H

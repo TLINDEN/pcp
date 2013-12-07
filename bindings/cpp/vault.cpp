@@ -86,6 +86,22 @@ void Vault::pubkey_add(PubKey &key) {
   key.is_stored(true);
 }
 
+bool Vault::key_exists(string &id) {
+  pcp_key_t *s = pcphash_keyexists((char *)id.c_str());
+  if(s == NULL)
+    return false;
+  else
+    return true;
+}
+
+bool Vault::pubkey_exists(string &id) {
+  pcp_pubkey_t *p = pcphash_pubkeyexists((char *)id.c_str());
+  if(p == NULL)
+    return false;
+  else
+    return true;
+}
+
 void Vault::key_delete(std::string &id) {
   pcp_pubkey_t *p = pcphash_pubkeyexists((char *)id.c_str());
   
@@ -107,4 +123,43 @@ void Vault::key_delete(std::string &id) {
       throw exception("Key not found!\n");
     }
   }
+}
+
+Key Vault::get_primary() {
+  pcp_key_t *k = NULL;
+  pcphash_iterate(k) {
+    if(k->type == PCP_KEY_TYPE_MAINSECRET) {
+      return Key(k);
+    }
+  }
+
+  if(Vault::key_count() == 1) {
+    pcphash_iterate(k) {
+      return Key(k);
+    }
+  }
+
+  // too bad
+  throw exception("No primary key found in vault.");
+}
+
+Key Vault::get_secret(std::string &id) {
+  pcp_key_t *k = NULL;
+  pcphash_iterate(k) {
+    if(memcmp(k->id, id.c_str(), 16) == 0) {
+      return Key(k);
+    }
+  }
+  throw exception("Secret key doesn't exist in vault.");
+}
+
+
+PubKey Vault::get_public(std::string &id) {
+  pcp_pubkey_t *k = NULL;
+  pcphash_iteratepub(k) {
+    if(memcmp(k->id, id.c_str(), 16) == 0) {
+      return PubKey(k);
+    }
+  }
+  throw exception("Public key doesn't exist in vault.");
 }

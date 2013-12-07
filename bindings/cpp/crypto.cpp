@@ -52,6 +52,9 @@ string Crypto::encrypt(vector<unsigned char> message) {
 }
 
 string Crypto::encrypt(unsigned char *message, size_t mlen) {
+  if(S.is_encrypted())
+    throw exception("Error: cannot encrypt with an encrypted secret key, decrypt it before using.");
+
   size_t clen, zlen, rlen;
   unsigned char *cipher;
 
@@ -79,6 +82,9 @@ string Crypto::encrypt(unsigned char *message, size_t mlen) {
 }
 
 ResultSet Crypto::decrypt(string cipher) {
+ if(S.is_encrypted())
+    throw exception("Error: cannot decrypt with an encrypted secret key, decrypt it before using.");
+
   size_t clen;
   unsigned char *combined = pcp_z85_decode((char *)cipher.c_str(), &clen);
 

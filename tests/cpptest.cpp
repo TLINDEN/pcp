@@ -83,8 +83,28 @@ void test2() {
   cout << "2 ok" << endl;
 }
 
+
+void test3() {
+  // signature test
+  Key A = Key("a", "alicia", "alicia@local");
+  A.decrypt("a");
+  PubKey PA = A.get_public();
+
+  string message = "hallo baby";
+
+  Signature SigA(A);
+  Signature SigB(PA);
+
+  string sig = SigA.sign(message);
+
+  if(SigB.verify(sig, message) )
+    cout << "3 ok" << endl;
+}
+
 int main(int argc, char **argv) {
   try {
+    if(argc < 2)
+      throw pcp::exception("usage: cpptest N");
     switch(argv[1][0]) {
     case '0':
       test0();
@@ -96,6 +116,14 @@ int main(int argc, char **argv) {
 
     case '2':
       test2();
+      break;
+
+    case '3':
+      test3();
+      break;
+
+    default:
+      cerr << "usage: cpptest N" << endl;
       break;
     };
   }

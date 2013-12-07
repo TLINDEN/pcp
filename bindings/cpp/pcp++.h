@@ -34,6 +34,7 @@
 #include "key++.h"
 #include "vault++.h"
 #include "crypto++.h"
+#include "sign++.h"
 #include "helpers++.h"
 
 #endif // _HAVE_PCPPP_H

@@ -20,62 +20,50 @@
 */
 
 
-#ifndef _HAVE_PCPPP_VAULT_H
-#define _HAVE_PCPPP_VAULT_H
+#ifndef _HAVE_PCPPP_SIGN_H
+#define _HAVE_PCPPP_SIGN_H
 
 #include <pcp.h>
-#include <vector>
 #include <string>
-#include <sstream>
-#include <map>
-#include <stdexcept>
 #include <iostream>
 
+#include "vault++.h"
 #include "key++.h"
+#include "sign++.h"
+#include "helpers++.h"
 
 namespace pcp {
-  
-  typedef std::map<std::string, Key> KeyMap;
-  typedef std::map<std::string, PubKey> PubKeyMap;
 
-  typedef std::map<std::string,Key>::iterator KeyIterator;
-  typedef std::map<std::string,PubKey>::iterator PubKeyIterator;
-
-
-  // the vault
-  class Vault {
+  class Signature {
   private:
-    vault_t *V;
+    bool havevault;
 
   public:
+    PubKey P;
+    Key S;
+    Vault vault;
+    pcp_sig_t *sig;
+
     // constructors
-    Vault();
-    Vault(std::string filename);
+    Signature(Key &skey); // sign only
+    Signature(PubKey &pkey); // verify only
+    Signature(Key &skey, PubKey &pkey); // both/bulk
+    Signature(Vault &v);
 
     // destructor
-    ~Vault();
+    ~Signature();
 
-    // methods
-    KeyMap keys();
-    PubKeyMap pubkeys();
+    // PK signature methods
+    // sender pubkey is P
+    std::string sign(std::vector<unsigned char> message);
+    std::string sign(std::string message);
+    std::string sign(unsigned char *message, size_t mlen);
 
-    bool key_exists(std::string &id);
-    bool pubkey_exists(std::string &id);
-
-    int key_count();
-    int pubkey_count();
-
-    void key_add(Key &key);
-    void pubkey_add(PubKey &key);
-
-    void key_delete(std::string &id);
-
-    Key get_primary();
-    Key get_secret(std::string &id);
-    PubKey get_public(std::string &id);
+    // verify using P or use vault if defined
+    bool verify(std::string signature, std::string message);
+    bool verify(std::string signature, std::vector<unsigned char> message);
+    bool verify(std::string signature, unsigned char *message, size_t mlen);
   };
-
-
 };
 
-#endif // _HAVE_PCPPP_VAULT_H
+#endif // _HAVE_PCPPP_SIGN_H

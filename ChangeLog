@@ -43,6 +43,9 @@
 	platform.h, now we just use the random functions
 	of libsodium if they're not available.
 
+	Added C++ language binding (bindings/cpp/), look
+	at tests/cpptest.cpp for usage examples.
+
 0.1.4   Changed key format (again), now the main secret
 	is the ED25519 secret key, which will be encrypted.
 	Everything else will be derived from that. Thanks

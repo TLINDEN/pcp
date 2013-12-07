@@ -8,3 +8,5 @@ work with already en+de-coded in+out-put.
 Bug: pcp_z85_decode() segfaults at z85.c:83 if input consists of "-----" only.
 
 Bug: pcp_z85_decode() fails if after end marker follows something, even whitespaces
+
+key++: normalize id and lc()

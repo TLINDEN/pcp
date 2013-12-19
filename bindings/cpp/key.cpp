@@ -103,7 +103,7 @@ Key::~Key() {
   }
 }
 
-Key::Key& Key::operator = (const Key &k) {
+Key& Key::operator = (const Key &k) {
   K = k.K;
   return *this;
 }
@@ -298,7 +298,7 @@ PubKey::~PubKey() {
   }
 }
 
-PubKey::PubKey& PubKey::operator = (const PubKey &k) {
+PubKey& PubKey::operator = (const PubKey &k) {
   K = k.K;
   return *this;
 }

@@ -46,6 +46,11 @@
 	Added C++ language binding (bindings/cpp/), look
 	at tests/cpptest.cpp for usage examples.
 
+	Fixed problem under big-endian platforms where
+	encryption didn't work due a missing sodium_init()
+	call. Thanks to Frank Denis. See
+	https://github.com/jedisct1/libsodium/issues/100
+
 0.1.4   Changed key format (again), now the main secret
 	is the ED25519 secret key, which will be encrypted.
 	Everything else will be derived from that. Thanks

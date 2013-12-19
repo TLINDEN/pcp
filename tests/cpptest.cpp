@@ -102,6 +102,8 @@ void test3() {
 }
 
 int main(int argc, char **argv) {
+  sodium_init();
+
   try {
     if(argc < 2)
       throw pcp::exception("usage: cpptest N");

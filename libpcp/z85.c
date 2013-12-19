@@ -161,6 +161,8 @@ char *pcp_readz85file(FILE *infile) {
   while(!feof(infile)) {
     if(!fread(&byte, 1, 1, infile))
       break;
+    if(ferror(infile) != 0)
+      break;
     tmp = realloc(input, bufsize + 1);
     input = tmp;
     memmove(&input[bufsize], byte, 1);

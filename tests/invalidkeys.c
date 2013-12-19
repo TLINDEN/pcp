@@ -10,6 +10,8 @@ int main() {
   strcpy(o, "xxxx");
   strcpy(m, "xxxx");
 
+  sodium_init();
+
   pcp_key_t *k = pcpkey_new ();
 
   memcpy(k->owner, o, 8);

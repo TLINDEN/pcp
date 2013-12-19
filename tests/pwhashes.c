@@ -24,6 +24,8 @@ int main() {
   pw *list = NULL;
   pw *have = NULL;
 
+  sodium_init();
+
   for(i=97; i<126; ++i) {
     pass[0] = i;
     pass[1] = 0;

@@ -12,6 +12,8 @@ void pr(char *var, unsigned char *d, size_t len) {
 }
 
 int main() {
+  sodium_init();
+
   pcp_key_t *a = pcpkey_new();
   pcp_key_t *b = pcpkey_new();
   pcp_pubkey_t *p = pcpkey_pub_from_secret(b);

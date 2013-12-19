@@ -2,6 +2,7 @@
 #include "static.h"
 
 int main() {
+  sodium_init();
   unsigned char *t = ucmalloc(12);
   if(pcp_sodium_verify_box(&t, cipher, cipher_len, nonce, secret_b, public_a) == 0) {
     if(memcmp(t, message, message_len) == 0) {

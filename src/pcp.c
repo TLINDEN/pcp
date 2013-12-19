@@ -229,6 +229,8 @@ int main (int argc, char **argv)  {
     return 1;
   }
 
+  sodium_init(); // FIXME: better called from the lib?
+
   if(usevault == 1) {
     pcphash_init();
     vault = pcpvault_init(vaultfile);

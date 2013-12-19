@@ -72,7 +72,7 @@ static inline u_int32_t arc4random() {
 }
 
 static inline void arc4random_buf(void *buf, size_t nbytes) {
-  randombytes(buf, nbytes);
+  randombytes((unsigned char*)buf, nbytes);
 }
 
 
@@ -119,7 +119,7 @@ int vasprintf(char **ret, const char *format, va_list args) {
 
   int count = vsnprintf(NULL, 0, format, args);
   if (count >= 0) {
-    char* buffer = malloc(count + 1);
+    char* buffer = (char *)malloc(count + 1);
     if (buffer != NULL) {
       count = vsnprintf(buffer, count + 1, format, copy);
       if (count < 0)

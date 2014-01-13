@@ -76,9 +76,8 @@
 0x00028F70
 */
 
-#define PCP_HELP_INTRO \
-"This is Pretty Curved Privacy. Licensed under the GPLv3. This\n"\
-"is BETA software. Use with care. NOT intended for production\n"\
+#define PCP_HELP_INTRO "This is Pretty Curved Privacy. Licensed under the GPLv3. This\n" \
+"is BETA software. Use with care. NOT intended for production\n"  \
 "use.\n"
 
 vault_t *vault;

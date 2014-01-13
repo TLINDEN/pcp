@@ -29,6 +29,7 @@
 # include <endian.h>
 #else // no endian.h
 # ifdef HAVE_SYS_ENDIAN_H
+#   include <sys/types.h>
 #   include <sys/endian.h>
 #   ifdef HAVE_BETOH32
 #     // openbsd, use aliases

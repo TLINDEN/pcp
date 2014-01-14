@@ -31,12 +31,10 @@
 # ifdef HAVE_SYS_ENDIAN_H
 #   include <sys/types.h>
 #   include <sys/endian.h>
-#   ifdef HAVE_BETOH32
+#   ifndef HAVE_BE32TOH
 #     // openbsd, use aliases
 #     define be32toh betoh32
-#     define htobe32 hto32be
 #     define be64toh betoh64
-#     define htobe64 hto64be
 #   endif
 # else // no sys/endian.h
 #   ifdef __CPU_IS_BIG_ENDIAN

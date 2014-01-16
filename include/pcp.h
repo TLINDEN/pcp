@@ -18,6 +18,7 @@ extern "C" {
 #include "pcp/pad.h"
 #include "pcp/platform.h"
 #include "pcp/randomart.h"
+#include "pcp/scrypt.h"
 #include "pcp/uthash.h"
 #include "pcp/vault.h"
 #include "pcp/version.h"

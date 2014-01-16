@@ -19,7 +19,7 @@
 #    You can contact me by mail: <tlinden AT cpan DOT org>.
 #
 
-AM_CFLAGS = -I../include/pcp -I../src -Wall -g
+AM_CFLAGS = -I../include/pcp -I../src -I../libpcp/scrypt/crypto -Wall -g
 check_PROGRAMS = col invalidkeys pwhashes gencheader statictest cpptest
 
 gencheader_LDADD = ../libpcp/.libs/libpcp1.a
@@ -40,7 +40,7 @@ invalidkeys_SOURCES = invalidkeys.c
 pwhashes_LDADD = ../libpcp/.libs/libpcp1.a
 pwhashes_SOURCES = pwhashes.c
 
-AM_CXXFLAGS = -I../include -I../bindings/cpp -Wall -g
+AM_CXXFLAGS = -I../include -I../bindings/cpp -I../libpcp/scrypt/crypto -Wall -g
 cpptest_LDADD = ../bindings/cpp/.libs/libpcp1++.a ../libpcp/.libs/libpcp1.a
 cpptest_SOURCES = cpptest.cpp
 

@@ -79,13 +79,47 @@ AC_CHECK_FUNCS( \
     strtol \
     sizeof \
     tcgetattr \
-    be32toh \
-    htobe32 \
     umask \
     towlower \
     getopt_long \
     vasprintf
 )
+
+AC_MSG_CHECKING([for be32toh])
+AC_TRY_LINK([
+#include "libpcp/pcp/config.h"
+#ifdef HAVE_ENDIAN_H
+#include <endian.h>
+#endif
+#ifdef HAVE_SYS_ENDIAN_H
+#include <sys/endian.h>
+#endif
+], [
+        (void)be32toh(0);
+], [AC_MSG_RESULT([no])], [
+        AC_DEFINE(HAVE_BE32TOH,, Define if be32toh() is available)
+        AC_MSG_RESULT([yes])
+])
+
+AC_MSG_CHECKING([for htobe32])
+AC_TRY_LINK([
+#include "libpcp/pcp/config.h"
+#ifdef HAVE_ENDIAN_H
+#include <endian.h>
+#endif
+#ifdef HAVE_SYS_ENDIAN_H
+#include <sys/endian.h>
+#endif
+], [
+        (void)htobe32(0);
+], [AC_MSG_RESULT([no])], [
+        AC_DEFINE(HAVE_HTOBE32,, Define if htobe32() is available)
+        AC_MSG_RESULT([yes])
+])
+
+# scrypt checks
+AC_CHECK_DECLS([be64enc], [], [], [[#include <sys/endian.h>]])
+AC_CHECK_FUNCS(posix_memalign)
 
 AC_MSG_CHECKING([compiler and flags for sanity])
 AC_RUN_IFELSE([AC_LANG_PROGRAM([[ #include <stdio.h> ]], [[ exit(0); ]])],

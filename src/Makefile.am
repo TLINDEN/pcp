@@ -20,7 +20,7 @@
 #
 
 
-AM_CFLAGS = -I../include/pcp -Wall -g
+AM_CFLAGS = -I../include/pcp -I../libpcp/scrypt/crypto -Wall -g
 
 bin_PROGRAMS = pcp1
 

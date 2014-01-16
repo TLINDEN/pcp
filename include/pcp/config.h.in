@@ -6,8 +6,12 @@
 /* Define to 1 if you have the <arpa/inet.h> header file. */
 #undef HAVE_ARPA_INET_H
 
-/* Define to 1 if you have the `be32toh' function. */
+/* Define if be32toh() is available */
 #undef HAVE_BE32TOH
+
+/* Define to 1 if you have the declaration of `be64enc', and to 0 if you
+   don't. */
+#undef HAVE_DECL_BE64ENC
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
@@ -48,7 +52,7 @@
 /* Define to 1 if you have the `getopt_long' function. */
 #undef HAVE_GETOPT_LONG
 
-/* Define to 1 if you have the `htobe32' function. */
+/* Define if htobe32() is available */
 #undef HAVE_HTOBE32
 
 /* Define to 1 if you have the <inttypes.h> header file. */
@@ -80,6 +84,9 @@
 
 /* Define to 1 if you have the `perror' function. */
 #undef HAVE_PERROR
+
+/* Define to 1 if you have the `posix_memalign' function. */
+#undef HAVE_POSIX_MEMALIGN
 
 /* Define to 1 if you have the `sizeof' function. */
 #undef HAVE_SIZEOF

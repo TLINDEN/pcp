@@ -23,13 +23,14 @@ int main() {
   pw *item;
   pw *list = NULL;
   pw *have = NULL;
+  unsigned char nonce[32] = {1};
 
   sodium_init();
 
   for(i=97; i<126; ++i) {
     pass[0] = i;
     pass[1] = 0;
-    h = pcp_derivekey(pass);
+    h = pcp_derivekey(pass, nonce);
 
     p =0;
     for(t=0; t<32; ++t) {

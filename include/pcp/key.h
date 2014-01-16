@@ -37,6 +37,7 @@
 #include "z85.h"
 #include "uthash.h"
 #include "jenhash.h"
+#include "scrypt.h"
 
 /*
   PCP private key structure. Most fields are self explanatory.
@@ -138,20 +139,8 @@ unsigned char * pcp_gennonce();
 
 void pcpedit_key(char *keyid);
 
-// proprietary key derivation function. derives an
-// secure encryption key from the given passphrase by
-// calculating a SALSA20 hash from it HCYCLES times.
-// 
-// turns the result into a proper CURVE25519 secret
-// key. allocates memory for key and it is up to the
-// user to free it after use.
-// 
-// deprecation warning: maybe removed once the libsodium
-// developers incorporated some key derivation function
-// into libsodium. so far, there's none but word goes
-// that perhaps something like scrypt() from the star
-// distribution may be added in the future.
-unsigned char *pcp_derivekey(char *passphrase);
+// use scrypt() to create a key from a passphrase and a nonce
+unsigned char *pcp_derivekey(char *passphrase, unsigned char *nonce);
 
 pcp_key_t *pcp_derive_pcpkey (pcp_key_t *ours, char *theirs);
 

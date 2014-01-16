@@ -23,6 +23,33 @@
 #include "key.h"
 #include "keyhash.h"
 
+/*
+ * AS of 16/01/2014 I'm using scrypt() instead of my crafted key
+ * derivation function. However, I create a hash from the pcp_script()
+ * result anyway because I need a cure25519 secret.
+ */
+unsigned char *pcp_derivekey(char *passphrase, unsigned char *nonce) {
+  unsigned char *key = ucmalloc(crypto_secretbox_KEYBYTES);
+  size_t plen = strnlen(passphrase, 255);
+
+  // create the scrypt hash
+  unsigned char *scrypted = pcp_scrypt(passphrase, plen, nonce);
+
+  // make a hash from the scrypt() result
+  crypto_hash_sha256(key, (unsigned char*)scrypted, 64);
+
+  // turn the 32byte hash into a secret key
+  key[0]  &= 248;
+  key[31] &= 127;
+  key[31] |= 64;
+
+  memset(passphrase, 0, plen);
+
+  return key;
+}
+
+/*
+ * deprecated
 unsigned char *pcp_derivekey(char *passphrase) {
   unsigned char *hash32 = ucmalloc(crypto_hash_sha256_BYTES);
   unsigned char *key = ucmalloc(crypto_secretbox_KEYBYTES);
@@ -55,7 +82,7 @@ unsigned char *pcp_derivekey(char *passphrase) {
 
   return key;
 }
-
+*/
 
 char *pcp_getkeyid(pcp_key_t *k) {
   uint32_t s, p;
@@ -135,7 +162,7 @@ pcp_key_t *pcpkey_encrypt(pcp_key_t *key, char *passphrase) {
     memcpy (key->nonce, nonce, crypto_secretbox_NONCEBYTES);
   }
 
-  unsigned char *encryptkey = pcp_derivekey(passphrase);  
+  unsigned char *encryptkey = pcp_derivekey(passphrase, key->nonce);  
 
   unsigned char *encrypted;
   size_t es;
@@ -163,7 +190,7 @@ pcp_key_t *pcpkey_encrypt(pcp_key_t *key, char *passphrase) {
 }
 
 pcp_key_t *pcpkey_decrypt(pcp_key_t *key, char *passphrase) {
-  unsigned char *encryptkey = pcp_derivekey(passphrase);  
+  unsigned char *encryptkey = pcp_derivekey(passphrase, key->nonce);  
 
   unsigned char *decrypted;
   size_t es;

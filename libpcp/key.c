@@ -93,46 +93,32 @@ char *pcp_getkeyid(pcp_key_t *k) {
   return id;
 }
 
-void pcp_keypairs(byte *csk, byte *cpk, byte *esk, byte *epk, byte *seed) {
+void pcp_keypairs(byte *csk, byte *cpk, byte *esk, byte *epk) {
   // generate ed25519 + curve25519 keypair from random seed
-  byte tmp[64];
+  byte *seed = urmalloc(32);
+  byte *tmp  = urmalloc(32);
 
+  // ed25519 signing key
   crypto_sign_seed_keypair(epk, esk, seed);
-  crypto_hash_sha512(tmp, seed, 32);
+
+  // curve25519 secret key
   tmp[0]  &= 248;
   tmp[31] &= 63;
   tmp[31] |= 64;
-  
   memcpy(csk, tmp, 32);
+
+  // curve25519 public key
   crypto_scalarmult_curve25519_base(cpk, csk); 
-  memset(tmp, 0, 64);
-}
-
-void pcp_ed_keypairs(byte *csk, byte *esk) {
-  // re-generate (derive) curve25519 secret from ed25519 secret
-  // (1st half = seed, 2nd half = pub)
-  byte tmp[64];
-  byte seed[32];
-  memcpy(seed, esk, 32);
-
-  crypto_hash_sha512(tmp, seed, 32);
-  tmp[0]  &= 248;
-  tmp[31] &= 63;
-  tmp[31] |= 64;
-  
-  memcpy(csk, tmp, 32);
-  memset(tmp, 0, 64);
+  memset(tmp, 0, 32);
 }
 
 pcp_key_t * pcpkey_new () {
-  byte pub[32] = { 0 };
+  byte pub[32]    = { 0 };
   byte secret[32] = { 0 };
-  byte edpub[32] = { 0 };
-  byte edsec[64] = { 0 };
+  byte edpub[32]  = { 0 };
+  byte edsec[64]  = { 0 };
 
-  byte *seed = urmalloc(32);
-
-  pcp_keypairs(secret, pub, edsec, edpub, seed);
+  pcp_keypairs(secret, pub, edsec, edpub);
 
   // fill in our struct
   pcp_key_t *key = urmalloc(sizeof(pcp_key_t));
@@ -167,14 +153,20 @@ pcp_key_t *pcpkey_encrypt(pcp_key_t *key, char *passphrase) {
   unsigned char *encrypted;
   size_t es;
 
-  es = pcp_sodium_mac(&encrypted, key->edsecret, 64, key->nonce, encryptkey);
+  unsigned char *both = ucmalloc(96);
+  memcpy(both, key->edsecret, 64);
+  memcpy(&both[64], key->secret, 32);
+
+  es = pcp_sodium_mac(&encrypted, both, 96, key->nonce, encryptkey);
 
   memset(encryptkey, 0, 32);
+  memset(both, 0, 96);
   free(encryptkey);
+  free(both);
 
-  if(es == 80) {
+  if(es == 112) {
     // success
-    memcpy(key->encrypted, encrypted, 80);
+    memcpy(key->encrypted, encrypted, 112);
     arc4random_buf(key->secret, 32);
     arc4random_buf(key->edsecret, 64);
     key->secret[0] = 0;
@@ -195,17 +187,15 @@ pcp_key_t *pcpkey_decrypt(pcp_key_t *key, char *passphrase) {
   unsigned char *decrypted;
   size_t es;
   
-  es = pcp_sodium_verify_mac(&decrypted, key->encrypted, 80, key->nonce, encryptkey);
+  es = pcp_sodium_verify_mac(&decrypted, key->encrypted, 112, key->nonce, encryptkey);
 
   memset(encryptkey, 0, 32);
   free(encryptkey);
 
   if(es == 0) {
     // success
-    byte secret[32] = { 0 };
-    pcp_ed_keypairs(secret, decrypted);
-    memcpy(key->secret, secret, 32);
     memcpy(key->edsecret, decrypted, 64);
+    memcpy(key->secret, &decrypted[64], 32);
   }
   else {
     fatal("failed to decrypt the secret key (got %d, expected 32)!\n", es);
@@ -306,53 +296,6 @@ pcp_pubkey_t *pubkey2native(pcp_pubkey_t *k) {
 #endif
 }
 
-pcp_key_t *pcp_derive_pcpkey (pcp_key_t *ours, char *theirs) {
-  byte edpub[32] = { 0 };
-  byte edsec[64] = { 0 };
-  byte pub[32] = { 0 };
-  byte secret[32] = { 0 };
-
-  byte *seed = ucmalloc(32);
-
-  size_t thlen = strnlen(theirs, 255);
-  size_t inlen = 64 + thlen;
-  unsigned char *both = ucmalloc(inlen);
-
-  memcpy(both, ours->edsecret, 64);
-  memcpy(&both[64], theirs, thlen);
-
-  if(crypto_hash_sha256(seed, both, inlen) != 0) {
-    fatal("Failed to generate a hash of our pub key and recipient id!\n");
-    goto errdp1;
-  }
-
-  pcp_keypairs(secret, pub, edsec, edpub, seed);
-
-  pcp_key_t * tmp = pcpkey_new ();
-  
-  memcpy(tmp->secret, secret, 32);
-  memcpy(tmp->edpub, edpub, 32);
-  memcpy(tmp->edsecret, edsec, 64);
-  memcpy(tmp->pub, pub, 32);
-  
-  memcpy(tmp->owner, ours->owner, 255);
-  memcpy(tmp->mail, ours->mail, 255);
-  memcpy(tmp->id, pcp_getkeyid(tmp), 17);
-
-  memset(both, 0, inlen);
-  memset(seed, 0, 32);
-
-  free(both);
-  free(seed);
-
-  return tmp;
-
- errdp1:
-  memset(both, 0, inlen);
-  free(both);
-  
-  return NULL;
-}
 
 void pcp_seckeyblob(void *blob, pcp_key_t *k) {
   memcpy(blob, k, PCP_RAW_KEYSIZE);

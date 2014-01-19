@@ -80,7 +80,7 @@ struct _pcp_key_t {
   byte edpub[32];
   byte edsecret[64];
   byte nonce[24];
-  byte encrypted[80];
+  byte encrypted[112]; // both ed+curve encrypted
   char owner[255];
   char mail[255];
   char id[17];
@@ -113,7 +113,7 @@ typedef struct _pcp_pubkey_t pcp_pubkey_t;
 void pcp_cleanhashes();
 pcp_key_t *pcpkey_new ();
 
-void pcp_keypairs(byte *csk, byte *cpk, byte *esk, byte *epk, byte *seed);
+void pcp_keypairs(byte *csk, byte *cpk, byte *esk, byte *epk);
 void pcp_ed_keypairs(byte *csk, byte *esk);
 
 char *pcppubkey_get_art(pcp_pubkey_t *k);

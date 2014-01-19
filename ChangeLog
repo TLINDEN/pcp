@@ -1,3 +1,29 @@
+0.2.0	ED25519 and Curve25519 keys are now generated
+	separately (previously they were generated from
+	one random seed, the curve had been derived from
+	the ed key).
+
+	To encrypt the secret keys, we're now using a key
+	derived from the user passphrase generated using
+	the scrypt() function, incorporated from tarsnap
+	via scrypt-1.1.6.
+
+	The "derived pcp key" feature has been dropped.
+
+	Encrypted file format/scheme changed. Previously
+	I included the sender's key-id with the encrypted
+	cipher as a hash. Now the sender's public key will
+	be included directly. This way I don't have to reveal
+	key-ids (which is bad) and people can encrypt for
+	others without a full key exchange first.
+
+	Also I'm no more using the primary secret (or any
+	other secret in the vault) for encryption. Instead
+	every time a user encrypts a file, a new keypair
+	will be generated. That way the file can only be
+	decrypted by the recipient (which public key have
+	been used) and no one else, not even the sender.
+
 0.1.5   Fixed a segmentation fault when using pcp1 -t on a
 	public key. I added a double free() there by purpose
 	to test segfault catching I added in unittest.pl

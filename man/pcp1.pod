@@ -196,48 +196,24 @@ Each key can be identified using its B<keyid> which looks like this:
  0xD49119E85266509F
 
 A public key exported from a secret key will have the same keyid
-as the secret key. When using for encryption, the keyid will be
-added to the message so that the receiver knows who was the
-sender of the message (B<This might change in the future. As of
-this writing I'm not sure if this was a good idea>).
+as the secret key.
 
 If you just want to know details about a key or the vault, use the
 B<-t> option.
 
-=head2 Derived Public Keys
-
-In the real world you would not use your primary key to encrypt
-messages, because this would require to send the public key part
-to your recipient in one way or another. The much better and more
-secure way is to use a B<Derived Public Key>:
-
-Such a key will be dynamically generated from a hash of your
-primary secret key and the recipient (an email address, name or key id).
-The public part of this dynamic key will be exported and sent to
-the recipient. A public key generated this way will only be usable
-by the recipient (and yourself) and each recipient will have a different
-public key from you (and vice versa).
-
 =head1 ENCRYPTION
 
-There are 3 modi for encryption available in pcp1:
+There are 2 modes of encryption available in pcp1:
 
 =over
 
 =item B<Standard public key encryption>
 
 In this mode, which is the default, a public key as specified
-with B<-i> and the primary secret key will be used for encryption.
-The public key in question maybe a derived public key, which
-is transparent for the sender however.
-
-If you don't use derived keys, you will have to transfer
-the public key part of your primary keypair to the recipient,
-which is considered insecure if the transfer channel itself
-uses untrusted transports or if the transferred public key
-ends up on a public system (a shared server, a workstation
-at your employer or the like). You should avoid this encryption
-mode in such cases and use derived keys instead.
+with B<-i> and a dynamically generated secret key will be used
+for encryption. The public part of the generated sender key
+will be included with the encrypted file, which the recipient
+can use to decrypt it.
 
 Example command:
 
@@ -245,27 +221,6 @@ Example command:
 
 Here we didn't specify a recipient. Therefore the public
 key given with -i will be used directly.
-
-=item B<Derived public key encryption>
-
-Derived keys will be generated dynamically at runtime
-(see B<Derived Public Keys> above). Therefore an exported
-derived public key is unique for the sender AND recipient.
-
-This mode can be considered the most secure. If such a key
-gets lost (or into the wrong hands), only this specific
-communication channel will be compromised.
-
-Example command:
-
- pcp1 -e -r bobby@local -I message.txt -O cipher.z85
-
-We specified a recipient. pcp1 searches the vault for a
-matching public key and generates a derived keypair for
-encryption. You need to have a public key installed from
-the recipient anyway, it won't work without one. You may
-also specify a key id (-i) as well to make sure, the right
-key will be used for derivation.
 
 =item B<Self encryption mode>
 
@@ -465,7 +420,9 @@ format:
  +---------------------------------------------------------+
  | Field         Size      Description                     |
  +-------------+--------+----------------------------------+
- | Hash        |     32 | Hash of the sender key id        |
+ | Pubkey      |     32 | Publix key of the sender         |
+ +-------------|--------|----------------------------------+
+ | Nonce       |     24 | Random Nonce                     |
  +-------------|--------|----------------------------------+
  | Encrypted   |      ~ | The actual encrypted data        |
  +-------------|--------|----------------------------------+

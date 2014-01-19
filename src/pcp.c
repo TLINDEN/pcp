@@ -365,7 +365,7 @@ int main (int argc, char **argv)  {
 	break;	
 
       case PCP_MODE_SIGN:
-	pcpsign(infile, outfile, recipient, xpass);
+	pcpsign(infile, outfile, xpass);
 	break;
 
       case PCP_MODE_VERIFY:

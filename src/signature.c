@@ -23,7 +23,7 @@
 #include "signature.h"
 #include "defines.h"
 
-int pcpsign(char *infile, char *outfile, char *recipient, char *passwd) {
+int pcpsign(char *infile, char *outfile, char *passwd) {
   FILE *in = NULL;
   FILE *out = NULL;
   pcp_key_t *secret = NULL;
@@ -69,10 +69,6 @@ int pcpsign(char *infile, char *outfile, char *recipient, char *passwd) {
     secret = pcpkey_decrypt(secret, passphrase);
     if(secret == NULL)
       goto errs3;
-  }
-
-  if(recipient != NULL) {
-    secret = pcp_derive_pcpkey(secret, recipient);
   }
 
   unsigned char *input = NULL;

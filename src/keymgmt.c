@@ -252,41 +252,12 @@ void pcp_exportsecretkey(pcp_key_t *key, char *outfile) {
   }
 }
 
-pcp_key_t *pcp_getrsk(pcp_key_t *s, char *recipient, char *passwd) {
-  if(recipient != NULL) {
-    if(s->secret[0] == 0) {
-      // encrypted, decrypt it
-      char *passphrase;
-      if(passwd == NULL) {
-	pcp_readpass(&passphrase,
-		     "Enter passphrase to decrypt your secret key", NULL, 1);
-      }
-      else {
-	passphrase = ucmalloc(strlen(passwd)+1);
-	strncpy(passphrase, passwd, strlen(passwd)+1);
-      }
-      s = pcpkey_decrypt(s, passphrase);
-      if(s == NULL)
-	goto errrsk1;
-    }
-    pcp_key_t *tmp;
-    tmp = pcp_derive_pcpkey(s, recipient);
-    return tmp;
-  }
-
-  return s;
-
- errrsk1:
-  return NULL;
-}
 
 /*
   if id given, look if it is already a public and export this,
   else we look for a secret key with that id. without a given
-  keyid we use the primary key. if we start with a secret key
-  and a recipient have been given, we use a derived secret key
-  and export the public component from that. without recipient
-  just export the public component of the found secret key.
+  keyid we use the primary key. if no keyid has been given but
+  a recipient instead, we try to look up the vault for a match.
  */
 void pcp_exportpublic(char *keyid, char *recipient, char *passwd, char *outfile) {
   pcp_pubkey_t *key = NULL;
@@ -303,9 +274,7 @@ void pcp_exportpublic(char *keyid, char *recipient, char *passwd, char *outfile)
 	free(s);
       }
       else {
-	s = pcp_getrsk(s, recipient, passwd);
-	if(s != NULL)
-	  key = pcpkey_pub_from_secret(s); 
+	key = pcpkey_pub_from_secret(s); 
       }
     }
   }
@@ -318,10 +287,7 @@ void pcp_exportpublic(char *keyid, char *recipient, char *passwd, char *outfile)
       free(s);
     }
     else {
-      pcp_key_t *t = NULL;
-      t = pcp_getrsk(s, recipient, passwd);
-      if(t != NULL)
-	key = pcpkey_pub_from_secret(t); 
+      key = pcpkey_pub_from_secret(s); 
     }
   }
 

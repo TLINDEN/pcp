@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013 T.Linden.
+    Copyright (C) 2013 T. von Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -20,23 +20,36 @@
 */
 
 
-#ifndef _HAVE_ENCRYPTION_H
-#define _HAVE_ENCRYPTION_H
+// used for recipient- or keyid lists
 
-#include <stdio.h>
-#include <string.h>
+#ifndef _HAVE_PCP_PLIST_H
+#define _HAVE_PCP_PLIST_H
 
-#include "defines.h"
-#include "key.h"
-#include "crypto.h"
-#include "pcp.h"
-#include "uthash.h"
-#include "z85.h"
-#include "keyprint.h"
-#include "keyhash.h"
-#include "plist.h"
+#include <stdlib.h>
 
-int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd);
-int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *recipient);
+struct _plist_t {
+  char *value;
+  struct _plist_t *next;
+};
 
-#endif // _HAVE_ENCRYPTION_H
+typedef struct _plist_t plist_t;
+
+static inline void p_add(plist_t **lst, char *value) {
+  plist_t *newitem;
+  plist_t *lst_iter = *lst;
+
+  newitem = (plist_t *)malloc(sizeof(plist_t));
+  newitem->value = malloc(strlen(value) + 1);
+  strncpy(newitem->value, value, strlen(value) + 1);
+  newitem->next = NULL;
+  
+  if ( lst_iter != NULL ) {
+    while (lst_iter->next != NULL )
+      lst_iter = lst_iter->next;
+    lst_iter->next = newitem;
+  }
+  else
+    *lst = newitem;
+}
+
+#endif // _HAVE_PCP_PLIST_H

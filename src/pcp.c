@@ -52,7 +52,7 @@ int main (int argc, char **argv)  {
   char *keyid = NULL;
   char *id = NULL;
   char *xpass = NULL;
-  char *recipient = NULL;
+  plist_t *recipient = NULL;
   FILE *in;
 
   PCP_EXIT = 0;
@@ -203,8 +203,7 @@ int main (int argc, char **argv)  {
 	strncpy(xpass, optarg, strlen(optarg)+1);
 	break;
       case 'r':
-	recipient = ucmalloc(strlen(optarg)+1);
-	strncpy(recipient, optarg, strlen(optarg)+1);
+	p_add(&recipient, optarg);
 	userec = 1;
 	break;
 
@@ -265,7 +264,10 @@ int main (int argc, char **argv)  {
 	  if(id == NULL)
 	    break;
 	}
-	pcp_exportpublic(id, recipient, xpass, outfile);
+	if (recipient != NULL)
+	  pcp_exportpublic(id, recipient->value, xpass, outfile);
+	else
+	  pcp_exportpublic(id, NULL, xpass, outfile);
 	if(xpass != NULL)
 	  free(xpass);
 	if(recipient != NULL)
@@ -325,28 +327,33 @@ int main (int argc, char **argv)  {
 	break;
 
       case PCP_MODE_ENCRYPT:
-	if(useid) {
+	if(useid == 1 && userec == 0) {
+	  // one dst, FIXME: make id a list as well
 	  id = pcp_normalize_id(keyid);
+	  pcpencrypt(id, infile, outfile, xpass, NULL);
 	}
-	if(useid == 0 && userec == 1) {
-	  id = pcp_find_id_byrec(recipient);
+	else if(useid == 0 && userec == 1) {
+	  // multiple dst
+	  pcpencrypt(id, infile, outfile, xpass, recipient);
 	}
-        if(useid == 0 && userec == 0) {
+        else if(useid == 0 && userec == 0) {
+	  // self mode
           pcp_key_t *k = pcp_find_primary_secret();
 	  id = ucmalloc(17);
           memcpy(id, k->id, 17);
+	  pcpencrypt(id, infile, outfile, xpass, NULL);
         }
-	if(id != NULL) {
-	  pcpencrypt(id, infile, outfile, xpass, recipient);
-	  free(id);
-	  if(xpass != NULL)
-	    free(xpass);
-	  if(recipient != NULL)
-	    free(recipient);
-	}
 	else {
-	  fatal("You need to specify a key id (--keyid) or a recipient (--recipient)!\n");
+	  // -i and -r specified
+	  fatal("You can't specify both -i and -r, use either -i or -r!\n");
 	}
+	if(id != NULL)
+	  free(id);
+	if(xpass != NULL)
+	    free(xpass);
+	if(recipient != NULL)
+	  free(recipient);
+
 	break;
 
       case PCP_MODE_DECRYPT:

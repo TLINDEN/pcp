@@ -93,39 +93,62 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd) {
 
 
 
-int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, char *recipient) {
+int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *recipient) {
   FILE *in = NULL;
   FILE *out = NULL;
+  pcp_pubkey_t *pubhash = NULL; // FIXME: add free()
+  pcp_pubkey_t *tmp = NULL;
   pcp_pubkey_t *pub = NULL;
   pcp_key_t *secret = NULL;
   int self = 0;
 
-  // look if we've got that key
-  HASH_FIND_STR(pcppubkey_hash, id, pub);
-  if(pub == NULL) {
-    // FIXME: use recipient to lookup by name or email
-    // self-encryption: look if its a secret one
-    pcp_key_t *s = NULL;
-    HASH_FIND_STR(pcpkey_hash, id, s);
-    if(s != NULL) {
-      pub = pcpkey_pub_from_secret(s);
-      self = 1;
+  // FIXME: mk id a plist_t with loop as well
+  if(id != NULL) {
+    // lookup by id
+    HASH_FIND_STR(pcppubkey_hash, id, tmp);
+    if(tmp == NULL) {
+      // FIXME: use recipient to lookup by name or email
+      // self-encryption: look if its a secret one
+      pcp_key_t *s = NULL;
+      HASH_FIND_STR(pcpkey_hash, id, s);
+      if(s != NULL) {
+	tmp = pcpkey_pub_from_secret(s);
+	HASH_ADD_STR( pubhash, id, tmp);
+	self = 1;
+      }
+      else {
+	fatal("Could not find a public key with id 0x%s in vault %s!\n",
+	      id, vault->filename);
+	goto erren3;
+      }
     }
     else {
-      fatal("Could not find a public key with id 0x%s in vault %s!\n",
-	  id, vault->filename);
-      goto erren3;
+      // found one by id, copy into local hash
+      pcp_pubkey_t *pub = ucmalloc(sizeof(pcp_pubkey_t));
+      memcpy(pub, tmp, sizeof(pcp_pubkey_t));
+      HASH_ADD_STR( pubhash, id, tmp);
     }
   }
+  else if(recipient != NULL) {
+    // lookup by recipient list
+    // FIXME: implement, iterate through global hashlist
+    //        copy matches into temporary pubhash
+  }
+  else {
+    fatal("id or recipient list required!\n");
+    goto erren3;
+  }
 
-  secret = pcpkey_new(); // DEPRECATED: pcp_find_primary_secret();
+
+  // we're using a random secret keypair on our side
+  secret = pcpkey_new();
 
   if(infile == NULL)
     in = stdin;
   else {
     if((in = fopen(infile, "rb")) == NULL) {
       fatal("Could not open input file %s\n", infile);
-      goto erren3;
+      goto erren2;
     }
   }
 
@@ -134,23 +157,21 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, char *recipi
   else {
     if((out = fopen(outfile, "wb+")) == NULL) {
       fatal("Could not open output file %s\n", outfile);
-      goto erren3;
+      goto erren2;
     }
   }
 
-  if(debug) {
-    fprintf(stderr, "Using secret key:\n");
-    pcp_dumpkey(secret);
-    fprintf(stderr, "Using publickey:\n");
-    pcp_dumppubkey(pub);
-  }
-
-  size_t clen = pcp_encrypt_file(in, out, secret, pub, self);
+  size_t clen = pcp_encrypt_file(in, out, secret, pubhash, self);
 
   if(clen > 0) {
     fprintf(stderr, "Encrypted %d bytes for 0x%s successfully\n", (int)clen, id);
     return 0;
   }
+
+ erren2:
+  free(pubhash);
+  free(tmp);
+  free(pub);
 
  erren3:
 

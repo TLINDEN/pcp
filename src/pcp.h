@@ -46,6 +46,7 @@
 #include "encryption.h"
 #include "signature.h"
 #include "keyhash.h"
+#include "plist.h"
 
 // operation modi
 // perl -e '$x=0; while ($x<100000) { $x++; $x *= 1.7; printf "0x%08X: %d\n", $x, $x }'

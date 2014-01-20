@@ -52,4 +52,10 @@ unsigned char *pcp_box_decrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
                                unsigned char *cipher, size_t ciphersize,
 			       size_t *dsize);
 
+size_t pcp_encrypt_file(FILE *in, FILE* out, pcp_key_t *s, pcp_pubkey_t *p, int self);
+
+size_t pcp_decrypt_file(FILE *in, FILE* out, pcp_key_t *s);
+
+
+
 #endif // _HAVE_PCP_CRYPTO_H

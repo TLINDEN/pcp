@@ -25,7 +25,6 @@
 int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd) {
   FILE *in = NULL;
   FILE *out = NULL;
-  pcp_pubkey_t *pub = NULL;
   pcp_key_t *secret = NULL;
 
   if(useid) {
@@ -49,7 +48,7 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd) {
   else {
     if((in = fopen(infile, "rb")) == NULL) {
       fatal("Could not open input file %s\n", infile);
-      goto errde2;
+      goto errde3;
     }
   }
 
@@ -58,7 +57,7 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd) {
   else {
     if((out = fopen(outfile, "wb+")) == NULL) {
       fatal("Could not open output file %s\n", outfile);
-      goto errde2;
+      goto errde3;
     }
   }
 
@@ -79,70 +78,14 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd) {
       goto errde3;
   }
 
-  char *encoded = pcp_readz85file(in);
-  if(encoded == NULL)
-    goto errde2;
+  size_t dlen = pcp_decrypt_file(in, out, secret);
 
-  size_t clen;
-  unsigned char *combined = pcp_z85_decode((char *)encoded, &clen);
-  clen = clen - crypto_secretbox_KEYBYTES;
-
-
-  if(combined == NULL)
-    goto errde1;
-
-  // extract the sender's public key from the cipher
-  pub = ucmalloc(sizeof(pcp_pubkey_t));
-  memcpy(pub->pub, combined, crypto_secretbox_KEYBYTES);
-
-
-  if(debug) {
-    fprintf(stderr, "Using secret key:\n");
-    pcpkey_printshortinfo(secret);
-    fprintf(stderr, "Using public key:\n");
-    pcpprint_bin(stderr, pub->pub, 32);
-    fprintf(stderr, "\n");
- }
-
-  unsigned char *encrypted = ucmalloc(clen);
-  memcpy(encrypted, &combined[crypto_secretbox_KEYBYTES], clen);
-
-  size_t dlen;
-  unsigned char *decrypted = pcp_box_decrypt(secret, pub,
-					     encrypted,
-					     clen, &dlen);
-
-  if(decrypted == NULL) {
-    // maybe self encryption?
-    pcp_pubkey_t *mypub = pcpkey_pub_from_secret(secret);
-    decrypted = pcp_box_decrypt(secret, mypub,
-				encrypted,
-				clen, &dlen);
-    free(mypub);
-  }
-
-  if(decrypted != NULL) {
-    fatals_reset();
-    fwrite(decrypted, dlen, 1, out);
-    fclose(out);
-    if(ferror(out) != 0) {
-      fatal("Failed to write decrypted output!\n");
-    }
-    free(decrypted);
-
+  if(dlen > 0) {
     fprintf(stderr, "Decrypted %d bytes successfully\n",
 	    (int)dlen);
+    return 0;
   }
-  
 
-  free(encrypted);
-  free(pub);
-  free(combined);
-
- errde1:
-  free(encoded);
-
- errde2:
 
  errde3:
   return 1;
@@ -155,7 +98,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, char *recipi
   FILE *out = NULL;
   pcp_pubkey_t *pub = NULL;
   pcp_key_t *secret = NULL;
-  int selfcipher = 0;
+  int self = 0;
 
   // look if we've got that key
   HASH_FIND_STR(pcppubkey_hash, id, pub);
@@ -166,7 +109,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, char *recipi
     HASH_FIND_STR(pcpkey_hash, id, s);
     if(s != NULL) {
       pub = pcpkey_pub_from_secret(s);
-      selfcipher = 1;
+      self = 1;
     }
     else {
       fatal("Could not find a public key with id 0x%s in vault %s!\n",
@@ -182,7 +125,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, char *recipi
   else {
     if((in = fopen(infile, "rb")) == NULL) {
       fatal("Could not open input file %s\n", infile);
-      goto erren1;
+      goto erren3;
     }
   }
 
@@ -191,7 +134,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, char *recipi
   else {
     if((out = fopen(outfile, "wb+")) == NULL) {
       fatal("Could not open output file %s\n", outfile);
-      goto erren1;
+      goto erren3;
     }
   }
 
@@ -202,77 +145,12 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, char *recipi
     pcp_dumppubkey(pub);
   }
 
-  unsigned char *input = NULL;
-  size_t inputBufSize = 0;
-  unsigned char byte[1];
-  
-  while(!feof(in)) {
-    if(!fread(&byte, 1, 1, in))
-      break;
-    unsigned char *tmp = realloc(input, inputBufSize + 1);
-    input = tmp;
-    memmove(&input[inputBufSize], byte, 1);
-    inputBufSize ++;
+  size_t clen = pcp_encrypt_file(in, out, secret, pub, self);
+
+  if(clen > 0) {
+    fprintf(stderr, "Encrypted %d bytes for 0x%s successfully\n", (int)clen, id);
+    return 0;
   }
-  fclose(in);
-
-  if(inputBufSize == 0) {
-    fatal("Input file is empty!\n");
-    goto erren1;
-  }
-
-  size_t ciphersize;
-  unsigned char *cipher = pcp_box_encrypt(secret, pub, input,
-					  inputBufSize, &ciphersize);
-  if(cipher == NULL)
-    goto erren1;
-
-  size_t zlen;
-  size_t clen = ciphersize + crypto_secretbox_KEYBYTES;
-  unsigned char *combined = ucmalloc(clen);
-
-  if(selfcipher == 1) {
-    unsigned char *fakepub = urmalloc(crypto_secretbox_KEYBYTES);
-    memcpy(combined, fakepub, crypto_secretbox_KEYBYTES);
-    free(fakepub);
-  }
-  else {
-    memcpy(combined, secret->pub, crypto_secretbox_KEYBYTES);
-  }
-
- if(debug) {
-    fprintf(stderr, "Using public key:\n");
-    pcpprint_bin(stderr, combined, 32);
-    fprintf(stderr, "\n");
-  }
-
-  memcpy(&combined[crypto_secretbox_KEYBYTES], cipher, ciphersize);
-
-  // combined consists of:
-  // our-public-key|nonce|cipher
-  char *encoded = pcp_z85_encode(combined, clen, &zlen);
-
-  if(encoded == NULL)
-    goto erren0;
-  
-  fprintf(out, "%s\n%s\n%s\n", PCP_ENFILE_HEADER, encoded, PCP_ENFILE_FOOTER);
-  if(ferror(out) != 0) {
-    fatal("Failed to write encrypted output!\n");
-  }
-
-  fprintf(stderr, "Encrypted %d bytes for 0x%s successfully\n",
-	  (int)inputBufSize, id);
-
-  fclose(out);
-  free(encoded);
-  free(combined);
-  free(cipher);
-  return 0;
-
- erren0:
-  free(cipher);
-
- erren1:
 
  erren3:
 

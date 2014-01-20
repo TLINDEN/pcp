@@ -160,3 +160,137 @@ unsigned char *pcp_box_decrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
 
   return NULL;
 }
+
+size_t pcp_decrypt_file(FILE *in, FILE* out, pcp_key_t *s) {
+  pcp_pubkey_t *p;
+  size_t clen;
+  size_t dlen = 0;
+
+  char *encoded = pcp_readz85file(in);
+  if(encoded == NULL)
+    return 0;
+
+  unsigned char *combined = pcp_z85_decode((char *)encoded, &clen);
+  clen = clen - crypto_secretbox_KEYBYTES;
+
+  if(combined == NULL)
+    goto errdf1;
+
+  // extract the sender's public key from the cipher
+  p = ucmalloc(sizeof(pcp_pubkey_t));
+  memcpy(p->pub, combined, crypto_secretbox_KEYBYTES);
+
+  unsigned char *encrypted = ucmalloc(clen);
+  memcpy(encrypted, &combined[crypto_secretbox_KEYBYTES], clen);
+
+  unsigned char *decrypted = pcp_box_decrypt(s, p,
+					     encrypted,
+					     clen, &dlen);
+
+  if(decrypted == NULL) {
+    // maybe self encryption?
+    pcp_pubkey_t *mypub = pcpkey_pub_from_secret(s);
+    decrypted = pcp_box_decrypt(s, mypub,
+				encrypted,
+				clen, &dlen);
+    free(mypub);
+  }
+
+  if(decrypted != NULL) {
+    fatals_reset();
+    fwrite(decrypted, dlen, 1, out);
+    fclose(out);
+
+    if(ferror(out) != 0) {
+      fatal("Failed to write decrypted output!\n");
+      dlen = 0;
+      goto errdf2;
+    }
+  }
+
+ errdf2:
+  free(decrypted);
+  free(combined);
+  free(p);
+
+ errdf1:
+  free(encoded);
+
+  return dlen;
+}
+
+
+size_t pcp_encrypt_file(FILE *in, FILE* out, pcp_key_t *s, pcp_pubkey_t *p, int self) {
+  unsigned char *input = NULL;
+  size_t inputBufSize = 0;
+  unsigned char byte[1];
+  size_t ciphersize;
+  size_t clen = 0;
+  size_t zlen = 0;
+  unsigned char *cipher;
+  unsigned char *combined;
+
+  while(!feof(in)) {
+    if(!fread(&byte, 1, 1, in))
+      break;
+    unsigned char *tmp = realloc(input, inputBufSize + 1);
+    input = tmp;
+    memmove(&input[inputBufSize], byte, 1);
+    inputBufSize ++;
+  }
+  fclose(in);
+
+  if(inputBufSize == 0) {
+    fatal("Input file is empty!\n");
+    goto erref1;
+  }
+
+  cipher = pcp_box_encrypt(s, p, input, inputBufSize, &ciphersize);
+  if(cipher == NULL)
+    goto erref2;
+
+  clen = ciphersize + crypto_secretbox_KEYBYTES;
+  combined = ucmalloc(clen);
+
+  if(self == 1) {
+    unsigned char *fakepub = urmalloc(crypto_secretbox_KEYBYTES);
+    memcpy(combined, fakepub, crypto_secretbox_KEYBYTES);
+    free(fakepub);
+  }
+  else {
+    memcpy(combined, s->pub, crypto_secretbox_KEYBYTES);
+  }
+
+  memcpy(&combined[crypto_secretbox_KEYBYTES], cipher, ciphersize);
+
+  // combined consists of:
+  // our-public-key|nonce|cipher
+  char *encoded = pcp_z85_encode(combined, clen, &zlen);
+
+  if(encoded == NULL)
+    goto erref3;
+  
+  fprintf(out, "%s\n%s\n%s\n", PCP_ENFILE_HEADER, encoded, PCP_ENFILE_FOOTER);
+  if(ferror(out) != 0) {
+    fatal("Failed to write encrypted output!\n");
+    inputBufSize = 0;
+  }
+
+  fclose(out);
+  free(encoded);
+  free(combined);
+  free(cipher);
+
+  return inputBufSize;
+
+ erref3:
+  free(combined);
+  free(cipher);
+
+ erref2:
+  free(input);
+
+ erref1:
+  
+  return 0;
+}

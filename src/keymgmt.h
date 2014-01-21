@@ -38,6 +38,7 @@
 #include "readpass.h"
 #include "keyprint.h"
 #include "keyhash.h"
+#include "util.h"
 
 #define _WITH_GETLINE
 
@@ -55,6 +56,5 @@ int pcp_importpublic (vault_t *vault, FILE *in);
 int pcp_importsecret (vault_t *vault, FILE *in);
 void pcpdelete_key(char *keyid);
 char *pcp_find_id_byrec(char *recipient);
-char *_lc(char *in);
 
 #endif // _HAVE_KEYMGMT_H

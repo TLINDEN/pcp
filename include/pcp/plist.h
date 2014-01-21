@@ -19,37 +19,58 @@
     You can contact me by mail: <tlinden AT cpan DOT org>.
 */
 
-
-// used for recipient- or keyid lists
+/*
+  Simple linked list wrappers,
+  used for recipient- or keyid lists
+*/
 
 #ifndef _HAVE_PCP_PLIST_H
 #define _HAVE_PCP_PLIST_H
 
 #include <stdlib.h>
+#include <stdio.h>
 
 struct _plist_t {
   char *value;
   struct _plist_t *next;
+  struct _plist_t *first;
 };
 
 typedef struct _plist_t plist_t;
 
 static inline void p_add(plist_t **lst, char *value) {
   plist_t *newitem;
-  plist_t *lst_iter = *lst;
+  plist_t *iter = *lst;
 
   newitem = (plist_t *)malloc(sizeof(plist_t));
   newitem->value = malloc(strlen(value) + 1);
   strncpy(newitem->value, value, strlen(value) + 1);
   newitem->next = NULL;
   
-  if ( lst_iter != NULL ) {
-    while (lst_iter->next != NULL )
-      lst_iter = lst_iter->next;
-    lst_iter->next = newitem;
+  if ( iter != NULL ) {
+    while (iter->next != NULL ) {
+      iter = iter->next;
+    }
+    newitem->first = iter->first;
+    iter->next = newitem;
   }
-  else
+  else {
+    newitem->first = newitem;
     *lst = newitem;
+  }
+}
+
+static inline void p_clean(plist_t *lst) {
+  plist_t *iter = lst->first;
+  plist_t *tmp;
+
+  while (iter != NULL) {
+    tmp = iter;
+    iter = iter->next;
+    free(tmp->value);
+    free(tmp);
+  }
+
 }
 
 #endif // _HAVE_PCP_PLIST_H

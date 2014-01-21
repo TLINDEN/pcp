@@ -124,15 +124,33 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
     }
     else {
       // found one by id, copy into local hash
-      pcp_pubkey_t *pub = ucmalloc(sizeof(pcp_pubkey_t));
+      pub = ucmalloc(sizeof(pcp_pubkey_t));
       memcpy(pub, tmp, sizeof(pcp_pubkey_t));
       HASH_ADD_STR( pubhash, id, tmp);
     }
   }
   else if(recipient != NULL) {
     // lookup by recipient list
-    // FIXME: implement, iterate through global hashlist
-    //        copy matches into temporary pubhash
+    // iterate through global hashlist
+    // copy matches into temporary pubhash
+    plist_t *rec;
+    pcphash_iteratepub(tmp) {
+      rec = recipient->first;
+      while (rec->next != NULL) {
+	_lc(rec->value);
+	if(strnstr(tmp->mail, rec->value, 255) != NULL || strnstr(tmp->owner, rec->value, 255) != NULL) {
+	  pub = ucmalloc(sizeof(pcp_pubkey_t));
+	  memcpy(pub, tmp, sizeof(pcp_pubkey_t));
+	  HASH_ADD_STR( pubhash, id, tmp);
+	  //fprintf(stderr, "  => found a matching key %s\n", tmp->id);
+	}
+	rec = rec->next;
+      }
+    }
+    if(HASH_COUNT(pubhash) == 0) {
+      fatal("no matching key found for specified recipient(s)!\n");
+      goto erren3;
+    }
   }
   else {
     fatal("id or recipient list required!\n");
@@ -164,12 +182,22 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
   size_t clen = pcp_encrypt_file(in, out, secret, pubhash, self);
 
   if(clen > 0) {
-    fprintf(stderr, "Encrypted %d bytes for 0x%s successfully\n", (int)clen, id);
+    if(id != NULL)
+      fprintf(stderr, "Encrypted %d bytes for 0x%s successfully\n", (int)clen, id);
+    else {
+      fprintf(stderr, "Encrypted %d bytes for:\n", (int)clen);
+      pcp_pubkey_t *cur, *t;
+      HASH_ITER(hh, pubhash, cur, t) {
+	fprintf(stderr, "%s <%s>\n", cur->owner, cur->mail);
+      }
+      free(t);
+      free(cur);
+    }
     return 0;
   }
 
  erren2:
-  free(pubhash);
+  free(pubhash); // FIXME: it's a uthash, dont use free() but func instead
   free(tmp);
   free(pub);
 

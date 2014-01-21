@@ -63,7 +63,6 @@ int main (int argc, char **argv)  {
   useid = 0;
   userec = 0;
   lo = 0;
-
   static struct option longopts[] = {
     // generics
     { "vault",           required_argument, NULL,           'V' },
@@ -334,7 +333,7 @@ int main (int argc, char **argv)  {
 	}
 	else if(useid == 0 && userec == 1) {
 	  // multiple dst
-	  pcpencrypt(id, infile, outfile, xpass, recipient);
+	  pcpencrypt(NULL, infile, outfile, xpass, recipient);
 	}
         else if(useid == 0 && userec == 0) {
 	  // self mode
@@ -352,7 +351,7 @@ int main (int argc, char **argv)  {
 	if(xpass != NULL)
 	    free(xpass);
 	if(recipient != NULL)
-	  free(recipient);
+	  p_clean(recipient);
 
 	break;
 

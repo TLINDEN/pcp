@@ -221,6 +221,125 @@ size_t pcp_decrypt_file(FILE *in, FILE* out, pcp_key_t *s) {
 
 
 size_t pcp_encrypt_file(FILE *in, FILE* out, pcp_key_t *s, pcp_pubkey_t *p, int self) {
+  unsigned char byte[1];
+  unsigned char *symkey;
+  int recipient_count;
+  unsigned char *recipients_cipher;
+  pcp_pubkey_t *cur, *t;
+  size_t es;
+  int nrec;
+  uint32_t lenrec;
+  size_t blocksize = 32 * 1024;
+  size_t cur_bufsize, rec_size, out_size;
+  unsigned char in_buf[blocksize];
+  unsigned char *buf_nonce;
+  unsigned char *buf_cipher;
+
+  /*
+    Correct format should be:
+      6[1]|temp_keypair.pubkey|len(recipients)[4]|(recipients...)|(secretboxes...)
+    where recipients is a concatenated list of
+      random_nonce|box(temp_keypair.privkey, recipient crypto pk, random_nonce, packet key)
+  */
+
+  // preparation
+  // A, generate sym key
+  symkey = urmalloc(crypto_secretbox_KEYBYTES);
+
+  // B, encrypt it asymetrically for each recipient
+  recipient_count = HASH_COUNT(p);
+  rec_size = ((crypto_secretbox_KEYBYTES + crypto_box_ZEROBYTES) - crypto_box_BOXZEROBYTES) +  crypto_secretbox_NONCEBYTES;
+  recipients_cipher = ucmalloc(rec_size * recipient_count);
+  nrec = 0;
+  HASH_ITER(hh, p, cur, t) {
+    unsigned char *rec_cipher;
+    rec_cipher = pcp_box_encrypt(s, cur, symkey, crypto_secretbox_KEYBYTES, &es);
+    if(es =! rec_size) {
+      fatal("invalid rec_size, expected %dl, got %dl\n", rec_size, es);
+      if(rec_cipher != NULL)
+	free(rec_cipher);
+      goto errec1;
+    }
+    memcpy(&recipients_cipher[nrec * rec_size], rec_cipher, rec_size); // already includes the nonce
+    nrec++;
+    free(rec_cipher);
+  }
+
+  // step 1, file header
+  uint8_t head = 5; // FIXME: use #define
+  fwrite(&head, 1, 1, out);
+  fprintf(stderr, "D: header - 1\n");
+  if(ferror(out) != 0) {
+    fatal("Failed to write encrypted output!\n");
+    goto errec1;
+  }
+
+  // step 2, sender's pubkey
+  fwrite(s->pub, crypto_box_PUBLICKEYBYTES, 1, out);
+  fprintf(stderr, "D: sender pub - %d\n", crypto_box_PUBLICKEYBYTES);
+  if(ferror(out) != 0)
+    goto errec1;
+
+  // step 3, len recipients, big endian
+  lenrec = recipient_count;
+  lenrec = htobe32(lenrec);
+  fwrite(&lenrec, 4, 1, out);
+  fprintf(stderr, "D: %d recipients - 4\n", recipient_count);
+  if(ferror(out) != 0)
+    goto errec1;
+
+  // step 4, recipient list
+  fwrite(recipients_cipher, rec_size * recipient_count, 1, out);
+  fprintf(stderr, "D: recipients - %d * %d\n",  rec_size, recipient_count);
+  if(ferror(out) != 0)
+    goto errec1;
+
+  out_size = 5 + (rec_size * recipient_count) + crypto_box_PUBLICKEYBYTES;
+
+  // step 5, actual encrypted data
+  cur_bufsize = 0;
+
+  while(!feof(in)) {
+    cur_bufsize = fread(&in_buf, 1, blocksize, in);
+    if(cur_bufsize <= 0)
+      break;
+    buf_nonce = pcp_gennonce();
+    es = pcp_sodium_mac(&buf_cipher, in_buf, cur_bufsize, buf_nonce, symkey);
+    fwrite(buf_nonce, crypto_secretbox_NONCEBYTES, 1, out);
+    fprintf(stderr, "D: 32k buf nonce - %d\n",  crypto_secretbox_NONCEBYTES);
+    fwrite(buf_cipher, es, 1, out);
+    fprintf(stderr, "D: 32k buf cipher - %d\n", es);
+    free(buf_nonce);
+    free(buf_cipher);
+    out_size += crypto_secretbox_NONCEBYTES + es;
+  }
+
+  if(ferror(out) != 0) {
+    fatal("Failed to write encrypted output!\n");
+    goto errec2;
+  }
+
+  fclose(in);
+  fclose(out); // FIXME: check for stdin/stdout
+
+  return out_size;
+
+ errec2:
+  
+
+ errec1:
+  memset(symkey, 0, crypto_secretbox_KEYBYTES);
+  free(symkey);
+  free(recipients_cipher);
+
+
+  fclose(in);
+  fclose(out);
+  return 0;
+}
+
+
+size_t OLD_pcp_encrypt_file(FILE *in, FILE* out, pcp_key_t *s, pcp_pubkey_t *p, int self) {
   unsigned char *input = NULL;
   size_t inputBufSize = 0;
   unsigned char byte[1];

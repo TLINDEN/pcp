@@ -1,3 +1,10 @@
+=head1 CAUTION
+
+B<I'm currently in the process to rewrite major parts of PCP,
+especially the asymetric crypto parts. Current master is incompatible
+to earlier versions and might or might not work. Head back until
+this message disappears. Thanks.>
+
 =head1 DESCRIPTION
 
 B<Pretty Curved Privacy> (pcp1) is a commandline utility which can

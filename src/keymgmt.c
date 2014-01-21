@@ -490,10 +490,3 @@ char *pcp_find_id_byrec(char *recipient) {
   return id;
 }
 
-char *_lc(char *in) {
-  size_t len = strlen(in);
-  int i;
-  for(i=0; i<len; ++i)
-    in[i] = towlower(in[i]);
-  return in;
-}

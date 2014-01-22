@@ -149,7 +149,7 @@ unsigned char *pcp_box_decrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
 
   // resulting size:
   // ciphersize - crypto_secretbox_ZEROBYTES
-  *dsize = ciphersize - crypto_secretbox_ZEROBYTES;
+  *dsize = ciphersize - crypto_secretbox_NONCEBYTES - 16;
   return message;
 
  errbed:
@@ -161,67 +161,119 @@ unsigned char *pcp_box_decrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
   return NULL;
 }
 
+
 size_t pcp_decrypt_file(FILE *in, FILE* out, pcp_key_t *s) {
-  pcp_pubkey_t *p;
-  size_t clen;
-  size_t dlen = 0;
+  unsigned char *symkey = NULL;
+  pcp_pubkey_t *cur, *sender;
+  size_t es;
+  int nrec, recmatch;
+  uint32_t lenrec;
+  uint8_t head;
+  size_t cur_bufsize, rec_size, out_size;
+  size_t ciphersize = (PCP_BLOCK_SIZE_IN) - crypto_secretbox_NONCEBYTES;
+  unsigned char in_buf[PCP_BLOCK_SIZE_IN];
+  unsigned char rec_buf[PCP_ASYM_RECIPIENT_SIZE];
+  unsigned char *buf_nonce;
+  unsigned char *buf_cipher;
+  unsigned char *buf_clear;
+#ifdef PCP_ASYM_ADD_SENDER_PUB
+  unsigned char *senderpub;
+#endif
 
-  char *encoded = pcp_readz85file(in);
-  if(encoded == NULL)
-    return 0;
+  // step 1, check header
+  cur_bufsize = fread(&head, 1, 1, in);
+  if(cur_bufsize != 1 && !feof(in) && !ferror(in))
+    if(head !=  PCP_ASYM_CIPHER) {
+      fatal("Error: input file is not asymetrically encrypted\n"); // FIXME: check for sym
+      goto errdef1;
+    }
 
-  unsigned char *combined = pcp_z85_decode((char *)encoded, &clen);
-  clen = clen - crypto_secretbox_KEYBYTES;
-
-  if(combined == NULL)
-    goto errdf1;
-
-  // extract the sender's public key from the cipher
-  p = ucmalloc(sizeof(pcp_pubkey_t));
-  memcpy(p->pub, combined, crypto_secretbox_KEYBYTES);
-
-  unsigned char *encrypted = ucmalloc(clen);
-  memcpy(encrypted, &combined[crypto_secretbox_KEYBYTES], clen);
-
-  unsigned char *decrypted = pcp_box_decrypt(s, p,
-					     encrypted,
-					     clen, &dlen);
-
-  if(decrypted == NULL) {
-    // maybe self encryption?
-    pcp_pubkey_t *mypub = pcpkey_pub_from_secret(s);
-    decrypted = pcp_box_decrypt(s, mypub,
-				encrypted,
-				clen, &dlen);
-    free(mypub);
+#ifdef PCP_ASYM_ADD_SENDER_PUB
+  // step 2, sender's pubkey
+  cur_bufsize = fread(&in_buf, 1, crypto_box_PUBLICKEYBYTES, in);
+  if(cur_bufsize !=  crypto_box_PUBLICKEYBYTES && !feof(in) && !ferror(in)) {
+    fatal("Error: input file doesn't contain senders public key\n");
+    goto errdef1;
   }
+#endif
 
-  if(decrypted != NULL) {
-    fatals_reset();
-    fwrite(decrypted, dlen, 1, out);
-    fclose(out);
-
-    if(ferror(out) != 0) {
-      fatal("Failed to write decrypted output!\n");
-      dlen = 0;
-      goto errdf2;
+  // step 3, check len recipients
+  cur_bufsize = fread(&lenrec, 1, 4, in);
+  if(cur_bufsize != 4 && !feof(in) && !ferror(in)) {
+    fatal("Error: input file doesn't contain recipient count\n");
+    goto errdef1;
+  }
+  lenrec = be32toh(lenrec);
+  
+  // step 4, fetch recipient list and try to decrypt it for us
+  for(nrec=0; nrec<lenrec; nrec++) {
+    cur_bufsize = fread(&rec_buf, 1, PCP_ASYM_RECIPIENT_SIZE, in);
+    if(cur_bufsize != PCP_ASYM_RECIPIENT_SIZE && !feof(in) && !ferror(in)) {
+      fatal("Error: input file corrupted, incomplete or no recipients\n");
+      goto errdef1;
+    }
+    recmatch = 0;
+    pcphash_iteratepub(cur) {
+      unsigned char *recipient;
+      recipient = pcp_box_decrypt(s, cur, rec_buf, PCP_ASYM_RECIPIENT_SIZE, &rec_size);
+      if(recipient != NULL && rec_size == crypto_secretbox_KEYBYTES) {
+	// found a match
+	recmatch = 1;
+	sender = cur;
+	symkey = ucmalloc(crypto_secretbox_KEYBYTES);
+	memcpy(symkey, recipient, crypto_secretbox_KEYBYTES);
+	free(recipient);
+	break;
+      }
+    }
+    if(recmatch == 0) {
+      fatal("Sorry, there's no matching public key in your vault for decryption\n");
+      goto errdef1;
     }
   }
+  
+  // step 5, actually decrypt the file, finally
+  buf_nonce  = ucmalloc(crypto_secretbox_NONCEBYTES);
+  buf_cipher = ucmalloc(ciphersize);
+  out_size = 0;
+  while(!feof(in)) {
+    cur_bufsize = fread(&in_buf, 1, PCP_BLOCK_SIZE_IN, in);
+    if(cur_bufsize <= 16)
+      break; // no valid cipher block
+    ciphersize = cur_bufsize - crypto_secretbox_NONCEBYTES;
+    memcpy(buf_nonce, in_buf, crypto_secretbox_NONCEBYTES);
+    memcpy(buf_cipher, &in_buf[crypto_secretbox_NONCEBYTES], ciphersize);
 
- errdf2:
-  free(decrypted);
-  free(combined);
-  free(p);
+    es = pcp_sodium_verify_mac(&buf_clear, buf_cipher, ciphersize, buf_nonce, symkey);
+    if(es == 0) {
+      fwrite(buf_clear, ciphersize - 16, 1, out);
+      if(ferror(out) != 0) {
+	fatal("Failed to write decrypted output!\n");
+	goto errdef2;
+      }
+    }
+    else {
+      fatal("Failed to decrypt file content!\n");
+      goto errdef2;
+    }
+    out_size += ciphersize - 16;
+  }
 
- errdf1:
-  free(encoded);
+  fclose(in);
+  fclose(out); // FIXME: check for stdin/stdout
 
-  return dlen;
+  return out_size;
+
+ errdef2:
+  free(buf_nonce);
+  free(buf_cipher);
+  free(symkey);
+
+ errdef1:
+  return 0;
 }
 
-
 size_t pcp_encrypt_file(FILE *in, FILE* out, pcp_key_t *s, pcp_pubkey_t *p, int self) {
-  unsigned char byte[1];
   unsigned char *symkey;
   int recipient_count;
   unsigned char *recipients_cipher;
@@ -229,9 +281,8 @@ size_t pcp_encrypt_file(FILE *in, FILE* out, pcp_key_t *s, pcp_pubkey_t *p, int 
   size_t es;
   int nrec;
   uint32_t lenrec;
-  size_t blocksize = 32 * 1024;
   size_t cur_bufsize, rec_size, out_size;
-  unsigned char in_buf[blocksize];
+  unsigned char in_buf[PCP_BLOCK_SIZE];
   unsigned char *buf_nonce;
   unsigned char *buf_cipher;
 
@@ -248,13 +299,13 @@ size_t pcp_encrypt_file(FILE *in, FILE* out, pcp_key_t *s, pcp_pubkey_t *p, int 
 
   // B, encrypt it asymetrically for each recipient
   recipient_count = HASH_COUNT(p);
-  rec_size = ((crypto_secretbox_KEYBYTES + crypto_box_ZEROBYTES) - crypto_box_BOXZEROBYTES) +  crypto_secretbox_NONCEBYTES;
+  rec_size = PCP_ASYM_RECIPIENT_SIZE;
   recipients_cipher = ucmalloc(rec_size * recipient_count);
   nrec = 0;
   HASH_ITER(hh, p, cur, t) {
     unsigned char *rec_cipher;
     rec_cipher = pcp_box_encrypt(s, cur, symkey, crypto_secretbox_KEYBYTES, &es);
-    if(es =! rec_size) {
+    if(es != rec_size) {
       fatal("invalid rec_size, expected %dl, got %dl\n", rec_size, es);
       if(rec_cipher != NULL)
 	free(rec_cipher);
@@ -266,31 +317,33 @@ size_t pcp_encrypt_file(FILE *in, FILE* out, pcp_key_t *s, pcp_pubkey_t *p, int 
   }
 
   // step 1, file header
-  uint8_t head = 5; // FIXME: use #define
+  uint8_t head = PCP_ASYM_CIPHER;
   fwrite(&head, 1, 1, out);
-  fprintf(stderr, "D: header - 1\n");
+  //fprintf(stderr, "D: header - 1\n");
   if(ferror(out) != 0) {
     fatal("Failed to write encrypted output!\n");
     goto errec1;
   }
 
+#ifdef PCP_ASYM_ADD_SENDER_PUB
   // step 2, sender's pubkey
   fwrite(s->pub, crypto_box_PUBLICKEYBYTES, 1, out);
-  fprintf(stderr, "D: sender pub - %d\n", crypto_box_PUBLICKEYBYTES);
+  //fprintf(stderr, "D: sender pub - %d\n", crypto_box_PUBLICKEYBYTES);
   if(ferror(out) != 0)
     goto errec1;
+#endif
 
   // step 3, len recipients, big endian
   lenrec = recipient_count;
   lenrec = htobe32(lenrec);
   fwrite(&lenrec, 4, 1, out);
-  fprintf(stderr, "D: %d recipients - 4\n", recipient_count);
+  //fprintf(stderr, "D: %d recipients - 4\n", recipient_count);
   if(ferror(out) != 0)
     goto errec1;
 
   // step 4, recipient list
   fwrite(recipients_cipher, rec_size * recipient_count, 1, out);
-  fprintf(stderr, "D: recipients - %d * %d\n",  rec_size, recipient_count);
+  //fprintf(stderr, "D: recipients - %ld * %d\n",  rec_size, recipient_count);
   if(ferror(out) != 0)
     goto errec1;
 
@@ -300,15 +353,15 @@ size_t pcp_encrypt_file(FILE *in, FILE* out, pcp_key_t *s, pcp_pubkey_t *p, int 
   cur_bufsize = 0;
 
   while(!feof(in)) {
-    cur_bufsize = fread(&in_buf, 1, blocksize, in);
+    cur_bufsize = fread(&in_buf, 1, PCP_BLOCK_SIZE, in);
     if(cur_bufsize <= 0)
       break;
     buf_nonce = pcp_gennonce();
     es = pcp_sodium_mac(&buf_cipher, in_buf, cur_bufsize, buf_nonce, symkey);
     fwrite(buf_nonce, crypto_secretbox_NONCEBYTES, 1, out);
-    fprintf(stderr, "D: 32k buf nonce - %d\n",  crypto_secretbox_NONCEBYTES);
+    //fprintf(stderr, "D: 32k buf nonce - %d\n",  crypto_secretbox_NONCEBYTES);
     fwrite(buf_cipher, es, 1, out);
-    fprintf(stderr, "D: 32k buf cipher - %d\n", es);
+    //fprintf(stderr, "D: 32k buf cipher - %ld\n", es);
     free(buf_nonce);
     free(buf_cipher);
     out_size += crypto_secretbox_NONCEBYTES + es;
@@ -338,78 +391,3 @@ size_t pcp_encrypt_file(FILE *in, FILE* out, pcp_key_t *s, pcp_pubkey_t *p, int 
   return 0;
 }
 
-
-size_t OLD_pcp_encrypt_file(FILE *in, FILE* out, pcp_key_t *s, pcp_pubkey_t *p, int self) {
-  unsigned char *input = NULL;
-  size_t inputBufSize = 0;
-  unsigned char byte[1];
-  size_t ciphersize;
-  size_t clen = 0;
-  size_t zlen = 0;
-  unsigned char *cipher;
-  unsigned char *combined;
-
-  while(!feof(in)) {
-    if(!fread(&byte, 1, 1, in))
-      break;
-    unsigned char *tmp = realloc(input, inputBufSize + 1);
-    input = tmp;
-    memmove(&input[inputBufSize], byte, 1);
-    inputBufSize ++;
-  }
-  fclose(in);
-
-  if(inputBufSize == 0) {
-    fatal("Input file is empty!\n");
-    goto erref1;
-  }
-
-  cipher = pcp_box_encrypt(s, p, input, inputBufSize, &ciphersize);
-  if(cipher == NULL)
-    goto erref2;
-
-  clen = ciphersize + crypto_secretbox_KEYBYTES;
-  combined = ucmalloc(clen);
-
-  if(self == 1) {
-    unsigned char *fakepub = urmalloc(crypto_secretbox_KEYBYTES);
-    memcpy(combined, fakepub, crypto_secretbox_KEYBYTES);
-    free(fakepub);
-  }
-  else {
-    memcpy(combined, s->pub, crypto_secretbox_KEYBYTES);
-  }
-
-  memcpy(&combined[crypto_secretbox_KEYBYTES], cipher, ciphersize);
-
-  // combined consists of:
-  // our-public-key|nonce|cipher
-  char *encoded = pcp_z85_encode(combined, clen, &zlen);
-
-  if(encoded == NULL)
-    goto erref3;
-  
-  fprintf(out, "%s\n%s\n%s\n", PCP_ENFILE_HEADER, encoded, PCP_ENFILE_FOOTER);
-  if(ferror(out) != 0) {
-    fatal("Failed to write encrypted output!\n");
-    inputBufSize = 0;
-  }
-
-  fclose(out);
-  free(encoded);
-  free(combined);
-  free(cipher);
-
-  return inputBufSize;
-
- erref3:
-  free(combined);
-  free(cipher);
-
- erref2:
-  free(input);
-
- erref1:
-  
-  return 0;
-}

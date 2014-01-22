@@ -159,7 +159,31 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
 
 
   // we're using a random secret keypair on our side
+#ifdef PCP_ASYM_ADD_SENDER_PUB
   secret = pcpkey_new();
+#else
+  secret = pcp_find_primary_secret();
+  if(secret == NULL) {
+    fatal("Could not find a secret key in vault %s!\n", id, vault->filename);
+    goto erren2;
+  }
+
+  if(secret->secret[0] == 0) {
+    // encrypted, decrypt it
+    char *passphrase;
+    if(passwd == NULL) {
+      pcp_readpass(&passphrase,
+                   "Enter passphrase to decrypt your secret key", NULL, 1);
+    }
+    else {
+      passphrase = ucmalloc(strlen(passwd)+1);
+      strncpy(passphrase, passwd, strlen(passwd)+1);
+    }
+    secret = pcpkey_decrypt(secret, passphrase);
+    if(secret == NULL)
+      goto erren2;
+  }
+#endif
 
   if(infile == NULL)
     in = stdin;

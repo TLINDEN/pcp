@@ -32,6 +32,7 @@
 #include "defines.h"
 #include "mem.h"
 #include "key.h"
+#include "keyhash.h"
 
 size_t pcp_sodium_box(unsigned char **cipher,
                       unsigned char *cleartext,

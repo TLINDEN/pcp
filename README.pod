@@ -5,6 +5,12 @@ especially the asymetric crypto parts. Current master is incompatible
 to earlier versions and might or might not work. Head back until
 this message disappears. Thanks.>
 
+B<Update 22/01/2014: Changes are complete, all unittests pass. So, pcp is
+usable again on its own. However, I'm not sure if it's already fully compatible
+with pbp, since I cant get pbp running here. Also, there#s still no key format
+agreement between stef and me and not import function for our respective
+pubkey formats.>
+
 =head1 DESCRIPTION
 
 B<Pretty Curved Privacy> (pcp1) is a commandline utility which can

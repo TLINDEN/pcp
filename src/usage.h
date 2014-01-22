@@ -60,14 +60,22 @@
 "                          as YAML formatted text. Use -O to put\n" \
 "                          the export into a file.\n" \
 "Encryption Options:\n" \
-"-e --encrypt              Encrypt a message. Read from stdin or\n" \
-"                          specified via -I. If a keyid (-i) has been\n" \
+"-e --encrypt              Asym-Encrypt a message. Read from stdin or\n" \
+"                          specified via -I. Output will be written\n" \
+"                          to stdout or the file given with -O.\n" \
+"                          If a keyid (-i) has been\n" \
 "                          given, use that public key for encryption.\n" \
-"                          If a recipient (-r) has been given, use\n" \
-"                          a derived public key. If none of -i or\n" \
-"                          -r has been given, use the primary\n" \
-"                          secret key and the public part of it\n" \
-"                          for encrytion (self-encryption mode).\n" \
+"                          If one or more recipient (-r) has been given,\n" \
+"                          encrypt the message for all recipients\n" \
+"                          asymetrically, given there are matching\n" \
+"                          public keys installed in the vault for them.\n" \
+"                          If none of -i or -r has been given, encrypt\n" \
+"                          the message symetrically. This is the same\n" \
+"                          as -m (self-encryption mode).\n" \
+"-m --encrypt-me           Sym-Encrypt a message. Specify -I and/or\n" \
+"                          -O for input/output file. You will be asked\n" \
+"                          for a passphrase. No key material will\n" \
+"                          be used. Same as -e without -r and -i.\n" \
 "-d --decrypt              Decrypt a message. Read from stdin or\n" \
 "                          specified via -I. Output to stdout or\n" \
 "                          written to the file specified via -O.\n" \
@@ -76,6 +84,10 @@
 "                          just one secret key in the vault, this\n" \
 "                          one will be used. Otherwise you'll have\n" \
 "                          to specify the keyid (-i) of the key.\n" \
+"                          You need to have the public key of the\n" \
+"                          sender installed in your vault.\n" \
+"                          If the input is self-encrypted (symetrically)\n" \
+"                          a passphrase will be requested.\n" \
 "\n" \
 "Signature Options:\n" \
 "-g --sign                 Create a signature of file specified with\n" \

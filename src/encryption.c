@@ -26,22 +26,11 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd) {
   FILE *in = NULL;
   FILE *out = NULL;
   pcp_key_t *secret = NULL;
+  unsigned char *symkey = NULL;
+  size_t dlen;
+  uint8_t head;
 
-  if(useid) {
-    HASH_FIND_STR(pcpkey_hash, id, secret);
-    if(secret == NULL) {
-      fatal("Could not find a secret key with id 0x%s in vault %s!\n",
-	    id, vault->filename);
-      goto errde3;
-    }
-  }
-  else {
-    secret = pcp_find_primary_secret();
-    if(secret == NULL) {
-      fatal("Could not find a secret key in vault %s!\n", id, vault->filename);
-      goto errde3;
-    }
-  }
+
 
   if(infile == NULL)
     in = stdin;
@@ -61,24 +50,72 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd) {
     }
   }
 
-  if(secret->secret[0] == 0) {
-    // encrypted, decrypt it
-    char *passphrase;
-    if(passwd == NULL) {
-      pcp_readpass(&passphrase,
-		   "Enter passphrase to decrypt your secret key", NULL, 1);
+  // determine crypt mode
+  fread(&head, 1, 1, in);
+  if(!feof(in) && !ferror(in)) {
+    if(head == PCP_SYM_CIPHER) {
+      // symetric mode
+      unsigned char *salt = ucmalloc(90);
+      char stsalt[] = PBP_COMPAT_SALT;
+      memcpy(salt, stsalt, 90);
+
+      char *passphrase;
+      if(passwd == NULL) {
+	pcp_readpass(&passphrase,
+		     "Enter passphrase for symetric decryption", NULL, 1);
+      }
+      else {
+	passphrase = ucmalloc(strlen(passwd)+1);
+	strncpy(passphrase, passwd, strlen(passwd)+1);
+      }
+
+      symkey = pcp_scrypt(passphrase, crypto_secretbox_KEYBYTES, salt);
+      free(salt);
     }
     else {
-      passphrase = ucmalloc(strlen(passwd)+1);
-      strncpy(passphrase, passwd, strlen(passwd)+1);
-    }
+      // asymetric mode
+      if(useid) {
+	HASH_FIND_STR(pcpkey_hash, id, secret);
+	if(secret == NULL) {
+	  fatal("Could not find a secret key with id 0x%s in vault %s!\n",
+		id, vault->filename);
+	  goto errde3;
+	}
+      }
+      else {
+	secret = pcp_find_primary_secret();
+	if(secret == NULL) {
+	  fatal("Could not find a secret key in vault %s!\n", id, vault->filename);
+	  goto errde3;
+	}
+      }
+      if(secret->secret[0] == 0) {
+	// encrypted, decrypt it
+	char *passphrase;
+	if(passwd == NULL) {
+	  pcp_readpass(&passphrase,
+		       "Enter passphrase to decrypt your secret key", NULL, 1);
+	}
+	else {
+	  passphrase = ucmalloc(strlen(passwd)+1);
+	  strncpy(passphrase, passwd, strlen(passwd)+1);
+	}
 
-    secret = pcpkey_decrypt(secret, passphrase);
-    if(secret == NULL)
-      goto errde3;
+	secret = pcpkey_decrypt(secret, passphrase);
+	if(secret == NULL)
+	  goto errde3;
+      }
+    }
+  }
+  else {
+    fatal("Could not determine input file type\n");
+    goto errde3;
   }
 
-  size_t dlen = pcp_decrypt_file(in, out, secret);
+  if(symkey == NULL)
+    dlen = pcp_decrypt_file(in, out, secret, NULL);
+  else
+    dlen = pcp_decrypt_file(in, out, NULL, symkey);
 
   if(dlen > 0) {
     fprintf(stderr, "Decrypted %d bytes successfully\n",
@@ -100,14 +137,32 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
   pcp_pubkey_t *tmp = NULL;
   pcp_pubkey_t *pub = NULL;
   pcp_key_t *secret = NULL;
+  unsigned char *symkey;
   int self = 0;
 
+  if(id == NULL && recipient == NULL) {
+    // self mode
+    self = 1;
+    char *passphrase;
+    if(passwd == NULL) {
+      pcp_readpass(&passphrase,
+                   "Enter passphrase for symetric encryption", "Repeat passphrase", 1);
+    }
+    else {
+      passphrase = ucmalloc(strlen(passwd)+1);
+      strncpy(passphrase, passwd, strlen(passwd)+1);
+    }
+    unsigned char *salt = ucmalloc(90);
+    char stsalt[] = PBP_COMPAT_SALT;
+    memcpy(salt, stsalt, 90);
+    symkey = pcp_scrypt(passphrase, crypto_secretbox_KEYBYTES, salt);
+    free(salt);
+  }
+  else if(id != NULL) {
   // FIXME: mk id a plist_t with loop as well
-  if(id != NULL) {
     // lookup by id
     HASH_FIND_STR(pcppubkey_hash, id, tmp);
     if(tmp == NULL) {
-      // FIXME: use recipient to lookup by name or email
       // self-encryption: look if its a secret one
       pcp_key_t *s = NULL;
       HASH_FIND_STR(pcpkey_hash, id, s);
@@ -152,38 +207,36 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
       goto erren3;
     }
   }
-  else {
-    fatal("id or recipient list required!\n");
-    goto erren3;
-  }
 
 
+  if(self != 1) {
   // we're using a random secret keypair on our side
 #ifdef PCP_ASYM_ADD_SENDER_PUB
-  secret = pcpkey_new();
+    secret = pcpkey_new();
 #else
-  secret = pcp_find_primary_secret();
-  if(secret == NULL) {
-    fatal("Could not find a secret key in vault %s!\n", id, vault->filename);
-    goto erren2;
-  }
-
-  if(secret->secret[0] == 0) {
-    // encrypted, decrypt it
-    char *passphrase;
-    if(passwd == NULL) {
-      pcp_readpass(&passphrase,
-                   "Enter passphrase to decrypt your secret key", NULL, 1);
-    }
-    else {
-      passphrase = ucmalloc(strlen(passwd)+1);
-      strncpy(passphrase, passwd, strlen(passwd)+1);
-    }
-    secret = pcpkey_decrypt(secret, passphrase);
-    if(secret == NULL)
+    secret = pcp_find_primary_secret();
+    if(secret == NULL) {
+      fatal("Could not find a secret key in vault %s!\n", id, vault->filename);
       goto erren2;
-  }
+    }
+
+    if(secret->secret[0] == 0) {
+      // encrypted, decrypt it
+      char *passphrase;
+      if(passwd == NULL) {
+	pcp_readpass(&passphrase,
+		     "Enter passphrase to decrypt your secret key", NULL, 1);
+      }
+      else {
+	passphrase = ucmalloc(strlen(passwd)+1);
+	strncpy(passphrase, passwd, strlen(passwd)+1);
+      }
+      secret = pcpkey_decrypt(secret, passphrase);
+      if(secret == NULL)
+	goto erren2;
+    }
 #endif
+  }
 
   if(infile == NULL)
     in = stdin;
@@ -203,13 +256,20 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
     }
   }
 
-  size_t clen = pcp_encrypt_file(in, out, secret, pubhash, self);
+  size_t clen;
+
+  if(self == 1)
+    pcp_encrypt_file_sym(in, out, symkey, 0);
+  else
+    clen = pcp_encrypt_file(in, out, secret, pubhash);
 
   if(clen > 0) {
-    if(id != NULL)
-      fprintf(stderr, "Encrypted %d bytes for 0x%s successfully\n", (int)clen, id);
+    if(id == NULL && recipient == NULL)
+      fprintf(stderr, "Encrypted %ld bytes symetrically\n", clen);
+    else if(id != NULL)
+      fprintf(stderr, "Encrypted %ld bytes for 0x%s successfully\n", clen, id);
     else {
-      fprintf(stderr, "Encrypted %d bytes for:\n", (int)clen);
+      fprintf(stderr, "Encrypted %ld bytes for:\n", clen);
       pcp_pubkey_t *cur, *t;
       HASH_ITER(hh, pubhash, cur, t) {
 	fprintf(stderr, "%s <%s>\n", cur->owner, cur->mail);

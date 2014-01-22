@@ -63,6 +63,7 @@ int main (int argc, char **argv)  {
   useid = 0;
   userec = 0;
   lo = 0;
+
   static struct option longopts[] = {
     // generics
     { "vault",           required_argument, NULL,           'V' },
@@ -86,6 +87,7 @@ int main (int argc, char **argv)  {
 
     // crypto
     {  "encrypt",        no_argument,       NULL,           'e' },
+    {  "encrypt-me",     no_argument,       NULL,           'm' },
     {  "decrypt",        no_argument,       NULL,           'd' },
 
     // encoding
@@ -103,7 +105,7 @@ int main (int argc, char **argv)  {
     { NULL,              0,                 NULL,            0 }
   };
 
-  while ((opt = getopt_long(argc, argv, "klV:vdehsO:i:I:pSPRtEx:DzZr:gc:y",
+  while ((opt = getopt_long(argc, argv, "klV:vdehsO:i:I:pSPRtEx:DzZr:gc:ym",
 			    longopts, NULL)) != -1) {
   
     switch (opt)  {
@@ -155,6 +157,9 @@ int main (int argc, char **argv)  {
       case 'e':
 	mode += PCP_MODE_ENCRYPT;
 	usevault = 1;
+	break;
+      case 'm':
+	mode += PCP_MODE_ENCRYPT_ME;
 	break;
       case 'd':
 	mode += PCP_MODE_DECRYPT;
@@ -336,11 +341,8 @@ int main (int argc, char **argv)  {
 	  pcpencrypt(NULL, infile, outfile, xpass, recipient);
 	}
         else if(useid == 0 && userec == 0) {
-	  // self mode
-          pcp_key_t *k = pcp_find_primary_secret();
-	  id = ucmalloc(17);
-          memcpy(id, k->id, 17);
-	  pcpencrypt(id, infile, outfile, xpass, NULL);
+	  // self mode, same as -m
+	  pcpencrypt(NULL, infile, outfile, xpass, NULL);
         }
 	else {
 	  // -i and -r specified
@@ -403,28 +405,32 @@ int main (int argc, char **argv)  {
       pcpz85_decode(infile, outfile);
       break;
 
-      case PCP_MODE_TEXT:
-	if(infile != NULL) {
-	  pcptext_infile(infile);
+    case PCP_MODE_ENCRYPT_ME:
+      pcpencrypt(NULL, infile, outfile, xpass, NULL);
+      break;
+
+    case PCP_MODE_TEXT:
+      if(infile != NULL) {
+	pcptext_infile(infile);
+      }
+      else {
+	pcphash_init();
+	vault = pcpvault_init(vaultfile);
+	if(! useid && infile == NULL) {
+	  pcptext_vault(vault);
 	}
 	else {
-	  pcphash_init();
-	  vault = pcpvault_init(vaultfile);
-	  if(! useid && infile == NULL) {
-	    pcptext_vault(vault);
+	  id = pcp_normalize_id(keyid);
+	  if(id != NULL) {
+	    pcptext_key(id);
+	    free(id);
 	  }
-	  else {
-	    id = pcp_normalize_id(keyid);
-	    if(id != NULL) {
-	      pcptext_key(id);
-	      free(id);
-	    }
-	  }
-	  pcpvault_close(vault);
-	  pcphash_clean();
-	  ucfree(vaultfile);
 	}
-	break;
+	pcpvault_close(vault);
+	pcphash_clean();
+	ucfree(vaultfile);
+      }
+      break;
 
     default:
       // mode params mixed

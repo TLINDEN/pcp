@@ -58,14 +58,22 @@ Keymanagement Options:
                           as YAML formatted text. Use -O to put
                           the export into a file.
 Encryption Options:
--e --encrypt              Encrypt a message. Read from stdin or
-                          specified via -I. If a keyid (-i) has been
+-e --encrypt              Asym-Encrypt a message. Read from stdin or
+                          specified via -I. Output will be written
+                          to stdout or the file given with -O.
+                          If a keyid (-i) has been
                           given, use that public key for encryption.
-                          If a recipient (-r) has been given, use
-                          a derived public key. If none of -i or
-                          -r has been given, use the primary
-                          secret key and the public part of it
-                          for encrytion (self-encryption mode).
+                          If one or more recipient (-r) has been given,
+                          encrypt the message for all recipients
+                          asymetrically, given there are matching
+                          public keys installed in the vault for them.
+                          If none of -i or -r has been given, encrypt
+                          the message symetrically. This is the same
+                          as -m (self-encryption mode).
+-m --encrypt-me           Sym-Encrypt a message. Specify -I and/or
+                          -O for input/output file. You will be asked
+                          for a passphrase. No key material will
+                          be used. Same as -e without -r and -i.
 -d --decrypt              Decrypt a message. Read from stdin or
                           specified via -I. Output to stdout or
                           written to the file specified via -O.
@@ -74,6 +82,10 @@ Encryption Options:
                           just one secret key in the vault, this
                           one will be used. Otherwise you'll have
                           to specify the keyid (-i) of the key.
+                          You need to have the public key of the
+                          sender installed in your vault.
+                          If the input is self-encrypted (symetrically)
+                          a passphrase will be requested.
 
 Signature Options:
 -g --sign                 Create a signature of file specified with

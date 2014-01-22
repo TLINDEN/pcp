@@ -149,7 +149,7 @@ unsigned char *pcp_box_decrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
 
   // resulting size:
   // ciphersize - crypto_secretbox_ZEROBYTES
-  *dsize = ciphersize - crypto_secretbox_NONCEBYTES - 16;
+  *dsize = ciphersize - crypto_secretbox_NONCEBYTES - PCP_CRYPTO_ADD;
   return message;
 
  errbed:
@@ -162,31 +162,47 @@ unsigned char *pcp_box_decrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
 }
 
 
-size_t pcp_decrypt_file(FILE *in, FILE* out, pcp_key_t *s) {
-  unsigned char *symkey = NULL;
+size_t pcp_decrypt_file(FILE *in, FILE* out, pcp_key_t *s, unsigned char *symkey) {
   pcp_pubkey_t *cur, *sender;
-  size_t es;
   int nrec, recmatch;
   uint32_t lenrec;
   uint8_t head;
-  size_t cur_bufsize, rec_size, out_size;
-  size_t ciphersize = (PCP_BLOCK_SIZE_IN) - crypto_secretbox_NONCEBYTES;
-  unsigned char in_buf[PCP_BLOCK_SIZE_IN];
+  size_t cur_bufsize, rec_size;
+  
   unsigned char rec_buf[PCP_ASYM_RECIPIENT_SIZE];
-  unsigned char *buf_nonce;
-  unsigned char *buf_cipher;
-  unsigned char *buf_clear;
+
 #ifdef PCP_ASYM_ADD_SENDER_PUB
   unsigned char *senderpub;
 #endif
+  int self = 0;
 
-  // step 1, check header
-  cur_bufsize = fread(&head, 1, 1, in);
-  if(cur_bufsize != 1 && !feof(in) && !ferror(in))
-    if(head !=  PCP_ASYM_CIPHER) {
-      fatal("Error: input file is not asymetrically encrypted\n"); // FIXME: check for sym
-      goto errdef1;
+  if(ftell(in) == 1) {
+    // header has already been determined outside the lib
+    if(symkey != NULL)
+      self = 1;
+  }
+  else {
+    // step 1, check header
+    cur_bufsize = fread(&head, 1, 1, in);
+    if(cur_bufsize != 1 && !feof(in) && !ferror(in)) {
+      if(head == PCP_SYM_CIPHER) {
+	if(symkey != NULL)
+	  self = 1;
+	else {
+	  fatal("Input is symetrically encrypted but no key have been specified (lib usage failure)\n");
+	  goto errdef1;
+	}
+      }
+      else if(head == PCP_ASYM_CIPHER) {
+	self = 0;
+      }
     }
+  }
+
+  if(self) {
+    // just decrypt symetrically and go outa here
+    return pcp_decrypt_file_sym(in, out, symkey);
+  }
 
 #ifdef PCP_ASYM_ADD_SENDER_PUB
   // step 2, sender's pubkey
@@ -233,47 +249,14 @@ size_t pcp_decrypt_file(FILE *in, FILE* out, pcp_key_t *s) {
   }
   
   // step 5, actually decrypt the file, finally
-  buf_nonce  = ucmalloc(crypto_secretbox_NONCEBYTES);
-  buf_cipher = ucmalloc(ciphersize);
-  out_size = 0;
-  while(!feof(in)) {
-    cur_bufsize = fread(&in_buf, 1, PCP_BLOCK_SIZE_IN, in);
-    if(cur_bufsize <= 16)
-      break; // no valid cipher block
-    ciphersize = cur_bufsize - crypto_secretbox_NONCEBYTES;
-    memcpy(buf_nonce, in_buf, crypto_secretbox_NONCEBYTES);
-    memcpy(buf_cipher, &in_buf[crypto_secretbox_NONCEBYTES], ciphersize);
+  return pcp_decrypt_file_sym(in, out, symkey);
 
-    es = pcp_sodium_verify_mac(&buf_clear, buf_cipher, ciphersize, buf_nonce, symkey);
-    if(es == 0) {
-      fwrite(buf_clear, ciphersize - 16, 1, out);
-      if(ferror(out) != 0) {
-	fatal("Failed to write decrypted output!\n");
-	goto errdef2;
-      }
-    }
-    else {
-      fatal("Failed to decrypt file content!\n");
-      goto errdef2;
-    }
-    out_size += ciphersize - 16;
-  }
-
-  fclose(in);
-  fclose(out); // FIXME: check for stdin/stdout
-
-  return out_size;
-
- errdef2:
-  free(buf_nonce);
-  free(buf_cipher);
-  free(symkey);
 
  errdef1:
   return 0;
 }
 
-size_t pcp_encrypt_file(FILE *in, FILE* out, pcp_key_t *s, pcp_pubkey_t *p, int self) {
+size_t pcp_encrypt_file(FILE *in, FILE* out, pcp_key_t *s, pcp_pubkey_t *p) {
   unsigned char *symkey;
   int recipient_count;
   unsigned char *recipients_cipher;
@@ -281,10 +264,9 @@ size_t pcp_encrypt_file(FILE *in, FILE* out, pcp_key_t *s, pcp_pubkey_t *p, int 
   size_t es;
   int nrec;
   uint32_t lenrec;
-  size_t cur_bufsize, rec_size, out_size;
-  unsigned char in_buf[PCP_BLOCK_SIZE];
-  unsigned char *buf_nonce;
-  unsigned char *buf_cipher;
+  size_t rec_size, out_size;
+ 
+ 
 
   /*
     Correct format should be:
@@ -350,7 +332,51 @@ size_t pcp_encrypt_file(FILE *in, FILE* out, pcp_key_t *s, pcp_pubkey_t *p, int 
   out_size = 5 + (rec_size * recipient_count) + crypto_box_PUBLICKEYBYTES;
 
   // step 5, actual encrypted data
-  cur_bufsize = 0;
+  size_t sym_size = pcp_encrypt_file_sym(in, out, symkey, 1);
+  if(sym_size == 0)
+    goto errec1;
+
+
+  return out_size + sym_size;
+
+  
+
+ errec1:
+  memset(symkey, 0, crypto_secretbox_KEYBYTES);
+  free(symkey);
+  free(recipients_cipher);
+
+  if(fileno(in) != 0)
+    fclose(in);
+  if(fileno(out) != 1)
+    fclose(out);
+
+  return 0;
+}
+
+size_t pcp_encrypt_file_sym(FILE *in, FILE* out, unsigned char *symkey, int havehead) {
+  /*
+    havehead = 0: write the whole thing from here
+    havehead = 1: no header, being called from asym...
+  */
+
+  unsigned char *buf_nonce;
+  unsigned char *buf_cipher;
+  unsigned char in_buf[PCP_BLOCK_SIZE];
+  size_t cur_bufsize = 0;
+  size_t out_size = 0;
+  size_t es;
+
+  if(havehead == 0) {
+    uint8_t head = PCP_SYM_CIPHER;
+    fwrite(&head, 1, 1, out);
+    if(ferror(out) != 0) {
+      fatal("Failed to write encrypted output!\n");
+      return 0;
+    }
+  }
+
+
 
   while(!feof(in)) {
     cur_bufsize = fread(&in_buf, 1, PCP_BLOCK_SIZE, in);
@@ -369,25 +395,67 @@ size_t pcp_encrypt_file(FILE *in, FILE* out, pcp_key_t *s, pcp_pubkey_t *p, int 
 
   if(ferror(out) != 0) {
     fatal("Failed to write encrypted output!\n");
-    goto errec2;
+    return 0;
   }
 
-  fclose(in);
-  fclose(out); // FIXME: check for stdin/stdout
+  if(fileno(in) != 0)
+    fclose(in);
+  if(fileno(out) != 1)
+    fclose(out);
+
+  return out_size;
+}
+
+size_t pcp_decrypt_file_sym(FILE *in, FILE* out, unsigned char *symkey) {
+  unsigned char *buf_nonce;
+  unsigned char *buf_cipher;
+  unsigned char *buf_clear;
+  size_t out_size, cur_bufsize, es;
+  size_t ciphersize = (PCP_BLOCK_SIZE_IN) - crypto_secretbox_NONCEBYTES;
+  unsigned char in_buf[PCP_BLOCK_SIZE_IN];
+
+  buf_nonce  = ucmalloc(crypto_secretbox_NONCEBYTES);
+  buf_cipher = ucmalloc(ciphersize);
+  out_size = 0;
+
+  while(!feof(in)) {
+    cur_bufsize = fread(&in_buf, 1, PCP_BLOCK_SIZE_IN, in);
+    if(cur_bufsize <= PCP_CRYPTO_ADD)
+      break; // no valid cipher block
+
+    ciphersize = cur_bufsize - crypto_secretbox_NONCEBYTES;
+    memcpy(buf_nonce, in_buf, crypto_secretbox_NONCEBYTES);
+    memcpy(buf_cipher, &in_buf[crypto_secretbox_NONCEBYTES], ciphersize);
+
+    es = pcp_sodium_verify_mac(&buf_clear, buf_cipher, ciphersize, buf_nonce, symkey);
+    out_size += ciphersize - PCP_CRYPTO_ADD;
+
+    if(es == 0) {
+      fwrite(buf_clear, ciphersize - PCP_CRYPTO_ADD, 1, out);
+      free(buf_clear);
+      if(ferror(out) != 0) {
+	fatal("Failed to write decrypted output!\n");
+	out_size = 0;
+	break;
+      }
+    }
+    else {
+      fatal("Failed to decrypt file content!\n");
+      free(buf_clear);
+      out_size = 0;
+      break;
+    }
+  }
+
+  free(buf_nonce);
+  free(buf_cipher);
+
+  if(fileno(in) != 0)
+    fclose(in);
+  if(fileno(out) != 1)
+    fclose(out);
 
   return out_size;
 
- errec2:
   
-
- errec1:
-  memset(symkey, 0, crypto_secretbox_KEYBYTES);
-  free(symkey);
-  free(recipients_cipher);
-
-
-  fclose(in);
-  fclose(out);
-  return 0;
 }
-

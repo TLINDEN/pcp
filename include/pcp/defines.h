@@ -67,11 +67,15 @@ typedef unsigned int    qbyte;          //  Quad byte = 32 bits
 
 // crypto file format stuff
 #define PCP_ASYM_CIPHER         5
-#define PCP_BLOCK_CIPHER        23
+#define PCP_SYM_CIPHER          23
 #define PCP_BLOCK_SIZE          32 * 1024
 #define PCP_BLOCK_SIZE_IN       (PCP_BLOCK_SIZE) + 16 + crypto_secretbox_NONCEBYTES
-#define PCP_ASYM_RECIPIENT_SIZE ((crypto_secretbox_KEYBYTES + crypto_box_ZEROBYTES) - crypto_box_BOXZEROBYTES) +  crypto_secretbox_NONCEBYTES
+#define PCP_CRYPTO_ADD          (crypto_box_ZEROBYTES - crypto_box_BOXZEROBYTES)
+#define PCP_ASYM_RECIPIENT_SIZE crypto_secretbox_KEYBYTES + PCP_CRYPTO_ADD +  crypto_secretbox_NONCEBYTES
 //#define PCP_ASYM_ADD_SENDER_PUB
+
+// used for self encryption only
+#define PBP_COMPAT_SALT "qa~t](84z<1t<1oz:ik.@IRNyhG=8q(on9}4#!/_h#a7wqK{Nt$T?W>,mt8NqYq&6U<GB1$,<$j>,rSYI2GRDd:Bcm"
 
 // error handling
 extern char *PCP_ERR;

@@ -99,60 +99,29 @@ int pcpverify(char *infile, char *id) {
   if(id != NULL)
     HASH_FIND_STR(pcppubkey_hash, id, pub);
  
-  /*
-  if(pub == NULL) {
-    fatal("Could not find a usable public key in vault %s!\n",
-	  vault->filename);
-      goto errv3;
-  }
-  */
-
-  unsigned char *input = NULL;
-  size_t inputBufSize = 0;
-  unsigned char byte[1];
-  
-  while(!feof(in)) {
-    if(!fread(&byte, 1, 1, in))
-      break;
-    unsigned char *tmp = realloc(input, inputBufSize + 1);
-    input = tmp;
-    memmove(&input[inputBufSize], byte, 1);
-    inputBufSize ++;
-  }
-  fclose(in);
-
-  if(inputBufSize == 0) {
-    fatal("Input file is empty!\n");
-    goto errv4;
-  }
-
   if(pub != NULL) {
-    message = pcp_ed_verify(input, inputBufSize, pub);
+    message = pcp_ed_verify_buffered(in, pub);
     if(message != NULL) {
       fprintf(stderr, "Signature verified (signed by %s <%s>).\n", pub->owner, pub->mail);
     }
   }
   else {
-    pcphash_iteratepub(pub) {
-      message = pcp_ed_verify(input, inputBufSize, pub);
-      if(message != NULL) {
-	fprintf(stderr, "Signature verified (signed by %s <%s>).\n", pub->owner, pub->mail);
-	break;
-      }
+    // put public key as pub, so verify iterates over our keys
+    message = pcp_ed_verify_buffered(in, pub);
+    if(message != NULL) {
+      fprintf(stderr, "Signature verified (signed by %s <%s>).\n", pub->owner, pub->mail);
     }
   }
 
   if(message == NULL) {
-    fprintf(stderr, "Could not verify ignature\n");
+    fprintf(stderr, "Could not verify signature\n");
   }
   else
     free(message);
 
-  free(input);
   return 0;
 
  errv4:
-  free(input);
 
  errv1:
   return 1;

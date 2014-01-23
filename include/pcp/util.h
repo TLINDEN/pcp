@@ -26,13 +26,31 @@
 #define _HAVE_PCP_UTIL_H
 
 #include <ctype.h>
+#include <wctype.h>
 
+// lowercase a string
 static inline char *_lc(char *in) {
   size_t len = strlen(in);
-  int i;
+  size_t i;
   for(i=0; i<len; ++i)
     in[i] = towlower(in[i]);
   return in;
+}
+
+// find the offset of the beginning of a certain string within binary data
+static inline int _findoffset(unsigned char *bin, size_t binlen, char *sigstart, size_t hlen) {
+  size_t i;
+  int sigfoot = 181; // yes, also bad. that's the armored sig footer
+  int offset = -1;
+
+  for(i=0; i<binlen-sigfoot; ++i) {
+    if(memcmp(&bin[i], sigstart, hlen) == 0) {
+      offset = i;
+      break;
+    }
+  }
+
+  return offset;
 }
 
 #endif // _HAVE_PCP_UTIL_H

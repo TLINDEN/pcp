@@ -42,7 +42,7 @@ namespace pcp {
     PubKey P;
     Key S;
     Vault vault;
-    pcp_sig_t *sig;
+    unsigned char *sig;
 
     // constructors
     Signature(Key &skey); // sign only
@@ -55,14 +55,12 @@ namespace pcp {
 
     // PK signature methods
     // sender pubkey is P
-    std::string sign(std::vector<unsigned char> message);
-    std::string sign(std::string message);
-    std::string sign(unsigned char *message, size_t mlen);
+    unsigned char *sign(std::vector<unsigned char> message);
+    unsigned char *sign(unsigned char *message, size_t mlen);
 
     // verify using P or use vault if defined
-    bool verify(std::string signature, std::string message);
-    bool verify(std::string signature, std::vector<unsigned char> message);
-    bool verify(std::string signature, unsigned char *message, size_t mlen);
+    bool verify(std::vector<unsigned char> message);
+    bool verify(unsigned char *signature, size_t mlen);
   };
 };
 

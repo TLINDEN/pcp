@@ -23,7 +23,7 @@
 #include "signature.h"
 #include "defines.h"
 
-int pcpsign(char *infile, char *outfile, char *passwd) {
+int pcpsign(char *infile, char *outfile, char *passwd, int z85) {
   FILE *in = NULL;
   FILE *out = NULL;
   pcp_key_t *secret = NULL;
@@ -33,15 +33,13 @@ int pcpsign(char *infile, char *outfile, char *passwd) {
     fatal("Could not find a secret key in vault %s!\n", vault->filename);
     goto errs1;
   }
-  
-
 
   if(infile == NULL)
     in = stdin;
   else {
     if((in = fopen(infile, "rb")) == NULL) {
       fatal("Could not open input file %s\n", infile);
-      goto errs2;
+      goto errs1;
     }
   }
 
@@ -50,7 +48,7 @@ int pcpsign(char *infile, char *outfile, char *passwd) {
   else {
     if((out = fopen(outfile, "wb+")) == NULL) {
       fatal("Could not open output file %s\n", outfile);
-      goto errs2;
+      goto errs1;
     }
   }
 
@@ -68,82 +66,26 @@ int pcpsign(char *infile, char *outfile, char *passwd) {
 
     secret = pcpkey_decrypt(secret, passphrase);
     if(secret == NULL)
-      goto errs3;
+      goto errs1;
   }
 
-  unsigned char *input = NULL;
-  size_t inputBufSize = 0;
-  unsigned char byte[1];
-  
-  while(!feof(in)) {
-    if(!fread(&byte, 1, 1, in))
-      break;
-    unsigned char *tmp = realloc(input, inputBufSize + 1);
-    input = tmp;
-    memmove(&input[inputBufSize], byte, 1);
-    inputBufSize ++;
-  }
-  fclose(in);
+  size_t sigsize = pcp_ed_sign_buffered(in, out, secret, z85);
 
-  if(inputBufSize == 0) {
-    fatal("Input file is empty!\n");
-    goto errs4;
-  }
+  if(sigsize == 0)
+    goto errs1;
 
-  size_t zlen;
-  pcp_sig_t *signature = pcp_ed_sign(input, inputBufSize, secret);
-
-  // scip
-  //printf("sigsize: %d\n", (int)sizeof(pcp_sig_t));
-  //pcp_dumpsig(signature);
-
-  if(signature == NULL)
-    goto errs5;
-
-  sig2be(signature);
-  char *encoded = pcp_z85_encode((unsigned char *)signature, sizeof(pcp_sig_t), &zlen);
-
-  if(encoded == NULL)
-    goto errs6;
-
-  fprintf(out, "%s\n%s\n%s\n", PCP_SIG_HEADER, encoded, PCP_SIG_FOOTER);
-  if(ferror(out) != 0) {
-    fatal("Failed to write encrypted output!\n");
-    goto errs7;
-  }
-
-  fprintf(stderr, "Signed %d bytes successfully\n",
-	  (int)inputBufSize);
-
-  fclose(out);
-  free(encoded);
-  free(signature);
+  fprintf(stderr, "Signed %ld bytes successfully\n", sigsize);
 
   return 0;
-
- errs7:
-  free(encoded);
-  
- errs6:
-  free(signature);
-
- errs5:
-
- errs4:
-  free(input);
-
- errs3:
-
- errs2:
 
  errs1:
   return 1;
 }
 
-int pcpverify(char *infile, char *sigfile) {
+int pcpverify(char *infile, char *id) {
   FILE *in = NULL;
-  FILE *sigin = NULL;
   pcp_pubkey_t *pub = NULL;
+  unsigned char *message = NULL;
 
   if(infile == NULL)
     in = stdin;
@@ -154,36 +96,16 @@ int pcpverify(char *infile, char *sigfile) {
     }
   }
 
- if((sigin = fopen(sigfile, "rb")) == NULL) {
-   fatal("Could not open signature file %s\n", sigfile);
-   goto errv1;
- }
-
-  char *encoded = pcp_readz85file(sigin);
-  if(encoded == NULL)
-    goto errv1;
-
-  size_t clen;
-  unsigned char *decoded = pcp_z85_decode((char *)encoded, &clen);
-
-  if(decoded == NULL)
-    goto errv2;
-
-  if(clen != sizeof(pcp_sig_t)) {
-    fatal("Error: decoded signature file didn't result to a proper sized sig! (got %d bytes)\n", clen);
-    goto errv2;
-  }
-
-  pcp_sig_t *sig = (pcp_sig_t *)decoded;
-  sig2native(sig);
-
-  HASH_FIND_STR(pcppubkey_hash, sig->id, pub);
+  if(id != NULL)
+    HASH_FIND_STR(pcppubkey_hash, id, pub);
  
+  /*
   if(pub == NULL) {
     fatal("Could not find a usable public key in vault %s!\n",
 	  vault->filename);
       goto errv3;
   }
+  */
 
   unsigned char *input = NULL;
   size_t inputBufSize = 0;
@@ -204,37 +126,35 @@ int pcpverify(char *infile, char *sigfile) {
     goto errv4;
   }
 
- 
-  if(pcp_ed_verify(input, inputBufSize, sig, pub) == 0) {
-    fprintf(stderr, "Signature verified.\n");
+  if(pub != NULL) {
+    message = pcp_ed_verify(input, inputBufSize, pub);
+    if(message != NULL) {
+      fprintf(stderr, "Signature verified (signed by %s <%s>).\n", pub->owner, pub->mail);
+    }
+  }
+  else {
+    pcphash_iteratepub(pub) {
+      message = pcp_ed_verify(input, inputBufSize, pub);
+      if(message != NULL) {
+	fprintf(stderr, "Signature verified (signed by %s <%s>).\n", pub->owner, pub->mail);
+	break;
+      }
+    }
   }
 
-  free(decoded);
-  free(encoded);
+  if(message == NULL) {
+    fprintf(stderr, "Could not verify ignature\n");
+  }
+  else
+    free(message);
+
   free(input);
   return 0;
 
  errv4:
   free(input);
 
- errv3:
-  free(decoded);
-
- errv2:
-  //  free(encoded); why???
-
  errv1:
   return 1;
 }
 
-void pcp_dumpsig(pcp_sig_t *sig) {
-  printf("     ed: ");
-  pcpprint_bin(stdout, sig->edsig, crypto_sign_BYTES);printf("\n");
-
-  printf("     id: %s\n", sig->id);
-
-  printf("  ctime: %ld\n", sig->ctime);
-
-  printf("version: %04x\n", sig->version);
-
-}

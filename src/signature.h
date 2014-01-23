@@ -32,8 +32,8 @@
 #include "uthash.h"
 #include "z85.h"
 
-int pcpsign(char *infile, char *outfile, char *passwd);
-int pcpverify(char *infile, char *sigfile);
+int pcpsign(char *infile, char *outfile, char *passwd, int z85);
+int pcpverify(char *infile, char *id);
 
 
 

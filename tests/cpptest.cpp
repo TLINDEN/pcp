@@ -95,9 +95,10 @@ void test3() {
   Signature SigA(A);
   Signature SigB(PA);
 
-  string sig = SigA.sign(message);
+  unsigned char *sig = SigA.sign((unsigned char*)message.c_str(), message.length());
 
-  if(SigB.verify(sig, message) )
+  // FIXME: bad api here
+  if(SigB.verify(sig, message.length() + crypto_sign_BYTES) )
     cout << "3 ok" << endl;
 }
 

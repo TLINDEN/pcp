@@ -21,79 +21,81 @@
 
 #include "ed.h"
 
-int pcp_ed_verify(unsigned char *input, size_t inputlen, pcp_sig_t *sig, pcp_pubkey_t *p) {
-  unsigned char *message = ucmalloc(inputlen + crypto_sign_BYTES);
-  unsigned char *tmpsig  = ucmalloc(inputlen + crypto_sign_BYTES); // from sig
-  size_t mlen = 0;
+unsigned char * pcp_ed_verify(unsigned char *signature, size_t siglen, pcp_pubkey_t *p) {
+  unsigned char *message = ucmalloc(siglen - crypto_sign_BYTES);
+  size_t mlen;
 
-  memcpy(tmpsig, sig->edsig, crypto_sign_BYTES);
-  memcpy(&tmpsig[crypto_sign_BYTES], input, inputlen);
-
-  if(crypto_sign_open(message, &mlen, tmpsig, inputlen + crypto_sign_BYTES, p->edpub) != 0) {
+  if(crypto_sign_open(message, &mlen, signature, siglen, p->edpub) != 0) {
     fatal("Failed to open the signature using the public key 0x%s!\n", p->id);
     goto errve1;
   }
 
-  if(memcmp(message, input, inputlen) != 0) {
-    fatal("Failed to verify the signature, signed messages differ!\n");
-    goto errve1;
-  }
-
-  free(tmpsig);
-  free(message);
-  return 0;
+  return message;
 
  errve1:
   free(message);
-  free(tmpsig);
-  return 1;
+  return NULL;
 }
 
-
-
-pcp_sig_t *pcp_ed_sign(unsigned char *message, size_t messagesize, pcp_key_t *s) {
+unsigned char *pcp_ed_sign(unsigned char *message, size_t messagesize, pcp_key_t *s) {
   size_t mlen = messagesize + crypto_sign_BYTES;
-  unsigned char *tmp = ucmalloc(mlen);
-  unsigned char *signature = ucmalloc(crypto_sign_BYTES);
+  unsigned char *signature = ucmalloc(mlen);
 
-  crypto_sign(tmp, &mlen, message, messagesize, s->edsecret);
+  crypto_sign(signature, &mlen, message, messagesize, s->edsecret);
 
-  memcpy(signature, tmp, crypto_sign_BYTES);
-
-  pcp_sig_t *sig = pcp_ed_newsig(signature, s->id);
-
-  memset(tmp, 0, mlen);
-  free(tmp);
-
-  return sig;
+  return signature;
 }
 
-pcp_sig_t *pcp_ed_newsig(unsigned char *hash, char *id) {
-  pcp_sig_t *sig = ucmalloc(sizeof(pcp_sig_t));
-  sig->version = PCP_SIG_VERSION;
-  sig->ctime = (long)time(0);
-  memcpy(sig->edsig, hash, crypto_sign_BYTES);
-  memcpy(sig->id, id, 17);
-  return sig;
-}
+size_t pcp_ed_sign_buffered(FILE *in, FILE *out, pcp_key_t *s, int z85) {
+  unsigned char in_buf[PCP_BLOCK_SIZE];
+  size_t cur_bufsize = 0;
+  crypto_generichash_state *st = ucmalloc(sizeof(crypto_generichash_state));
+  unsigned char hash[crypto_generichash_BYTES_MAX];
 
-pcp_sig_t *sig2native(pcp_sig_t *s) {
-#ifdef __CPU_IS_BIG_ENDIAN
-  return s;
-#else
-  s->version = be32toh(s->version);
-  s->ctime   = be64toh(s->ctime);
-  return s;
-#endif
-}
+  crypto_generichash_init(st, NULL, 0, 0);
 
-pcp_sig_t *sig2be(pcp_sig_t *s) {
-#ifdef __CPU_IS_BIG_ENDIAN
-  return s;
-#else
-  s->version = htobe32(s->version);
-  s->ctime   = htobe64(s->ctime);
-  return s;
-#endif
-}
+  if(z85)
+    fprintf(out, "%s\nHash: Blake2\n\n", PCP_SIG_HEADER);
 
+  while(!feof(in)) {
+    cur_bufsize = fread(&in_buf, 1, PCP_BLOCK_SIZE, in);
+    if(cur_bufsize <= 0)
+      break;
+
+    crypto_generichash_update(st, in_buf, cur_bufsize);
+    fwrite(in_buf, cur_bufsize, 1, out);
+  }
+
+  if(ferror(out) != 0) {
+    fatal("Failed to write encrypted output!\n");
+    free(st);
+    return 0;
+  }
+
+  crypto_generichash_final(st, hash, crypto_generichash_BYTES_MAX);
+
+  size_t mlen = + crypto_sign_BYTES + crypto_generichash_BYTES_MAX;
+  unsigned char *signature = ucmalloc(mlen);
+  crypto_sign(signature, &mlen, hash, crypto_generichash_BYTES_MAX, s->edsecret);
+
+  if(z85) {
+    if(in_buf[cur_bufsize] != '\n')
+      fprintf(out, "\n");
+    fprintf(out, "%s\nVersion: PCP v%d.%d.%d\n\n", PCP_SIG_START, PCP_VERSION_MAJOR, PCP_VERSION_MINOR, PCP_VERSION_PATCH);
+    size_t zlen;
+    char *z85encoded = pcp_z85_encode((unsigned char*)signature, crypto_sign_BYTES, &zlen);
+    fprintf(out, "%s\n%s\n", z85encoded, PCP_SIG_END);
+  }
+  else {
+    fwrite(signature, crypto_sign_BYTES, 1, out);
+  }
+
+  if(fileno(in) != 0)
+    fclose(in);
+  if(fileno(out) != 1)
+    fclose(out);
+
+  free(st);
+
+  return mlen; // ???
+}

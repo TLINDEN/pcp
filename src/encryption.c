@@ -137,7 +137,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
   pcp_pubkey_t *tmp = NULL;
   pcp_pubkey_t *pub = NULL;
   pcp_key_t *secret = NULL;
-  unsigned char *symkey;
+  unsigned char *symkey = NULL;
   int self = 0;
 
   if(id == NULL && recipient == NULL) {
@@ -256,7 +256,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
     }
   }
 
-  size_t clen;
+  size_t clen = 0;
 
   if(self == 1)
     pcp_encrypt_file_sym(in, out, symkey, 0);

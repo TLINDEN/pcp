@@ -102,33 +102,6 @@ int pcptext_infile(char *infile) {
     }
   }
 
-  if(clen  == sizeof(pcp_sig_t)) {
-    // a signature?
-    pcp_sig_t *sig = (pcp_sig_t *)bin;
-    sig2native(sig);
-    if(sig->version == PCP_SIG_VERSION) {
-      // looks valid
-      fprintf(stdout, "%s is an ed25519 signature file:\n", infile);
-      struct tm *c;
-      time_t t = (time_t)sig->ctime;
-      c = localtime(&t);
-      fprintf(stdout, "Signed by key: 0x%s\n", sig->id);
-      fprintf(stdout, "Creation Time: %04d-%02d-%02dT%02d:%02d:%02d\n",
-	      c->tm_year+1900, c->tm_mon+1, c->tm_mday,
-	      c->tm_hour, c->tm_min, c->tm_sec);
-      fprintf(stdout, "    Signature: ");
-      pcpprint_bin(stdout, sig->edsig, crypto_sign_BYTES);
-      fprintf(stdout, "\n");
-      free(sig);
-      goto tdone;
-    }
-    else {
-      fprintf(stdout, "%s looks like a ed255 signature but failed sanity checking.\n", infile);
-      free(sig);
-      goto errtinf1;
-    }
-  }
-
   // still there?
   fprintf(stdout, "%s looks Z85 encoded but otherwise unknown and is possibly encrypted.\n", infile);
 

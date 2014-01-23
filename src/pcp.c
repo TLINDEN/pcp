@@ -44,11 +44,10 @@ char *default_vault() {
 }
 
 int main (int argc, char **argv)  {
-  int opt, mode, usevault, useid, userec, lo;
+  int opt, mode, usevault, useid, userec, lo, armor;
   char *vaultfile = default_vault();
   char *outfile = NULL;
   char *infile = NULL;
-  char *sigfile = NULL;
   char *keyid = NULL;
   char *id = NULL;
   char *xpass = NULL;
@@ -63,6 +62,7 @@ int main (int argc, char **argv)  {
   useid = 0;
   userec = 0;
   lo = 0;
+  armor = 0;
 
   static struct option longopts[] = {
     // generics
@@ -101,11 +101,11 @@ int main (int argc, char **argv)  {
 
     // signing
     { "sign",            no_argument,       NULL,           'g' }, 
-    { "check-signature", required_argument, NULL,           'c' }, 
+    { "check-signature", no_argument,       NULL,           'c' }, 
     { NULL,              0,                 NULL,            0 }
   };
 
-  while ((opt = getopt_long(argc, argv, "klV:vdehsO:i:I:pSPRtEx:DzZr:gc:ym",
+  while ((opt = getopt_long(argc, argv, "klV:vdehsO:i:I:pSPRtEx:DzZr:gcym",
 			    longopts, NULL)) != -1) {
   
     switch (opt)  {
@@ -166,10 +166,10 @@ int main (int argc, char **argv)  {
 	usevault = 1;
 	break;
       case 'z':
-	mode += PCP_MODE_ZENCODE;
+	armor = 1;
 	break;
       case 'Z':
-	mode += PCP_MODE_ZDECODE;
+	armor = 1;
 	break;
       case 'g':
 	mode += PCP_MODE_SIGN;
@@ -177,8 +177,6 @@ int main (int argc, char **argv)  {
 	break;
       case 'c':
 	mode += PCP_MODE_VERIFY;
-	sigfile = ucmalloc(strlen(optarg)+1);
-	strncpy(sigfile, optarg, strlen(optarg)+1);
 	usevault = 1;
 	break;
       case 'y':
@@ -233,6 +231,11 @@ int main (int argc, char **argv)  {
   }
 
   sodium_init(); // FIXME: better called from the lib?
+
+  if(mode == PCP_MODE_ENCRYPT && useid == 0 && userec == 0) {
+    usevault = 0;
+    mode = PCP_MODE_ENCRYPT_ME;
+  }
 
   if(usevault == 1) {
     pcphash_init();
@@ -340,10 +343,6 @@ int main (int argc, char **argv)  {
 	  // multiple dst
 	  pcpencrypt(NULL, infile, outfile, xpass, recipient);
 	}
-        else if(useid == 0 && userec == 0) {
-	  // self mode, same as -m
-	  pcpencrypt(NULL, infile, outfile, xpass, NULL);
-        }
 	else {
 	  // -i and -r specified
 	  fatal("You can't specify both -i and -r, use either -i or -r!\n");
@@ -373,11 +372,20 @@ int main (int argc, char **argv)  {
 	break;	
 
       case PCP_MODE_SIGN:
-	pcpsign(infile, outfile, xpass);
+	pcpsign(infile, outfile, xpass, armor);
 	break;
 
       case PCP_MODE_VERIFY:
-	pcpverify(infile, sigfile);
+	if(useid) {
+	  id = pcp_normalize_id(keyid);
+	  if(id != NULL) {
+	    pcpverify(infile, id);
+	    free(id);
+	  }
+	}
+	else {
+	  pcpverify(infile, NULL);
+	}
 	break;
 
       case PCP_MODE_YAML:
@@ -434,7 +442,7 @@ int main (int argc, char **argv)  {
 
     default:
       // mode params mixed
-      fatal("Sorry, invalid combination of commandline parameters!\n");
+      fatal("Sorry, invalid combination of commandline parameters (0x%04X)!\n", mode);
       break;  
     }
   }

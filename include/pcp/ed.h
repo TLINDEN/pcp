@@ -19,6 +19,10 @@
     You can contact me by mail: <tlinden AT cpan DOT org>.
 */
 
+/*
+ ED25519 signatures. Currently unbuffered
+*/
+
 #ifndef _HAVE_PCP_ED_H
 #define _HAVE_PCP_ED_H
 
@@ -32,24 +36,19 @@
 #include "mem.h"
 #include "key.h"
 
-struct _pcp_sig_t {
-  byte edsig[crypto_sign_BYTES];
-  char id[17];
-  uint64_t ctime;
-  uint32_t version;
-};
+/* sign a message of messagesize using s->edsecret, if it works
+   return message+signature (size: messagesize + crypto_sign_BYTES),
+   returns NULL otherwise */
+unsigned char *pcp_ed_sign(unsigned char *message, size_t messagesize, pcp_key_t *s);
 
-typedef struct _pcp_sig_t pcp_sig_t;
+/* verify a signature of siglen size using p->edpub, if the signature verifies
+   return the raw message with the signature removed (size: siglen - crypto_sign_BYTES),
+   returns NULL otherwise */
+unsigned char * pcp_ed_verify(unsigned char *signature, size_t siglen, pcp_pubkey_t *p);
 
-int pcp_ed_verify(unsigned char *input, size_t inputlen,
-		  pcp_sig_t *sig, pcp_pubkey_t *p);
-
-pcp_sig_t *pcp_ed_sign(unsigned char *message,
-			   size_t messagesize, pcp_key_t *s);
-
-pcp_sig_t *sig2native(pcp_sig_t *k);
-pcp_sig_t *sig2be(pcp_sig_t *k);
-
-pcp_sig_t *pcp_ed_newsig(unsigned char *hash, char *id);
+/* same as pcp_ed_sign() but work on i/o directly, we're making a hash
+   of the input 32k-wise, copy in=>out, sign the hash and append the
+   sig only to the output */
+size_t pcp_ed_sign_buffered(FILE *in, FILE *out, pcp_key_t *s, int z85);
 
 #endif // _HAVE_PCP_ED_H

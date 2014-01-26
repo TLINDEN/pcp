@@ -10,19 +10,7 @@ key++: normalize id and lc()
 
 allow signing using an alternate secret key, like in pcpdecrypt()
 
-use recipient in encryption to lookup public key in the vault, if id not given
-
-change encrypted file format to the one of pbp, following it:
-   - support multiple recipients
-   - encrypt 32k blockwise using crypto_secretbox() using
-     a random key, encrypt that key for each recipient with
-     pk using crypto_box()
-   - base85 <=> z85? maybe make us base85 tolerant while still
-     preferring z85? I dunno...
-
 support export/import from/to pbp
 
-remove key-id from stored signatures, maybe add the file content again
-(by default a signature consists of the file+sig, but I sometime decided
-to detach the sig and only write this to the signature file, at least pbp
-stores the full stuff, so I shall do it as well).
+re-add detached signatures, calculated with the pbp scheme but with
+separate files (as I had it before).

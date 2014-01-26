@@ -29,6 +29,7 @@ int pcpsign(char *infile, char *outfile, char *passwd, int z85) {
   pcp_key_t *secret = NULL;
 
   secret = pcp_find_primary_secret();
+
   if(secret == NULL) {
     fatal("Could not find a secret key in vault %s!\n", vault->filename);
     goto errs1;
@@ -113,13 +114,10 @@ int pcpverify(char *infile, char *id) {
     }
   }
 
-  if(message == NULL) {
-    fprintf(stderr, "Could not verify signature\n");
-  }
-  else
+  if(message != NULL) {
     free(message);
-
-  return 0;
+    return 0;
+  }
 
  errv4:
 

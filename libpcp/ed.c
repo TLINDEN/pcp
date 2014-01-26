@@ -99,7 +99,7 @@ size_t pcp_ed_sign_buffered(FILE *in, FILE *out, pcp_key_t *s, int z85) {
   return outsize;
 }
 
-unsigned char *pcp_ed_verify_buffered(FILE *in, pcp_pubkey_t *p) {
+pcp_pubkey_t *pcp_ed_verify_buffered(FILE *in, pcp_pubkey_t *p) {
   unsigned char in_buf[PCP_BLOCK_SIZE/2];
   unsigned char in_next[PCP_BLOCK_SIZE/2];
   unsigned char in_full[PCP_BLOCK_SIZE];
@@ -236,8 +236,6 @@ unsigned char *pcp_ed_verify_buffered(FILE *in, pcp_pubkey_t *p) {
     if(z85block == NULL)
       goto errvb1;
 
-    fprintf(stderr, "<%s>\n", z85block);
-
     size_t dstlen;
     unsigned char *z85decoded = pcp_z85_decode(z85block, &dstlen);
     if(dstlen != mlen) {
@@ -272,7 +270,7 @@ unsigned char *pcp_ed_verify_buffered(FILE *in, pcp_pubkey_t *p) {
     return NULL;
   }
 
-  return verifiedhash;
+  return p;
   
 
  errvb1:
@@ -280,3 +278,139 @@ unsigned char *pcp_ed_verify_buffered(FILE *in, pcp_pubkey_t *p) {
   return NULL;
 }
 
+size_t pcp_ed_detachsign_buffered(FILE *in, FILE *out, pcp_key_t *s) {
+  unsigned char in_buf[PCP_BLOCK_SIZE];
+  size_t cur_bufsize = 0;
+  size_t outsize = 0;
+  crypto_generichash_state *st = ucmalloc(sizeof(crypto_generichash_state));
+  unsigned char hash[crypto_generichash_BYTES_MAX];
+
+  crypto_generichash_init(st, NULL, 0, 0);
+
+  while(!feof(in)) {
+    cur_bufsize = fread(&in_buf, 1, PCP_BLOCK_SIZE, in);
+    if(cur_bufsize <= 0)
+      break;
+    outsize += cur_bufsize;
+    crypto_generichash_update(st, in_buf, cur_bufsize);
+  }
+
+  crypto_generichash_final(st, hash, crypto_generichash_BYTES_MAX);
+
+  unsigned char *signature = pcp_ed_sign(hash, crypto_generichash_BYTES_MAX, s);
+  size_t mlen = + crypto_sign_BYTES + crypto_generichash_BYTES_MAX;
+
+  fprintf(out, "\n%s\n Version: PCP v%d.%d.%d\n\n",
+	  PCP_SIG_START, PCP_VERSION_MAJOR, PCP_VERSION_MINOR, PCP_VERSION_PATCH);
+  size_t zlen;
+  char *z85encoded = pcp_z85_encode((unsigned char*)signature, mlen, &zlen);
+  fprintf(out, "%s\n%s\n", z85encoded, PCP_SIG_END);
+
+  if(fileno(in) != 0)
+    fclose(in);
+  if(fileno(out) != 1)
+    fclose(out);
+
+  free(st);
+
+  return outsize;
+}
+
+pcp_pubkey_t *pcp_ed_detachverify_buffered(FILE *in, FILE *sigfd, pcp_pubkey_t *p) {
+  unsigned char in_buf[PCP_BLOCK_SIZE];
+  size_t cur_bufsize = 0;
+  size_t outsize = 0;
+  crypto_generichash_state *st = ucmalloc(sizeof(crypto_generichash_state));
+  unsigned char hash[crypto_generichash_BYTES_MAX];
+  size_t mlen = + crypto_sign_BYTES + crypto_generichash_BYTES_MAX;
+
+  crypto_generichash_init(st, NULL, 0, 0);
+
+  while(!feof(in)) {
+    cur_bufsize = fread(&in_buf, 1, PCP_BLOCK_SIZE, in);
+    if(cur_bufsize <= 0)
+      break;
+    outsize += cur_bufsize;
+    crypto_generichash_update(st, in_buf, cur_bufsize);
+  }
+
+  crypto_generichash_final(st, hash, crypto_generichash_BYTES_MAX);
+
+  // read the sig
+  unsigned char *sig = NULL;
+  size_t inputBufSize = 0;
+  unsigned char byte[1];
+  
+  while(!feof(sigfd)) {
+    if(!fread(&byte, 1, 1, sigfd))
+      break;
+    unsigned char *tmp = realloc(sig, inputBufSize + 1);
+    sig = tmp;
+    memmove(&sig[inputBufSize], byte, 1);
+    inputBufSize ++;
+  }
+  fclose(sigfd);
+
+  if(sig == NULL) {
+    fatal("Invalid detached signature\n");
+    goto errdea1;
+  }
+
+
+  char *z85block = pcp_readz85string(sig, inputBufSize);
+  if(z85block == NULL)
+    goto errdea2;
+
+  size_t clen;
+  unsigned char *sighash = pcp_z85_decode(z85block, &clen);
+  if(sighash == NULL)
+    goto errdea3;
+
+  if(clen != mlen) {
+    fatal("z85 decoded signature didn't result in a proper signed hash(got: %ld, expected: %ld)\n", clen, mlen);
+    goto errdea4;
+  }
+  
+  unsigned char *verifiedhash = NULL;
+  if(p == NULL) {
+    pcphash_iteratepub(p) {
+      verifiedhash = pcp_ed_verify(sighash, mlen, p);
+      if(verifiedhash != NULL)
+	break;
+    }
+  }
+  else {
+    verifiedhash = pcp_ed_verify(sighash, mlen, p);
+  }
+
+  if(verifiedhash == NULL)
+    goto errdea4;
+
+  if(memcmp(verifiedhash, hash, crypto_generichash_BYTES_MAX) != 0) {
+    // sig verified, but the hash doesn't
+    fatal("signed hash doesn't match actual hash of signed file content\n");
+    goto errdea5;
+  }
+
+  free(verifiedhash);
+  free(sighash);
+  free(z85block);
+  free(sig);
+  return p;
+
+
+ errdea5:
+  free(verifiedhash);
+
+ errdea4:
+  free(sighash);
+  
+ errdea3:
+  free(z85block);
+  
+ errdea2:
+  free(sig);
+  
+ errdea1:
+  return NULL;
+}

@@ -53,6 +53,9 @@ unsigned char * pcp_ed_verify(unsigned char *signature, size_t siglen, pcp_pubke
    sig only to the output */
 size_t pcp_ed_sign_buffered(FILE *in, FILE *out, pcp_key_t *s, int z85);
 
-unsigned char *pcp_ed_verify_buffered(FILE *in, pcp_pubkey_t *p);
+pcp_pubkey_t *pcp_ed_verify_buffered(FILE *in, pcp_pubkey_t *p);
+
+size_t pcp_ed_detachsign_buffered(FILE *in, FILE *out, pcp_key_t *s);
+pcp_pubkey_t *pcp_ed_detachverify_buffered(FILE *in, FILE *sigfd, pcp_pubkey_t *p);
 
 #endif // _HAVE_PCP_ED_H

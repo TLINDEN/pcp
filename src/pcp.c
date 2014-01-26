@@ -44,10 +44,11 @@ char *default_vault() {
 }
 
 int main (int argc, char **argv)  {
-  int opt, mode, usevault, useid, userec, lo, armor;
+  int opt, mode, usevault, useid, userec, lo, armor, detach;
   char *vaultfile = default_vault();
   char *outfile = NULL;
   char *infile = NULL;
+  char *sigfile = NULL;
   char *keyid = NULL;
   char *id = NULL;
   char *xpass = NULL;
@@ -63,6 +64,7 @@ int main (int argc, char **argv)  {
   userec = 0;
   lo = 0;
   armor = 0;
+  detach = 0;
 
   static struct option longopts[] = {
     // generics
@@ -101,11 +103,12 @@ int main (int argc, char **argv)  {
 
     // signing
     { "sign",            no_argument,       NULL,           'g' }, 
-    { "check-signature", no_argument,       NULL,           'c' }, 
+    { "check-signature", required_argument, NULL,           'c' }, 
+    { "detach",          no_argument,       NULL,           'a' }, 
     { NULL,              0,                 NULL,            0 }
   };
 
-  while ((opt = getopt_long(argc, argv, "klV:vdehsO:i:I:pSPRtEx:DzZr:gcym",
+  while ((opt = getopt_long(argc, argv, "klV:vdehsO:i:I:pSPRtEx:DzZr:gc:yma",
 			    longopts, NULL)) != -1) {
   
     switch (opt)  {
@@ -171,12 +174,17 @@ int main (int argc, char **argv)  {
       case 'Z':
 	armor = 1;
 	break;
+      case 'a':
+	detach = 1;
+	break;
       case 'g':
 	mode += PCP_MODE_SIGN;
 	usevault = 1;
 	break;
       case 'c':
 	mode += PCP_MODE_VERIFY;
+	sigfile = ucmalloc(strlen(optarg)+1);
+	strncpy(sigfile, optarg, strlen(optarg)+1);
 	usevault = 1;
 	break;
       case 'y':
@@ -372,19 +380,19 @@ int main (int argc, char **argv)  {
 	break;	
 
       case PCP_MODE_SIGN:
-	pcpsign(infile, outfile, xpass, armor);
+	pcpsign(infile, outfile, xpass, armor, detach);
 	break;
 
       case PCP_MODE_VERIFY:
 	if(useid) {
 	  id = pcp_normalize_id(keyid);
 	  if(id != NULL) {
-	    pcpverify(infile, id);
+	    pcpverify(infile, sigfile, id, detach);
 	    free(id);
 	  }
 	}
 	else {
-	  pcpverify(infile, NULL);
+	  pcpverify(infile, sigfile, NULL, detach);
 	}
 	break;
 

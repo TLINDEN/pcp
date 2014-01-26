@@ -22,6 +22,12 @@
 	Armored signatures are calculated the same way but
 	output follows the pgp scheme instead.
 
+	Detached signatures are still supported as before,
+	for the user everything with them is as known, but
+	the commandline option -a (--detach) have to be
+	applied. Internally, however, inputs will be read in
+	32k blockwise as well. Detached signatures are now
+	z85 encoded always.
 
 0.1.5   Fixed a segmentation fault when using pcp1 -t on a
 	public key. I added a double free() there by purpose

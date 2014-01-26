@@ -259,7 +259,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
   size_t clen = 0;
 
   if(self == 1)
-    pcp_encrypt_file_sym(in, out, symkey, 0);
+    clen = pcp_encrypt_file_sym(in, out, symkey, 0);
   else
     clen = pcp_encrypt_file(in, out, secret, pubhash);
 

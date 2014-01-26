@@ -23,7 +23,8 @@
 #include "signature.h"
 #include "defines.h"
 
-int pcpsign(char *infile, char *outfile, char *passwd, int z85) {
+
+int pcpsign(char *infile, char *outfile, char *passwd, int z85, int detach) {
   FILE *in = NULL;
   FILE *out = NULL;
   pcp_key_t *secret = NULL;
@@ -70,7 +71,11 @@ int pcpsign(char *infile, char *outfile, char *passwd, int z85) {
       goto errs1;
   }
 
-  size_t sigsize = pcp_ed_sign_buffered(in, out, secret, z85);
+  size_t sigsize;
+  if(detach == 1)
+    sigsize = pcp_ed_detachsign_buffered(in, out, secret);
+  else
+    sigsize = pcp_ed_sign_buffered(in, out, secret, z85);
 
   if(sigsize == 0)
     goto errs1;
@@ -83,10 +88,10 @@ int pcpsign(char *infile, char *outfile, char *passwd, int z85) {
   return 1;
 }
 
-int pcpverify(char *infile, char *id) {
+int pcpverify(char *infile, char *sigfile, char *id, int detach) {
   FILE *in = NULL;
+  FILE *sigfd = NULL;
   pcp_pubkey_t *pub = NULL;
-  unsigned char *message = NULL;
 
   if(infile == NULL)
     in = stdin;
@@ -97,27 +102,24 @@ int pcpverify(char *infile, char *id) {
     }
   }
 
+  if(sigfile != NULL) {
+    if((sigfd = fopen(sigfile, "rb")) == NULL) {
+      fatal("Could not open signature file %s\n", sigfile);
+      goto errv1;
+    }
+  }
+  
   if(id != NULL)
     HASH_FIND_STR(pcppubkey_hash, id, pub);
  
-  if(pub != NULL) {
-    message = pcp_ed_verify_buffered(in, pub);
-    if(message != NULL) {
-      fprintf(stderr, "Signature verified (signed by %s <%s>).\n", pub->owner, pub->mail);
-    }
-  }
-  else {
-    // put public key as pub, so verify iterates over our keys
-    message = pcp_ed_verify_buffered(in, pub);
-    if(message != NULL) {
-      fprintf(stderr, "Signature verified (signed by %s <%s>).\n", pub->owner, pub->mail);
-    }
-  }
+  if(detach)
+    pub = pcp_ed_detachverify_buffered(in, sigfd, pub);
+  else
+    pub = pcp_ed_verify_buffered(sigfd, pub);
 
-  if(message != NULL) {
-    free(message);
-    return 0;
-  }
+  if(pub != NULL)
+    fprintf(stderr, "Signature verified (signed by %s <%s>).\n", pub->owner, pub->mail);
+  
 
  errv4:
 

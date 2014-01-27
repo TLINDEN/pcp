@@ -23,12 +23,14 @@
 #include "signature.h"
 #include "defines.h"
 
-int pcpsign(char *infile, char *outfile, char *passwd, int z85) {
+
+int pcpsign(char *infile, char *outfile, char *passwd, int z85, int detach) {
   FILE *in = NULL;
   FILE *out = NULL;
   pcp_key_t *secret = NULL;
 
   secret = pcp_find_primary_secret();
+
   if(secret == NULL) {
     fatal("Could not find a secret key in vault %s!\n", vault->filename);
     goto errs1;
@@ -69,7 +71,11 @@ int pcpsign(char *infile, char *outfile, char *passwd, int z85) {
       goto errs1;
   }
 
-  size_t sigsize = pcp_ed_sign_buffered(in, out, secret, z85);
+  size_t sigsize;
+  if(detach == 1)
+    sigsize = pcp_ed_detachsign_buffered(in, out, secret);
+  else
+    sigsize = pcp_ed_sign_buffered(in, out, secret, z85);
 
   if(sigsize == 0)
     goto errs1;
@@ -82,10 +88,10 @@ int pcpsign(char *infile, char *outfile, char *passwd, int z85) {
   return 1;
 }
 
-int pcpverify(char *infile, char *id) {
+int pcpverify(char *infile, char *sigfile, char *id, int detach) {
   FILE *in = NULL;
+  FILE *sigfd = NULL;
   pcp_pubkey_t *pub = NULL;
-  unsigned char *message = NULL;
 
   if(infile == NULL)
     in = stdin;
@@ -96,63 +102,26 @@ int pcpverify(char *infile, char *id) {
     }
   }
 
+  if(sigfile != NULL) {
+    if((sigfd = fopen(sigfile, "rb")) == NULL) {
+      fatal("Could not open signature file %s\n", sigfile);
+      goto errv1;
+    }
+  }
+  
   if(id != NULL)
     HASH_FIND_STR(pcppubkey_hash, id, pub);
  
-  /*
-  if(pub == NULL) {
-    fatal("Could not find a usable public key in vault %s!\n",
-	  vault->filename);
-      goto errv3;
-  }
-  */
-
-  unsigned char *input = NULL;
-  size_t inputBufSize = 0;
-  unsigned char byte[1];
-  
-  while(!feof(in)) {
-    if(!fread(&byte, 1, 1, in))
-      break;
-    unsigned char *tmp = realloc(input, inputBufSize + 1);
-    input = tmp;
-    memmove(&input[inputBufSize], byte, 1);
-    inputBufSize ++;
-  }
-  fclose(in);
-
-  if(inputBufSize == 0) {
-    fatal("Input file is empty!\n");
-    goto errv4;
-  }
-
-  if(pub != NULL) {
-    message = pcp_ed_verify(input, inputBufSize, pub);
-    if(message != NULL) {
-      fprintf(stderr, "Signature verified (signed by %s <%s>).\n", pub->owner, pub->mail);
-    }
-  }
-  else {
-    pcphash_iteratepub(pub) {
-      message = pcp_ed_verify(input, inputBufSize, pub);
-      if(message != NULL) {
-	fprintf(stderr, "Signature verified (signed by %s <%s>).\n", pub->owner, pub->mail);
-	break;
-      }
-    }
-  }
-
-  if(message == NULL) {
-    fprintf(stderr, "Could not verify ignature\n");
-  }
+  if(detach)
+    pub = pcp_ed_detachverify_buffered(in, sigfd, pub);
   else
-    free(message);
+    pub = pcp_ed_verify_buffered(sigfd, pub);
 
-  free(input);
-  return 0;
+  if(pub != NULL)
+    fprintf(stderr, "Signature verified (signed by %s <%s>).\n", pub->owner, pub->mail);
+  
 
  errv4:
-  free(input);
 
  errv1:
   return 1;

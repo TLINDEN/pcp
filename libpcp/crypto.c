@@ -456,6 +456,4 @@ size_t pcp_decrypt_file_sym(FILE *in, FILE* out, unsigned char *symkey) {
     fclose(out);
 
   return out_size;
-
-  
 }

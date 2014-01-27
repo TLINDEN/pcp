@@ -35,6 +35,8 @@
 #include "platform.h"
 #include "mem.h"
 #include "key.h"
+#include "keyhash.h"
+#include "util.h"
 
 /* sign a message of messagesize using s->edsecret, if it works
    return message+signature (size: messagesize + crypto_sign_BYTES),
@@ -50,5 +52,10 @@ unsigned char * pcp_ed_verify(unsigned char *signature, size_t siglen, pcp_pubke
    of the input 32k-wise, copy in=>out, sign the hash and append the
    sig only to the output */
 size_t pcp_ed_sign_buffered(FILE *in, FILE *out, pcp_key_t *s, int z85);
+
+pcp_pubkey_t *pcp_ed_verify_buffered(FILE *in, pcp_pubkey_t *p);
+
+size_t pcp_ed_detachsign_buffered(FILE *in, FILE *out, pcp_key_t *s);
+pcp_pubkey_t *pcp_ed_detachverify_buffered(FILE *in, FILE *sigfd, pcp_pubkey_t *p);
 
 #endif // _HAVE_PCP_ED_H

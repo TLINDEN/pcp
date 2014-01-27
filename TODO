@@ -13,8 +13,3 @@ allow signing using an alternate secret key, like in pcpdecrypt()
 
 support export/import from/to pbp
 
-add support for armored signature using -z
-
-add support for buffered_signature (which has to be the default from pcp commandline)
-
-remove z85 mode (-z without -e -d -c -g)

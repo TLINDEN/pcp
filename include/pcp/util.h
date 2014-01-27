@@ -26,13 +26,36 @@
 #define _HAVE_PCP_UTIL_H
 
 #include <ctype.h>
+#include <wctype.h>
 
+// lowercase a string
 static inline char *_lc(char *in) {
   size_t len = strlen(in);
-  int i;
+  size_t i;
   for(i=0; i<len; ++i)
     in[i] = towlower(in[i]);
   return in;
+}
+
+// find the offset of the beginning of a certain string within binary data
+static inline size_t _findoffset(unsigned char *bin, size_t binlen, char *sigstart, size_t hlen) {
+  size_t i;
+  size_t offset = 0;
+  int m = 0;
+
+  for(i=0; i<binlen-hlen; ++i) {
+    if(memcmp(&bin[i], sigstart, hlen) == 0) {
+      offset = i;
+      m = 1;
+      break;
+    }
+  }
+
+  if(m == 0)
+    offset = -1;
+
+
+  return offset;
 }
 
 #endif // _HAVE_PCP_UTIL_H

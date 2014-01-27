@@ -40,9 +40,10 @@ typedef unsigned int    qbyte;          //  Quad byte = 32 bits
 #define PCP_ZFILE_HEADER "----- BEGIN Z85 ENCODED FILE -----"
 #define PCP_ZFILE_FOOTER "------ END Z85 ENCODED FILE ------"
 
-#define PCP_SIG_HEADER "----- BEGIN PCP SIGNED MESSAGE -----"
-#define PCP_SIG_START  "----- BEGIN PCP SIGNATURE -----"
-#define PCP_SIG_END    "------ END PCP SIGNATURE ------"
+#define PCP_SIG_HEADER "----- BEGIN ED25519 SIGNED MESSAGE -----"
+#define PCP_SIG_START  "----- BEGIN ED25519 SIGNATURE -----"
+#define PCP_SIG_END    "------ END ED25519 SIGNATURE ------"
+#define PCP_SIGPREFIX  "\nnacl-"
 
 #define PCP_ME "Pretty Curved Privacy"
 

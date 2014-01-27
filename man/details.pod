@@ -35,42 +35,119 @@ There are 2 modes of encryption available in pcp1:
 =item B<Standard public key encryption>
 
 In this mode, which is the default, a public key as specified
-with B<-i> and a dynamically generated secret key will be used
-for encryption. The public part of the generated sender key
-will be included with the encrypted file, which the recipient
-can use to decrypt it.
+with B<-i> or B<-r> and your primary secret key will be used
+for encryption.
 
 Example command:
 
- pcp1 -e -i 0x2BD734B15CE2722D -I message.txt -O cipher.z85
+ pcp1 -e -i 0x2BD734B15CE2722D -I message.txt -O message.asc
 
 Here we didn't specify a recipient. Therefore the public
 key given with -i will be used directly.
 
+Another example:
+
+ pcp1 -e -r Bobby -r McCoy -I message.txt -O message.asc
+
 =item B<Self encryption mode>
 
-Pretty Curved Privacy doesn't provide symetric file encryption.
-However there are cases when you need to encrypt a file just
-for yourself. In such a case the file will be encrypted using
-the public key part of your primary secret key and the secret
-key itself (thanks to the wonders of ECC this works like a charm).
-
-The file can be decrypted using the primary key pair.
-
+You can also encrypt a file symetrically. No public key material
+will be used in this mode.
 While this works, the security of it totally depends on the
-strength of your password, especially if the primary secret 
-used for this kind of encryption is stored in a vault on the
-same system.
+strength of the passphrase used for encryption.
 
 Example command:
 
  pcp1 -e -I message.txt -O cipher.z85
 
 As you can see we didn't specify -i or -r and therefore pcp1
-tries to use the primary keypair for encryption.
+operates in self mode for encryption. It will ask you for a passphrase
+to protect the encryption key.
 
 =back
 
+=head1 SIGNATURES
+
+There are 3 modes for digital signatures available on pcp1:
+
+=over
+
+=item B<Standard NACL binary signatures>
+
+In this mode, which is the default, an ED25519 signature will
+be calculated from a BLAKE2 hash of the input file content. Both
+the original file content plus the signature will be written to
+the output file.
+
+Example:
+
+ pcp1 -g -I message.txt -O message.asc -g
+
+You will be asked for the passphrase to access your primary
+secret key. The output file will be a binary file.
+
+=item B<Armored NACL signatures>
+
+While this mode does the very same calculations, the output
+slightly differs. The output file will be marked as a signature
+file, the signature itself will be appended with its own headers
+and Z85 encoded.
+
+
+Example:
+
+ pcp1 -g -I message.txt -O message.asc -g -z
+
+You will be asked for the passphrase to access your primary
+secret key. The output file will be a text file.
+
+=item B<Detached NACL signatures>
+
+In some cases you will need to have the signature separated
+from the original input file, e.g. to sign download files. You
+can generate detached signatures for such purposes. Still, the
+signature will be calculated the same way as in standard signatures
+but put out into a separate file. A detached signature file will always
+be Z85 encoded.
+
+Example:
+
+ pcp1 -g -I message.txt -O message.asc -g --detach
+
+=back
+
+=head1 SIGNED ENCRYPTION
+
+Beside pure encryption and signatures pcp1 also supports signed
+encryption. In this mode an input file will be encrypted and
+a signature using your primary secret key from a BLAKE2 hash of
+the file contents will be appended to it.
+
+Example:
+
+ pcp1 -e -g -r Bobby -I README.txt -O README.asc
+
+Please note the additional B<-g> parameter. The recipient can
+decrypt and verify the so created data like this:
+
+ pcp1 -d -c -I README.asc -o README.txt
+
+Please note the additional B<-c> parameter.
+
+If decryption works, the output file will be written. If signature
+verification fails you will be informed, but the decrypted
+output will be left untouched. It is up to you how to react
+on an invalid signature.
+
+B<Caution: as of this writing (pcp version 0.2.0) there is
+no offset marker included into the output which separates
+the signature from the cipher. Therefore a recipient has to
+know that the file is encrypted AND signed. If, for example,
+the recpient leaves the -c parameter on such a file, the decryption
+process will fail. Otherwise, if the user supplies -c on an
+encrypted file without a signature, decryption will fail as well.>
+
+Note: this behavior might change in the future.
 
 =head1 VULNERABILITIES
 
@@ -217,95 +294,119 @@ Generate a random seed (32 bytes).
 
 =item *
 
-Generate a ED25519 keypair from that seed.
+Generate a ED25519 sigining keypair from that seed.
 
 =item *
 
-Take the first 32 bytes of the generated ED25519 secret
-and generate a SHA512 hash from it.
+Generate a random seed (32 bytes).
 
 =item *
 
-Clamp bytes 0 and 31 which turns it into a Curve25519 secret.
-
-=item *
-
-Do scalar multiplication from that secret to retrieve
-the matching public key.
+Generate a Curve25519 encryption keypair from that seed.
 
 =back
 
-Take a look at the function B<pcp_keypairs()> for details. 
+So, while both secrets are stored in the sam PCP key, they
+are otherwise unrelated. If one of them leaks, the other
+cannot be recalculated from it.
+
+Take a look at the function B<pcp_keypairs()> for details.
 
 =head2 ENCRYPTED OUTPUT FORMAT
 
-Encrypted output will always be Z85 encoded and has the following
-format:
+Encrypted output will always written as binary files. No armoring
+supported yet. The encryption process works as this:
+
+=over
+
+=item generate a random symetric 32 byte key B<S>
+
+=item encrypt it asymetrically for each recipient using a unique nonce (B<R>)
+
+=item encrypt the input file 32k blockwise using the symetric key
+
+=back
+
+Symetric encryption works the very same with the recipient stuff
+left out.
+
+Formal format description, asymetric encrypted files:
 
  +---------------------------------------------------------+
  | Field         Size      Description                     |
  +-------------+--------+----------------------------------+
- | Pubkey      |     32 | Publix key of the sender         |
+ | Type        |      1 | Filetype, 5=ASYM, 23=SYM         |
  +-------------|--------|----------------------------------+
- | Nonce       |     24 | Random Nonce                     |
+ | Len R       |      4 | Number of recipients         (*) |
+ +-------------|--------|----------------------------------+
+ | Recipients  |   R*72 | C(recipient)|C(recipient)... (*) |
  +-------------|--------|----------------------------------+
  | Encrypted   |      ~ | The actual encrypted data        |
  +-------------|--------|----------------------------------+
 
-=head2 SIGNATURE FORMAT
+Left out when doing symetric encryption.
 
-Signatures will always be Z85 encoded and have the following
-format:
+Recipient field format:
 
  +---------------------------------------------------------+
  | Field         Size      Description                     |
  +-------------+--------+----------------------------------+
- | Key ID      |     17 | Signers key id
+ | Nonce       |     24 | Random Nonce, one per R          |
  +-------------|--------|----------------------------------+
- | Ctime       |      4 | Creation time, sec since epoch   |
+ | Cipher      |     48 | S encrypted with PK or R         |
  +-------------|--------|----------------------------------+
- | Version     |      4 | Signature version                |
+
+R is calculated using public key encryption using the senders
+secret key, the recipients public key and a random nonce.
+
+=head2 SIGNATURE FORMAT
+
+There are different signature formats. Standard binary NACL
+signatures have the following format:
+
+ +---------------------------------------------------------+
+ | Field         Size      Description                     |
+ +-------------+--------+----------------------------------+
+ | Content     |      ~ | Original file content            |
  +-------------|--------|----------------------------------+
- | Signature   |     96 | ED25519 signature of SHA256 Hash |
+ | \nnacl-     |      6 | Offset separator                 |
+ +-------------|--------|----------------------------------+
+ | Hash        |     64 | BLAKE2 hash of the content       |
+ +-------------|--------|----------------------------------+
+ | Signature   |     64 | ED25519 signature of BLAKE2 Hash |
  +-------------|--------|----------------------------------+
 
 The actual signature is not a signature over the whole content
-of an input file but of a SHA256 hash of the content.
+of an input file but of a BLAKE2 hash of the content.
+
+Armored signatures have the following format:
+
+ ----- BEGIN ED25519 SIGNED MESSAGE -----
+ Hash: Blake2
+ 
+ MESSAGE
+ 
+ ----- BEGIN ED25519 SIGNATURE -----
+  Version: PCP v0.2.0
+ 
+ 195j%-^/G[cVo4dSk7hU@D>NT-1rBJ]VbJ678H4I!%@-)bzi>zOba5$KSgz7b@R]A0!kL$m
+ MTQ-1DW(e1mma(<jH=QGA(VudgAMXaKF5AGo65Zx7-5fuMZt&:6IL:n2N{KMto*KQ$:J+]d
+ dp1{3}Ju*M&+Vk7=:a=J0}B
+ ------ END ED25519 SIGNATURE ------
+
+The Z85 encoded signature at the end contains the same signature
+contents as the binary signature outlined above (hash+sig).
+
+=head2 SIGNED ENCRYPTION FORMAT
+
+Signed encrypted files are in binary form only. The first part is
+the standard encrypted file as described in B<ENCRYPTED OUTPUT FORMAT>
+followed by the binary signature described in B<SIGNATURE FORMAT> without
+the offset separator.
 
 =head2 Z85 ENCODING
 
-B<pcp1> uses Z85 to encode exported keys and encrypted messages.
-Therefore it includes a Z85 utility mode:
-
-B<pcp1> can be used to encode and decode strings to Z85 encoding.
-
-The option B<-z> encodes B<to> Z85, the option B<-Z> does the opposite
-and decodes B<from> Z85.
-
-If no input file have been specified using B<-I>, B<pcp1> expects the
-input to come from B<STDIN>, otherwise it reads the contents
-of B<file>.
-
-Encoded or decoded output will be written to B<STDOUT> unless an
-output file has been specified using the option B<-O>.
-
-=head3 Z85 EXAMPLES
-
-To encode a given file to Z85 and write the output to another:
-
- pcp1 -z myfile.bin > myfile.z85
-
-To decode the file created above and restore the original:
-
- pcp1 -Z -d myfile.z85 > myfile.bin
-
-To encode something from stdin to Z85:
-
- ps axuw | pcp1 -z > pslist.z85
-
-To decode the above and print to stdout:
-
- pcp1 -Z -d pslist.z85
+B<pcp1> uses Z85 to encode exported keys and armored signatures.
 
 =head3 Z85 BACKGROUND
 
@@ -344,3 +445,9 @@ B<Trying to use another tool to decode an Z85 encoded string produced
 by z85, might not work therefore, unless the tool takes the padding scheme
 outlined above into account>.
 
+=head2 PBP COMPATIBILITY
+
+PCP tries to be fully compatible with PBP (https://github.com/stef/pbp). Encrypted
+files and signatures - at least their binary versions - should be exchangable. However,
+this is a work in progress and might not work under all circumstances. Also there's currently
+no shared key format between pbp and pcp.

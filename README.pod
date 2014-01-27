@@ -1,16 +1,3 @@
-=head1 CAUTION
-
-B<I'm currently in the process to rewrite major parts of PCP,
-especially the asymetric crypto parts. Current master is incompatible
-to earlier versions and might or might not work. Head back until
-this message disappears. Thanks.>
-
-B<Update 22/01/2014: Changes are complete, all unittests pass. So, pcp is
-usable again on its own. However, I'm not sure if it's already fully compatible
-with pbp, since I cant get pbp running here. Also, there#s still no key format
-agreement between stef and me and not import function for our respective
-pubkey formats.>
-
 =head1 DESCRIPTION
 
 B<Pretty Curved Privacy> (pcp1) is a commandline utility which can
@@ -64,10 +51,10 @@ sends it to Bobby, who in turn decrypts it:
 
  Alicia                             Bobby
  echo "Love you, honey" > letter
- pcp1 -e -i 0x29A323A2C295D391 -I letter -O letter.z85
- cat letter.z85 | mail bobby@foo.bar
+ pcp1 -e -r Bobby -I letter -O letter.asc
+ cat letter.asc | mail bobby@foo.bar
 
-                                    pcp1 -d -I letter.z85 | less
+                                    pcp1 -d -I letter.asc | less
 
 And that's it.
 

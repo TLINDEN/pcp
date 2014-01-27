@@ -29,6 +29,16 @@
 	32k blockwise as well. Detached signatures are now
 	z85 encoded always.
 
+	Now you can also crypt+sign files with pcp1. Signatures
+	of encrypted files are always binary appended as is,
+	no offset designator. This leads to a couple of
+	problems which need to be solved somehow in the
+	future: recipient doesn't know whether to decrypt
+	the file or to decrypt and verify it. Also it's unclear
+	how to behave if decryption works but the signature
+	doesn't verify. Currently pcp1 failes in this case,
+	but leaves the decrypted result on disk. Hm...
+
 0.1.5   Fixed a segmentation fault when using pcp1 -t on a
 	public key. I added a double free() there by purpose
 	to test segfault catching I added in unittest.pl

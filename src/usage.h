@@ -94,11 +94,15 @@
 "                          -I (or from stdin) using your primary\n" \
 "                          secret key. If -r has been given, a derived\n" \
 "                          secret key will be used for signing.\n" \
-"\n" \
 "-c --check-signature <file> Verify a signature in file <file> against\n" \
 "                          the file specified with -I (or stdin).\n" \
 "                          The public key required for this must\n" \
 "                          exist in your vault file.\n" \
+"-a --detach               Write a detached signature file, which doesn't\n" \
+"                          contain the original content. Output will be\n" \
+"                          z85 encoded always. To verify, you need to\n" \
+"                          specify the original file to be verified\n" \
+"                          against using -I as well (plus -a).\n" \
 "\n" \
 "Encoding Options:\n" \
 "-z --z85-encode           Encode something to Z85 encoding. Use\n" \

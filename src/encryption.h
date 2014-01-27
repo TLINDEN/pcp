@@ -36,7 +36,7 @@
 #include "keyhash.h"
 #include "plist.h"
 
-int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd);
-int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *recipient);
+int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, int verify);
+int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *recipient, int signcrypt);
 
 #endif // _HAVE_ENCRYPTION_H

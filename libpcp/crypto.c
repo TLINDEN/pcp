@@ -162,8 +162,9 @@ unsigned char *pcp_box_decrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
 }
 
 
-size_t pcp_decrypt_file(FILE *in, FILE* out, pcp_key_t *s, unsigned char *symkey) {
-  pcp_pubkey_t *cur, *sender;
+size_t pcp_decrypt_file(FILE *in, FILE* out, pcp_key_t *s, unsigned char *symkey, int verify) {
+  pcp_pubkey_t *cur = NULL;
+  pcp_pubkey_t *sender = NULL;
   int nrec, recmatch;
   uint32_t lenrec;
   uint8_t head;
@@ -201,7 +202,7 @@ size_t pcp_decrypt_file(FILE *in, FILE* out, pcp_key_t *s, unsigned char *symkey
 
   if(self) {
     // just decrypt symetrically and go outa here
-    return pcp_decrypt_file_sym(in, out, symkey);
+    return pcp_decrypt_file_sym(in, out, symkey, NULL);
   }
 
 #ifdef PCP_ASYM_ADD_SENDER_PUB
@@ -249,14 +250,17 @@ size_t pcp_decrypt_file(FILE *in, FILE* out, pcp_key_t *s, unsigned char *symkey
   }
   
   // step 5, actually decrypt the file, finally
-  return pcp_decrypt_file_sym(in, out, symkey);
+  if(verify)
+    return pcp_decrypt_file_sym(in, out, symkey, cur);
+  else
+    return pcp_decrypt_file_sym(in, out, symkey, NULL);
 
 
  errdef1:
   return 0;
 }
 
-size_t pcp_encrypt_file(FILE *in, FILE* out, pcp_key_t *s, pcp_pubkey_t *p) {
+size_t pcp_encrypt_file(FILE *in, FILE* out, pcp_key_t *s, pcp_pubkey_t *p, int sign) {
   unsigned char *symkey;
   int recipient_count;
   unsigned char *recipients_cipher;
@@ -266,10 +270,7 @@ size_t pcp_encrypt_file(FILE *in, FILE* out, pcp_key_t *s, pcp_pubkey_t *p) {
   uint32_t lenrec;
   size_t rec_size, out_size;
  
- 
-
   /*
-    Correct format should be:
       6[1]|temp_keypair.pubkey|len(recipients)[4]|(recipients...)|(secretboxes...)
     where recipients is a concatenated list of
       random_nonce|box(temp_keypair.privkey, recipient crypto pk, random_nonce, packet key)
@@ -332,7 +333,12 @@ size_t pcp_encrypt_file(FILE *in, FILE* out, pcp_key_t *s, pcp_pubkey_t *p) {
   out_size = 5 + (rec_size * recipient_count) + crypto_box_PUBLICKEYBYTES;
 
   // step 5, actual encrypted data
-  size_t sym_size = pcp_encrypt_file_sym(in, out, symkey, 1);
+  size_t sym_size = 0;
+  if(sign)
+    sym_size = pcp_encrypt_file_sym(in, out, symkey, 1, s);
+  else
+    sym_size = pcp_encrypt_file_sym(in, out, symkey, 1, NULL);
+
   if(sym_size == 0)
     goto errec1;
 
@@ -354,7 +360,7 @@ size_t pcp_encrypt_file(FILE *in, FILE* out, pcp_key_t *s, pcp_pubkey_t *p) {
   return 0;
 }
 
-size_t pcp_encrypt_file_sym(FILE *in, FILE* out, unsigned char *symkey, int havehead) {
+size_t pcp_encrypt_file_sym(FILE *in, FILE* out, unsigned char *symkey, int havehead, pcp_key_t *signkey) {
   /*
     havehead = 0: write the whole thing from here
     havehead = 1: no header, being called from asym...
@@ -366,6 +372,14 @@ size_t pcp_encrypt_file_sym(FILE *in, FILE* out, unsigned char *symkey, int have
   size_t cur_bufsize = 0;
   size_t out_size = 0;
   size_t es;
+  crypto_generichash_state *st = NULL;
+  unsigned char *hash = NULL;
+
+  if(signkey != NULL) {
+    st = ucmalloc(sizeof(crypto_generichash_state));
+    hash = ucmalloc(crypto_generichash_BYTES_MAX);
+    crypto_generichash_init(st, NULL, 0, 0);
+  }
 
   if(havehead == 0) {
     uint8_t head = PCP_SYM_CIPHER;
@@ -376,8 +390,7 @@ size_t pcp_encrypt_file_sym(FILE *in, FILE* out, unsigned char *symkey, int have
     }
   }
 
-
-
+  // 32k-ECB-mode. FIXME: maybe support CBC as well or only use CBC?
   while(!feof(in)) {
     cur_bufsize = fread(&in_buf, 1, PCP_BLOCK_SIZE, in);
     if(cur_bufsize <= 0)
@@ -385,17 +398,31 @@ size_t pcp_encrypt_file_sym(FILE *in, FILE* out, unsigned char *symkey, int have
     buf_nonce = pcp_gennonce();
     es = pcp_sodium_mac(&buf_cipher, in_buf, cur_bufsize, buf_nonce, symkey);
     fwrite(buf_nonce, crypto_secretbox_NONCEBYTES, 1, out);
+
     //fprintf(stderr, "D: 32k buf nonce - %d\n",  crypto_secretbox_NONCEBYTES);
     fwrite(buf_cipher, es, 1, out);
     //fprintf(stderr, "D: 32k buf cipher - %ld\n", es);
     free(buf_nonce);
     free(buf_cipher);
     out_size += crypto_secretbox_NONCEBYTES + es;
+
+    if(signkey != NULL)
+      crypto_generichash_update(st, in_buf, cur_bufsize);
   }
 
   if(ferror(out) != 0) {
     fatal("Failed to write encrypted output!\n");
-    return 0;
+    goto errsym1;
+  }
+
+  if(signkey != NULL) {
+    crypto_generichash_final(st, hash, crypto_generichash_BYTES_MAX);
+    unsigned char *signature = pcp_ed_sign(hash, crypto_generichash_BYTES_MAX, signkey);
+    size_t siglen = crypto_sign_BYTES + crypto_generichash_BYTES_MAX;
+    fwrite(signature, siglen, 1, out);
+    free(st);
+    free(signature);
+    free(hash);
   }
 
   if(fileno(in) != 0)
@@ -404,9 +431,16 @@ size_t pcp_encrypt_file_sym(FILE *in, FILE* out, unsigned char *symkey, int have
     fclose(out);
 
   return out_size;
+
+ errsym1:
+  if(symkey != NULL) {
+    free(st);
+    free(hash);
+  }
+  return 0;
 }
 
-size_t pcp_decrypt_file_sym(FILE *in, FILE* out, unsigned char *symkey) {
+size_t pcp_decrypt_file_sym(FILE *in, FILE* out, unsigned char *symkey, pcp_pubkey_t *verifykey) {
   unsigned char *buf_nonce;
   unsigned char *buf_cipher;
   unsigned char *buf_clear;
@@ -418,10 +452,30 @@ size_t pcp_decrypt_file_sym(FILE *in, FILE* out, unsigned char *symkey) {
   buf_cipher = ucmalloc(ciphersize);
   out_size = 0;
 
+  unsigned char *signature = NULL;
+  size_t siglen = crypto_sign_BYTES + crypto_generichash_BYTES_MAX;
+  crypto_generichash_state *st = NULL;
+  unsigned char *hash = NULL;
+
+  if(verifykey != NULL) {
+    st = ucmalloc(sizeof(crypto_generichash_state));
+    hash = ucmalloc(crypto_generichash_BYTES_MAX);
+    crypto_generichash_init(st, NULL, 0, 0);
+    signature = ucmalloc(siglen);
+  }
+
   while(!feof(in)) {
     cur_bufsize = fread(&in_buf, 1, PCP_BLOCK_SIZE_IN, in);
     if(cur_bufsize <= PCP_CRYPTO_ADD)
       break; // no valid cipher block
+
+    if(verifykey != NULL) {
+      if(cur_bufsize < PCP_BLOCK_SIZE_IN || feof(in)) {
+	// pull out signature
+	memcpy(signature, &in_buf[cur_bufsize - siglen], siglen);
+	cur_bufsize -= siglen;
+      }
+    }
 
     ciphersize = cur_bufsize - crypto_secretbox_NONCEBYTES;
     memcpy(buf_nonce, in_buf, crypto_secretbox_NONCEBYTES);
@@ -432,7 +486,12 @@ size_t pcp_decrypt_file_sym(FILE *in, FILE* out, unsigned char *symkey) {
 
     if(es == 0) {
       fwrite(buf_clear, ciphersize - PCP_CRYPTO_ADD, 1, out);
+
+      if(verifykey != NULL)
+	crypto_generichash_update(st, buf_clear, ciphersize - PCP_CRYPTO_ADD);
+
       free(buf_clear);
+
       if(ferror(out) != 0) {
 	fatal("Failed to write decrypted output!\n");
 	out_size = 0;
@@ -450,10 +509,30 @@ size_t pcp_decrypt_file_sym(FILE *in, FILE* out, unsigned char *symkey) {
   free(buf_nonce);
   free(buf_cipher);
 
+  if(verifykey != NULL) {
+    crypto_generichash_final(st, hash, crypto_generichash_BYTES_MAX);
+    unsigned char *verifiedhash = NULL;
+    verifiedhash = pcp_ed_verify(signature, siglen, verifykey);
+    if(verifiedhash == NULL)
+      out_size = 0;
+    else {
+      if(memcmp(verifiedhash, hash, crypto_generichash_BYTES_MAX) != 0) {
+	// sig verified, but the hash doesn't match
+	fatal("signed hash doesn't match actual hash of signed decrypted file content\n");
+	out_size = 0;
+      }
+      free(verifiedhash);
+    }
+    free(st);
+    free(hash);
+    free(signature);
+  }
+
   if(fileno(in) != 0)
     fclose(in);
   if(fileno(out) != 1)
     fclose(out);
 
   return out_size;
+
 }

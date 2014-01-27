@@ -22,7 +22,7 @@
 
 #include "encryption.h"
 
-int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd) {
+int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, int verify) {
   FILE *in = NULL;
   FILE *out = NULL;
   pcp_key_t *secret = NULL;
@@ -113,13 +113,15 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd) {
   }
 
   if(symkey == NULL)
-    dlen = pcp_decrypt_file(in, out, secret, NULL);
+    dlen = pcp_decrypt_file(in, out, secret, NULL, verify);
   else
-    dlen = pcp_decrypt_file(in, out, NULL, symkey);
+    dlen = pcp_decrypt_file(in, out, NULL, symkey, verify);
 
   if(dlen > 0) {
-    fprintf(stderr, "Decrypted %d bytes successfully\n",
-	    (int)dlen);
+    if(verify)
+      fprintf(stderr, "Decrypted and Verified %ld bytes successfully\n", dlen);
+    else
+      fprintf(stderr, "Decrypted %ld bytes successfully\n", dlen);
     return 0;
   }
 
@@ -130,7 +132,7 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd) {
 
 
 
-int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *recipient) {
+int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *recipient, int signcrypt) {
   FILE *in = NULL;
   FILE *out = NULL;
   pcp_pubkey_t *pubhash = NULL; // FIXME: add free()
@@ -259,9 +261,9 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
   size_t clen = 0;
 
   if(self == 1)
-    clen = pcp_encrypt_file_sym(in, out, symkey, 0);
+    clen = pcp_encrypt_file_sym(in, out, symkey, 0, NULL);
   else
-    clen = pcp_encrypt_file(in, out, secret, pubhash);
+    clen = pcp_encrypt_file(in, out, secret, pubhash, signcrypt);
 
   if(clen > 0) {
     if(id == NULL && recipient == NULL)
@@ -277,6 +279,8 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
       free(t);
       free(cur);
     }
+    if(signcrypt)
+      fprintf(stderr, "Signed encrypted file successfully\n");
     return 0;
   }
 

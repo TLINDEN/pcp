@@ -6,23 +6,15 @@ Bug: pcp_z85_decode() fails if after end marker follows something, even whitespa
 
 key++: normalize id and lc()
 
+sym decrypt uses vault, which it shouldn't
 
 
 allow signing using an alternate secret key, like in pcpdecrypt()
 
-use recipient in encryption to lookup public key in the vault, if id not given
-
-change encrypted file format to the one of pbp, following it:
-   - support multiple recipients
-   - encrypt 32k blockwise using crypto_secretbox() using
-     a random key, encrypt that key for each recipient with
-     pk using crypto_box()
-   - base85 <=> z85? maybe make us base85 tolerant while still
-     preferring z85? I dunno...
-
 support export/import from/to pbp
 
-remove key-id from stored signatures, maybe add the file content again
-(by default a signature consists of the file+sig, but I sometime decided
-to detach the sig and only write this to the signature file, at least pbp
-stores the full stuff, so I shall do it as well).
+add support for armored signature using -z
+
+add support for buffered_signature (which has to be the default from pcp commandline)
+
+remove z85 mode (-z without -e -d -c -g)

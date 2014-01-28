@@ -390,24 +390,43 @@ size_t pcp_encrypt_file_sym(FILE *in, FILE* out, unsigned char *symkey, int have
     }
   }
 
+#ifdef PCP_CBC
+  // write the IV, pad it with rubbish, since pcp_decrypt_file_sym
+  // reads in with  PCP_BLOCK_SIZE_IN buffersize and uses the last
+  // PCP_BLOCK_SIZE as IV.
+  unsigned char *iv = urmalloc(PCP_BLOCK_SIZE);
+  unsigned char *ivpad = urmalloc(PCP_BLOCK_SIZE_IN - PCP_BLOCK_SIZE);
+  fwrite(ivpad, PCP_BLOCK_SIZE_IN - PCP_BLOCK_SIZE, 1, out);
+  fwrite(iv, PCP_BLOCK_SIZE, 1, out);
+#endif
+
   // 32k-ECB-mode. FIXME: maybe support CBC as well or only use CBC?
   while(!feof(in)) {
     cur_bufsize = fread(&in_buf, 1, PCP_BLOCK_SIZE, in);
     if(cur_bufsize <= 0)
       break;
     buf_nonce = pcp_gennonce();
+
+#ifdef PCP_CBC
+    // apply IV to current clear
+    _xorbuf(iv, in_buf, cur_bufsize);
+#endif
+
     es = pcp_sodium_mac(&buf_cipher, in_buf, cur_bufsize, buf_nonce, symkey);
     fwrite(buf_nonce, crypto_secretbox_NONCEBYTES, 1, out);
 
-    //fprintf(stderr, "D: 32k buf nonce - %d\n",  crypto_secretbox_NONCEBYTES);
     fwrite(buf_cipher, es, 1, out);
-    //fprintf(stderr, "D: 32k buf cipher - %ld\n", es);
     free(buf_nonce);
     free(buf_cipher);
     out_size += crypto_secretbox_NONCEBYTES + es;
 
     if(signkey != NULL)
       crypto_generichash_update(st, in_buf, cur_bufsize);
+
+#ifdef PCP_CBC
+    // make current cipher to next IV, ignore nonce and pad
+    memcpy(iv, &buf_cipher[PCP_CRYPTO_ADD], PCP_BLOCK_SIZE);
+#endif
   }
 
   if(ferror(out) != 0) {
@@ -464,6 +483,10 @@ size_t pcp_decrypt_file_sym(FILE *in, FILE* out, unsigned char *symkey, pcp_pubk
     signature = ucmalloc(siglen);
   }
 
+#ifdef PCP_CBC
+  unsigned char *iv = NULL; // will be filled during 1st loop
+#endif
+
   while(!feof(in)) {
     cur_bufsize = fread(&in_buf, 1, PCP_BLOCK_SIZE_IN, in);
     if(cur_bufsize <= PCP_CRYPTO_ADD)
@@ -477,11 +500,26 @@ size_t pcp_decrypt_file_sym(FILE *in, FILE* out, unsigned char *symkey, pcp_pubk
       }
     }
 
+#ifdef PCP_CBC
+    if(iv == NULL) {
+      // first block is the IV, don't write it out and skip to the next block
+      iv = ucmalloc(PCP_BLOCK_SIZE);
+      memcpy(iv, &in_buf[PCP_CRYPTO_ADD + crypto_secretbox_NONCEBYTES], PCP_BLOCK_SIZE);
+      continue;
+    }
+#endif
+
     ciphersize = cur_bufsize - crypto_secretbox_NONCEBYTES;
     memcpy(buf_nonce, in_buf, crypto_secretbox_NONCEBYTES);
     memcpy(buf_cipher, &in_buf[crypto_secretbox_NONCEBYTES], ciphersize);
 
     es = pcp_sodium_verify_mac(&buf_clear, buf_cipher, ciphersize, buf_nonce, symkey);
+
+#ifdef PCP_CBC
+    // take last IV and apply it to current clear
+    _xorbuf(iv, buf_clear, cur_bufsize - (PCP_CRYPTO_ADD + crypto_secretbox_NONCEBYTES));
+#endif 
+
     out_size += ciphersize - PCP_CRYPTO_ADD;
 
     if(es == 0) {
@@ -504,6 +542,10 @@ size_t pcp_decrypt_file_sym(FILE *in, FILE* out, unsigned char *symkey, pcp_pubk
       out_size = 0;
       break;
     }
+#ifdef PCP_CBC
+    // use last cipher as next IV
+    memcpy(iv, &in_buf[PCP_CRYPTO_ADD + crypto_secretbox_NONCEBYTES], PCP_BLOCK_SIZE);
+#endif
   }
 
   free(buf_nonce);

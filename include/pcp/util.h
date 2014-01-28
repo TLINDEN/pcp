@@ -20,7 +20,7 @@
 */
 
 
-// various helpers
+// various helpers, too small to put into own c
 
 #ifndef _HAVE_PCP_UTIL_H
 #define _HAVE_PCP_UTIL_H
@@ -57,5 +57,12 @@ static inline size_t _findoffset(unsigned char *bin, size_t binlen, char *sigsta
 
   return offset;
 }
+
+static inline void _xorbuf(unsigned char *iv, unsigned char *buf, size_t xlen) {
+  size_t i;
+  for (i = 0; i < xlen; ++i)
+   buf[i] = iv[i] ^ buf[i];
+}
+
 
 #endif // _HAVE_PCP_UTIL_H

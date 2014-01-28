@@ -23,6 +23,8 @@
 #ifndef _DEFINES_H
 #define _DEFINES_H
 
+#include "config.h"
+
 typedef unsigned char   byte;           //  Single unsigned byte = 8 bits
 typedef unsigned short  dbyte;          //  Double byte = 16 bits
 typedef unsigned int    qbyte;          //  Quad byte = 32 bits
@@ -54,9 +56,6 @@ typedef unsigned int    qbyte;          //  Quad byte = 32 bits
 #define PCP_KEY_TYPE_SECRET     2
 #define PCP_KEY_TYPE_PUBLIC     3
 
-// how many times do we hash a passphrase
-#define HCYCLES 128000
-
 // save typing, dammit
 #define PCP_ENCRYPT_PAD crypto_secretbox_ZEROBYTES + crypto_secretbox_NONCEBYTES
 
@@ -68,11 +67,21 @@ typedef unsigned int    qbyte;          //  Quad byte = 32 bits
 #define PCP_SIG_VERSION 2
 
 // crypto file format stuff
-#define PCP_ASYM_CIPHER         5
-#define PCP_SYM_CIPHER          23
-#define PCP_BLOCK_SIZE          32 * 1024
-#define PCP_BLOCK_SIZE_IN       (PCP_BLOCK_SIZE) + 16 + crypto_secretbox_NONCEBYTES
+// enabled via config.h (configure --enable-cbc)
+#ifndef PCP_CBC
+#error cbc not enabled
+  #define PCP_ASYM_CIPHER         5
+  #define PCP_SYM_CIPHER          23
+  #define PCP_BLOCK_SIZE          32 * 1024
+#else
+// CBC mode, use smaller blocks
+  #define PCP_ASYM_CIPHER         7
+  #define PCP_SYM_CIPHER          25
+  #define PCP_BLOCK_SIZE          1 * 1024
+#endif
+
 #define PCP_CRYPTO_ADD          (crypto_box_ZEROBYTES - crypto_box_BOXZEROBYTES)
+#define PCP_BLOCK_SIZE_IN       (PCP_BLOCK_SIZE) + PCP_CRYPTO_ADD + crypto_secretbox_NONCEBYTES
 #define PCP_ASYM_RECIPIENT_SIZE crypto_secretbox_KEYBYTES + PCP_CRYPTO_ADD +  crypto_secretbox_NONCEBYTES
 //#define PCP_ASYM_ADD_SENDER_PUB
 

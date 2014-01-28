@@ -189,6 +189,12 @@ if test "x${_havenacl}" = "xno"; then
 	fi
 fi
 
+AC_ARG_ENABLE([cbc],
+            [AS_HELP_STRING([--enable-cbc],
+                            [Enable CBC@1k encryption mode (default: EBC @32k)])],
+            [AC_DEFINE(PCP_CBC, 1, Define if you want to enable CBC mode)],
+             [])
+
 
 # Check for some target-specific stuff
 case "$host" in

@@ -764,6 +764,7 @@ enable_libtool_lock
 with_libsodium
 with_libsodium_include_dir
 with_libsodium_lib_dir
+enable_cbc
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1405,6 +1406,7 @@ Optional Features:
   --disable-dependency-tracking
                           speeds up one-time build
   --disable-libtool-lock  avoid locking (might break parallel builds)
+  --enable-cbc            Enable CBC@1k encryption mode (default: EBC @32k)
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -16536,6 +16538,14 @@ $as_echo "yes" >&6; }
 $as_echo "no" >&6; }
 	fi
 fi
+
+# Check whether --enable-cbc was given.
+if test "${enable_cbc+set}" = set; then :
+  enableval=$enable_cbc;
+$as_echo "#define PCP_CBC 1" >>confdefs.h
+
+fi
+
 
 
 # Check for some target-specific stuff

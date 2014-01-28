@@ -13,3 +13,4 @@ allow signing using an alternate secret key, like in pcpdecrypt()
 
 support export/import from/to pbp
 
+malloc() new pointers in funcs only if not NULL, e.g. pcp_gennonce()

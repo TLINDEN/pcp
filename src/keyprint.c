@@ -253,7 +253,7 @@ void pcppubkey_print(pcp_pubkey_t *key, FILE* out, int pbpcompat) {
 	    v->tm_year+1900-1, v->tm_mon+1, v->tm_mday,
 	    v->tm_hour, v->tm_min, v->tm_sec);
 
-    sprintf(name, "%s|%s", key->owner, key->mail);
+    sprintf(name, "%s<%s>", key->owner, key->mail);
 
     memcpy(&raw[pos], dates, 64);
     pos += 64;

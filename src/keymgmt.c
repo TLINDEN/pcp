@@ -401,14 +401,14 @@ int pcp_importpublic (vault_t *vault, FILE *in, int pbpcompat) {
       goto errimp1;
     }
 
-    char *parts = strtok (tmp, "|");
+    char *parts = strtok (tmp, "<>");
     int pnum = 0;
     while (parts != NULL) {
       if(pnum == 0)
 	memcpy(pub->owner, parts, strlen(parts));
       else if (pnum == 1)
 	memcpy(pub->mail, parts, strlen(parts));
-      parts = strtok(NULL, "|");
+      parts = strtok(NULL, "<>");
       pnum++;
     }
     free(parts);

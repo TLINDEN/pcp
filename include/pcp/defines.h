@@ -69,7 +69,6 @@ typedef unsigned int    qbyte;          //  Quad byte = 32 bits
 // crypto file format stuff
 // enabled via config.h (configure --enable-cbc)
 #ifndef PCP_CBC
-#error cbc not enabled
   #define PCP_ASYM_CIPHER         5
   #define PCP_SYM_CIPHER          23
   #define PCP_BLOCK_SIZE          32 * 1024

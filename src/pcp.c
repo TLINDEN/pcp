@@ -23,12 +23,14 @@
 #include "pcp.h"
 #include "defines.h"
 
-void usage() {
+void usage(int error) {
   fprintf(stderr, PCP_HELP_INTRO);
-  fprintf(stderr, PCP_HELP);
+  if(error == 0)
+    fprintf(stderr, PCP_HELP);
   version();
   exit(EXIT_FAILURE);
 }
+
 
 void version() {
   fprintf(stderr, "pcp version %d.%d.%d, use --help to learn how to use.\n",
@@ -224,9 +226,9 @@ int main (int argc, char **argv)  {
       case 'v':
 	version();
       case 'h':
-	usage();
+	usage(0);
       default:
-	usage();
+	usage(1);
     }
   }
 

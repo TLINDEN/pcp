@@ -43,7 +43,7 @@ static inline void p_add(plist_t **lst, char *value) {
   plist_t *iter = *lst;
 
   newitem = (plist_t *)malloc(sizeof(plist_t));
-  newitem->value = malloc(strlen(value) + 1);
+  newitem->value = (char *)malloc(strlen(value) + 1);
   strncpy(newitem->value, value, strlen(value) + 1);
   newitem->next = NULL;
   

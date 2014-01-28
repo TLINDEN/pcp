@@ -48,6 +48,10 @@
 	compile time with ./configure --enable-cbc. CBC mode
 	in PCP uses a blocksize of 1k.
 
+	Added PBP public key import and export compatibility
+	(untested against pbp yet), use -b when exporting a
+	public key, or when importing one.
+
 0.1.5   Fixed a segmentation fault when using pcp1 -t on a
 	public key. I added a double free() there by purpose
 	to test segfault catching I added in unittest.pl

@@ -93,6 +93,16 @@ char *pcp_getkeyid(pcp_key_t *k) {
   return id;
 }
 
+// same as above but for imported pbp keys
+char *pcp_getpubkeyid(pcp_pubkey_t *k) {
+  uint32_t s, p;
+  p = jen_hash(k->pub, 32, JEN_PSALT);
+  s = jen_hash(k->edpub, 32, JEN_SSALT);
+  char *id = ucmalloc(17);
+  snprintf(id, 17, "%08X%08X", p, s);
+  return id;
+}
+
 void pcp_keypairs(byte *csk, byte *cpk, byte *esk, byte *epk) {
   // generate ed25519 + curve25519 keypair from random seed
   byte *seed = urmalloc(32);

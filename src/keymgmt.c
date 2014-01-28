@@ -259,7 +259,7 @@ void pcp_exportsecretkey(pcp_key_t *key, char *outfile) {
   keyid we use the primary key. if no keyid has been given but
   a recipient instead, we try to look up the vault for a match.
  */
-void pcp_exportpublic(char *keyid, char *recipient, char *passwd, char *outfile) {
+void pcp_exportpublic(char *keyid, char *recipient, char *passwd, char *outfile, int pbpcompat) {
   pcp_pubkey_t *key = NULL;
   
   if(keyid != NULL) {
@@ -307,8 +307,11 @@ void pcp_exportpublic(char *keyid, char *recipient, char *passwd, char *outfile)
       // scip
       //printf("EXPORT:\n");
       //pcpprint_bin(stdout, key, PCP_RAW_PUBKEYSIZE); printf("\n");
-      pcppubkey_print(key, out);
-      fprintf(stderr, "public key exported.\n");
+      pcppubkey_print(key, out, pbpcompat);
+      if(pbpcompat)
+	fprintf(stderr, "public key exported in PBP format.\n");
+      else
+	fprintf(stderr, "public key exported.\n");
     }
 
     free(key);
@@ -370,31 +373,97 @@ int pcp_importsecret (vault_t *vault, FILE *in) {
 }
 
 
-int pcp_importpublic (vault_t *vault, FILE *in) {
-  size_t clen;
-  char *z85 = pcp_readz85file(in);
+int pcp_importpublic (vault_t *vault, FILE *in, int pbpcompat) {
+  pcp_pubkey_t *pub = NULL;
+  if(pbpcompat == 1) {
+    size_t bufsize = 1024;
+    unsigned char in_buf[bufsize];
+    pub = ucmalloc(sizeof(pcp_pubkey_t));
+    char *date = ucmalloc(19);
+    char *tmp = ucmalloc(1024);
 
-  if(z85 == NULL)
-    return 1;
+    bufsize = fread(&in_buf, 1, crypto_sign_BYTES, in);
+    
+    fread(&in_buf, 1, crypto_box_PUBLICKEYBYTES, in); // ignored currently
+    fread(pub->edpub, 1, crypto_sign_PUBLICKEYBYTES, in);
+    fread(pub->pub, 1, crypto_box_PUBLICKEYBYTES, in);
 
-  unsigned char *z85decoded = pcp_z85_decode((char *)z85, &clen);
-  free(z85);
+    fread(date, 1, 19, in);
+    date[19] = '\0';
+    fread(&in_buf, 1, 44, in); // ignore validity date
 
-  if(z85decoded == NULL) {
-    fatal("Error: could not decode input - it's probably not Z85 (got %d bytes)\n", clen);
+    bufsize = fread(tmp, 1, 1024, in);
+    tmp[bufsize] = '\0';
+
+    struct tm c;
+    if(strptime(date, "%Y-%m-%dT%H:%M:%S", &c) == NULL) {
+      fatal("Failed to parse creation time in PBP public key file (<%s>)\n", date);
+      goto errimp1;
+    }
+
+    char *parts = strtok (tmp, "|");
+    int pnum = 0;
+    while (parts != NULL) {
+      if(pnum == 0)
+	memcpy(pub->owner, parts, strlen(parts));
+      else if (pnum == 1)
+	memcpy(pub->mail, parts, strlen(parts));
+      parts = strtok(NULL, "|");
+      pnum++;
+    }
+    free(parts);
+
+    if(sscanf(tmp, "%s|%s", pub->owner, pub->mail) == 0) {
+      if(sscanf(tmp, "%s", pub->owner) == 0) {
+	fatal("Failed to parse owner in PBP public key file\n");
+	goto errimp1;
+      }
+    }
+
+    pub->ctime = (long)mktime(&c);
+    pub->type = PCP_KEY_TYPE_PUBLIC;
+    pub->version = PCP_KEY_VERSION;
+    pub->serial  = arc4random();
+    memcpy(pub->id, pcp_getpubkeyid(pub), 17);
+
+    free(date);
+    free(tmp);
+    goto kimp;
+
+  errimp1:
+    free(date);
+    free(tmp);
+    free(pub);
     return 1;
   }
+  else {
+    size_t clen;
+    char *z85 = pcp_readz85file(in);
 
-  if(clen != PCP_RAW_PUBKEYSIZE) {
-    fatal("Error: decoded input didn't result to a proper sized key (got %d, expected %d)!\n", clen, PCP_RAW_PUBKEYSIZE);
-    free(z85decoded);
-    return 1;
+    if(z85 == NULL)
+      return 1;
+
+    unsigned char *z85decoded = pcp_z85_decode((char *)z85, &clen);
+    free(z85);
+
+    if(z85decoded == NULL) {
+      fatal("Error: could not decode input - it's probably not Z85 (got %d bytes)\n", clen);
+      return 1;
+    }
+
+    if(clen != PCP_RAW_PUBKEYSIZE) {
+      fatal("Error: decoded input didn't result to a proper sized key (got %d, expected %d)!\n", clen, PCP_RAW_PUBKEYSIZE);
+      free(z85decoded);
+      return 1;
+    }
+
+    // all good now
+    pub = ucmalloc(sizeof(pcp_pubkey_t));
+    memcpy(pub, z85decoded, PCP_RAW_PUBKEYSIZE);
+    pubkey2native(pub);
   }
 
-  // all good now
-  pcp_pubkey_t *pub = ucmalloc(sizeof(pcp_pubkey_t));
-  memcpy(pub, z85decoded, PCP_RAW_PUBKEYSIZE);
-  pubkey2native(pub);
+ kimp:
 
   if(debug)
     pcp_dumppubkey(pub);

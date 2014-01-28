@@ -46,7 +46,7 @@ char *default_vault() {
 }
 
 int main (int argc, char **argv)  {
-  int opt, mode, usevault, useid, userec, lo, armor, detach, signcrypt;
+  int opt, mode, usevault, useid, userec, lo, armor, detach, signcrypt, pbpcompat;
   char *vaultfile = default_vault();
   char *outfile = NULL;
   char *infile = NULL;
@@ -68,6 +68,7 @@ int main (int argc, char **argv)  {
   armor = 0;
   detach = 0;
   signcrypt = 0;
+  pbpcompat = 0;
 
   static struct option longopts[] = {
     // generics
@@ -89,6 +90,7 @@ int main (int argc, char **argv)  {
     { "remove-key",      no_argument,       NULL,           'R' },
     { "edit-key",        no_argument,       NULL,           'E' },    
     { "export-yaml",     no_argument,       NULL,           'y' },
+    { "pbpcompat",       no_argument,       NULL,           'b' },
 
     // crypto
     {  "encrypt",        no_argument,       NULL,           'e' },
@@ -111,7 +113,7 @@ int main (int argc, char **argv)  {
     { NULL,              0,                 NULL,            0 }
   };
 
-  while ((opt = getopt_long(argc, argv, "klV:vdehsO:i:I:pSPRtEx:DzZr:gcymf:",
+  while ((opt = getopt_long(argc, argv, "klV:vdehsO:i:I:pSPRtEx:DzZr:gcymf:b",
 			    longopts, NULL)) != -1) {
   
     switch (opt)  {
@@ -176,6 +178,9 @@ int main (int argc, char **argv)  {
 	break;
       case 'Z':
 	armor = 1;
+	break;
+      case 'b':
+	pbpcompat = 1;
 	break;
       case 'g':
 	mode += PCP_MODE_SIGN;
@@ -293,9 +298,9 @@ int main (int argc, char **argv)  {
 	    break;
 	}
 	if (recipient != NULL)
-	  pcp_exportpublic(id, recipient->value, xpass, outfile);
+	  pcp_exportpublic(id, recipient->value, xpass, outfile, pbpcompat);
 	else
-	  pcp_exportpublic(id, NULL, xpass, outfile);
+	  pcp_exportpublic(id, NULL, xpass, outfile, pbpcompat);
 	if(xpass != NULL)
 	  free(xpass);
 	if(recipient != NULL)
@@ -312,7 +317,7 @@ int main (int argc, char **argv)  {
 	    break;
 	  }
 	}
-	pcp_importpublic(vault, in);
+	pcp_importpublic(vault, in, pbpcompat);
 	break;
 
       case PCP_MODE_IMPORT_SECRET:

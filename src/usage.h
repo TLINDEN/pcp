@@ -59,6 +59,9 @@
 "-y --export-yaml          Export all keys stored in your vault\n" \
 "                          as YAML formatted text. Use -O to put\n" \
 "                          the export into a file.\n" \
+"-b --pbpcompat            Enable PBP compatibility for public key\n" \
+"                          exports and imports.\n" \
+"\n" \
 "Encryption Options:\n" \
 "-e --encrypt              Asym-Encrypt a message. Read from stdin or\n" \
 "                          specified via -I. Output will be written\n" \

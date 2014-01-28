@@ -123,6 +123,7 @@ pcp_key_t *pcpkey_encrypt(pcp_key_t *key, char *passphrase);
 pcp_key_t *pcpkey_decrypt(pcp_key_t *key, char *passphrase);
 pcp_pubkey_t *pcpkey_pub_from_secret(pcp_key_t *key);
 char *pcp_getkeyid(pcp_key_t *k);
+char *pcp_getpubkeyid(pcp_pubkey_t *k);
 unsigned char *pcppubkey_getchecksum(pcp_pubkey_t *k);
 unsigned char *pcpkey_getchecksum(pcp_key_t *k);
 void pcp_inithashes();

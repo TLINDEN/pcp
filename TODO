@@ -13,4 +13,6 @@ allow signing using an alternate secret key, like in pcpdecrypt()
 
 support export/import from/to pbp
 
-malloc() new pointers in funcs only if not NULL, e.g. pcp_gennonce()
+malloc() new pointers in functions only if not NULL, e.g. pcp_gennonce()
+
+generalize file i/0, open+close only in src/, print msg if using stdin or stdout

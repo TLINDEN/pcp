@@ -99,17 +99,17 @@ int main (int argc, char **argv)  {
 
     // globals
     { "help",            no_argument,       NULL,           'h' },
-    { "version",         no_argument,       NULL,           'f' },
+    { "version",         no_argument,       NULL,           'v' },
     { "debug",           no_argument,       NULL,           'D' },
 
     // signing
     { "sign",            no_argument,       NULL,           'g' }, 
-    { "check-signature", optional_argument, NULL,           'c' }, 
-    { "detach",          no_argument,       NULL,           'a' }, 
+    { "check-signature", no_argument,       NULL,           'c' },
+    { "sigfile",         required_argument, NULL,           'f' },
     { NULL,              0,                 NULL,            0 }
   };
 
-  while ((opt = getopt_long(argc, argv, "klV:vdehsO:i:I:pSPRtEx:DzZr:gc::yma",
+  while ((opt = getopt_long(argc, argv, "klV:vdehsO:i:I:pSPRtEx:DzZr:gcymf:",
 			    longopts, NULL)) != -1) {
   
     switch (opt)  {
@@ -175,20 +175,18 @@ int main (int argc, char **argv)  {
       case 'Z':
 	armor = 1;
 	break;
-      case 'a':
-	detach = 1;
-	break;
       case 'g':
 	mode += PCP_MODE_SIGN;
 	usevault = 1;
 	break;
       case 'c':
 	mode += PCP_MODE_VERIFY;
-	if(optarg) {
-	  sigfile = ucmalloc(strlen(optarg)+1);
-	  strncpy(sigfile, optarg, strlen(optarg)+1);
-	}
 	usevault = 1;
+	break;
+      case 'f':
+	sigfile = ucmalloc(strlen(optarg)+1);
+	strncpy(sigfile, optarg, strlen(optarg)+1);
+	detach = 1;
 	break;
       case 'y':
 	mode += PCP_MODE_YAML;
@@ -393,7 +391,14 @@ int main (int argc, char **argv)  {
 	break;	
 
       case PCP_MODE_SIGN:
-	pcpsign(infile, outfile, xpass, armor, detach);
+	if(detach) {
+	  if(outfile != NULL && sigfile != NULL)
+	    fatal("You can't both specify -O and -f, use -O for std signatures and -f for detached ones\n");
+	  else
+	    pcpsign(infile, sigfile, xpass, armor, detach);
+	}
+	else
+	  pcpsign(infile, outfile, xpass, armor, detach);
 	break;
 
       case PCP_MODE_VERIFY:

@@ -124,7 +124,7 @@
 .\" ========================================================================
 .\"
 .IX Title "PCP1 1"
-.TH PCP1 1 "2014-01-27" "PCP 0.2.0" "USER CONTRIBUTED DOCUMENTATION"
+.TH PCP1 1 "2014-01-28" "PCP 0.2.0" "USER CONTRIBUTED DOCUMENTATION"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -231,11 +231,11 @@ Pretty Curved Privacy \- File encryption using eliptic curve cryptography.
 \&                            the file specified with \-I (or stdin).
 \&                            The public key required for this must
 \&                            exist in your vault file.
-\&  \-a \-\-detach               Write a detached signature file, which doesn\*(Aqt
+\&  \-f \-\-sigfile <file>       Write a detached signature file, which doesn\*(Aqt
 \&                            contain the original content. Output will be
 \&                            z85 encoded always. To verify, you need to
 \&                            specify the original file to be verified
-\&                            against using \-I as well (plus \-a).
+\&                            against using \-I as well (plus \-f <sigfile>).
 \&  
 \&  Encoding Options:
 \&  \-z \-\-z85\-encode           Encode something to Z85 encoding. Use
@@ -436,7 +436,13 @@ be Z85 encoded.
 Example:
 .Sp
 .Vb 1
-\& pcp1 \-g \-I message.txt \-O message.asc \-g \-\-detach
+\& pcp1 \-g \-I message.txt \-O \-g \-\-sigfile message.sig
+.Ve
+.Sp
+Verification by recipient:
+.Sp
+.Vb 1
+\& pcp \-c \-f message.sig \-I message.txt
 .Ve
 .SH "SIGNED ENCRYPTION"
 .IX Header "SIGNED ENCRYPTION"

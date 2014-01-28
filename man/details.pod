@@ -112,7 +112,11 @@ be Z85 encoded.
 
 Example:
 
- pcp1 -g -I message.txt -O message.asc -g --detach
+ pcp1 -g -I message.txt -O -g --sigfile message.sig
+
+Verification by recipient:
+
+ pcp -c -f message.sig -I message.txt
 
 =back
 

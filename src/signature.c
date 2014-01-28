@@ -115,7 +115,7 @@ int pcpverify(char *infile, char *sigfile, char *id, int detach) {
   if(detach)
     pub = pcp_ed_detachverify_buffered(in, sigfd, pub);
   else
-    pub = pcp_ed_verify_buffered(sigfd, pub);
+    pub = pcp_ed_verify_buffered(in, pub);
 
   if(pub != NULL)
     fprintf(stderr, "Signature verified (signed by %s <%s>).\n", pub->owner, pub->mail);

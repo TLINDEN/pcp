@@ -376,33 +376,31 @@ int pcp_importsecret (vault_t *vault, FILE *in) {
 int pcp_importpublic (vault_t *vault, FILE *in, int pbpcompat) {
   pcp_pubkey_t *pub = NULL;
   if(pbpcompat == 1) {
-    size_t bufsize = 1024;
-    unsigned char in_buf[bufsize];
+    char *date = NULL;
+    char *parts = NULL;
+    int pnum;
+    pbp_pubkey_t *b = ucmalloc(sizeof(pbp_pubkey_t));
     pub = ucmalloc(sizeof(pcp_pubkey_t));
-    char *date = ucmalloc(19);
-    char *tmp = ucmalloc(1024);
+ 
+    // fetch the key from the file
+    if(fread(b, 1, sizeof(pbp_pubkey_t), in) <  sizeof(pbp_pubkey_t) - 1024) {
+      fatal("PBP key seems to be too small, maybe it's not a PBP key\n");
+      goto errimp1;
+    }
 
-    bufsize = fread(&in_buf, 1, crypto_sign_BYTES, in);
-    
-    fread(&in_buf, 1, crypto_box_PUBLICKEYBYTES, in); // ignored currently
-    fread(pub->edpub, 1, crypto_sign_PUBLICKEYBYTES, in);
-    fread(pub->pub, 1, crypto_box_PUBLICKEYBYTES, in);
-
-    fread(date, 1, 19, in);
+    // parse the date
+    date = ucmalloc(19);
+    memcpy(date, b->iso_ctime, 18);
     date[19] = '\0';
-    fread(&in_buf, 1, 44, in); // ignore validity date
-
-    bufsize = fread(tmp, 1, 1024, in);
-    tmp[bufsize] = '\0';
-
     struct tm c;
     if(strptime(date, "%Y-%m-%dT%H:%M:%S", &c) == NULL) {
       fatal("Failed to parse creation time in PBP public key file (<%s>)\n", date);
       goto errimp1;
     }
 
-    char *parts = strtok (tmp, "<>");
-    int pnum = 0;
+    // parse the name
+    parts = strtok (b->name, "<>");
+    pnum = 0;
     while (parts != NULL) {
       if(pnum == 0)
 	memcpy(pub->owner, parts, strlen(parts));
@@ -413,27 +411,23 @@ int pcp_importpublic (vault_t *vault, FILE *in, int pbpcompat) {
     }
     free(parts);
 
-    if(sscanf(tmp, "%s|%s", pub->owner, pub->mail) == 0) {
-      if(sscanf(tmp, "%s", pub->owner) == 0) {
-	fatal("Failed to parse owner in PBP public key file\n");
-	goto errimp1;
-      }
-    }
-
+    // fill in the fields
     pub->ctime = (long)mktime(&c);
     pub->type = PCP_KEY_TYPE_PUBLIC;
     pub->version = PCP_KEY_VERSION;
     pub->serial  = arc4random();
     memcpy(pub->id, pcp_getpubkeyid(pub), 17);
+    memcpy(pub->pub, b->pub, crypto_box_PUBLICKEYBYTES);
+    memcpy(pub->edpub, b->edpub, crypto_sign_PUBLICKEYBYTES);
 
+    free(b);
     free(date);
-    free(tmp);
     goto kimp;
 
   errimp1:
     free(date);
-    free(tmp);
     free(pub);
+    free(b);
     return 1;
   }
   else {

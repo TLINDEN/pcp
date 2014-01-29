@@ -104,8 +104,20 @@ struct _pcp_pubkey_t {
   UT_hash_handle hh;
 };
 
+// the PBP public key format
+struct _pbp_pubkey_t {
+  byte sig[crypto_sign_BYTES];
+  byte sigpub[crypto_box_PUBLICKEYBYTES];
+  byte edpub[crypto_sign_PUBLICKEYBYTES];
+  byte pub[crypto_box_PUBLICKEYBYTES];
+  char iso_ctime[32];
+  char iso_expire[32];
+  char name[1024];
+};
+
 typedef struct _pcp_key_t pcp_key_t;
 typedef struct _pcp_pubkey_t pcp_pubkey_t;
+typedef struct _pbp_pubkey_t pbp_pubkey_t;
 
 #define PCP_RAW_KEYSIZE    sizeof(pcp_key_t)    - sizeof(UT_hash_handle)
 #define PCP_RAW_PUBKEYSIZE sizeof(pcp_pubkey_t) - sizeof(UT_hash_handle)

@@ -6,13 +6,10 @@ Bug: pcp_z85_decode() fails if after end marker follows something, even whitespa
 
 key++: normalize id and lc()
 
-sym decrypt uses vault, which it shouldn't
-
-
 allow signing using an alternate secret key, like in pcpdecrypt()
-
-support export/import from/to pbp
 
 malloc() new pointers in functions only if not NULL, e.g. pcp_gennonce()
 
 generalize file i/0, open+close only in src/, print msg if using stdin or stdout
+
+put the key import and export stuff into the lib, support from/to file and string

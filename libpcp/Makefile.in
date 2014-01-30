@@ -102,7 +102,7 @@ libpcp1_la_LIBADD =
 am_libpcp1_la_OBJECTS = mac.lo mem.lo pad.lo version.lo z85.lo \
 	zmq_z85.lo key.lo randomart.lo vault.lo fatal.lo jenhash.lo \
 	digital_crc32.lo crypto.lo ed.lo keyhash.lo scrypt.lo \
-	sha256.lo crypto_scrypt-nosse.lo
+	sha256.lo crypto_scrypt-nosse.lo base85.lo
 libpcp1_la_OBJECTS = $(am_libpcp1_la_OBJECTS)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include/pcp
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
@@ -276,7 +276,8 @@ libpcp1_la_SOURCES = mac.c mem.c pad.c version.c \
 		    z85.c zmq_z85.c key.c randomart.c \
 		    vault.c fatal.c jenhash.c digital_crc32.c \
                     crypto.c ed.c keyhash.c scrypt.c \
-		    scrypt/crypto/sha256.c scrypt/crypto/crypto_scrypt-nosse.c
+		    scrypt/crypto/sha256.c scrypt/crypto/crypto_scrypt-nosse.c \
+		    base85.c
 
 include_HEADERS = ../include/pcp.h
 all: all-am
@@ -358,6 +359,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/base85.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/crypto.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/crypto_scrypt-nosse.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/digital_crc32.Plo@am__quote@

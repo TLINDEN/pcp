@@ -381,12 +381,25 @@ int pcp_importpublic (vault_t *vault, FILE *in, int pbpcompat) {
     int pnum;
     pbp_pubkey_t *b = ucmalloc(sizeof(pbp_pubkey_t));
     pub = ucmalloc(sizeof(pcp_pubkey_t));
- 
-    // fetch the key from the file
-    if(fread(b, 1, sizeof(pbp_pubkey_t), in) <  sizeof(pbp_pubkey_t) - 1024) {
-      fatal("PBP key seems to be too small, maybe it's not a PBP key\n");
+    unsigned char *buf = ucmalloc(2048);
+    unsigned char *bin = ucmalloc(2048);
+    size_t buflen;
+    size_t klen;
+
+    buflen = fread(buf, 1, 2048, in); // base85 encoded
+    klen = (buflen / 5) * 4;
+
+    if(decode_85(bin, (char *)buf, klen) != 0)
+      goto errimp1;
+
+    if(klen < sizeof(pbp_pubkey_t) - 1024 - crypto_sign_BYTES) {
+      fatal("PBP key seems to be too small, maybe it's not a PBP key (got %ld, expected %ld)\n",
+	    klen, sizeof(pbp_pubkey_t) - 1024);
       goto errimp1;
     }
+
+    // FIXME: or use first part as sig and verify
+    memcpy(b, &bin[crypto_sign_BYTES], klen - crypto_sign_BYTES);
 
     // parse the date
     date = ucmalloc(19);
@@ -395,7 +408,7 @@ int pcp_importpublic (vault_t *vault, FILE *in, int pbpcompat) {
     struct tm c;
     if(strptime(date, "%Y-%m-%dT%H:%M:%S", &c) == NULL) {
       fatal("Failed to parse creation time in PBP public key file (<%s>)\n", date);
-      goto errimp1;
+      goto errimp2;
     }
 
     // parse the name
@@ -422,12 +435,18 @@ int pcp_importpublic (vault_t *vault, FILE *in, int pbpcompat) {
 
     free(b);
     free(date);
+    free(buf);
+    free(bin);
     goto kimp;
+
+  errimp2:
+    free(bin);
 
   errimp1:
     free(date);
     free(pub);
     free(b);
+    free(buf);
     return 1;
   }
   else {

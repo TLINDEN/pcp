@@ -106,7 +106,6 @@ struct _pcp_pubkey_t {
 
 // the PBP public key format
 struct _pbp_pubkey_t {
-  byte sig[crypto_sign_BYTES];
   byte sigpub[crypto_box_PUBLICKEYBYTES];
   byte edpub[crypto_sign_PUBLICKEYBYTES];
   byte pub[crypto_box_PUBLICKEYBYTES];

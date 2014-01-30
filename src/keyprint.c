@@ -226,39 +226,29 @@ void pcppubkey_print(pcp_pubkey_t *key, FILE* out, int pbpcompat) {
     // >>> dates='{:<32}{:<32}'.format(c.isoformat(), c.isoformat())
     // >>> dates
     // '2014-01-28T13:30:32.674394      2014-01-28T13:30:32.674394      '
-    size_t namelen = strlen(key->owner) + 3 + strlen(key->mail);
-    size_t rawsize = (crypto_box_PUBLICKEYBYTES * 2) + crypto_sign_PUBLICKEYBYTES +\
-                      64 + namelen;
-    size_t pos = 0;
-    unsigned char *raw = ucmalloc(rawsize);
-    char *dates = ucmalloc(65);
-    char *name = ucmalloc(strlen(key->owner) + 3 + strlen(key->mail));
-
-    memcpy(raw, key->pub, crypto_box_PUBLICKEYBYTES);
-    pos +=  crypto_box_PUBLICKEYBYTES;
-
-    memcpy(&raw[pos], key->edpub, crypto_sign_PUBLICKEYBYTES);
-    pos += crypto_sign_PUBLICKEYBYTES;
-
-    memcpy(&raw[pos], key->pub,  crypto_box_PUBLICKEYBYTES);
-    pos +=  crypto_box_PUBLICKEYBYTES;
+    size_t namelen = strlen(key->owner) + 2 + strlen(key->mail);
+    pbp_pubkey_t *b = ucmalloc(sizeof(pbp_pubkey_t));
+    memcpy(b->pub, key->pub, crypto_box_PUBLICKEYBYTES);
+    memcpy(b->edpub, key->edpub, crypto_sign_PUBLICKEYBYTES);
+    memcpy(b->sigpub, key->pub, crypto_box_PUBLICKEYBYTES);
+    sprintf(b->name, "%s<%s>", key->owner, key->mail);
 
     struct tm *v;
     time_t vt = t + 31536000;
     v = localtime(&vt);
 
-    sprintf(dates, "%04d-%02d-%02dT%02d:%02d:%02d             %04d-%02d-%02dT%02d:%02d:%02d             ",
+    char *date = ucmalloc(65);
+
+    sprintf(date, "%04d-%02d-%02dT%02d:%02d:%02d             %04d-%02d-%02dT%02d:%02d:%02d             ",
 	    c->tm_year+1900-1, c->tm_mon+1, c->tm_mday, // wtf? why -1?
 	    c->tm_hour, c->tm_min, c->tm_sec,
 	    v->tm_year+1900-1, v->tm_mon+1, v->tm_mday,
 	    v->tm_hour, v->tm_min, v->tm_sec);
 
-    sprintf(name, "%s<%s>", key->owner, key->mail);
+    memcpy(b->iso_ctime, date, 32);
+    memcpy(b->iso_expire, &date[32], 32);
 
-    memcpy(&raw[pos], dates, 64);
-    pos += 64;
-    
-    memcpy(&raw[pos], name, namelen);
+    size_t pbplen = sizeof(pbp_pubkey_t) - (1024 - namelen);
 
     pcp_key_t *secret = NULL;
     secret = pcp_find_primary_secret();
@@ -273,10 +263,16 @@ void pcppubkey_print(pcp_pubkey_t *key, FILE* out, int pbpcompat) {
       
       secret = pcpkey_decrypt(secret, passphrase);
       if(secret != NULL) {
-	size_t siglen = rawsize + crypto_sign_BYTES;
-	unsigned char *sig = pcp_ed_sign(raw, rawsize, secret);
-	if(sig != NULL)
-	  fwrite(sig, 1, siglen, out);
+	unsigned char *sig = pcp_ed_sign((unsigned char*)b, pbplen, secret);
+	if(sig != NULL) {
+	  size_t siglen = pbplen + crypto_sign_BYTES;
+	  size_t blen = ((siglen / 4) * 5) + siglen + 1;
+	  char *b85sig = ucmalloc(blen);
+	  encode_85(b85sig, sig, siglen);
+	  fprintf(out, "%s", b85sig);
+	  free(b85sig);
+	  free(sig);
+	}
       }
     }
   }

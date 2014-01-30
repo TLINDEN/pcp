@@ -220,33 +220,12 @@ void pcppubkey_print(pcp_pubkey_t *key, FILE* out, int pbpcompat) {
   c = localtime(&t);
 
   if(pbpcompat == 1) {
-    // sign(mk, master public | cipher public | sign public | created[32] | valid[32] | name... )
-    // dates='{:<32}{:<32}'.format(self.created.isoformat(), self.valid.isoformat())
-    // fd.write(nacl.crypto_sign(self.mp+self.sp+self.cp+dates+self.name, self.ms))
-    // >>> dates='{:<32}{:<32}'.format(c.isoformat(), c.isoformat())
-    // >>> dates
-    // '2014-01-28T13:30:32.674394      2014-01-28T13:30:32.674394      '
     size_t namelen = strlen(key->owner) + 2 + strlen(key->mail);
     pbp_pubkey_t *b = ucmalloc(sizeof(pbp_pubkey_t));
     memcpy(b->pub, key->pub, crypto_box_PUBLICKEYBYTES);
     memcpy(b->edpub, key->edpub, crypto_sign_PUBLICKEYBYTES);
-    memcpy(b->sigpub, key->pub, crypto_box_PUBLICKEYBYTES);
+    memcpy(b->sigpub, key->edpub, crypto_sign_PUBLICKEYBYTES);
     sprintf(b->name, "%s<%s>", key->owner, key->mail);
-
-    struct tm *v;
-    time_t vt = t + 31536000;
-    v = localtime(&vt);
-
-    char *date = ucmalloc(65);
-
-    sprintf(date, "%04d-%02d-%02dT%02d:%02d:%02d             %04d-%02d-%02dT%02d:%02d:%02d             ",
-	    c->tm_year+1900-1, c->tm_mon+1, c->tm_mday, // wtf? why -1?
-	    c->tm_hour, c->tm_min, c->tm_sec,
-	    v->tm_year+1900-1, v->tm_mon+1, v->tm_mday,
-	    v->tm_hour, v->tm_min, v->tm_sec);
-
-    memcpy(b->iso_ctime, date, 32);
-    memcpy(b->iso_expire, &date[32], 32);
 
     size_t pbplen = sizeof(pbp_pubkey_t) - (1024 - namelen);
 
@@ -266,7 +245,7 @@ void pcppubkey_print(pcp_pubkey_t *key, FILE* out, int pbpcompat) {
 	unsigned char *sig = pcp_ed_sign((unsigned char*)b, pbplen, secret);
 	if(sig != NULL) {
 	  size_t siglen = pbplen + crypto_sign_BYTES;
-	  size_t blen = ((siglen / 4) * 5) + siglen + 1;
+	  size_t blen = ((siglen / 4) * 5) + siglen;
 	  char *b85sig = ucmalloc(blen);
 	  encode_85(b85sig, sig, siglen);
 	  fprintf(out, "%s", b85sig);

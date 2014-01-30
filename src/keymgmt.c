@@ -376,7 +376,6 @@ int pcp_importsecret (vault_t *vault, FILE *in) {
 int pcp_importpublic (vault_t *vault, FILE *in, int pbpcompat) {
   pcp_pubkey_t *pub = NULL;
   if(pbpcompat == 1) {
-    char *date = NULL;
     char *parts = NULL;
     int pnum;
     pbp_pubkey_t *b = ucmalloc(sizeof(pbp_pubkey_t));
@@ -387,11 +386,29 @@ int pcp_importpublic (vault_t *vault, FILE *in, int pbpcompat) {
     size_t klen;
 
     buflen = fread(buf, 1, 2048, in); // base85 encoded
-    klen = (buflen / 5) * 4;
 
-    if(decode_85(bin, (char *)buf, klen) != 0)
+    // remove trailing newline, if any
+    size_t i, nlen;
+    nlen = buflen;
+    for(i=buflen; i>0; --i) {
+      if(buf[i] == '\n' || buf[i] == '\r') {
+	buf[i] = '\0';
+	nlen -= 1;
+      }
+    } 
+    klen = (nlen / 5) * 4;
+
+
+
+    if(decode_85((char *)bin, (char *)buf, klen) != 0)
       goto errimp1;
 
+    /*
+    FILE *o = fopen("out", "wb+");
+    fwrite(bin, 1, klen, o);
+    */
+
+ 
     if(klen < sizeof(pbp_pubkey_t) - 1024 - crypto_sign_BYTES) {
       fatal("PBP key seems to be too small, maybe it's not a PBP key (got %ld, expected %ld)\n",
 	    klen, sizeof(pbp_pubkey_t) - 1024);
@@ -400,16 +417,6 @@ int pcp_importpublic (vault_t *vault, FILE *in, int pbpcompat) {
 
     // FIXME: or use first part as sig and verify
     memcpy(b, &bin[crypto_sign_BYTES], klen - crypto_sign_BYTES);
-
-    // parse the date
-    date = ucmalloc(19);
-    memcpy(date, b->iso_ctime, 18);
-    date[19] = '\0';
-    struct tm c;
-    if(strptime(date, "%Y-%m-%dT%H:%M:%S", &c) == NULL) {
-      fatal("Failed to parse creation time in PBP public key file (<%s>)\n", date);
-      goto errimp2;
-    }
 
     // parse the name
     parts = strtok (b->name, "<>");
@@ -424,8 +431,14 @@ int pcp_importpublic (vault_t *vault, FILE *in, int pbpcompat) {
     }
     free(parts);
 
+    if(strlen(b->name) == 0) {
+      char *owner =  pcp_getstdin("Enter the name of the key owner");
+      memcpy(b->name, owner, strlen(owner) + 1);
+      free(owner);
+    }
+
     // fill in the fields
-    pub->ctime = (long)mktime(&c);
+    pub->ctime = (long)time(0); // pbp exports no ctime
     pub->type = PCP_KEY_TYPE_PUBLIC;
     pub->version = PCP_KEY_VERSION;
     pub->serial  = arc4random();
@@ -434,16 +447,13 @@ int pcp_importpublic (vault_t *vault, FILE *in, int pbpcompat) {
     memcpy(pub->edpub, b->edpub, crypto_sign_PUBLICKEYBYTES);
 
     free(b);
-    free(date);
     free(buf);
     free(bin);
     goto kimp;
 
-  errimp2:
-    free(bin);
 
   errimp1:
-    free(date);
+    free(bin);
     free(pub);
     free(b);
     free(buf);

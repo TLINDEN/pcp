@@ -1,116 +1,42 @@
 
-Usage: pcp1 [options]
+Usage: pcp1 [ --help          | --version ]
+            [ --keygen        | --listkeys      | --remove-key    | --edit-key      ]
+	    [ --export-public | --export-secret | --import-public | --import-secret ]
+	    [ --encrypt       | --decrypt ]
+	    [ --sign          | --check-signature ]
 
 General Options:
--V --vault <vaultfile>    Specify an alternate vault file.
-                          The deault vault is ~/.pcpvault.
--O --outfile <file>       Output file. If not specified, stdout
-                          will be used.
--I --infile <file>        Input file. If not specified, stdin
-                          will be used.
--i --keyid <id>           Specify a key id to import/export.
--r --recipient <string>   Specify a recpipient, used for public
-                          key export and encryption.
--t --text                 Print textual representation of some
-                          item. Specify -V to get info about a
-			  vault, -i to get info about a key id
-			  installed in the vault or -I in which
-			  case it determines itself what kind of
-			  file it is.
 -h --help                 Print this help message.
 -v --version              Print program version.
 -D --debug                Enable debug output.
+-V --vault <vaultfile>    Specify an alternate vault file.
+-O --outfile <file>       Output file. STDOUT if unspecified.
+-I --infile <file>        Input file. STDIN if unspecified.
+-i --keyid <id>           Specify a key id for various operations.
+-r --recipient <string>   Specify a recpipient, multiple allowed.
+-t --text                 Print textual representation of ojects.
 
 Keymanagement Options:
--k --keygen               Generate a CURVE25519 secret key. If
-                          the generated key is the first one in
-                          your vault, it will become the primary
-                          secret key. If an output file (-O) has
-			  been specified, don't store the generated
-			  key to the vault but export it to the
-			  file instead. You will be asked for
-			  an owner, mail and a passphrase. If you
-			  leave the passphrase empty, the key will
-			  be stored unencrypted.
--l --listkeys             List all keys currently stored in your
-                          vault. Only the key id's and some info
-                          about the keys will be printed, not the
-                          actual keys.
--R --remove-key           Remove a key from the vault. Requires
-                          option -i <keyid>.
--s --export-secret        Export a secret key. If your vault only
-                          contains one secret key, this one will
-                          be exported. If a key id have been
-                          specified (-i), this one will be used.
-                          If there are more than one secret keys
-                          in the vault and no key id has been
-                          given, export the primary secret key.
-                          Use -O to export to a file.
--p --export-public        Export a public key. If no key id have
-                          been specified, the public part of your
-                          primary secret key will be exported.
-                          Use -O to export to a file.
--S --import-secret        Import a secret key. Use -I to import
-                          from a file.
--P --import-public        Import a public key. Use -I to import
-                          from a file.
--y --export-yaml          Export all keys stored in your vault
-                          as YAML formatted text. Use -O to put
-                          the export into a file.
+-k --keygen               Generate new key pair.
+-l --listkeys             List all keys stored in your vault.
+-R --remove-key           Remove a key from the vault.
+-s --export-secret        Export a secret key.
+-p --export-public        Export a public key.
+-S --import-secret        Import a secret key.
+-P --import-public        Import a public key.
+-y --export-yaml          Export all keys as YAML formatted text.
 -b --pbpcompat            Enable PBP compatibility for public key
                           exports and imports.
-
 Encryption Options:
--e --encrypt              Asym-Encrypt a message. Read from stdin or
-                          specified via -I. Output will be written
-                          to stdout or the file given with -O.
-                          If a keyid (-i) has been
-                          given, use that public key for encryption.
-                          If one or more recipient (-r) has been given,
-                          encrypt the message for all recipients
-                          asymetrically, given there are matching
-                          public keys installed in the vault for them.
-                          If none of -i or -r has been given, encrypt
-                          the message symetrically. This is the same
-                          as -m (self-encryption mode).
--m --encrypt-me           Sym-Encrypt a message. Specify -I and/or
-                          -O for input/output file. You will be asked
-                          for a passphrase. No key material will
-                          be used. Same as -e without -r and -i.
--d --decrypt              Decrypt a message. Read from stdin or
-                          specified via -I. Output to stdout or
-                          written to the file specified via -O.
-                          The primary secret key will be used for
-                          decryption, if there is no primary and
-                          just one secret key in the vault, this
-                          one will be used. Otherwise you'll have
-                          to specify the keyid (-i) of the key.
-                          You need to have the public key of the
-                          sender installed in your vault.
-                          If the input is self-encrypted (symetrically)
-                          a passphrase will be requested.
+-e --encrypt              Asym-Encrypt a message. If none of -i or -r
+                          has been given, encrypt the message symetrically.
+-m --encrypt-me           Symetrically encrypt a message.
+-d --decrypt              Decrypt a message.
 
 Signature Options:
--g --sign                 Create a signature of file specified with
-                          -I (or from stdin) using your primary
-                          secret key. If -r has been given, a derived
-                          secret key will be used for signing.
--c --check-signature <file> Verify a signature in file <file> against
-                          the file specified with -I (or stdin).
-                          The public key required for this must
-                          exist in your vault file.
--f --sigfile <file>       Write a detached signature file, which doesn't
-                          contain the original content. Output will be
-                          z85 encoded always. To verify, you need to
-                          specify the original file to be verified
-                          against using -I as well (plus -f <sigfile>).
+-g --sign                 Create a signature of a file.
+-c --check-signature <file> Verify a detached signature in file <file>.
+-f --sigfile <file>       Write a detached signature file.
 
 Encoding Options:
--z --z85-encode           Encode something to Z85 encoding. Use
-                          -I and -O respectively, otherwise it
-                          stdin/stdout.
--Z --z85-decode           Decode something from Z85 encoding. Use
-                          -I and -O respectively, otherwise it
-                          stdin/stdout
-
-
+-z --z85-encode           Armor with Z85 encoding.

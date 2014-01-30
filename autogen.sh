@@ -44,6 +44,7 @@ Pretty Curved Privacy - File encryption using eliptic curve cryptography.
 
 " > man/pcp1.pod
 cat src/usage.txt | sed "s/^/  /g" >> man/pcp1.pod
+cat man/options.pod >> man/pcp1.pod
 cat man/pcp.pod >> man/pcp1.pod
 cat man/details.pod >> man/pcp1.pod
 cat man/footer.pod >> man/pcp1.pod

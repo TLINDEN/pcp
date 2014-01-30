@@ -5,6 +5,7 @@
 extern "C" {
 #endif
 
+#include "pcp/base85.h"
 #include "pcp/crypto.h"
 #include "pcp/defines.h"
 #include "pcp/digital_crc32.h"

@@ -39,6 +39,7 @@
 #include "keyprint.h"
 #include "keyhash.h"
 #include "util.h"
+#include "base85.h"
 
 #define _WITH_GETLINE
 

@@ -167,7 +167,7 @@ size_t pcp_decrypt_file(FILE *in, FILE* out, pcp_key_t *s, unsigned char *symkey
   pcp_pubkey_t *sender = NULL;
   int nrec, recmatch;
   uint32_t lenrec;
-  uint8_t head;
+  byte head[1];
   size_t cur_bufsize, rec_size;
   
   unsigned char rec_buf[PCP_ASYM_RECIPIENT_SIZE];
@@ -184,9 +184,9 @@ size_t pcp_decrypt_file(FILE *in, FILE* out, pcp_key_t *s, unsigned char *symkey
   }
   else {
     // step 1, check header
-    cur_bufsize = fread(&head, 1, 1, in);
+    cur_bufsize = fread(head, 1, 1, in);
     if(cur_bufsize != 1 && !feof(in) && !ferror(in)) {
-      if(head == PCP_SYM_CIPHER) {
+      if(head[0] == PCP_SYM_CIPHER) {
 	if(symkey != NULL)
 	  self = 1;
 	else {
@@ -194,7 +194,7 @@ size_t pcp_decrypt_file(FILE *in, FILE* out, pcp_key_t *s, unsigned char *symkey
 	  goto errdef1;
 	}
       }
-      else if(head == PCP_ASYM_CIPHER) {
+      else if(head[0] == PCP_ASYM_CIPHER) {
 	self = 0;
       }
     }
@@ -269,7 +269,8 @@ size_t pcp_encrypt_file(FILE *in, FILE* out, pcp_key_t *s, pcp_pubkey_t *p, int 
   int nrec;
   uint32_t lenrec;
   size_t rec_size, out_size;
- 
+  byte head[1];
+
   /*
       6[1]|temp_keypair.pubkey|len(recipients)[4]|(recipients...)|(secretboxes...)
     where recipients is a concatenated list of
@@ -300,8 +301,8 @@ size_t pcp_encrypt_file(FILE *in, FILE* out, pcp_key_t *s, pcp_pubkey_t *p, int 
   }
 
   // step 1, file header
-  uint8_t head = PCP_ASYM_CIPHER;
-  fwrite(&head, 1, 1, out);
+  head[0] = PCP_ASYM_CIPHER;
+  fwrite(head, 1, 1, out);
   //fprintf(stderr, "D: header - 1\n");
   if(ferror(out) != 0) {
     fatal("Failed to write encrypted output!\n");
@@ -374,6 +375,7 @@ size_t pcp_encrypt_file_sym(FILE *in, FILE* out, unsigned char *symkey, int have
   size_t es;
   crypto_generichash_state *st = NULL;
   unsigned char *hash = NULL;
+  byte head[1];
 
   if(signkey != NULL) {
     st = ucmalloc(sizeof(crypto_generichash_state));
@@ -382,8 +384,8 @@ size_t pcp_encrypt_file_sym(FILE *in, FILE* out, unsigned char *symkey, int have
   }
 
   if(havehead == 0) {
-    uint8_t head = PCP_SYM_CIPHER;
-    fwrite(&head, 1, 1, out);
+    head[0] = PCP_SYM_CIPHER;
+    size_t hs = fwrite(head, 1, 1, out);
     if(ferror(out) != 0) {
       fatal("Failed to write encrypted output!\n");
       return 0;

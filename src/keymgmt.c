@@ -398,24 +398,24 @@ int pcp_importpublic (vault_t *vault, FILE *in, int pbpcompat) {
     } 
     klen = (nlen / 5) * 4;
 
-
-
     if(decode_85((char *)bin, (char *)buf, klen) != 0)
       goto errimp1;
 
-    /*
-    FILE *o = fopen("out", "wb+");
-    fwrite(bin, 1, klen, o);
-    */
-
- 
     if(klen < sizeof(pbp_pubkey_t) - 1024 - crypto_sign_BYTES) {
       fatal("PBP key seems to be too small, maybe it's not a PBP key (got %ld, expected %ld)\n",
 	    klen, sizeof(pbp_pubkey_t) - 1024);
       goto errimp1;
     }
 
-    // FIXME: or use first part as sig and verify
+    // unpad result, if any
+    for(i=klen; i>0; --i) {
+      if(bin[i] != '\0' && i < klen) {
+	klen = i + 1;
+	break;
+      }
+    }
+
+    // use first part as sig and verify
     memcpy(b, &bin[crypto_sign_BYTES], klen - crypto_sign_BYTES);
 
     // parse the name
@@ -446,6 +446,13 @@ int pcp_importpublic (vault_t *vault, FILE *in, int pbpcompat) {
     memcpy(pub->pub, b->pub, crypto_box_PUBLICKEYBYTES);
     memcpy(pub->edpub, b->edpub, crypto_sign_PUBLICKEYBYTES);
 
+    fprintf(stderr, "edpub: "); pcpprint_bin(stderr, pub->edpub, crypto_sign_PUBLICKEYBYTES); fprintf(stderr, "\n");
+    fprintf(stderr, "  sig: "); pcpprint_bin(stderr, bin, klen); fprintf(stderr, "\n");
+    unsigned char *sig = pcp_ed_verify(bin, klen, pub);
+    if(sig == NULL)
+      goto errimp1;
+
+    free(sig);
     free(b);
     free(buf);
     free(bin);

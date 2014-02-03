@@ -25,7 +25,7 @@
 
 /*
  * AS of 16/01/2014 I'm using scrypt() instead of my crafted key
- * derivation function. However, I create a hash from the pcp_script()
+ * derivation function. However, I create a hash from the pcp_scrypt()
  * result anyway because I need a cure25519 secret.
  */
 unsigned char *pcp_derivekey(char *passphrase, unsigned char *nonce) {
@@ -33,7 +33,7 @@ unsigned char *pcp_derivekey(char *passphrase, unsigned char *nonce) {
   size_t plen = strnlen(passphrase, 255);
 
   // create the scrypt hash
-  unsigned char *scrypted = pcp_scrypt(passphrase, plen, nonce);
+  unsigned char *scrypted = pcp_scrypt(passphrase, plen, nonce, crypto_secretbox_NONCEBYTES);
 
   // make a hash from the scrypt() result
   crypto_hash_sha256(key, (unsigned char*)scrypted, 64);

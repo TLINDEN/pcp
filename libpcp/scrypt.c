@@ -21,7 +21,7 @@
 
 #include "scrypt.h"
 
-unsigned char* pcp_scrypt(char *passwd, size_t passwdlen, unsigned char *nonce) {
+unsigned char* pcp_scrypt(char *passwd, size_t passwdlen, unsigned char *nonce, size_t noncelen) {
   uint8_t *dk = ucmalloc(64); // resulting hash
 
   // constants
@@ -30,7 +30,7 @@ unsigned char* pcp_scrypt(char *passwd, size_t passwdlen, unsigned char *nonce) 
   uint32_t p = 1;
   size_t buflen = 64;
 
-  if (crypto_scrypt(passwd, passwdlen, (uint8_t *)nonce, crypto_secretbox_NONCEBYTES, N, r, p, dk, buflen) == 0) {
+  if (crypto_scrypt(passwd, passwdlen, (uint8_t *)nonce, noncelen, N, r, p, dk, buflen) == 0) {
     return dk;
   }
   else {

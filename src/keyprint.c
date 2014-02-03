@@ -220,15 +220,6 @@ void pcppubkey_print(pcp_pubkey_t *key, FILE* out, int pbpcompat) {
   c = localtime(&t);
 
   if(pbpcompat == 1) {
-    size_t namelen = strlen(key->owner) + 2 + strlen(key->mail);
-    pbp_pubkey_t *b = ucmalloc(sizeof(pbp_pubkey_t));
-    memcpy(b->pub, key->pub, crypto_box_PUBLICKEYBYTES);
-    memcpy(b->edpub, key->edpub, crypto_sign_PUBLICKEYBYTES);
-    memcpy(b->sigpub, key->edpub, crypto_sign_PUBLICKEYBYTES);
-    sprintf(b->name, "%s<%s>", key->owner, key->mail);
-
-    size_t pbplen = sizeof(pbp_pubkey_t) - (1024 - namelen);
-
     pcp_key_t *secret = NULL;
     secret = pcp_find_primary_secret();
 
@@ -242,7 +233,23 @@ void pcppubkey_print(pcp_pubkey_t *key, FILE* out, int pbpcompat) {
       
       secret = pcpkey_decrypt(secret, passphrase);
       if(secret != NULL) {
-	unsigned char *sig = pcp_ed_sign((unsigned char*)b, pbplen, secret);
+	size_t pbplen = crypto_sign_PUBLICKEYBYTES+crypto_box_PUBLICKEYBYTES+crypto_sign_PUBLICKEYBYTES+strlen(key->owner);
+
+	unsigned char *blob = ucmalloc(pbplen);
+
+	fprintf(stderr, "edpub: "); pcpprint_bin(stderr, key->edpub, crypto_sign_PUBLICKEYBYTES); fprintf(stderr, "\n");
+	fprintf(stderr, "  pub: "); pcpprint_bin(stderr, key->pub, crypto_box_PUBLICKEYBYTES); fprintf(stderr, "\n");
+	fprintf(stderr, "edpub: "); pcpprint_bin(stderr, key->edpub, crypto_sign_PUBLICKEYBYTES); fprintf(stderr, "\n");
+
+	memcpy(blob, key->edpub, crypto_sign_PUBLICKEYBYTES);
+	memcpy(&blob[crypto_sign_PUBLICKEYBYTES], key->pub, crypto_box_PUBLICKEYBYTES);
+	memcpy(&blob[crypto_sign_PUBLICKEYBYTES+crypto_box_PUBLICKEYBYTES], key->edpub, crypto_sign_PUBLICKEYBYTES);
+	memcpy(&blob[crypto_sign_PUBLICKEYBYTES+crypto_box_PUBLICKEYBYTES+crypto_sign_PUBLICKEYBYTES],
+	       key->owner, strlen(key->owner));
+
+	unsigned char *sig = pcp_ed_sign(blob, pbplen, secret);
+	fprintf(stderr, "  sig: "); pcpprint_bin(stderr, sig, pbplen+crypto_sign_BYTES); fprintf(stderr, "\n");
+	fprintf(stderr, "siglen: %ld, inlen: %ld\n", crypto_sign_BYTES, pbplen);
 	if(sig != NULL) {
 	  size_t siglen = pbplen + crypto_sign_BYTES;
 	  size_t blen = ((siglen / 4) * 5) + siglen;
@@ -252,6 +259,7 @@ void pcppubkey_print(pcp_pubkey_t *key, FILE* out, int pbpcompat) {
 	  free(b85sig);
 	  free(sig);
 	}
+	free(blob);
       }
     }
   }

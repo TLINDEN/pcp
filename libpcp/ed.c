@@ -246,7 +246,6 @@ pcp_pubkey_t *pcp_ed_verify_buffered(FILE *in, pcp_pubkey_t *p) {
   }
   // else: if unarmored, sighash is already filled
 
-
   // huh, how did we made it til here?
   unsigned char *verifiedhash = NULL;
   if(p == NULL) {

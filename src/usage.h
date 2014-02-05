@@ -3,9 +3,9 @@
 #define PCP_HELP "\n" \
 "Usage: pcp1 [ --help          | --version ]\n" \
 "            [ --keygen        | --listkeys      | --remove-key    | --edit-key      ]\n" \
-"	    [ --export-public | --export-secret | --import-public | --import-secret ]\n" \
-"	    [ --encrypt       | --decrypt ]\n" \
-"	    [ --sign          | --check-signature ]\n" \
+"            [ --export-public | --export-secret | --import-public | --import-secret ]\n" \
+"            [ --encrypt       | --decrypt ]\n" \
+"            [ --sign          | --check-signature ]\n" \
 "\n" \
 "General Options:\n" \
 "-h --help                 Print this help message.\n" \
@@ -37,8 +37,8 @@
 "\n" \
 "Signature Options:\n" \
 "-g --sign                 Create a signature of a file.\n" \
-"-c --check-signature <file> Verify a detached signature in file <file>.\n" \
-"-f --sigfile <file>       Write a detached signature file.\n" \
+"-c --check-signature      Verify a signature of a file.\n" \
+"-f --sigfile <file>       Write or check a detached signature file.\n" \
 "\n" \
 "Encoding Options:\n" \
 "-z --z85-encode           Armor with Z85 encoding.\n" \

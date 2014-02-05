@@ -1,3 +1,11 @@
+0.2.1   My crypt+sign implementation were wrong (better:
+	defect). It worked but a legal recipient could
+	re-encrypt the message and attach the original
+	signature, fooling a third party. Now the signature
+	is being made of the encrypted recipient list,
+	the cleartext content (both hashed together) and
+	encrypted afterwards.
+
 0.2.0	ED25519 and Curve25519 keys are now generated
 	separately (previously they were generated from
 	one random seed, the curve had been derived from

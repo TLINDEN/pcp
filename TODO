@@ -15,3 +15,7 @@ generalize file i/0, open+close only in src/, print msg if using stdin or stdout
 put the key import and export stuff into the lib, support from/to file and string
 
 check pub key count in pcp.c before calling verify signature, croak if count==0
+
+fix encrypt+sign protocol (http://world.std.com/~dtd/sign_encrypt/sign_encrypt7.html),
+by: hash the message, at the end, sign that hash, then encrypt the result, append to
+cipher output. include recipient list also in the signature.

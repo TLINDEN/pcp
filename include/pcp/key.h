@@ -113,9 +113,24 @@ struct _pbp_pubkey_t {
   char name[1024];
 };
 
+
 typedef struct _pcp_key_t pcp_key_t;
 typedef struct _pcp_pubkey_t pcp_pubkey_t;
 typedef struct _pbp_pubkey_t pbp_pubkey_t;
+
+/*
+  encrypted recipient list, required for crypt+sign
+  contains the encrypted recipients and the secret
+  key required for signing the message+recipients.
+*/
+struct _pcp_rec_t {
+  size_t ciphersize;
+  byte *cipher;
+  pcp_key_t *secret;
+  pcp_pubkey_t *pub;
+};
+
+typedef struct _pcp_rec_t pcp_rec_t;
 
 #define PCP_RAW_KEYSIZE    sizeof(pcp_key_t)    - sizeof(UT_hash_handle)
 #define PCP_RAW_PUBKEYSIZE sizeof(pcp_pubkey_t) - sizeof(UT_hash_handle)

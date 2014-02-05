@@ -58,8 +58,11 @@ size_t pcp_encrypt_file(FILE *in, FILE* out, pcp_key_t *s, pcp_pubkey_t *p, int 
 
 size_t pcp_decrypt_file(FILE *in, FILE* out, pcp_key_t *s, unsigned char *symkey, int verify);
 
-size_t pcp_encrypt_file_sym(FILE *in, FILE* out, unsigned char *symkey, int havehead, pcp_key_t *signkey);
+size_t pcp_encrypt_file_sym(FILE *in, FILE* out, unsigned char *symkey, int havehead, pcp_rec_t *recsign);
 
-size_t pcp_decrypt_file_sym(FILE *in, FILE* out, unsigned char *symkey, pcp_pubkey_t *verifykey);
+size_t pcp_decrypt_file_sym(FILE *in, FILE* out, unsigned char *symkey, pcp_rec_t *recverify);
+
+pcp_rec_t *pcp_rec_new(unsigned char *cipher, size_t clen, pcp_key_t *secret, pcp_pubkey_t *pub);
+void pcp_rec_free(pcp_rec_t *r);
 
 #endif // _HAVE_PCP_CRYPTO_H

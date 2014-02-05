@@ -160,8 +160,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
     symkey = pcp_scrypt(passphrase, crypto_secretbox_KEYBYTES, salt, 90);
     free(salt);
   }
-  else if(id != NULL) {
-  // FIXME: mk id a plist_t with loop as well
+  else if(id != NULL && recipient == NULL) {
     // lookup by id
     HASH_FIND_STR(pcppubkey_hash, id, tmp);
     if(tmp == NULL) {
@@ -193,7 +192,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
     plist_t *rec;
     pcphash_iteratepub(tmp) {
       rec = recipient->first;
-      while (rec->next != NULL) {
+      while (rec != NULL) {
 	_lc(rec->value);
 	if(strnstr(tmp->mail, rec->value, 255) != NULL || strnstr(tmp->owner, rec->value, 255) != NULL) {
 	  pub = ucmalloc(sizeof(pcp_pubkey_t));

@@ -34,4 +34,4 @@
 
 int pcp_version();
 
-#endif // _HAVE_PCP_VERSION
+#endif /*  _HAVE_PCP_VERSION */

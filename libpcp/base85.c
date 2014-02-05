@@ -61,7 +61,7 @@ int decode_85(char *dst, const char *buffer, int len)
 		    0xffffffff - de < (acc *= 85))
 		  return error("invalid base85 sequence %.5s => %08x\n", buffer-5, acc);
 		acc += de;
-		//		say1(" %08x\n", acc);
+		/* 		say1(" %08x\n", acc); */
 		say1("%.5s", buffer-5);
 		say2("=> %08x (len: %d)\n", acc, len);
 

@@ -32,7 +32,7 @@
 #include <stdlib.h>
 #include <compat_getopt.h>
 
-// lib
+/*  lib */
 #include "mem.h"
 #include "z85.h"
 #include "zmq_z85.h"
@@ -40,7 +40,7 @@
 #include "version.h"
 #include "vault.h"
 
-// subs
+/*  subs */
 #include "keymgmt.h"
 #include "usage.h"
 #include "encryption.h"
@@ -48,8 +48,8 @@
 #include "keyhash.h"
 #include "plist.h"
 
-// operation modi
-// perl -e '$x=0; while ($x<100000) { $x++; $x *= 1.7; printf "0x%08X: %d\n", $x, $x }'
+/*  operation modi */
+/*  perl -e '$x=0; while ($x<100000) { $x++; $x *= 1.7; printf "0x%08X: %d\n", $x, $x }' */
 #define PCP_MODE_KEYGEN        0x00000001
 #define PCP_MODE_LISTKEYS      0x00000004
 #define PCP_MODE_EXPORT_SECRET 0x00000009
@@ -88,4 +88,4 @@ void version();
 void usage();
 char *default_vault();
 
-#endif // _HAVE_PCP_H
+#endif /*  _HAVE_PCP_H */

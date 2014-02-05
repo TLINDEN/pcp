@@ -30,7 +30,7 @@ extern pcp_pubkey_t *pcppubkey_hash;
 extern pcp_key_t *__k;
 extern pcp_pubkey_t *__p;
 
-// wrapper for HASH_ITER
+/*  wrapper for HASH_ITER */
 #define pcphash_iterate(key) \
   __k = NULL; \
   HASH_ITER(hh, pcpkey_hash, key, __k)
@@ -52,4 +52,4 @@ void pcphash_add(void *key, int type);
 int pcphash_count();
 int pcphash_countpub();
 
-#endif // _HAVE_KEYHASH_H
+#endif /*  _HAVE_KEYHASH_H */

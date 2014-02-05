@@ -55,7 +55,7 @@ int pcpsign(char *infile, char *outfile, char *passwd, int z85, int detach) {
   }
 
   if(secret->secret[0] == 0) {
-    // encrypted, decrypt it
+    /*  encrypted, decrypt it */
     char *passphrase;
     if(passwd == NULL) {
       pcp_readpass(&passphrase,
@@ -120,8 +120,6 @@ int pcpverify(char *infile, char *sigfile, char *id, int detach) {
   if(pub != NULL)
     fprintf(stderr, "Signature verified (signed by %s <%s>).\n", pub->owner, pub->mail);
   
-
- errv4:
 
  errv1:
   return 1;

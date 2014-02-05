@@ -27,7 +27,7 @@ void pcp_pad_prepend(unsigned char **padded, unsigned char *unpadded,
   *padded = ucmalloc(unpadlen + padlen);
   unsigned char *tmp = ucmalloc(unpadlen + padlen);
 
-  // pcp_append orig
+  /*  pcp_append orig */
   int i;
   for(i=0; i<unpadlen; ++i) {
     tmp[i + padlen] = unpadded[i];
@@ -60,15 +60,15 @@ int main(int argc, char **argv) {
     unsigned char *dst;
     
     pcp_pad_prepend(&dst, argv[1], padlen, unpadlen);
-    //printf("   prev: %s\n  after: %s\n", argv[1], dst);
+    /* printf("   prev: %s\n  after: %s\n", argv[1], dst); */
     
     unsigned char *reverse;
     pcp_pad_remove(&reverse, dst, padlen, unpadlen);
-    //printf("reverse: %s\n", reverse);
+    /* printf("reverse: %s\n", reverse); */
     
     return 0;
   }
-  //fprintf(stderr, "Usage: pad <string> <padlen>\n");
+  /* fprintf(stderr, "Usage: pad <string> <padlen>\n"); */
   return -1;
 }
 #endif

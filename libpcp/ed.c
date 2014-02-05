@@ -23,7 +23,7 @@
 
 unsigned char * pcp_ed_verify(unsigned char *signature, size_t siglen, pcp_pubkey_t *p) {
   unsigned char *message = ucmalloc(siglen - crypto_sign_BYTES);
-  size_t mlen;
+  unsigned long long mlen;
 
   if(crypto_sign_open(message, &mlen, signature, siglen, p->edpub) != 0) {
     fatal("Failed to open the signature using the public key 0x%s!\n", p->id);
@@ -38,7 +38,7 @@ unsigned char * pcp_ed_verify(unsigned char *signature, size_t siglen, pcp_pubke
 }
 
 unsigned char *pcp_ed_sign(unsigned char *message, size_t messagesize, pcp_key_t *s) {
-  size_t mlen = messagesize + crypto_sign_BYTES;
+  unsigned long long mlen = messagesize + crypto_sign_BYTES;
   unsigned char *signature = ucmalloc(mlen);
 
   crypto_sign(signature, &mlen, message, messagesize, s->edsecret);
@@ -114,9 +114,9 @@ pcp_pubkey_t *pcp_ed_verify_buffered(FILE *in, pcp_pubkey_t *p) {
   unsigned char hash[crypto_generichash_BYTES_MAX];
   char zhead[] = PCP_SIG_HEADER;
   size_t hlen = strlen(PCP_SIG_HEADER);
-  size_t hlen2 = 15; // hash: blake2\n\n
+  size_t hlen2 = 15; /*  hash: blake2\n\n */
   size_t mlen = + crypto_sign_BYTES + crypto_generichash_BYTES_MAX;
-  size_t zlen = 262; // FIXME: calculate
+  size_t zlen = 262; /*  FIXME: calculate */
   unsigned char z85encoded[zlen];
   unsigned char sighash[mlen];
   char z85sigstart[] = PCP_SIG_START;
@@ -131,20 +131,20 @@ pcp_pubkey_t *pcp_ed_verify_buffered(FILE *in, pcp_pubkey_t *p) {
   /* use two half blocks, to overcome sigs spanning block boundaries */
   cur_bufsize = fread(&in_buf, 1, PCP_BLOCK_SIZE/2, in);
 
-  // look for z85 header and cut it out
+  /*  look for z85 header and cut it out */
   if(_findoffset(in_buf, cur_bufsize, zhead, hlen) == 0) {
-    // it is armored
-    next_bufsize = cur_bufsize - (hlen+hlen2); // size - the header
-    memcpy(in_next, &in_buf[hlen+hlen2], next_bufsize); // tmp save
-    memcpy(in_buf, in_next, next_bufsize); // put into inbuf without header
+    /*  it is armored */
+    next_bufsize = cur_bufsize - (hlen+hlen2); /*  size - the header */
+    memcpy(in_next, &in_buf[hlen+hlen2], next_bufsize); /*  tmp save */
+    memcpy(in_buf, in_next, next_bufsize); /*  put into inbuf without header */
     if(cur_bufsize == PCP_BLOCK_SIZE/2) {
-      // more to come
+      /*  more to come */
       cur_bufsize = fread(&in_buf[next_bufsize], 1, ((PCP_BLOCK_SIZE/2) - next_bufsize), in);
       cur_bufsize += next_bufsize;
       next_bufsize = 0;
-      // now we've got the 1st half block in in_buf
-      // unless the file was smaller than blocksize/2,
-      // in which case it contains all the rest til eof
+      /*  now we've got the 1st half block in in_buf */
+      /*  unless the file was smaller than blocksize/2, */
+      /*  in which case it contains all the rest til eof */
     }
     z85 = 1;
   }
@@ -163,13 +163,13 @@ pcp_pubkey_t *pcp_ed_verify_buffered(FILE *in, pcp_pubkey_t *p) {
 
   while (cur_bufsize > 0) {
     if(cur_bufsize == PCP_BLOCK_SIZE/2) {
-      // probably not eof
+      /*  probably not eof */
       next_bufsize = fread(&in_next, 1, PCP_BLOCK_SIZE/2, in);
     }
     else
-      next_bufsize = 0; // <= this is eof
+      next_bufsize = 0; /*  <= this is eof */
 
-    // concatenate previous and current buffer
+    /*  concatenate previous and current buffer */
     if(next_bufsize == 0)
       memcpy(in_full, in_buf, cur_bufsize);
     else {
@@ -178,14 +178,14 @@ pcp_pubkey_t *pcp_ed_verify_buffered(FILE *in, pcp_pubkey_t *p) {
     }
     full_bufsize = cur_bufsize+next_bufsize;
 
-    // find signature offset
+    /*  find signature offset */
     offset = _findoffset(in_full, full_bufsize, sigstart, startlen);
 
-    //printf("offset: %ld, full: %ld, cur: %ld\n", offset, full_bufsize, cur_bufsize);
+    /* printf("offset: %ld, full: %ld, cur: %ld\n", offset, full_bufsize, cur_bufsize); */
 
     if(offset >= 0 && offset <= PCP_BLOCK_SIZE/2) {
-      // sig begins within the first half, adjust in_buf size
-      //printf("1st half\n");
+      /*  sig begins within the first half, adjust in_buf size */
+      /* printf("1st half\n"); */
       next_bufsize = 0;
       cur_bufsize = offset;
       gotsig = 1;
@@ -197,9 +197,9 @@ pcp_pubkey_t *pcp_ed_verify_buffered(FILE *in, pcp_pubkey_t *p) {
 	memcpy(sighash, &in_full[offset + strlen(binsigstart)], mlen);
     }
     else if(full_bufsize - offset == siglen) {
-      // sig fits within the 2nd half
-      // offset: 28279, full: 28413, cur: 16384
-      //printf("2nd half\n");
+      /*  sig fits within the 2nd half */
+      /*  offset: 28279, full: 28413, cur: 16384 */
+      /* printf("2nd half\n"); */
       next_bufsize -= siglen;
       gotsig = 1;
       if(z85) {
@@ -212,17 +212,17 @@ pcp_pubkey_t *pcp_ed_verify_buffered(FILE *in, pcp_pubkey_t *p) {
     else
       offset = 0;
 
-    // add previous half block to hash 
+    /*  add previous half block to hash  */
     crypto_generichash_update(st, in_buf, cur_bufsize);
  
-    // next => in
+    /*  next => in */
     if(next_bufsize > 0) {
       memcpy(in_buf, in_next, next_bufsize);
       cur_bufsize = next_bufsize;
     }
     else
       break;
-  } // while
+  } /*  while */
 
   if(gotsig == 0) {
     fatal("Error, the signature doesn't contain the ed25519 signed hash\n");
@@ -244,9 +244,9 @@ pcp_pubkey_t *pcp_ed_verify_buffered(FILE *in, pcp_pubkey_t *p) {
     }
     memcpy(sighash, z85decoded, mlen);
   }
-  // else: if unarmored, sighash is already filled
+  /*  else: if unarmored, sighash is already filled */
 
-  // huh, how did we made it til here?
+  /*  huh, how did we made it til here? */
   unsigned char *verifiedhash = NULL;
   if(p == NULL) {
     pcphash_iteratepub(p) {
@@ -263,7 +263,7 @@ pcp_pubkey_t *pcp_ed_verify_buffered(FILE *in, pcp_pubkey_t *p) {
     goto errvb1;
 
   if(memcmp(verifiedhash, hash, crypto_generichash_BYTES_MAX) != 0) {
-    // sig verified, but the hash doesn't
+    /*  sig verified, but the hash doesn't */
     fatal("signed hash doesn't match actual hash of signed file content\n");
     free(verifiedhash);
     return NULL;
@@ -335,7 +335,7 @@ pcp_pubkey_t *pcp_ed_detachverify_buffered(FILE *in, FILE *sigfd, pcp_pubkey_t *
 
   crypto_generichash_final(st, hash, crypto_generichash_BYTES_MAX);
 
-  // read the sig
+  /*  read the sig */
   unsigned char *sig = NULL;
   size_t inputBufSize = 0;
   unsigned char byte[1];
@@ -386,7 +386,7 @@ pcp_pubkey_t *pcp_ed_detachverify_buffered(FILE *in, FILE *sigfd, pcp_pubkey_t *
     goto errdea4;
 
   if(memcmp(verifiedhash, hash, crypto_generichash_BYTES_MAX) != 0) {
-    // sig verified, but the hash doesn't
+    /*  sig verified, but the hash doesn't */
     fatal("signed hash doesn't match actual hash of signed file content\n");
     goto errdea5;
   }

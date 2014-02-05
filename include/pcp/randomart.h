@@ -33,7 +33,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// key_fingerprint_randomart comitted by Alexander von Gernler in rev 1.70
+/*  key_fingerprint_randomart comitted by Alexander von Gernler in rev 1.70 */
 
 #ifndef _HAVE_PCP_RANDOMART_H
 #define _HAVE_PCP_RANDOMART_H
@@ -41,7 +41,7 @@
 #include "mem.h"
 #include <string.h>
 
-// from openssh key.c
+/*  from openssh key.c */
 
 #ifndef MAX
 # define MAX(a,b) (((a)>(b))?(a):(b))
@@ -51,4 +51,4 @@
 
 char *key_fingerprint_randomart(unsigned char *dgst_raw, unsigned int dgst_raw_len);
 
-#endif // _HAVE_PCP_RANDOMART_H
+#endif /*  _HAVE_PCP_RANDOMART_H */

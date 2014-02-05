@@ -192,7 +192,7 @@ pcp_key_t *pcp_find_primary_secret() {
     }
   }
 
-  // no primary? whoops
+  /*  no primary? whoops */
   int nkeys = HASH_COUNT(pcpkey_hash);
   if(nkeys == 1) {
     pcphash_iterate(k) {
@@ -209,7 +209,7 @@ void pcp_exportsecret(char *keyid, int useid, char *outfile) {
   pcp_key_t *key = NULL;
 
   if(useid == 1) {
-    // look if we've got that one
+    /*  look if we've got that one */
     HASH_FIND_STR(pcpkey_hash, keyid, key);
     if(key == NULL) {
       fatal("Could not find a secret key with id 0x%s in vault %s!\n", keyid, vault->filename);
@@ -217,7 +217,7 @@ void pcp_exportsecret(char *keyid, int useid, char *outfile) {
     }
   }
   else {
-    // look for our primary key
+    /*  look for our primary key */
     key = pcp_find_primary_secret();
     if(key == NULL) {
       fatal("There's no primary secret key in the vault %s!\n", vault->filename);
@@ -246,9 +246,9 @@ void pcp_exportsecretkey(pcp_key_t *key, char *outfile) {
       pcp_dumpkey(key);
     else
       pcpkey_print(key, out);
-    // scip
-    //printf("EXPORT:\n");
-    // pcpprint_bin(stdout, key, PCP_RAW_KEYSIZE); printf("\n");
+    /*  scip */
+    /* printf("EXPORT:\n"); */
+    /*  pcpprint_bin(stdout, key, PCP_RAW_KEYSIZE); printf("\n"); */
   }
 }
 
@@ -263,10 +263,10 @@ void pcp_exportpublic(char *keyid, char *recipient, char *passwd, char *outfile,
   pcp_pubkey_t *key = NULL;
   
   if(keyid != NULL) {
-    // look if we've got that one
+    /*  look if we've got that one */
     HASH_FIND_STR(pcppubkey_hash, keyid, key);
     if(key == NULL) {
-      // maybe it's a secret key?
+      /*  maybe it's a secret key? */
       pcp_key_t *s = NULL;
       HASH_FIND_STR(pcpkey_hash, keyid, s);
       if(s == NULL) {
@@ -279,7 +279,7 @@ void pcp_exportpublic(char *keyid, char *recipient, char *passwd, char *outfile,
     }
   }
   else {
-    // look for the primary secret
+    /*  look for the primary secret */
     pcp_key_t *s = NULL;
     s = pcp_find_primary_secret();
     if(s == NULL) {
@@ -304,9 +304,9 @@ void pcp_exportpublic(char *keyid, char *recipient, char *passwd, char *outfile,
     }
 
     if(out != NULL) {
-      // scip
-      //printf("EXPORT:\n");
-      //pcpprint_bin(stdout, key, PCP_RAW_PUBKEYSIZE); printf("\n");
+      /*  scip */
+      /* printf("EXPORT:\n"); */
+      /* pcpprint_bin(stdout, key, PCP_RAW_PUBKEYSIZE); printf("\n"); */
       pcppubkey_print(key, out, pbpcompat);
       if(pbpcompat)
 	fprintf(stderr, "public key exported in PBP format.\n");
@@ -341,7 +341,7 @@ int pcp_importsecret (vault_t *vault, FILE *in) {
     return 1;
   }
 
-  // all good now, import the blob
+  /*  all good now, import the blob */
   pcp_key_t *key = ucmalloc(sizeof(pcp_key_t));
   memcpy(key, z85decoded, PCP_RAW_KEYSIZE);
   key2native(key);
@@ -351,7 +351,7 @@ int pcp_importsecret (vault_t *vault, FILE *in) {
 
   if(pcp_sanitycheck_key(key) == 0) {
     if(key->secret[0] != 0) {
-      // unencrypted, encrypt it
+      /*  unencrypted, encrypt it */
       fprintf(stderr, "Key to be imported is unencrypted.\n");
       char *passphrase;
       pcp_readpass(&passphrase, "Enter passphrase for key encryption", NULL, 1);
@@ -385,9 +385,9 @@ int pcp_importpublic (vault_t *vault, FILE *in, int pbpcompat) {
     size_t buflen;
     size_t klen;
 
-    buflen = fread(buf, 1, 2048, in); // base85 encoded
+    buflen = fread(buf, 1, 2048, in); /*  base85 encoded */
 
-    // remove trailing newline, if any
+    /*  remove trailing newline, if any */
     size_t i, nlen;
     nlen = buflen;
     for(i=buflen; i>0; --i) {
@@ -407,7 +407,7 @@ int pcp_importpublic (vault_t *vault, FILE *in, int pbpcompat) {
       goto errimp1;
     }
 
-    // unpad result, if any
+    /*  unpad result, if any */
     for(i=klen; i>0; --i) {
       if(bin[i] != '\0' && i < klen) {
 	klen = i + 1;
@@ -415,10 +415,10 @@ int pcp_importpublic (vault_t *vault, FILE *in, int pbpcompat) {
       }
     }
 
-    // use first part as sig and verify
+    /*  use first part as sig and verify */
     memcpy(b, &bin[crypto_sign_BYTES], klen - crypto_sign_BYTES);
 
-    // parse the name
+    /*  parse the name */
     parts = strtok (b->name, "<>");
     pnum = 0;
     while (parts != NULL) {
@@ -437,8 +437,8 @@ int pcp_importpublic (vault_t *vault, FILE *in, int pbpcompat) {
       free(owner);
     }
 
-    // fill in the fields
-    pub->ctime = (long)time(0); // pbp exports no ctime
+    /*  fill in the fields */
+    pub->ctime = (long)time(0); /*  pbp exports no ctime */
     pub->type = PCP_KEY_TYPE_PUBLIC;
     pub->version = PCP_KEY_VERSION;
     pub->serial  = arc4random();
@@ -487,7 +487,7 @@ int pcp_importpublic (vault_t *vault, FILE *in, int pbpcompat) {
       return 1;
     }
 
-    // all good now
+    /*  all good now */
     pub = ucmalloc(sizeof(pcp_pubkey_t));
     memcpy(pub, z85decoded, PCP_RAW_PUBKEYSIZE);
     pubkey2native(pub);
@@ -513,7 +513,7 @@ void pcpdelete_key(char *keyid) {
   pcp_pubkey_t *p = pcphash_pubkeyexists(keyid);
   
   if(p != NULL) {
-    // delete public
+    /*  delete public */
     HASH_DEL(pcppubkey_hash, p);
     free(p);
     vault->unsafed = 1;
@@ -522,7 +522,7 @@ void pcpdelete_key(char *keyid) {
   else {
     pcp_key_t *s = pcphash_keyexists(keyid);
     if(s != NULL) {
-      // delete secret
+      /*  delete secret */
       HASH_DEL(pcpkey_hash, s);
       free(s);
       vault->unsafed = 1;
@@ -559,7 +559,7 @@ void pcpedit_key(char *keyid) {
 	if(debug)
 	  pcp_dumpkey(key);
 
-	vault->unsafed = 1; // will be safed automatically
+	vault->unsafed = 1; /*  will be safed automatically */
 	fprintf(stderr, "Key key changed.\n");
       }
     }

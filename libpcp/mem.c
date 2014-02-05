@@ -38,7 +38,7 @@ void *ucmalloc(size_t s) {
 
   memset (value, 0, size);
 
-  //printf("allocated %d bytes at %p\n", (int)size, value);
+  /* printf("allocated %d bytes at %p\n", (int)size, value); */
 
   return value;
 }
@@ -52,7 +52,3 @@ void *urmalloc(size_t s) {
 }
 
 
-void *ucfree(void *ptr) {
-  free(ptr);
-  ptr = NULL;
-}

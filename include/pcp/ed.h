@@ -58,4 +58,4 @@ pcp_pubkey_t *pcp_ed_verify_buffered(FILE *in, pcp_pubkey_t *p);
 size_t pcp_ed_detachsign_buffered(FILE *in, FILE *out, pcp_key_t *s);
 pcp_pubkey_t *pcp_ed_detachverify_buffered(FILE *in, FILE *sigfd, pcp_pubkey_t *p);
 
-#endif // _HAVE_PCP_ED_H
+#endif /*  _HAVE_PCP_ED_H */

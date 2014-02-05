@@ -30,8 +30,8 @@
 #include <digital_crc32.h>
 
    
-// Automatically generated CRC function
-// polynomial: 0x104C11DB7
+/*  Automatically generated CRC function */
+/*  polynomial: 0x104C11DB7 */
 unsigned int
 digital_update_crc32(unsigned int crc, const unsigned char *data, size_t len)
 {

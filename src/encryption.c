@@ -50,11 +50,11 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
     }
   }
 
-  // determine crypt mode
+  /*  determine crypt mode */
   fread(&head, 1, 1, in);
   if(!feof(in) && !ferror(in)) {
     if(head == PCP_SYM_CIPHER) {
-      // symetric mode
+      /*  symetric mode */
       unsigned char *salt = ucmalloc(90);
       char stsalt[] = PBP_COMPAT_SALT;
       memcpy(salt, stsalt, 90);
@@ -73,7 +73,7 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
       free(salt);
     }
     else {
-      // asymetric mode
+      /*  asymetric mode */
       if(useid) {
 	HASH_FIND_STR(pcpkey_hash, id, secret);
 	if(secret == NULL) {
@@ -90,7 +90,7 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
 	}
       }
       if(secret->secret[0] == 0) {
-	// encrypted, decrypt it
+	/*  encrypted, decrypt it */
 	char *passphrase;
 	if(passwd == NULL) {
 	  pcp_readpass(&passphrase,
@@ -135,7 +135,7 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
 int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *recipient, int signcrypt) {
   FILE *in = NULL;
   FILE *out = NULL;
-  pcp_pubkey_t *pubhash = NULL; // FIXME: add free()
+  pcp_pubkey_t *pubhash = NULL; /*  FIXME: add free() */
   pcp_pubkey_t *tmp = NULL;
   pcp_pubkey_t *pub = NULL;
   pcp_key_t *secret = NULL;
@@ -143,7 +143,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
   int self = 0;
 
   if(id == NULL && recipient == NULL) {
-    // self mode
+    /*  self mode */
     self = 1;
     char *passphrase;
     if(passwd == NULL) {
@@ -154,17 +154,17 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
       passphrase = ucmalloc(strlen(passwd)+1);
       strncpy(passphrase, passwd, strlen(passwd)+1);
     }
-    unsigned char *salt = ucmalloc(90); // FIXME: use random salt, concat it with result afterwards
+    unsigned char *salt = ucmalloc(90); /*  FIXME: use random salt, concat it with result afterwards */
     char stsalt[] = PBP_COMPAT_SALT;
     memcpy(salt, stsalt, 90);
     symkey = pcp_scrypt(passphrase, crypto_secretbox_KEYBYTES, salt, 90);
     free(salt);
   }
   else if(id != NULL && recipient == NULL) {
-    // lookup by id
+    /*  lookup by id */
     HASH_FIND_STR(pcppubkey_hash, id, tmp);
     if(tmp == NULL) {
-      // self-encryption: look if its a secret one
+      /*  self-encryption: look if its a secret one */
       pcp_key_t *s = NULL;
       HASH_FIND_STR(pcpkey_hash, id, s);
       if(s != NULL) {
@@ -179,16 +179,16 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
       }
     }
     else {
-      // found one by id, copy into local hash
+      /*  found one by id, copy into local hash */
       pub = ucmalloc(sizeof(pcp_pubkey_t));
       memcpy(pub, tmp, sizeof(pcp_pubkey_t));
       HASH_ADD_STR( pubhash, id, tmp);
     }
   }
   else if(recipient != NULL) {
-    // lookup by recipient list
-    // iterate through global hashlist
-    // copy matches into temporary pubhash
+    /*  lookup by recipient list */
+    /*  iterate through global hashlist */
+    /*  copy matches into temporary pubhash */
     plist_t *rec;
     pcphash_iteratepub(tmp) {
       rec = recipient->first;
@@ -198,7 +198,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
 	  pub = ucmalloc(sizeof(pcp_pubkey_t));
 	  memcpy(pub, tmp, sizeof(pcp_pubkey_t));
 	  HASH_ADD_STR( pubhash, id, tmp);
-	  //fprintf(stderr, "  => found a matching key %s\n", tmp->id);
+	  /* fprintf(stderr, "  => found a matching key %s\n", tmp->id); */
 	}
 	rec = rec->next;
       }
@@ -211,7 +211,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
 
 
   if(self != 1) {
-  // we're using a random secret keypair on our side
+  /*  we're using a random secret keypair on our side */
 #ifdef PCP_ASYM_ADD_SENDER_PUB
     secret = pcpkey_new();
 #else
@@ -222,7 +222,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
     }
 
     if(secret->secret[0] == 0) {
-      // encrypted, decrypt it
+      /*  encrypted, decrypt it */
       char *passphrase;
       if(passwd == NULL) {
 	pcp_readpass(&passphrase,
@@ -284,7 +284,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
   }
 
  erren2:
-  free(pubhash); // FIXME: it's a uthash, dont use free() but func instead
+  free(pubhash); /*  FIXME: it's a uthash, dont use free() but func instead */
   free(tmp);
   free(pub);
 

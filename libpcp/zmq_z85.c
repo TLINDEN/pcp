@@ -19,17 +19,17 @@
 
 #include "zmq_z85.h"
 
-//  Z85 codec, taken from 0MQ RFC project, implements RFC32 Z85 encoding
+/*   Z85 codec, taken from 0MQ RFC project, implements RFC32 Z85 encoding */
 
-//  Maps base 256 to base 85
+/*   Maps base 256 to base 85 */
 static char encoder [85 + 1] = {
     "0123456789" "abcdefghij" "klmnopqrst" "uvwxyzABCD"
     "EFGHIJKLMN" "OPQRSTUVWX" "YZ.-:+=^!/" "*?&<>()[]{" 
     "}@%$#"
 };
 
-//  Maps base 85 to base 256
-//  We chop off lower 32 and higher 128 ranges
+/*   Maps base 85 to base 256 */
+/*   We chop off lower 32 and higher 128 ranges */
 static uint8_t decoder [96] = {
     0x00, 0x44, 0x00, 0x54, 0x53, 0x52, 0x48, 0x00, 
     0x4B, 0x4C, 0x46, 0x41, 0x00, 0x3F, 0x3E, 0x45, 
@@ -45,24 +45,24 @@ static uint8_t decoder [96] = {
     0x21, 0x22, 0x23, 0x4F, 0x00, 0x50, 0x00, 0x00
 };
 
-//  --------------------------------------------------------------------------
-//  Encode a binary frame as a string; destination string MUST be at least
-//  size * 5 / 4 bytes long plus 1 byte for the null terminator. Returns
-//  dest. Size must be a multiple of 4.
+/*   -------------------------------------------------------------------------- */
+/*   Encode a binary frame as a string; destination string MUST be at least */
+/*   size * 5 / 4 bytes long plus 1 byte for the null terminator. Returns */
+/*   dest. Size must be a multiple of 4. */
 
 char *zmq_z85_encode (char *dest, uint8_t *data, size_t size)
 {
   if (size % 4 != 0)
-    return NULL; // !assert
+    return NULL; /*  !assert */
 
     unsigned int char_nbr = 0;
     unsigned int byte_nbr = 0;
     uint32_t value = 0;
     while (byte_nbr < size) {
-        //  Accumulate value in base 256 (binary)
+        /*   Accumulate value in base 256 (binary) */
         value = value * 256 + data [byte_nbr++];
         if (byte_nbr % 4 == 0) {
-            //  Output value in base 85
+            /*   Output value in base 85 */
             unsigned int divisor = 85 * 85 * 85 * 85;
             while (divisor) {
                 dest [char_nbr++] = encoder [value / divisor % 85];
@@ -72,31 +72,31 @@ char *zmq_z85_encode (char *dest, uint8_t *data, size_t size)
         }
     }
     if (char_nbr != size * 5 / 4)
-      return NULL; // !assert
+      return NULL; /*  !assert */
 
     dest [char_nbr] = 0;
     return dest;
 }
 
     
-//  --------------------------------------------------------------------------
-//  Decode an encoded string into a binary frame; dest must be at least
-//  strlen (string) * 4 / 5 bytes long. Returns dest. strlen (string) 
-//  must be a multiple of 5.
+/*   -------------------------------------------------------------------------- */
+/*   Decode an encoded string into a binary frame; dest must be at least */
+/*   strlen (string) * 4 / 5 bytes long. Returns dest. strlen (string)  */
+/*   must be a multiple of 5. */
 
 uint8_t *zmq_z85_decode (uint8_t *dest, char *string)
 {
     if (strlen (string) % 5 != 0)
-      return NULL; // !assert
+      return NULL; /*  !assert */
     unsigned int byte_nbr = 0;
     unsigned int char_nbr = 0;
     uint32_t value = 0;
     size_t string_len = strlen (string);
     while (char_nbr < string_len) {
-        //  Accumulate value in base 85
+        /*   Accumulate value in base 85 */
         value = value * 85 + decoder [(uint8_t) string [char_nbr++] - 32];
         if (char_nbr % 5 == 0) {
-            //  Output value in base 256
+            /*   Output value in base 256 */
             unsigned int divisor = 256 * 256 * 256;
             while (divisor) {
                 dest [byte_nbr++] = value / divisor % 256;
@@ -106,6 +106,6 @@ uint8_t *zmq_z85_decode (uint8_t *dest, char *string)
         }
     }
     if (byte_nbr != strlen (string) * 4 / 5)
-      return NULL; //!assert
+      return NULL; /* !assert */
     return dest;
 }

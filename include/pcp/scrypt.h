@@ -38,5 +38,5 @@
 
 unsigned char * pcp_scrypt(char *passwd, size_t passwdlen, unsigned char *nonce, size_t noncelen);
 
-#endif // _HAVE_PCP_SCRYPT_H
+#endif /*  _HAVE_PCP_SCRYPT_H */
 

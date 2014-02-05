@@ -73,4 +73,4 @@ static inline void p_clean(plist_t *lst) {
 
 }
 
-#endif // _HAVE_PCP_PLIST_H
+#endif /*  _HAVE_PCP_PLIST_H */

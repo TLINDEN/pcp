@@ -32,13 +32,13 @@ unsigned char *pcp_derivekey(char *passphrase, unsigned char *nonce) {
   unsigned char *key = ucmalloc(crypto_secretbox_KEYBYTES);
   size_t plen = strnlen(passphrase, 255);
 
-  // create the scrypt hash
+  /*  create the scrypt hash */
   unsigned char *scrypted = pcp_scrypt(passphrase, plen, nonce, crypto_secretbox_NONCEBYTES);
 
-  // make a hash from the scrypt() result
+  /*  make a hash from the scrypt() result */
   crypto_hash_sha256(key, (unsigned char*)scrypted, 64);
 
-  // turn the 32byte hash into a secret key
+  /*  turn the 32byte hash into a secret key */
   key[0]  &= 248;
   key[31] &= 127;
   key[31] |= 64;
@@ -48,41 +48,6 @@ unsigned char *pcp_derivekey(char *passphrase, unsigned char *nonce) {
   return key;
 }
 
-/*
- * deprecated
-unsigned char *pcp_derivekey(char *passphrase) {
-  unsigned char *hash32 = ucmalloc(crypto_hash_sha256_BYTES);
-  unsigned char *key = ucmalloc(crypto_secretbox_KEYBYTES);
-
-  size_t plen = strnlen(passphrase, 255);
-  unsigned char *temp = ucmalloc(crypto_hash_sha256_BYTES);
-  int i;
-
-  // make a hash from the passphrase and then HCYCLES times from the result
-  crypto_hash_sha256(temp, (unsigned char*)passphrase, plen);
-
-  for(i=0; i<HCYCLES; ++i) {
-    if(crypto_hash_sha256(hash32, temp, crypto_hash_sha256_BYTES) == 0) {
-      memcpy(temp, hash32, crypto_hash_sha256_BYTES);
-    }
-  }
-
-  // turn the 32byte hash into a secret key
-  temp[0]  &= 248;
-  temp[31] &= 127;
-  temp[31] |= 64;
-
-  memcpy(key, temp, crypto_secretbox_KEYBYTES);
-
-  memset(passphrase, 0, plen);
-  memset(temp, 0, crypto_hash_sha256_BYTES);
-
-  free(temp);
-  free(hash32);
-
-  return key;
-}
-*/
 
 char *pcp_getkeyid(pcp_key_t *k) {
   uint32_t s, p;
@@ -93,7 +58,7 @@ char *pcp_getkeyid(pcp_key_t *k) {
   return id;
 }
 
-// same as above but for imported pbp keys
+/*  same as above but for imported pbp keys */
 char *pcp_getpubkeyid(pcp_pubkey_t *k) {
   uint32_t s, p;
   p = jen_hash(k->pub, 32, JEN_PSALT);
@@ -104,20 +69,20 @@ char *pcp_getpubkeyid(pcp_pubkey_t *k) {
 }
 
 void pcp_keypairs(byte *csk, byte *cpk, byte *esk, byte *epk) {
-  // generate ed25519 + curve25519 keypair from random seed
+  /*  generate ed25519 + curve25519 keypair from random seed */
   byte *seed = urmalloc(32);
   byte *tmp  = urmalloc(32);
 
-  // ed25519 signing key
+  /*  ed25519 signing key */
   crypto_sign_seed_keypair(epk, esk, seed);
 
-  // curve25519 secret key
+  /*  curve25519 secret key */
   tmp[0]  &= 248;
   tmp[31] &= 63;
   tmp[31] |= 64;
   memcpy(csk, tmp, 32);
 
-  // curve25519 public key
+  /*  curve25519 public key */
   crypto_scalarmult_curve25519_base(cpk, csk); 
   memset(tmp, 0, 32);
 }
@@ -130,7 +95,7 @@ pcp_key_t * pcpkey_new () {
 
   pcp_keypairs(secret, pub, edsec, edpub);
 
-  // fill in our struct
+  /*  fill in our struct */
   pcp_key_t *key = urmalloc(sizeof(pcp_key_t));
   memcpy (key->pub, pub, 32);
   memcpy (key->secret, secret, 32);
@@ -175,7 +140,7 @@ pcp_key_t *pcpkey_encrypt(pcp_key_t *key, char *passphrase) {
   free(both);
 
   if(es == 112) {
-    // success
+    /*  success */
     memcpy(key->encrypted, encrypted, 112);
     arc4random_buf(key->secret, 32);
     arc4random_buf(key->edsecret, 64);
@@ -203,7 +168,7 @@ pcp_key_t *pcpkey_decrypt(pcp_key_t *key, char *passphrase) {
   free(encryptkey);
 
   if(es == 0) {
-    // success
+    /*  success */
     memcpy(key->edsecret, decrypted, 64);
     memcpy(key->secret, &decrypted[64], 32);
   }
@@ -217,7 +182,7 @@ pcp_key_t *pcpkey_decrypt(pcp_key_t *key, char *passphrase) {
 }
 
 pcp_pubkey_t *pcpkey_pub_from_secret(pcp_key_t *key) {
-  //pcp_dumpkey(key);
+  /* pcp_dumpkey(key); */
   pcp_pubkey_t *pub = urmalloc(sizeof (pcp_pubkey_t));
   memcpy(pub->pub, key->pub, 32);
   memcpy(pub->edpub, key->edpub, 32);
@@ -365,7 +330,7 @@ int pcp_sanitycheck_pub(pcp_pubkey_t *key) {
   time_t t = (time_t)key->ctime;
   c = localtime(&t);
   if(c->tm_year <= 0 || c->tm_year > 1100) {
-    // well, I'm perhaps overacting here :)
+    /*  well, I'm perhaps overacting here :) */
     fatal("Pubkey sanity check: invalid creation timestamp (got year %04d)!\n", c->tm_year + 1900);
     return 1;
   }
@@ -416,7 +381,7 @@ int pcp_sanitycheck_key(pcp_key_t *key) {
   time_t t = (time_t)key->ctime;
   c = localtime(&t);
   if(c->tm_year <= 0 || c->tm_year > 1100) {
-    // well, I'm perhaps overacting here :)
+    /*  well, I'm perhaps overacting here :) */
     fatal("Secretkey sanity check: invalid creation timestamp (got year %04d)!\n", c->tm_year + 1900);
     return 1;
   }

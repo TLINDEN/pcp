@@ -26,14 +26,14 @@ unsigned char *pcp_padfour(unsigned char *src, size_t srclen, size_t *dstlen) {
   size_t outlen, zerolen;
   unsigned char *dst;
  
-  outlen = srclen + 1; // 1 for the pad flag
+  outlen = srclen + 1; /*  1 for the pad flag */
   while (outlen % 4 != 0) outlen++;
   zerolen = outlen - (srclen + 1);
 
   dst = (unsigned char*)ucmalloc(outlen);
-  dst[0] = zerolen;             // add the number of zeros we add
-  memcpy(&dst[1], src, srclen); // add the original
-  memset(&dst[srclen+1], 0, zerolen); // pad with zeroes 
+  dst[0] = zerolen;             /*  add the number of zeros we add */
+  memcpy(&dst[1], src, srclen); /*  add the original */
+  memset(&dst[srclen+1], 0, zerolen); /*  pad with zeroes  */
 
   *dstlen = outlen;
 
@@ -45,7 +45,7 @@ unsigned char *pcp_unpadfour(unsigned char *src, size_t srclen, size_t *dstlen) 
   size_t numzeroes;
   unsigned char *dst;
 
-  numzeroes = src[0];  // first byte tells us how many zeroes we've got
+  numzeroes = src[0];  /*  first byte tells us how many zeroes we've got */
   outlen = srclen - 1 - numzeroes;
   
   dst = malloc(outlen);
@@ -65,7 +65,7 @@ unsigned char *pcp_z85_decode(char *z85block, size_t *dstlen) {
   zlen = strlen(z85block);
   char *z85 = ucmalloc(zlen+1);
 
-  // remove newlines
+  /*  remove newlines */
   pos = 0;
   for(i=0; i<zlen+1; ++i) {
     if(z85block[i] != '\r' && z85block[i] != '\n') {
@@ -94,21 +94,21 @@ char *pcp_z85_encode(unsigned char *raw, size_t srclen, size_t *dstlen) {
   int pos, b;
   size_t outlen, blocklen, zlen;
 
-  // make z85 happy (size % 4)
+  /*  make z85 happy (size % 4) */
   unsigned char *padded = pcp_padfour(raw, srclen, &outlen);
 
-  // encode to z85
+  /*  encode to z85 */
   zlen = (outlen * 5 / 4) + 1;
   char *z85 = ucmalloc(zlen);
   z85 = zmq_z85_encode(z85, padded, outlen);
 
 
-  // make it a 72 chars wide block
+  /*  make it a 72 chars wide block */
   blocklen = (zlen + ((zlen / 72) * 2)) + 1;
   char *z85block = ucmalloc(blocklen);
 
-  //fprintf(stderr, "zlen: %d, outlen: %d, srclen: %d, blocklen: %d\n",
-  //	  zlen, outlen, srclen, blocklen);
+  /* fprintf(stderr, "zlen: %d, outlen: %d, srclen: %d, blocklen: %d\n", */
+  /* 	  zlen, outlen, srclen, blocklen); */
 
   pos = b = 0;
   /*
@@ -141,8 +141,8 @@ char *pcp_z85_encode(unsigned char *raw, size_t srclen, size_t *dstlen) {
   }
   *B = '\0';
 
-  //fprintf(stderr, "z85block len: %d\n", blocklen, strlen(z85block));
-  //fprintf(stderr, "z85block: <%s>\n", z85block);
+  /* fprintf(stderr, "z85block len: %d\n", blocklen, strlen(z85block)); */
+  /* fprintf(stderr, "z85block: <%s>\n", z85block); */
 
   *dstlen = blocklen;
   free(z85); 
@@ -189,7 +189,7 @@ char *pcp_readz85string(unsigned char *input, size_t bufsize) {
 
   for(i=0; i<bufsize; ++i) {
     if(lpos > MAXLINE) {
-      // huh, now that's suspicious
+      /*  huh, now that's suspicious */
       fatal("Invalid input, line is too long (%d bytes so far)!\n", lpos);
       goto rferr;
     }

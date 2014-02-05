@@ -37,4 +37,4 @@ int pcpverify(char *infile, char *sigfile, char *id, int detach);
 
 
 
-#endif // _HAVE_SIGNATURE_H
+#endif /*  _HAVE_SIGNATURE_H */

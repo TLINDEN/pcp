@@ -65,13 +65,13 @@ void pcphash_clean() {
 pcp_key_t *pcphash_keyexists(char *id) {
   pcp_key_t *key = NULL;
   HASH_FIND_STR(pcpkey_hash, id, key);
-  return key; // maybe NULL!
+  return key; /*  maybe NULL! */
 }
 
 pcp_pubkey_t *pcphash_pubkeyexists(char *id) {
   pcp_pubkey_t *key = NULL;
   HASH_FIND_STR(pcppubkey_hash, id, key);
-  return key; // maybe NULL!
+  return key; /*  maybe NULL! */
 }
 
 void pcphash_add(void *key, int type) {

@@ -171,7 +171,7 @@ size_t pcp_decrypt_file(FILE *in, FILE* out, pcp_key_t *s, unsigned char *symkey
   byte head[1];
   size_t cur_bufsize, rec_size;
   
-  unsigned char rec_buf[PCP_ASYM_RECIPIENT_SIZE];
+  unsigned char rec_buf[PCP_ASYM_RECIPIENT_RSIZE];
 
 #ifdef PCP_ASYM_ADD_SENDER_PUB
   unsigned char *senderpub;
@@ -224,20 +224,27 @@ size_t pcp_decrypt_file(FILE *in, FILE* out, pcp_key_t *s, unsigned char *symkey
   lenrec = be32toh(lenrec);
   
   if(verify) {
-    reccipher = ucmalloc(lenrec * PCP_ASYM_RECIPIENT_SIZE);
+    reccipher = ucmalloc(lenrec * PCP_ASYM_RECIPIENT_RSIZE);
   }
 
+
+
   /*  step 4, fetch recipient list and try to decrypt it for us */
+  unsigned char *recip = ucmalloc(PCP_ASYM_RECIPIENT_SIZE);
   for(nrec=0; nrec<lenrec; nrec++) {
-    cur_bufsize = fread(&rec_buf, 1, PCP_ASYM_RECIPIENT_SIZE, in);
-    if(cur_bufsize != PCP_ASYM_RECIPIENT_SIZE && !feof(in) && !ferror(in)) {
+    cur_bufsize = fread(&rec_buf, 1, PCP_ASYM_RECIPIENT_RSIZE, in);
+    if(cur_bufsize != PCP_ASYM_RECIPIENT_RSIZE && !feof(in) && !ferror(in)) {
       fatal("Error: input file corrupted, incomplete or no recipients\n");
       goto errdef1;
     }
     recmatch = 0;
+
+    memcpy(recip, rec_buf, crypto_secretbox_NONCEBYTES);
+    memcpy(&recip[crypto_secretbox_NONCEBYTES], &rec_buf[crypto_secretbox_NONCEBYTES + 1], PCP_ASYM_RECIPIENT_SIZE - crypto_secretbox_NONCEBYTES);
+
     pcphash_iteratepub(cur) {
       unsigned char *recipient;
-      recipient = pcp_box_decrypt(s, cur, rec_buf, PCP_ASYM_RECIPIENT_SIZE, &rec_size);
+      recipient = pcp_box_decrypt(s, cur, recip, PCP_ASYM_RECIPIENT_SIZE, &rec_size);
       if(recipient != NULL && rec_size == crypto_secretbox_KEYBYTES) {
 	/*  found a match */
 	recmatch = 1;
@@ -249,7 +256,7 @@ size_t pcp_decrypt_file(FILE *in, FILE* out, pcp_key_t *s, unsigned char *symkey
       }
     }
     if(verify) {
-      memcpy(&reccipher[nrec * (PCP_ASYM_RECIPIENT_SIZE)], &rec_buf, PCP_ASYM_RECIPIENT_SIZE);
+      memcpy(&reccipher[nrec * PCP_ASYM_RECIPIENT_RSIZE], rec_buf, PCP_ASYM_RECIPIENT_RSIZE);
     }
   }
   
@@ -261,7 +268,7 @@ size_t pcp_decrypt_file(FILE *in, FILE* out, pcp_key_t *s, unsigned char *symkey
   
   /*  step 5, actually decrypt the file, finally */
   if(verify) {
-    pcp_rec_t *rec = pcp_rec_new(reccipher, nrec * PCP_ASYM_RECIPIENT_SIZE, NULL, cur);
+    pcp_rec_t *rec = pcp_rec_new(reccipher, nrec * (PCP_ASYM_RECIPIENT_SIZE + 1), NULL, cur);
     return pcp_decrypt_file_sym(in, out, symkey, rec);
     pcp_rec_free(rec);
   }
@@ -283,6 +290,7 @@ size_t pcp_encrypt_file(FILE *in, FILE* out, pcp_key_t *s, pcp_pubkey_t *p, int 
   uint32_t lenrec;
   size_t rec_size, out_size;
   byte head[1];
+  byte rs[1];
 
   /*
       6[1]|temp_keypair.pubkey|len(recipients)[4]|(recipients...)|(secretboxes...)
@@ -296,19 +304,28 @@ size_t pcp_encrypt_file(FILE *in, FILE* out, pcp_key_t *s, pcp_pubkey_t *p, int 
 
   /*  B, encrypt it asymetrically for each recipient */
   recipient_count = HASH_COUNT(p);
-  rec_size = PCP_ASYM_RECIPIENT_SIZE;
+  rec_size = PCP_ASYM_RECIPIENT_SIZE + 1;
+  rs[0] = PCP_ASYM_RECIPIENT_SIZE - crypto_secretbox_NONCEBYTES;
   recipients_cipher = ucmalloc(rec_size * recipient_count);
   nrec = 0;
+
   HASH_ITER(hh, p, cur, t) {
     unsigned char *rec_cipher;
     rec_cipher = pcp_box_encrypt(s, cur, symkey, crypto_secretbox_KEYBYTES, &es);
-    if(es != rec_size) {
-      fatal("invalid rec_size, expected %dl, got %dl\n", rec_size, es);
+    if(es != rec_size - 1) {
+      fatal("invalid rec_size, expected %dl, got %dl\n", rec_size - 1, es);
       if(rec_cipher != NULL)
 	free(rec_cipher);
       goto errec1;
     }
-    memcpy(&recipients_cipher[nrec * rec_size], rec_cipher, rec_size); /*  already includes the nonce */
+
+    /* so we need to put out the reclist in pbp form which has
+       a byte between the nonce and the cipher, for whatever reason */
+    memcpy(&recipients_cipher[nrec * rec_size], rec_cipher, crypto_secretbox_NONCEBYTES);
+    memcpy(&recipients_cipher[(nrec * rec_size) + crypto_secretbox_NONCEBYTES], rs, 1);
+    memcpy(&recipients_cipher[(nrec * rec_size) + crypto_secretbox_NONCEBYTES + 1],
+	   &rec_cipher[crypto_secretbox_NONCEBYTES], rec_size - 1 - crypto_secretbox_NONCEBYTES);
+    
     nrec++;
     free(rec_cipher);
   }
@@ -349,6 +366,7 @@ size_t pcp_encrypt_file(FILE *in, FILE* out, pcp_key_t *s, pcp_pubkey_t *p, int 
   /*  step 5, actual encrypted data */
   size_t sym_size = 0;
   if(sign) {
+    _dump("reclist", recipients_cipher, rec_size * recipient_count);
     pcp_rec_t *rec = pcp_rec_new(recipients_cipher, rec_size * recipient_count, s, NULL);
     sym_size = pcp_encrypt_file_sym(in, out, symkey, 1, rec);
     pcp_rec_free(rec);

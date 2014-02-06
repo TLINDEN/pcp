@@ -464,6 +464,7 @@ int pcp_importpublic (vault_t *vault, FILE *in, int pbpcompat) {
     memcpy(pub->pub, b->pub, crypto_box_PUBLICKEYBYTES);
     memcpy(pub->edpub, b->edpub, crypto_sign_PUBLICKEYBYTES);
     memcpy(pub->id, pcp_getpubkeyid(pub), 17);
+    _lc(pub->owner);
 
     /* edpub used for signing, might differ */
     memcpy(tmp->edpub, b->sigpub, crypto_sign_PUBLICKEYBYTES);

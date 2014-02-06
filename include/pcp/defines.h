@@ -82,6 +82,8 @@ typedef unsigned int    qbyte;          /*   Quad byte = 32 bits */
 #define PCP_CRYPTO_ADD          (crypto_box_ZEROBYTES - crypto_box_BOXZEROBYTES)
 #define PCP_BLOCK_SIZE_IN       (PCP_BLOCK_SIZE) + PCP_CRYPTO_ADD + crypto_secretbox_NONCEBYTES
 #define PCP_ASYM_RECIPIENT_SIZE crypto_secretbox_KEYBYTES + PCP_CRYPTO_ADD + crypto_secretbox_NONCEBYTES
+#define PCP_ASYM_RECIPIENT_RSIZE  (PCP_ASYM_RECIPIENT_SIZE + 1)
+
 /* #define PCP_ASYM_ADD_SENDER_PUB */
 
 /*  used for self encryption only */

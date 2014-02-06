@@ -360,9 +360,9 @@ Verification by recipient:
 =head1 SIGNED ENCRYPTION
 
 Beside pure encryption and signatures pcp1 also supports signed
-encryption. In this mode an input file will be encrypted and
-a signature using your primary secret key from a BLAKE2 hash of
-the file contents will be appended to it.
+encryption. In this mode an input file will be signed your primary
+secret key from a BLAKE2 hash of the file contents and the recipients
+and then encrypted. The signature is encrypted as well.
 
 Example:
 
@@ -600,6 +600,20 @@ Recipient field format:
 R is calculated using public key encryption using the senders
 secret key, the recipients public key and a random nonce.
 
+Pseudocode:
+
+ R = foreach P: N | crypto_box(S, N, P, SK)
+ L = len(R)
+ T = 5
+ write (T | L | R)
+ foreach I: write (N | crypto_secret_box(I, N, S))
+
+where P is the public key of a recipient, SK is the senders
+secret key, R is the recipient list, L is the number of recipients,
+T is the filetype header, I is a block of input with a size
+of 32k, N is a nonce (new per block) and S the symmetric key.
+
+
 =head2 SIGNATURE FORMAT
 
 There are different signature formats. Standard binary NACL
@@ -619,6 +633,15 @@ signatures have the following format:
 
 The actual signature is not a signature over the whole content
 of an input file but of a BLAKE2 hash of the content.
+
+Pseudo code:
+
+ H = crypto_generichash(C)
+ C | O | H | crypto_sign(H, S)
+
+where C is the message (content), H is the blake2 hash,
+O is the offset separator and S is the secret signing key
+of the sender.
 
 Armored signatures have the following format:
 
@@ -642,8 +665,54 @@ contents as the binary signature outlined above (hash+sig).
 
 Signed encrypted files are in binary form only. The first part is
 the standard encrypted file as described in B<ENCRYPTED OUTPUT FORMAT>
-followed by the binary signature described in B<SIGNATURE FORMAT> without
-the offset separator.
+followed by the binary encrypted signature described in B<SIGNATURE FORMAT>
+without the offset separator.
+
+However, not only the hash of the file content will be signed but the
+recipient list described in B<ENCRYPTED OUTPUT FORMAT> as well. A
+valid recipient is therefore not able to re-encrypt the decrypted
+message, append the original signature and send it to other recipients.
+The signature would not match since the recipient list differs and
+so recipients know that the signature is forged.
+
+Formal file description of sign+encrypt format:
+
+ +---------------------------------------------------------+
+ | Field         Size      Description                     |
+ +-------------+--------+----------------------------------+
+ | Type        |      1 | Filetype, 5=ASYM, 23=SYM         |
+ +-------------|--------|----------------------------------+
+ | Len R       |      4 | Number of recipients         (*) |
+ +-------------|--------|----------------------------------+
+ | Recipients  |   R*72 | C(recipient)|C(recipient)... (*) |
+ +-------------|--------|----------------------------------+
+ | Encrypted   |      ~ | The actual encrypted data        |
+ +-------------|--------|----------------------------------+
+ | Signature   |      ~ | Encrypted signature(*)           |
+ +-------------|--------|----------------------------------+
+
+As usual the encrypted signature consists of a nonce and the
+actual cipher, which is computed symmetrically (see above)
+from the following clear signature.
+
+Before encryption the signature format is:
+
+ +---------------------------------------------------------+
+ | Field         Size      Description                     |
+ +-------------+--------+----------------------------------+
+ | Hash        |     64 | BLAKE2 hash of content+R (*)     |
+ +-------------|--------|----------------------------------+
+ | Signature   |     64 | ED25519 signature of BLAKE2 Hash |
+ +-------------|--------|----------------------------------+
+
+where R is: C(recipient)|C(recipient)... (see B<ENCRYPTED OUTPUT FORMAT>).
+
+Pseudocode:
+
+ N | crypto_secret_box( crypto_sign( crypto_generichash( M + R, SK ) ), N, S)
+
+where N is the nonce, M the message, R the recipient list, SK is the senders
+secret signing key and S the symmetric key.
 
 =head2 Z85 ENCODING
 

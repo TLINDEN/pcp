@@ -233,23 +233,52 @@ void pcppubkey_print(pcp_pubkey_t *key, FILE* out, int pbpcompat) {
       
       secret = pcpkey_decrypt(secret, passphrase);
       if(secret != NULL) {
-	size_t pbplen = crypto_sign_PUBLICKEYBYTES+crypto_box_PUBLICKEYBYTES+crypto_sign_PUBLICKEYBYTES+strlen(key->owner);
+	size_t pbplen = crypto_sign_PUBLICKEYBYTES+crypto_box_PUBLICKEYBYTES+crypto_sign_PUBLICKEYBYTES+strlen(key->owner)+64;
+
+	/* we need to do the padding here, since pbp verifies the sig including the pad */
+	/*
+	int pad = pbplen % 4;
+        if(pad > 0) {
+          pad = 4 - pad;
+	  pbplen += pad;
+	}
+	*/
 
 	unsigned char *blob = ucmalloc(pbplen);
 
-	fprintf(stderr, "edpub: "); pcpprint_bin(stderr, key->edpub, crypto_sign_PUBLICKEYBYTES); fprintf(stderr, "\n");
-	fprintf(stderr, "  pub: "); pcpprint_bin(stderr, key->pub, crypto_box_PUBLICKEYBYTES); fprintf(stderr, "\n");
-	fprintf(stderr, "edpub: "); pcpprint_bin(stderr, key->edpub, crypto_sign_PUBLICKEYBYTES); fprintf(stderr, "\n");
+	if(debug) {
+	  _dump("  mp", secret->edpub, crypto_sign_PUBLICKEYBYTES);
+	  _dump("  cp", key->pub, crypto_sign_PUBLICKEYBYTES);
+	  _dump("  sp", key->edpub, crypto_sign_PUBLICKEYBYTES);
+	  _dump("name", (unsigned char *)key->owner, strlen(key->owner));
+	}
 
-	memcpy(blob, key->edpub, crypto_sign_PUBLICKEYBYTES);
-	memcpy(&blob[crypto_sign_PUBLICKEYBYTES], key->pub, crypto_box_PUBLICKEYBYTES);
-	memcpy(&blob[crypto_sign_PUBLICKEYBYTES+crypto_box_PUBLICKEYBYTES], key->edpub, crypto_sign_PUBLICKEYBYTES);
-	memcpy(&blob[crypto_sign_PUBLICKEYBYTES+crypto_box_PUBLICKEYBYTES+crypto_sign_PUBLICKEYBYTES],
-	       key->owner, strlen(key->owner));
+	/* pkt = keys.sign(keys.mp+keys.sp+keys.cp+dates+keys.name, master=True) */
+	memcpy(blob, secret->edpub, crypto_sign_PUBLICKEYBYTES);
+	memcpy(&blob[crypto_sign_PUBLICKEYBYTES], key->edpub, crypto_sign_PUBLICKEYBYTES);
+	memcpy(&blob[crypto_sign_PUBLICKEYBYTES*2], key->pub, crypto_box_PUBLICKEYBYTES);
+
+	struct tm *v;
+	time_t vt = t + 31536000;
+	v = localtime(&vt);
+
+	char *date = ucmalloc(65);
+
+	sprintf(date, "%04d-%02d-%02dT%02d:%02d:%02d.000000      %04d-%02d-%02dT%02d:%02d:%02d.000000      ",
+		c->tm_year+1900-1, c->tm_mon+1, c->tm_mday, // wtf? why -1?
+		c->tm_hour, c->tm_min, c->tm_sec,
+		v->tm_year+1900-1, v->tm_mon+1, v->tm_mday,
+		v->tm_hour, v->tm_min, v->tm_sec);
+	
+	memcpy(&blob[crypto_sign_PUBLICKEYBYTES+crypto_box_PUBLICKEYBYTES*2], date, 64);
+
+	memcpy(&blob[crypto_sign_PUBLICKEYBYTES+crypto_box_PUBLICKEYBYTES*2+64], key->owner, strlen(key->owner));
 
 	unsigned char *sig = pcp_ed_sign(blob, pbplen, secret);
-	fprintf(stderr, "  sig: "); pcpprint_bin(stderr, sig, pbplen+crypto_sign_BYTES); fprintf(stderr, "\n");
-	fprintf(stderr, "siglen: %d, inlen: %ld\n", crypto_sign_BYTES, pbplen);
+
+	if(debug)
+	  _dump(" sig", sig, crypto_sign_BYTES+pbplen);
+
 	if(sig != NULL) {
 	  size_t siglen = pbplen + crypto_sign_BYTES;
 	  size_t blen = ((siglen / 4) * 5) + siglen;

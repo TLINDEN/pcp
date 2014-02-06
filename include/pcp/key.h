@@ -108,8 +108,10 @@ struct _pcp_pubkey_t {
 /*  keys.mp+keys.cp+keys.sp+keys.name */
 struct _pbp_pubkey_t {
   byte sigpub[crypto_sign_PUBLICKEYBYTES];
-  byte pub[crypto_box_PUBLICKEYBYTES];
   byte edpub[crypto_sign_PUBLICKEYBYTES];
+  byte pub[crypto_box_PUBLICKEYBYTES];
+  char iso_ctime[32];
+  char iso_expire[32];
   char name[1024];
 };
 

@@ -36,7 +36,7 @@ static void prep_base85(void)
 int decode_85(char *dst, const char *buffer, int len)
 {
 	prep_base85();
-
+	int pos = 0;
 	say1("len: %d\n", len);
 	say2("decode 85 <%.*s>\n", len / 4 * 5, buffer);
 	while (len) {
@@ -47,13 +47,13 @@ int decode_85(char *dst, const char *buffer, int len)
 			ch = *buffer++;
 			de = de85[ch];
 			if (--de < 0)
-				return error("invalid base85 alphabet <%c>\n", ch);
+			  return error("invalid base85 alphabet <%02x> de: %d\n", ch, de);
 			acc = acc * 85 + de;
 		} while (--cnt);
 		ch = *buffer++;
 		de = de85[ch];
-		if (--de < 0)
-			return error("invalid base85 alphabet <%c>\n", ch);
+		if (--de < 0 && ch != '\0')
+			return error("invalid base85 alphabet <%02x> left\n", ch);
 
 	
 		/* Detect overflow. */
@@ -63,8 +63,7 @@ int decode_85(char *dst, const char *buffer, int len)
 		acc += de;
 		/* 		say1(" %08x\n", acc); */
 		say1("%.5s", buffer-5);
-		say2("=> %08x (len: %d)\n", acc, len);
-
+		say2(" => %08x (len: %d)\n", acc, len);
 		cnt = (len < 4) ? len : 4;
 		len -= cnt;
 		do {

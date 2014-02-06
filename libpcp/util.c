@@ -60,9 +60,17 @@ void _xorbuf(unsigned char *iv, unsigned char *buf, size_t xlen) {
 
 /* print some binary data to stderr */
 void _dump(char *n, unsigned char *d, size_t s) {
-  fprintf(stderr, "%s (%ld): ", n, s);
+  int l = strlen(n) + 9;
+  fprintf(stderr, "%s (%04ld): ", n, s);
   size_t i;
-  for (i=0; i<s; ++i)
+  int c;
+  for (i=0; i<s; ++i) {
     fprintf(stderr, "%02x", d[i]);
+    if(i % 36 == 35 && i > 0) {
+      fprintf(stderr, "\n");
+      for(c=0; c<l; ++c)
+	fprintf(stderr, " ");
+    }
+  }
   fprintf(stderr, "\n");
 }

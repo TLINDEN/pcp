@@ -376,9 +376,11 @@ int pcp_importsecret (vault_t *vault, FILE *in) {
 int pcp_importpublic (vault_t *vault, FILE *in, int pbpcompat) {
   pcp_pubkey_t *pub = NULL;
   if(pbpcompat == 1) {
+    char *date = NULL;
     char *parts = NULL;
     int pnum;
     pbp_pubkey_t *b = ucmalloc(sizeof(pbp_pubkey_t));
+    pcp_pubkey_t *tmp = ucmalloc(sizeof(pcp_pubkey_t));
     pub = ucmalloc(sizeof(pcp_pubkey_t));
     unsigned char *buf = ucmalloc(2048);
     unsigned char *bin = ucmalloc(2048);
@@ -396,7 +398,8 @@ int pcp_importpublic (vault_t *vault, FILE *in, int pbpcompat) {
 	nlen -= 1;
       }
     } 
-    klen = (nlen / 5) * 4;
+
+    klen = nlen /5 * 4; /*((nlen + (5 - (nlen % 5))) / 5) * 4;*/
 
     if(decode_85((char *)bin, (char *)buf, klen) != 0)
       goto errimp1;
@@ -406,6 +409,9 @@ int pcp_importpublic (vault_t *vault, FILE *in, int pbpcompat) {
 	    klen, sizeof(pbp_pubkey_t) - 1024);
       goto errimp1;
     }
+
+    if(debug)
+      _dump("sig", bin, nlen);
 
     /*  unpad result, if any */
     for(i=klen; i>0; --i) {
@@ -417,6 +423,19 @@ int pcp_importpublic (vault_t *vault, FILE *in, int pbpcompat) {
 
     /*  use first part as sig and verify */
     memcpy(b, &bin[crypto_sign_BYTES], klen - crypto_sign_BYTES);
+
+    if(debug)
+      _dump("sig", bin, klen);
+
+    /* parse the date */
+    date = ucmalloc(19);
+    memcpy(date, b->iso_ctime, 18);
+    date[19] = '\0';
+    struct tm c;
+    if(strptime(date, "%Y-%m-%dT%H:%M:%S", &c) == NULL) {
+      fatal("Failed to parse creation time in PBP public key file (<%s>)\n", date);
+      goto errimp2;
+    }
 
     /*  parse the name */
     parts = strtok (b->name, "<>");
@@ -433,22 +452,35 @@ int pcp_importpublic (vault_t *vault, FILE *in, int pbpcompat) {
 
     if(strlen(b->name) == 0) {
       char *owner =  pcp_getstdin("Enter the name of the key owner");
-      memcpy(b->name, owner, strlen(owner) + 1);
+      memcpy(pub->owner, owner, strlen(owner) + 1);
       free(owner);
     }
 
     /*  fill in the fields */
-    pub->ctime = (long)time(0); /*  pbp exports no ctime */
+    pub->ctime = (long)mktime(&c);
     pub->type = PCP_KEY_TYPE_PUBLIC;
     pub->version = PCP_KEY_VERSION;
     pub->serial  = arc4random();
-    memcpy(pub->id, pcp_getpubkeyid(pub), 17);
     memcpy(pub->pub, b->pub, crypto_box_PUBLICKEYBYTES);
     memcpy(pub->edpub, b->edpub, crypto_sign_PUBLICKEYBYTES);
+    memcpy(pub->id, pcp_getpubkeyid(pub), 17);
 
-    fprintf(stderr, "edpub: "); pcpprint_bin(stderr, pub->edpub, crypto_sign_PUBLICKEYBYTES); fprintf(stderr, "\n");
-    fprintf(stderr, "  sig: "); pcpprint_bin(stderr, bin, klen); fprintf(stderr, "\n");
-    unsigned char *sig = pcp_ed_verify(bin, klen, pub);
+    /* edpub used for signing, might differ */
+    memcpy(tmp->edpub, b->sigpub, crypto_sign_PUBLICKEYBYTES);
+
+    if(debug) {
+      _dump("  mp", tmp->edpub, crypto_sign_PUBLICKEYBYTES);
+      _dump("  cp", pub->pub, crypto_sign_PUBLICKEYBYTES);
+      _dump("  sp", pub->edpub, crypto_sign_PUBLICKEYBYTES);
+      _dump("name", (unsigned char *)pub->owner, strlen(pub->owner));
+      _dump(" sig", bin, klen);
+      fprintf(stderr, "<%s>\n",  (unsigned char *)pub->owner);
+      pcp_dumppubkey(pub);
+    }
+
+    unsigned char *sig = pcp_ed_verify(bin, klen, tmp);
+    free(tmp);
+
     if(sig == NULL)
       goto errimp1;
 
@@ -458,6 +490,8 @@ int pcp_importpublic (vault_t *vault, FILE *in, int pbpcompat) {
     free(bin);
     goto kimp;
 
+  errimp2:
+    free(date);
 
   errimp1:
     free(bin);

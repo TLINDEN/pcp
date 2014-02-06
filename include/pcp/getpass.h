@@ -19,4 +19,4 @@ void pcp_echo_on();
 char *pcp_get_stdin();
 char *pcp_get_passphrase(char *prompt);
 
-#endif // _HAVE_PCP_GETPASS
+#endif /*  _HAVE_PCP_GETPASS */

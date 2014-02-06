@@ -41,7 +41,7 @@ int pcptext_infile(char *infile) {
     goto tdone;
   }
 
-  // maybe a vault?
+  /*  maybe a vault? */
   vault_t *v = pcpvault_init(infile);
   if(v != NULL) {
     fprintf(stdout, "%s is a vault file\n", infile);
@@ -49,7 +49,7 @@ int pcptext_infile(char *infile) {
     goto tdone;
   }
 
-  // try z85ing it
+  /*  try z85ing it */
   char *z85 = pcp_readz85file(in);
   if(z85 == NULL) {
       fprintf(stdout, "Can't handle %s - unknown file type.\n", infile); 
@@ -65,11 +65,11 @@ int pcptext_infile(char *infile) {
     goto errtinf1;
   }
 
-  //fprintf(stdout, "have: %d, secret: %d, public: %d, sig: %d, hh: %d\n", (int)clen,
-  //	  (int)sizeof(pcp_key_t), (int)sizeof(pcp_pubkey_t), (int)sizeof(pcp_sig_t), (int)sizeof(UT_hash_handle));
+  /* fprintf(stdout, "have: %d, secret: %d, public: %d, sig: %d, hh: %d\n", (int)clen, */
+  /* 	  (int)sizeof(pcp_key_t), (int)sizeof(pcp_pubkey_t), (int)sizeof(pcp_sig_t), (int)sizeof(UT_hash_handle)); */
 
   if(clen == PCP_RAW_KEYSIZE) {
-    // secret key?
+    /*  secret key? */
     pcp_key_t *key = (pcp_key_t *)bin;
     key2native(key);
     if(pcp_sanitycheck_key(key) == 0) {
@@ -86,7 +86,7 @@ int pcptext_infile(char *infile) {
   }
 
   if(clen  == PCP_RAW_PUBKEYSIZE) {
-    // public key?
+    /*  public key? */
     pcp_pubkey_t *key = (pcp_pubkey_t *)bin;
     pubkey2native(key);
     if(pcp_sanitycheck_pub(key) == 0) {
@@ -102,7 +102,7 @@ int pcptext_infile(char *infile) {
     }
   }
 
-  // still there?
+  /*  still there? */
   fprintf(stdout, "%s looks Z85 encoded but otherwise unknown and is possibly encrypted.\n", infile);
 
  tdone:
@@ -199,7 +199,7 @@ void pcpkey_print(pcp_key_t *key, FILE* out) {
 
   fprintf(out, "        Key-ID: 0x%s\n", key->id);
 
-  //2004-06-14T23:34:30.
+  /* 2004-06-14T23:34:30. */
   fprintf(out, " Creation Time: %04d-%02d-%02dT%02d:%02d:%02d\n",
 	 c->tm_year+1900, c->tm_mon+1, c->tm_mday,
 	 c->tm_hour, c->tm_min, c->tm_sec);
@@ -249,7 +249,7 @@ void pcppubkey_print(pcp_pubkey_t *key, FILE* out, int pbpcompat) {
 
 	unsigned char *sig = pcp_ed_sign(blob, pbplen, secret);
 	fprintf(stderr, "  sig: "); pcpprint_bin(stderr, sig, pbplen+crypto_sign_BYTES); fprintf(stderr, "\n");
-	fprintf(stderr, "siglen: %ld, inlen: %ld\n", crypto_sign_BYTES, pbplen);
+	fprintf(stderr, "siglen: %d, inlen: %ld\n", crypto_sign_BYTES, pbplen);
 	if(sig != NULL) {
 	  size_t siglen = pbplen + crypto_sign_BYTES;
 	  size_t blen = ((siglen / 4) * 5) + siglen;
@@ -266,7 +266,7 @@ void pcppubkey_print(pcp_pubkey_t *key, FILE* out, int pbpcompat) {
   else {
     size_t zlen;
 
-    //printf("version: %08x\n", key->version);
+    /* printf("version: %08x\n", key->version); */
 
     pubkey2be(key);
 
@@ -292,7 +292,7 @@ void pcppubkey_print(pcp_pubkey_t *key, FILE* out, int pbpcompat) {
     fprintf(out, "        Key-ID: 0x%s\n", key->id);
     fprintf(out, "    Public-Key: %s\n", pcp_z85_encode(key->pub, 32, &zlen));
 
-    //2004-06-14T23:34:30.
+    /* 2004-06-14T23:34:30. */
     fprintf(out, " Creation Time: %04d-%02d-%02dT%02d:%02d:%02d\n",
 	    c->tm_year+1900, c->tm_mon+1, c->tm_mday,
 	    c->tm_hour, c->tm_min, c->tm_sec);

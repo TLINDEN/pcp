@@ -51,7 +51,7 @@ size_t pcp_sodium_mac(unsigned char **cipher,
 int pcp_sodium_verify_mac(unsigned char **cleartext, unsigned char* message,
 			  size_t messagesize, unsigned char *nonce,
 			  unsigned char *key) {
-  // verify the mac
+  /*  verify the mac */
   unsigned char *pad_cipher;
   unsigned char *pad_clear;
   int success = -1;

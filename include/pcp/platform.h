@@ -27,16 +27,16 @@
 
 #ifdef HAVE_ENDIAN_H
 # include <endian.h>
-#else // no endian.h
+#else /*  no endian.h */
 # ifdef HAVE_SYS_ENDIAN_H
 #   include <sys/types.h>
 #   include <sys/endian.h>
 #   ifndef HAVE_BE32TOH
-#     // openbsd, use aliases
+#     /*  openbsd, use aliases */
 #     define be32toh betoh32
 #     define be64toh betoh64
 #   endif
-# else // no sys/endian.h
+# else /*  no sys/endian.h */
 #   ifdef __CPU_IS_BIG_ENDIAN
 #     define be32toh(x)	(x)
 #     define htobe32(x)	(x)
@@ -57,12 +57,12 @@
 #     define be64toh(x)	((u_int64_t)ntohl((u_int64_t)(x)))
 #     define htobe64(x)	((u_int64_t)htonl((u_int64_t)(x)))
 #   endif
-#  endif // HAVE_SYS_ENDIAN_H
-#endif // HAVE_ENDIAN_H
+#  endif /*  HAVE_SYS_ENDIAN_H */
+#endif /*  HAVE_ENDIAN_H */
 
 
 #ifndef HAVE_ARC4RANDOM_BUF
-// shitty OS. we're using libsodium's implementation
+/*  shitty OS. we're using libsodium's implementation */
 
 #include <sodium.h>
 
@@ -127,7 +127,7 @@ int vasprintf(char **ret, const char *format, va_list args) {
 	*ret = buffer;
     }
   }
-  va_end(copy);  // Each va_start() or va_copy() needs a va_end()
+  va_end(copy);  /*  Each va_start() or va_copy() needs a va_end() */
 
   return count;
 }

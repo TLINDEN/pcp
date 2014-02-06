@@ -22,9 +22,9 @@
 #include "scrypt.h"
 
 unsigned char* pcp_scrypt(char *passwd, size_t passwdlen, unsigned char *nonce, size_t noncelen) {
-  uint8_t *dk = ucmalloc(64); // resulting hash
+  uint8_t *dk = ucmalloc(64); /*  resulting hash */
 
-  // constants
+  /*  constants */
   uint64_t N = 1 << 14;
   uint32_t r = 8;
   uint32_t p = 1;

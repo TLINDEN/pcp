@@ -80,14 +80,14 @@ struct _pcp_key_t {
   byte edpub[32];
   byte edsecret[64];
   byte nonce[24];
-  byte encrypted[112]; // both ed+curve encrypted
+  byte encrypted[112]; /*  both ed+curve encrypted */
   char owner[255];
   char mail[255];
   char id[17];
   uint8_t type;
-  uint64_t ctime;   // 8
-  uint32_t version; // 4
-  uint32_t serial;  // 4
+  uint64_t ctime;   /*  8 */
+  uint32_t version; /*  4 */
+  uint32_t serial;  /*  4 */
   UT_hash_handle hh;
 };
 
@@ -104,8 +104,8 @@ struct _pcp_pubkey_t {
   UT_hash_handle hh;
 };
 
-// the PBP public key format
-// keys.mp+keys.cp+keys.sp+keys.name
+/*  the PBP public key format */
+/*  keys.mp+keys.cp+keys.sp+keys.name */
 struct _pbp_pubkey_t {
   byte sigpub[crypto_sign_PUBLICKEYBYTES];
   byte pub[crypto_box_PUBLICKEYBYTES];
@@ -165,17 +165,17 @@ unsigned char * pcp_gennonce();
 
 void pcpedit_key(char *keyid);
 
-// use scrypt() to create a key from a passphrase and a nonce
+/*  use scrypt() to create a key from a passphrase and a nonce */
 unsigned char *pcp_derivekey(char *passphrase, unsigned char *nonce);
 
 pcp_key_t *pcp_derive_pcpkey (pcp_key_t *ours, char *theirs);
 
 void pcp_seckeyblob(void *blob, pcp_key_t *k);
 void pcp_pubkeyblob(void *blob, pcp_pubkey_t *k);
-void *pcp_keyblob(void *k, int type); // allocates blob
+void *pcp_keyblob(void *k, int type); /*  allocates blob */
 
 int pcp_sanitycheck_pub(pcp_pubkey_t *key);
 int pcp_sanitycheck_key(pcp_key_t *key);
 
 
-#endif // _HAVE_PCP_KEYPAIR_H
+#endif /*  _HAVE_PCP_KEYPAIR_H */

@@ -83,4 +83,4 @@ vault_header_t * vh2native(vault_header_t *h);
 vault_item_header_t * ih2be(vault_item_header_t *h);
 vault_item_header_t * ih2native(vault_item_header_t *h);
 
-#endif // _HAVE_PCP_VAULT
+#endif /*  _HAVE_PCP_VAULT */

@@ -37,7 +37,7 @@ char *pcp_get_stdin() {
     return NULL;
   }
   else {
-    line[linelen - 1] = '\0'; // remove newline at end
+    line[linelen - 1] = '\0'; /*  remove newline at end */
     return line;
   }
 }

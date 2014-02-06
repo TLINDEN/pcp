@@ -34,7 +34,7 @@ vault_t *pcpvault_init(char *filename) {
     }
     else {
       if(pcpvault_fetchall(vault) != 0) {
-	errno = 0; // weird, something sets it to ENOENT and it's not me
+	errno = 0; /*  weird, something sets it to ENOENT and it's not me */
 	pcpvault_close(vault);
 	return NULL;
       }
@@ -161,7 +161,7 @@ int pcpvault_addkey(vault_t *vault, void *item, uint8_t type) {
     saveitem = ucmalloc(sizeof(pcp_pubkey_t));
     memcpy(saveitem, item, sizeof(pcp_pubkey_t));
     pubkey2be((pcp_pubkey_t *)item);
-    //pcp_dumppubkey((pcp_pubkey_t *)saveitem);
+    /* pcp_dumppubkey((pcp_pubkey_t *)saveitem); */
   }
   else {
     itemsize = PCP_RAW_KEYSIZE;
@@ -172,9 +172,9 @@ int pcpvault_addkey(vault_t *vault, void *item, uint8_t type) {
 
   void *blob = pcp_keyblob(item, type);
 
-  // scip
-  //printf("BLOB (%d):\n", (int)itemsize);
-  //pcpprint_bin(stdout, saveitem, itemsize); printf("\n");
+  /*  scip */
+  /* printf("BLOB (%d):\n", (int)itemsize); */
+  /* pcpprint_bin(stdout, saveitem, itemsize); printf("\n"); */
 
   if(tmp != NULL) {
     if(pcpvault_copy(vault, tmp) != 0)
@@ -253,7 +253,7 @@ void pcpvault_update_checksum(vault_t *vault) {
   memcpy(header->checksum, checksum, 32);
   memcpy(vault->checksum, checksum, 32);
   
-  //printf("write checksum: "); pcpprint_bin(stdout, checksum, 32); printf("\n");
+  /* printf("write checksum: "); pcpprint_bin(stdout, checksum, 32); printf("\n"); */
 
   vh2be(header);
 
@@ -282,16 +282,16 @@ unsigned char *pcpvault_create_checksum(vault_t *vault) {
 
   pcp_pubkey_t *p = NULL;
   pcphash_iteratepub(p) {
-    //pcp_dumppubkey(p);
+    /* pcp_dumppubkey(p); */
     pubkey2be(p);
     memcpy(&data[datapos], p, PCP_RAW_PUBKEYSIZE);
     pubkey2native(p);
     datapos += PCP_RAW_PUBKEYSIZE;
   }
 
-  // scip
-  //printf("DATA (%d) (s: %d, p: %d):\n", (int)datasize, numskeys, numpkeys);
-  //pcpprint_bin(stdout, data, datasize); printf("\n");
+  /*  scip */
+  /* printf("DATA (%d) (s: %d, p: %d):\n", (int)datasize, numskeys, numpkeys); */
+  /* pcpprint_bin(stdout, data, datasize); printf("\n"); */
 
   crypto_hash_sha256(checksum, data, datasize);
 
@@ -303,14 +303,14 @@ unsigned char *pcpvault_create_checksum(vault_t *vault) {
 
 
 int pcpvault_copy(vault_t *tmp, vault_t *vault) {
-  // fetch tmp content
+  /*  fetch tmp content */
   fseek(tmp->fd, 0, SEEK_END);
   int tmpsize = ftell(tmp->fd);
   fseek(tmp->fd, 0, SEEK_SET);
   unsigned char *in = ucmalloc(tmpsize);
   fread(in, tmpsize, 1, tmp->fd);
 
-  // and put it into the new file
+  /*  and put it into the new file */
   vault->fd = freopen(vault->filename, "wb+", vault->fd);
   if(fwrite(in, tmpsize, 1, vault->fd) != 1) {
     fatal("Failed to copy %s to %s (write) [keeping %s]\n",
@@ -405,12 +405,12 @@ int pcpvault_fetchall(vault_t *vault) {
   vh2native(header);
 
   if(header->fileid == PCP_VAULT_ID && header->version == PCP_VAULT_VERSION) {
-    // loop over the file and slurp everything in
+    /*  loop over the file and slurp everything in */
     int readpos = 0;
     pcp_key_t *key;
     pcp_pubkey_t *pubkey;
     int bytesleft = 0;
-    int ksize =  PCP_RAW_PUBKEYSIZE; // smallest possbile item
+    int ksize =  PCP_RAW_PUBKEYSIZE; /*  smallest possbile item */
 
     pcphash_init();
 
@@ -420,28 +420,28 @@ int pcpvault_fetchall(vault_t *vault) {
     for(;;) {
       readpos = ftell(vault->fd);
       if(vault->size - readpos >= sizeof(vault_item_header_t)) {
-	// an item header follows
+	/*  an item header follows */
 	fread(item, sizeof(vault_item_header_t), 1, vault->fd);
 	ih2native(item);
 
 	if(item->size > 0) {
-	  // item is valid
+	  /*  item is valid */
 	  readpos = ftell(vault->fd);
 	  bytesleft = vault->size - readpos;
 	  if(bytesleft >= ksize) {
-	    // a key follows
+	    /*  a key follows */
 	    if(item->type == PCP_KEY_TYPE_MAINSECRET ||
 	       item->type == PCP_KEY_TYPE_SECRET) {
-	      // read a secret key
+	      /*  read a secret key */
 	      key = ucmalloc(sizeof(pcp_key_t));
 	      fread(key, PCP_RAW_KEYSIZE, 1, vault->fd);
 	      key2native(key);
-	      //pcp_dumpkey(key);
-	      //pcpprint_bin(stdout, key, sizeof(pcp_key_t));printf("\n");
+	      /* pcp_dumpkey(key); */
+	      /* pcpprint_bin(stdout, key, sizeof(pcp_key_t));printf("\n"); */
 	      pcphash_add((void *)key, item->type);
 	    }
 	    else if(item->type == PCP_KEY_TYPE_PUBLIC) {
-	      // read a public key
+	      /*  read a public key */
 	      pubkey = ucmalloc(sizeof(pcp_pubkey_t));
 	      fread(pubkey, PCP_RAW_PUBKEYSIZE, 1, vault->fd);
 	      pubkey2native(pubkey);
@@ -464,7 +464,7 @@ int pcpvault_fetchall(vault_t *vault) {
 	}
       }
       else {
-	// no more items
+	/*  no more items */
 	break;
       }
     }
@@ -476,9 +476,9 @@ int pcpvault_fetchall(vault_t *vault) {
 
   unsigned char *checksum = NULL;
   checksum = pcpvault_create_checksum(vault);
-  //printf(" calc checksum: "); pcpprint_bin(stdout, checksum, 32); printf("\n");
+  /* printf(" calc checksum: "); pcpprint_bin(stdout, checksum, 32); printf("\n"); */
   if(pcphash_count() + pcphash_countpub() > 0) {
-    // only validate the checksum if there are keys
+    /*  only validate the checksum if there are keys */
     if(memcmp(checksum, vault->checksum, 32) != 0) {
       fatal("Error: the checksum of the key vault doesn't match its contents!\n");
       goto err;
@@ -493,7 +493,7 @@ int pcpvault_fetchall(vault_t *vault) {
  err:
   free(item);
   free(header);
-  //pcphash_clean();
+  /* pcphash_clean(); */
 
   return -1;
 }

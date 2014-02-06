@@ -25,11 +25,11 @@
 
 #include "config.h"
 
-typedef unsigned char   byte;           //  Single unsigned byte = 8 bits
-typedef unsigned short  dbyte;          //  Double byte = 16 bits
-typedef unsigned int    qbyte;          //  Quad byte = 32 bits
+typedef unsigned char   byte;           /*   Single unsigned byte = 8 bits */
+typedef unsigned short  dbyte;          /*   Double byte = 16 bits */
+typedef unsigned int    qbyte;          /*   Quad byte = 32 bits */
 
-// key stuff
+/*  key stuff */
 #define PCP_KEY_HEADER "----- BEGIN PCP SECRET KEY -----"
 #define PCP_KEY_FOOTER "------ END PCP SECRET KEY ------"
 
@@ -56,24 +56,24 @@ typedef unsigned int    qbyte;          //  Quad byte = 32 bits
 #define PCP_KEY_TYPE_SECRET     2
 #define PCP_KEY_TYPE_PUBLIC     3
 
-// save typing, dammit
+/*  save typing, dammit */
 #define PCP_ENCRYPT_PAD crypto_secretbox_ZEROBYTES + crypto_secretbox_NONCEBYTES
 
-// vault id
+/*  vault id */
 #define PCP_VAULT_ID 14
 #define PCP_VAULT_VERSION 2
 
-// sigs
+/*  sigs */
 #define PCP_SIG_VERSION 2
 
-// crypto file format stuff
-// enabled via config.h (configure --enable-cbc)
+/*  crypto file format stuff */
+/*  enabled via config.h (configure --enable-cbc) */
 #ifndef PCP_CBC
   #define PCP_ASYM_CIPHER         5
   #define PCP_SYM_CIPHER          23
   #define PCP_BLOCK_SIZE          32 * 1024
 #else
-// CBC mode, use smaller blocks
+/*  CBC mode, use smaller blocks */
   #define PCP_ASYM_CIPHER         7
   #define PCP_SYM_CIPHER          25
   #define PCP_BLOCK_SIZE          1 * 1024
@@ -82,23 +82,23 @@ typedef unsigned int    qbyte;          //  Quad byte = 32 bits
 #define PCP_CRYPTO_ADD          (crypto_box_ZEROBYTES - crypto_box_BOXZEROBYTES)
 #define PCP_BLOCK_SIZE_IN       (PCP_BLOCK_SIZE) + PCP_CRYPTO_ADD + crypto_secretbox_NONCEBYTES
 #define PCP_ASYM_RECIPIENT_SIZE crypto_secretbox_KEYBYTES + PCP_CRYPTO_ADD + crypto_secretbox_NONCEBYTES
-//#define PCP_ASYM_ADD_SENDER_PUB
+/* #define PCP_ASYM_ADD_SENDER_PUB */
 
-// used for self encryption only
+/*  used for self encryption only */
 #define PBP_COMPAT_SALT "qa~t](84z<1t<1oz:ik.@IRNyhG=8q(on9}4#!/_h#a7wqK{Nt$T?W>,mt8NqYq&6U<GB1$,<$j>,rSYI2GRDd:Bcm"
 
-// error handling
+/*  error handling */
 extern char *PCP_ERR;
 extern byte PCP_ERRSET;
 extern int PCP_EXIT;
 
-//set error
+/* set error */
 void fatal(const char * fmt, ...);
 
-// fetch error
+/*  fetch error */
 void fatals_ifany();
 
-// reset
+/*  reset */
 void fatals_reset();
 
-#endif // _DEFINES_H
+#endif /*  _DEFINES_H */

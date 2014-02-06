@@ -1,8 +1,8 @@
 #ifndef _HAVE_JENHASH_H
 #define _HAVE_JENHASH_H
 
-// Bob Jenkins 32bit hash function
-// via: http://eternallyconfuzzled.com/tuts/algorithms/jsw_tut_hashing.aspx
+/*  Bob Jenkins 32bit hash function */
+/*  via: http://eternallyconfuzzled.com/tuts/algorithms/jsw_tut_hashing.aspx */
 
 #define jen_mix(a,b,c)				\
   {						\
@@ -22,4 +22,4 @@
 
 unsigned jen_hash ( unsigned char *k, unsigned length, unsigned initval );
 
-#endif // _HAVE_JENHASH_H
+#endif /*  _HAVE_JENHASH_H */

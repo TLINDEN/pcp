@@ -27,19 +27,16 @@
 #include <stdlib.h>
 #include "platform.h"
 
-// simple malloc()  wrapper 
-// behaves like calloc(), which
-// I don't have here.
-// 
-// exits if there's no more memory
-// available.
+/*  simple malloc()  wrapper  */
+/*  behaves like calloc(), which */
+/*  I don't have here. */
+/*   */
+/*  exits if there's no more memory */
+/*  available. */
 void *ucmalloc(size_t s);
 
-// the same but it fills the pointer with random values
+/*  the same but it fills the pointer with random values */
 void *urmalloc(size_t s);
 
-// dito.
-void *ucfree(void *ptr);
 
-
-#endif // _HAVE_PCP_MEM
+#endif /*  _HAVE_PCP_MEM */

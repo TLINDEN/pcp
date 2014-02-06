@@ -58,4 +58,4 @@ int pcp_importsecret (vault_t *vault, FILE *in);
 void pcpdelete_key(char *keyid);
 char *pcp_find_id_byrec(char *recipient);
 
-#endif // _HAVE_KEYMGMT_H
+#endif /*  _HAVE_KEYMGMT_H */

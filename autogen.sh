@@ -1,8 +1,7 @@
 #!/bin/sh
 
-# clear up the mess
-set -x
-
+cat <<EOF > clean.sh
+#!/bin/sh
 find . -name Makefile -exec rm {} \;
 find . -name Makefile.in -exec rm {} \;
 find . -name "*~"     -exec rm {} \;
@@ -13,9 +12,11 @@ find . -name .libs    -exec rm -rf {} \;
 find . -name .o    -exec rm -rf {} \;
 find . -name .lo    -exec rm -rf {} \;
 
-rm -rf configure config.* config autom4te.cache tests/test* tests/v* tests/stresstest/* \
-    libpcp/libpcp1.pc
-set +x
+rm -rf aclocal.m4 libtool man/pcp1.1 configure config.* config autom4te.cache tests/test* tests/v* tests/stresstest/* libpcp/libpcp1.pc
+rm clean.sh
+EOF
+
+chmod 700 clean.sh
 
 # generate the install include file
 (echo "#ifndef _HAVE_PCP"; echo "#define _HAVE_PCP"; echo) > include/pcp.h

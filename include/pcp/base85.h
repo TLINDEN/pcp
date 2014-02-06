@@ -32,4 +32,4 @@ void encode_85(char *buf, const unsigned char *data, int bytes);
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
 #define error(...) (fatal(__VA_ARGS__), -1)
 
-#endif // HAVE_BASE85_H
+#endif /*  HAVE_BASE85_H */

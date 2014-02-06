@@ -65,4 +65,4 @@ size_t pcp_decrypt_file_sym(FILE *in, FILE* out, unsigned char *symkey, pcp_rec_
 pcp_rec_t *pcp_rec_new(unsigned char *cipher, size_t clen, pcp_key_t *secret, pcp_pubkey_t *pub);
 void pcp_rec_free(pcp_rec_t *r);
 
-#endif // _HAVE_PCP_CRYPTO_H
+#endif /*  _HAVE_PCP_CRYPTO_H */

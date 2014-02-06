@@ -71,7 +71,7 @@ int main (int argc, char **argv)  {
   pbpcompat = 0;
 
   static struct option longopts[] = {
-    // generics
+    /*  generics */
     { "vault",           required_argument, NULL,           'V' },
     { "outfile",         required_argument, NULL,           'O' },
     { "infile",          required_argument, NULL,           'I' },
@@ -80,7 +80,7 @@ int main (int argc, char **argv)  {
     { "xpass",           required_argument, NULL,           'x' },
     { "recipient",       required_argument, NULL,           'r' },
 
-    // key management
+    /*  key management */
     { "keygen",          no_argument,       NULL,           'k' },
     { "listkeys",        no_argument,       NULL,           'l' },
     { "export-secret",   no_argument,       NULL,           's' },
@@ -92,21 +92,21 @@ int main (int argc, char **argv)  {
     { "export-yaml",     no_argument,       NULL,           'y' },
     { "pbpcompat",       no_argument,       NULL,           'b' },
 
-    // crypto
+    /*  crypto */
     {  "encrypt",        no_argument,       NULL,           'e' },
     {  "encrypt-me",     no_argument,       NULL,           'm' },
     {  "decrypt",        no_argument,       NULL,           'd' },
 
-    // encoding
+    /*  encoding */
     {  "z85-encode",     no_argument,       NULL,           'z' },
     {  "z85-decode",     no_argument,       NULL,           'Z' },
 
-    // globals
+    /*  globals */
     { "help",            no_argument,       NULL,           'h' },
     { "version",         no_argument,       NULL,           'v' },
     { "debug",           no_argument,       NULL,           'D' },
 
-    // signing
+    /*  signing */
     { "sign",            no_argument,       NULL,           'g' }, 
     { "check-signature", no_argument,       NULL,           'c' },
     { "sigfile",         required_argument, NULL,           'f' },
@@ -256,7 +256,7 @@ int main (int argc, char **argv)  {
   }
 
 
-  sodium_init(); // FIXME: better called from the lib?
+  sodium_init(); /*  FIXME: better called from the lib? */
 
   if(mode == PCP_MODE_ENCRYPT && useid == 0 && userec == 0) {
     usevault = 0;
@@ -361,16 +361,16 @@ int main (int argc, char **argv)  {
 
       case PCP_MODE_ENCRYPT:
 	if(useid == 1 && userec == 0) {
-	  // one dst, FIXME: make id a list as well
+	  /*  one dst, FIXME: make id a list as well */
 	  id = pcp_normalize_id(keyid);
 	  pcpencrypt(id, infile, outfile, xpass, NULL, signcrypt);
 	}
 	else if(useid == 0 && userec == 1) {
-	  // multiple dst
+	  /*  multiple dst */
 	  pcpencrypt(NULL, infile, outfile, xpass, recipient, signcrypt);
 	}
 	else {
-	  // -i and -r specified
+	  /*  -i and -r specified */
 	  fatal("You can't specify both -i and -r, use either -i or -r!\n");
 	}
 	if(id != NULL)
@@ -426,14 +426,14 @@ int main (int argc, char **argv)  {
 	break;
 
       default:
- 	// 
+ 	/*   */
 	goto ELSEMODE;
 	break;
       }
     }
     pcpvault_close(vault);
     pcphash_clean();
-    ucfree(vaultfile);
+    free(vaultfile);
   }
   else {
   ELSEMODE:
@@ -469,12 +469,12 @@ int main (int argc, char **argv)  {
 	}
 	pcpvault_close(vault);
 	pcphash_clean();
-	ucfree(vaultfile);
+	free(vaultfile);
       }
       break;
 
     default:
-      // mode params mixed
+      /*  mode params mixed */
       fatal("Sorry, invalid combination of commandline parameters (0x%04X)!\n", mode);
       break;  
     }

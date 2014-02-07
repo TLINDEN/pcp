@@ -169,7 +169,8 @@ Pretty Curved Privacy - File encryption using eliptic curve cryptography.
                            -I and -O respectively, otherwise it
                            stdin/stdout
  
- 
+
+
 =head1 DESCRIPTION
 
 B<Pretty Curved Privacy> (pcp1) is a commandline utility which can

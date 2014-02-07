@@ -38,5 +38,7 @@ void *ucmalloc(size_t s);
 /*  the same but it fills the pointer with random values */
 void *urmalloc(size_t s);
 
+/* resize a a pointer and fill the added remainder with zeroes */
+void *ucrealloc(void *d, size_t oldlen, size_t newlen);
 
 #endif /*  _HAVE_PCP_MEM */

@@ -52,3 +52,16 @@ void *urmalloc(size_t s) {
 }
 
 
+void *ucrealloc(void *d, size_t oldlen, size_t newlen) {
+  newlen = newlen * sizeof(unsigned char);
+  void *value = realloc (d, newlen);
+
+  if (value == NULL) {
+    err(errno, "Cannot reallocate %ld bytes of memory", newlen);
+    exit(-1);
+  }
+
+  memset (&value[oldlen], 0, newlen-oldlen);
+
+  return value;
+}

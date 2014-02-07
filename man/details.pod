@@ -1,4 +1,3 @@
-# -*-perl-*-
 
 =head1 PCP1 KEYS
 
@@ -153,11 +152,84 @@ encrypted file without a signature, decryption will fail as well.>
 
 Note: this behavior might change in the future.
 
-=head1 VULNERABILITIES
+=head1 ALTERNATIVE COMMANDLINES
 
-Currently there are a couple of problems which are not
-addressed. These are usually protocol problems, which are
-not caused by pcp1.
+You can save typing if you supply additional arguments to
+pcp after commandline options. Such arguments are treated
+as filenames or recipients, depending what options you already
+specified.
+
+Here is a list of commandlines and their possible alternatives:
+
+ ORIGINAL                    ALTERNATIVE               DESCRIPTION
+
+ pcp -e -I message -r Bob    pcp -e -r Bob message     use 'message' as inputfile.
+                             pcp -e -I message Bob     use 'Bob' as recipient,
+                                                       multiple recipients supported.
+
+ pcp -d -I crypted           pcp -d crypted            use 'crypted' as inputfile.
+
+ pcp -g -I message           pcp -g message            use 'message' as inputfile.
+
+ pcp -g -I msg -O sig        pcp -g -I msg sig         use 'sig' as outputfile.
+
+ pcp -p -O key.pcp           pcp -p key.pcp            use 'key.pcp' as outputfile.
+
+ pcp -p -O key.pcp -r Bob    pcp -p -O key.pcp Bob     use 'Bob' as recipient.
+
+ pcp -s -O key.pcp           pcp -s key.pcp            use 'key.pcp' as outputfile.
+
+ pcp -s -O key.pcp -r Bob    pcp -s -O key.pcp Bob     use 'Bob' as recipient.
+
+ pcp -P -I alice.pcp         pcp -P alice.pcp          use 'alice.pcp' as inputfile.
+
+ pcp -S -I alice.pcp         pcp -S alice.pcp          use 'alice.pcp' as inputfile.
+
+
+=head1 ENVIRONMENT VARIABLES
+
+pcp respects the following environment variables:
+
+=over
+
+=item B<PCP_VAULT>
+
+Use an alternative vaultfile. The default is B<~/.pcpvault> and
+can be overridden with the B<-V> commandline option. If PCP_VAULT
+is set, this one will be used instead.
+
+=item B<PCP_DEBUG>
+
+Enable debugging output, where supported. Same as B<-D>.
+
+=back
+
+=head1 EXIT STATUS
+
+Pcp may return one of several error codes if it encounters problems.
+
+=over
+
+=item 0   No problems occurred.
+
+=item 1   Generic error code.
+
+=back
+
+=head1 FILES
+
+=over
+
+=item B<~/.pcpvault>
+
+Default vault file where all keys are stored.
+
+=back
+
+=head1 EXPERIMENTAL STATUS
+
+Currently there are a couple of problems which are currently
+unsolved or in the process to be solved.
 
 =over
 
@@ -523,4 +595,5 @@ outlined above into account>.
 PCP tries to be fully compatible with PBP (https://github.com/stef/pbp). Encrypted
 files and signatures - at least their binary versions - should be exchangable. However,
 this is a work in progress and might not work under all circumstances. Also there's currently
-no shared key format between pbp and pcp.
+no shared key format between pbp and pcp. However, it is possible to export and
+import pbp keys from/to pcp.

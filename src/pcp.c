@@ -54,6 +54,7 @@ int main (int argc, char **argv)  {
   char *keyid = NULL;
   char *id = NULL;
   char *xpass = NULL;
+  char *extra = NULL;
   plist_t *recipient = NULL;
   FILE *in;
 
@@ -261,6 +262,85 @@ int main (int argc, char **argv)  {
   if(mode == PCP_MODE_ENCRYPT && useid == 0 && userec == 0) {
     usevault = 0;
     mode = PCP_MODE_ENCRYPT_ME;
+  }
+
+
+  if(argc >= 1) {
+    /* ok, there are arguments left on the commandline.
+       treat it as filename or recipient, depending on
+       current mode and other given parameters */
+    extra = ucmalloc(strlen(argv[0])+1);
+    strncpy(extra, argv[0], strlen(argv[0])+1);
+
+    switch (mode) {
+    case PCP_MODE_DECRYPT:
+      if(infile == NULL)
+	infile = extra;
+      break;
+
+    case PCP_MODE_ENCRYPT:
+      if(infile == NULL)
+	infile = extra;
+      else if(userec == 0 && useid == 0) {
+	userec = 1;
+	int i;
+	for (i=0; i<argc; i++) {
+	  p_add(&recipient, argv[i]);
+	}
+	free(extra);
+      }
+      break;
+
+    case PCP_MODE_IMPORT_PUBLIC:
+    case PCP_MODE_IMPORT_SECRET:
+      if(infile == NULL)
+	infile = extra;
+      break;
+
+    case PCP_MODE_EXPORT_SECRET:
+    case PCP_MODE_EXPORT_PUBLIC:
+      if(outfile == NULL)
+	outfile = extra;
+      else if(useid == 0 && userec == 0) {
+	p_add(&recipient, extra);
+	userec = 1;
+      }
+      break;
+
+    case PCP_MODE_VERIFY:
+      if(infile == NULL)
+	infile = extra;
+      else if (useid == 0) {
+	id = extra;
+	useid = 1;
+      }
+      break;
+
+    case PCP_MODE_SIGN:
+      if(infile == NULL)
+	infile = extra;
+      else if(outfile == NULL && detach == 0)
+	outfile = extra;
+      break;
+
+    default:
+      free(extra); /* not used */
+    }
+  }
+
+
+  /* check if there's some enviroment we could use */
+  if(usevault == 1) {
+    char *_vaultfile = getenv("PCP_VAULT");
+    if(_vaultfile != NULL) {
+      strncpy(vaultfile, _vaultfile, strlen(_vaultfile)+1);
+    }
+  }
+  if(debug == 0) {
+    char *_debug = getenv("PCP_DEBUG");
+    if(_debug != NULL) {
+      debug = 1;
+    }
   }
 
   if(usevault == 1) {

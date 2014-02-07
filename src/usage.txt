@@ -4,6 +4,7 @@ Usage: pcp1 [ --help          | --version ]
             [ --export-public | --export-secret | --import-public | --import-secret ]
             [ --encrypt       | --decrypt ]
             [ --sign          | --check-signature ]
+            [ arguments ]
 
 General Options:
 -h --help                 Print this help message.
@@ -40,3 +41,8 @@ Signature Options:
 
 Encoding Options:
 -z --z85-encode           Armor with Z85 encoding.
+
+Arguments:
+Extra arguments after options are treated as filenames or
+recipients, depending on operation mode.
+

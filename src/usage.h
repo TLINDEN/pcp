@@ -6,6 +6,7 @@
 "            [ --export-public | --export-secret | --import-public | --import-secret ]\n" \
 "            [ --encrypt       | --decrypt ]\n" \
 "            [ --sign          | --check-signature ]\n" \
+"            [ arguments ]\n" \
 "\n" \
 "General Options:\n" \
 "-h --help                 Print this help message.\n" \
@@ -42,5 +43,10 @@
 "\n" \
 "Encoding Options:\n" \
 "-z --z85-encode           Armor with Z85 encoding.\n" \
+"\n" \
+"Arguments:\n" \
+"Extra arguments after options are treated as filenames or\n" \
+"recipients, depending on operation mode.\n" \
+"\n" \
 "\n"
 #endif

@@ -97,7 +97,7 @@ DOCUMENTATION
      man pcp1
 
 COPYRIGHT
-    Copyright (c) 2013 by T.Linden <tom AT cpan DOT org>
+    Copyright (c) 2013-2014 by T.v.Dein <tom AT vondein DOT org>
 
 ADDITIONAL COPYRIGHTS
     ZeroMQ Z85 encoding routine
@@ -125,7 +125,7 @@ ADDITIONAL COPYRIGHTS
     as well.
 
 AUTHORS
-    *T.Linden <tom AT cpan DOT org*>
+    *T.v.Dein <tom AT vondein DOT org*>
 
 LICENSE
     Licensed under the GNU GENERAL PUBLIC LICENSE version 3.

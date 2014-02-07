@@ -105,7 +105,7 @@ To learn how to use B<pcp>, read the manpage:
 
 =head1 COPYRIGHT
 
-Copyright (c) 2013 by T.Linden <tom AT cpan DOT org>
+Copyright (c) 2013-2014 by T.v.Dein <tom AT vondein DOT org>
 
 =head1 ADDITIONAL COPYRIGHTS
 
@@ -144,7 +144,7 @@ under the B<GPL> as well.
 
 =head1 AUTHORS
 
-I<T.Linden <tom AT cpan DOT org>>
+I<T.v.Dein <tom AT vondein DOT org>>
 
 =head1 LICENSE
 

@@ -89,6 +89,8 @@ typedef unsigned int    qbyte;          /*   Quad byte = 32 bits */
 /*  used for self encryption only */
 #define PBP_COMPAT_SALT "qa~t](84z<1t<1oz:ik.@IRNyhG=8q(on9}4#!/_h#a7wqK{Nt$T?W>,mt8NqYq&6U<GB1$,<$j>,rSYI2GRDd:Bcm"
 
+#define PCP_RFC_CIPHER 0x21 /* curve25519+ed25519+poly1305+salsa20+blake2 */
+
 /*  error handling */
 extern char *PCP_ERR;
 extern byte PCP_ERRSET;

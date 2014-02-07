@@ -38,6 +38,7 @@
 #include "uthash.h"
 #include "jenhash.h"
 #include "scrypt.h"
+#include "buffer.h"
 
 /*
   PCP private key structure. Most fields are self explanatory.

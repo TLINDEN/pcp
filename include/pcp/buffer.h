@@ -94,4 +94,16 @@ uint64_t buffer_last64(Buffer *b);
 /* read from a file directly into a buffer object */
 size_t buffer_fd_read(Buffer *b, FILE *in, size_t len);
 
+/* write numbers as binary into the buffer */
+void buffer_add8(Buffer *b, uint8_t v);
+void buffer_add16(Buffer *b, uint16_t v);
+void buffer_add32(Buffer *b, uint32_t v);
+void buffer_add64(Buffer *b, uint64_t v);
+
+/* the same, but convert to big-endian before doing so */
+void buffer_add16be(Buffer *b, uint16_t v);
+void buffer_add32be(Buffer *b, uint32_t v);
+void buffer_add64be(Buffer *b, uint64_t v);
+
+
 #endif // HAVE_PCP_BUFFER_H

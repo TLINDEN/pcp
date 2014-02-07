@@ -149,10 +149,44 @@ size_t buffer_fd_read(Buffer *b, FILE *in, size_t len) {
   size_t s = fread(data, 1, len, in);
 
   if(s < len) {
-    fatal("[buffer %s] attemt to read %ld bytes from FILE, but got %ld only\n", b->name, len, s);
+    fatal("[buffer %s] attempt to read %ld bytes from FILE, but got %ld bytes only\n", b->name, len, s);
     return 0;
   }
 
   buffer_add(b, data, len);
   return len;
+}
+
+void buffer_add8(Buffer *b, uint8_t v) {
+  buffer_add(b, &v, 1);
+}
+
+void buffer_add16(Buffer *b, uint16_t v) {
+  buffer_add(b, &v, 2);
+}
+
+void buffer_add32(Buffer *b, uint32_t v) {
+  buffer_add(b, &v, 4);
+}
+
+void buffer_add64(Buffer *b, uint64_t v) {
+  buffer_add(b, &v, 8);
+}
+
+void buffer_add16be(Buffer *b, uint16_t v) {
+  uint16_t e = v;
+  htobe16(e);
+  buffer_add(b, &e, 2);
+}
+
+void buffer_add32be(Buffer *b, uint32_t v) {
+  uint32_t e = v;
+  htobe32(e);
+  buffer_add(b, &v, 4);
+}
+
+void buffer_add64be(Buffer *b, uint64_t v) {
+  uint64_t e = v;
+  htobe64(e);
+  buffer_add(b, &v, 8);
 }

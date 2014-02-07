@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013 T.Linden.
+    Copyright (C) 2014 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    You can contact me by mail: <tlinden AT cpan DOT org>.
+    You can contact me by mail: <tom AT vondein DOT org>.
 */
 
 
@@ -136,6 +136,81 @@ typedef struct _pcp_rec_t pcp_rec_t;
 
 #define PCP_RAW_KEYSIZE    sizeof(pcp_key_t)    - sizeof(UT_hash_handle)
 #define PCP_RAW_PUBKEYSIZE sizeof(pcp_pubkey_t) - sizeof(UT_hash_handle)
+
+
+
+
+
+
+/* RFC4880 alike public key export with some simplifications:
+
+   In sig subpackets we're using fixed sized fields instead
+   of the mess they use in rfc4880. Sorry. We use only these types:
+
+            2 = Signature Creation Time     (4 byte)
+            3 = Signature Expiration Time   (4 byte)
+            9 = Key Expiration Time         (4 bytes)
+           20 = Notation Data               (4 byte flags, N bytes name+value)
+           27 = Key Flags                   (1 byte, use 0x02, 0x08 and 0x80
+  
+  The actual signature field doesn't contain the 1st 16 bits
+  of the hash, since crypto_sign() created signatures consist
+  of the hash+signature anyway.
+
+  So, a full pubkey export looks like this
+
+  version
+  ctime
+  cipher
+  3 x raw keys           \
+  sigheader               > calc hash from this
+   sigsubs (header+data) /
+  hash
+  signature
+
+  We use big-endian always.
+
+  http://tools.ietf.org/html/rfc4880#section-5.2.3
+ 
+ */
+struct _pcp_rfc_pubkey_header_t {
+  uint8_t version;
+  uint32_t ctime;
+  uint8_t cipher;
+};
+
+struct _pcp_rfc_pubkey_0x21_t {
+  byte sig_ed25519_pub[crypto_sign_PUBLICKEYBYTES];
+  byte ed25519_pub[crypto_sign_PUBLICKEYBYTES];
+  byte curve25519_pub[crypto_box_PUBLICKEYBYTES];
+};
+
+struct _pcp_rfc_pubkey_sigheader_0x21_t {
+  uint8_t version;
+  uint8_t type; /* 0x1F only, self signed */
+  uint8_t pkcipher;
+  uint8_t hashcipher;
+  uint16_t numsubs;
+};
+
+struct _pcp_rfc_pubkey_sigsub_0x21_t {
+  uint32_t size;
+  uint8_t type;
+};
+
+struct _pcp_rfc_pubkey_sig_0x21_t {
+  byte signature[crypto_generichash_BYTES_MAX + crypto_sign_BYTES];
+};
+
+typedef struct _pcp_rfc_pubkey_header_t rfc_pub_h;
+typedef struct _pcp_rfc_pubkey_0x21_t  rfc_pub_k;
+typedef struct _pcp_rfc_pubkey_sigheader_0x21_t rfc_pub_sig_h;
+typedef struct _pcp_rfc_pubkey_sigsub_0x21_t rfc_pub_sig_s;
+typedef struct _pcp_rfc_pubkey_sig_0x21_t rfc_pub_sig;
+
+
+
+
 
 void pcp_cleanhashes();
 pcp_key_t *pcpkey_new ();

@@ -6,6 +6,7 @@ extern "C" {
 #endif
 
 #include "pcp/base85.h"
+#include "pcp/buffer.h"
 #include "pcp/config.h"
 #include "pcp/crypto.h"
 #include "pcp/defines.h"

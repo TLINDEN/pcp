@@ -18,6 +18,7 @@ PCPEXPORT = pcp.h \
             pcp/z85.h \
             pcp/zmq_z85.h \
             pcp/ed.h \
-	    pcp/base85.h
+	    pcp/base85.h \
+            pcp/buffer.h
 
 nobase_include_HEADERS = $(PCPEXPORT)

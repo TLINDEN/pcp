@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2014 T.v.Dein.
+    Copyright (C) 2013-2014 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -65,7 +65,14 @@ void buffer_resize(Buffer *b, size_t len) {
   }
 }
 
-size_t buffer_get(Buffer *b, void *buf, size_t len) {
+unsigned char *buffer_get(Buffer *b) {
+  if(b->end > 0)
+    return b->buf;
+  else
+    return NULL;
+}
+
+size_t buffer_get_chunk(Buffer *b, void *buf, size_t len) {
   if(len > b->end - b->offset || len == 0) {
     fatal("[buffer %s] attempt to read %ld data from buffer with size %ld %p at offset %ld",
 	  len, b->size, b->offset);

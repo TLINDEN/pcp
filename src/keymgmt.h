@@ -40,6 +40,8 @@
 #include "keyhash.h"
 #include "util.h"
 #include "base85.h"
+#include "buffer.h"
+#include "mgmt.h"
 
 #define _WITH_GETLINE
 
@@ -57,5 +59,8 @@ int pcp_importpublic (vault_t *vault, FILE *in, int pbpcompat);
 int pcp_importsecret (vault_t *vault, FILE *in);
 void pcpdelete_key(char *keyid);
 char *pcp_find_id_byrec(char *recipient);
+
+/* Experimental: new rfc4880 style pk export */
+void pcp_exportpublic2(char *passwd, char *outfile, int armor);
 
 #endif /*  _HAVE_KEYMGMT_H */

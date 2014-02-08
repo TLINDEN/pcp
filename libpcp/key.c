@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013 T.Linden.
+    Copyright (C) 2013-2014 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    You can contact me by mail: <tlinden AT cpan DOT org>.
+    You can contact me by mail: <tom AT vondein DOT org>.
 */
 
 
@@ -391,73 +391,6 @@ int pcp_sanitycheck_key(pcp_key_t *key) {
     fatal("Secretkey sanity check: there already exists a key with the id 0x%s\n", key->id);
     return 1;
   }
-
-  return 0;
-}
-
-int pcp_get_rfc_pub (pcp_pubkey_t *key) {
-  Buffer *out = buffer_new(1024, "bo1");
-  Buffer *raw = buffer_new(1024, "bs1");
-
-  /* add the header */
-  buffer_add8(out, PCP_KEY_VERSION);
-  buffer_add32(out, key->ctime);
-  buffer_add8(out, PCP_RFC_CIPHER);
-
-  /* add the keys */
-  buffer_add(raw, key->edpub, 32);
-  buffer_add(raw, key->edpub, 32);
-  buffer_add(raw, key->pub, 32);
-
-  /* add the sig header */
-  buffer_add8(raw, PCP_KEY_VERSION);
-  buffer_add8(raw, 0x1F); // FIXME: define
-  buffer_add8(raw, PCP_RFC_CIPHER);
-  buffer_add8(raw, PCP_RFC_CIPHER);
-  buffer_add16(raw, 5);
-
-  /* add sig ctime */
-  buffer_add32be(raw, 4);
-  buffer_add8(raw, 2);
-  buffer_add32be(raw, time(0));
-
-  /* add sig expire time */
-  buffer_add32be(raw, 4);
-  buffer_add8(raw, 3);
-  buffer_add32be(raw, time(0) + 31536000);
-
-  /* add key expire time */
-  buffer_add32be(raw, 4);
-  buffer_add8(raw, 9);
-  buffer_add32be(raw, key->ctime);
-
-  /* add name */
-  size_t notation_size = strlen(key->owner) + 4 + 5;
-  buffer_add32be(raw, notation_size);
-  buffer_add8(raw, 20);
-  buffer_add16be(raw, 5);
-  buffer_add16be(raw, strlen(key->owner));
-  buffer_add(raw, "owner", 5);
-  buffer_add(raw, key->owner, strlen(key->owner));
-
-  /* add mail */
-  notation_size = strlen(key->mail) + 4 + 4;
-  buffer_add32be(raw, notation_size);
-  buffer_add8(raw, 20);
-  buffer_add16be(raw, 4);
-  buffer_add16be(raw, strlen(key->mail));
-  buffer_add(raw, "mail", 4);
-  buffer_add(raw, key->mail, strlen(key->mail));
-
-  /* add key flags */
-  buffer_add32be(raw, 1);
-  buffer_add8(raw, 27);
-  buffer_add8(raw, 0x02 & 0x08 & 0x80);
-
-  /* FIXME:
-     Now, calculate the signature from the raw buffer,
-     add it to the output buffer, add the sig to the
-     output buffer and finally return it. */
 
   return 0;
 }

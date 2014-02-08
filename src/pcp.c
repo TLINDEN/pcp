@@ -46,7 +46,7 @@ char *default_vault() {
 }
 
 int main (int argc, char **argv)  {
-  int opt, mode, usevault, useid, userec, lo, armor, detach, signcrypt, pbpcompat;
+  int opt, mode, usevault, useid, userec, lo, armor, detach, signcrypt, pbpcompat, rfc;
   char *vaultfile = default_vault();
   char *outfile = NULL;
   char *infile = NULL;
@@ -70,6 +70,7 @@ int main (int argc, char **argv)  {
   detach = 0;
   signcrypt = 0;
   pbpcompat = 0;
+  rfc = 0;
 
   static struct option longopts[] = {
     /*  generics */
@@ -92,6 +93,7 @@ int main (int argc, char **argv)  {
     { "edit-key",        no_argument,       NULL,           'E' },    
     { "export-yaml",     no_argument,       NULL,           'y' },
     { "pbpcompat",       no_argument,       NULL,           'b' },
+    { "rfc-format",      no_argument,       NULL,           '1' }, /* no short option */
 
     /*  crypto */
     {  "encrypt",        no_argument,       NULL,           'e' },
@@ -114,7 +116,7 @@ int main (int argc, char **argv)  {
     { NULL,              0,                 NULL,            0 }
   };
 
-  while ((opt = getopt_long(argc, argv, "klV:vdehsO:i:I:pSPRtEx:DzZr:gcymf:b",
+  while ((opt = getopt_long(argc, argv, "klV:vdehsO:i:I:pSPRtEx:DzZr:gcymf:b1",
 			    longopts, NULL)) != -1) {
   
     switch (opt)  {
@@ -150,6 +152,9 @@ int main (int argc, char **argv)  {
       case 'S':
 	mode += PCP_MODE_IMPORT_SECRET;
 	usevault = 1;
+	break;
+      case '1':
+	rfc = 1;
 	break;
       case 'R':
 	mode += PCP_MODE_DELETE_KEY;
@@ -372,19 +377,24 @@ int main (int argc, char **argv)  {
 	break;
 
       case PCP_MODE_EXPORT_PUBLIC:
-	if(useid) {
-	  id = pcp_normalize_id(keyid);
-	  if(id == NULL)
-	    break;
+	if(rfc) {
+	  pcp_exportpublic2(xpass, outfile, armor);
 	}
-	if (recipient != NULL)
-	  pcp_exportpublic(id, recipient->value, xpass, outfile, pbpcompat);
-	else
-	  pcp_exportpublic(id, NULL, xpass, outfile, pbpcompat);
-	if(xpass != NULL)
-	  free(xpass);
-	if(recipient != NULL)
-	  free(recipient);
+	else {
+	  if(useid) {
+	    id = pcp_normalize_id(keyid);
+	    if(id == NULL)
+	      break;
+	  }
+	  if (recipient != NULL)
+	    pcp_exportpublic(id, recipient->value, xpass, outfile, pbpcompat);
+	  else
+	    pcp_exportpublic(id, NULL, xpass, outfile, pbpcompat);
+	  if(xpass != NULL)
+	    free(xpass);
+	  if(recipient != NULL)
+	    free(recipient);
+	}
 	break;
 
       case PCP_MODE_IMPORT_PUBLIC:

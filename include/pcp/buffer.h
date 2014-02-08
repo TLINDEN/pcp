@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2014 T.v.Dein.
+    Copyright (C) 2013-2014 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -69,7 +69,10 @@ void buffer_resize(Buffer *b, size_t len);
 /* get some chunk of data from the buffer, starting from offset til len,
    it doesn't allocate the returned data (void *buf, the 2nd argument).
 */
-size_t buffer_get(Buffer *b, void *buf, size_t len);
+size_t buffer_get_chunk(Buffer *b, void *buf, size_t len);
+
+/* return the whole buffer contents */
+unsigned char *buffer_get(Buffer *b);
 
 /* same as buffer_get() but fetch some data chunk from somewhere
    in the middle of the buffer */

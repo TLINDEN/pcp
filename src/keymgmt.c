@@ -336,7 +336,7 @@ int pcp_importsecret (vault_t *vault, FILE *in) {
   }
 
   if(clen != PCP_RAW_KEYSIZE) {
-    fatal("Error: decoded input didn't result to a proper sized key! (got %d bytes)\n", clen);
+    fatal("Error: decoded input didn't result to a proper sized key! (got %ld bytes, expected %ld)\n", clen, PCP_RAW_KEYSIZE);
     free(z85decoded);
     return 1;
   }
@@ -624,3 +624,69 @@ char *pcp_find_id_byrec(char *recipient) {
   return id;
 }
 
+
+
+/*
+  Experimental RFC4880-alike public key export. Once stable and
+  flexible enough, this will become the PCP default, I hope. */
+void pcp_exportpublic2(char *passwd, char *outfile, int armor) {
+  pcp_pubkey_t *key = NULL;
+  
+  pcp_key_t *s = NULL;
+  s = pcp_find_primary_secret();
+  if(s == NULL) {
+    fatal("There's no primary secret key in the vault %s!\n", vault->filename);
+    free(s);
+  }
+  else {
+    key = pcpkey_pub_from_secret(s); 
+  }
+  
+  if(key != NULL) {
+    FILE *out;
+    if(outfile == NULL) {
+      out = stdout;
+    }
+    else {
+      if((out = fopen(outfile, "wb+")) == NULL) {
+	fatal("Could not create output file %s", outfile);
+	out = NULL;
+      }
+    }
+
+    if(out != NULL) {
+      pcp_key_t *sk = pcp_find_primary_secret();
+      if(sk != NULL) {
+	char *passphrase;
+	pcp_readpass(&passphrase, "Enter passphrase to decrypt your secret key for signing the export", NULL, 1);
+	
+	sk = pcpkey_decrypt(sk, passphrase);
+	if(sk != NULL) {
+	  Buffer *exported_pk = pcp_get_rfc_pub(key, sk);
+	  if(exported_pk != NULL) {
+	    if(armor == 1) {
+	      size_t zlen;
+	      char *z85 = pcp_z85_encode(buffer_get(exported_pk), buffer_size(exported_pk), &zlen);
+	      fprintf(out, "%s\r\n%s\r\n%s\r\n", EXP_PK_HEADER, z85, EXP_PK_FOOTER);
+	      free(z85);
+	    }
+	    else
+	      fwrite(buffer_get(exported_pk), 1, buffer_size(exported_pk), out);
+
+	    fclose(out);
+	    if(debug) {
+	      buffer_dump(exported_pk);
+	      buffer_info(exported_pk);
+	      pcp_dumppubkey(key);
+	    }
+	    buffer_free(exported_pk);
+	  }
+	}
+
+	free(passphrase);
+      }
+
+      free(key);
+    }
+  }
+}

@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013 T.Linden.
+    Copyright (C) 2013-2014 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    You can contact me by mail: <tlinden AT cpan DOT org>.
+    You can contact me by mail: <tom AT vondein DOT org>.
 */
 
 
@@ -26,14 +26,13 @@ unsigned char *pcp_padfour(unsigned char *src, size_t srclen, size_t *dstlen) {
   size_t outlen, zerolen;
   unsigned char *dst;
  
-  outlen = srclen + 1; /*  1 for the pad flag */
+  outlen = srclen;
   while (outlen % 4 != 0) outlen++;
-  zerolen = outlen - (srclen + 1);
+  zerolen = outlen - srclen;
 
   dst = (unsigned char*)ucmalloc(outlen);
-  dst[0] = zerolen;             /*  add the number of zeros we add */
-  memcpy(&dst[1], src, srclen); /*  add the original */
-  memset(&dst[srclen+1], 0, zerolen); /*  pad with zeroes  */
+  memcpy(dst, src, srclen); /*  add the original */
+  memset(&dst[srclen], 0, zerolen); /*  pad with zeroes  */
 
   *dstlen = outlen;
 
@@ -43,18 +42,19 @@ unsigned char *pcp_padfour(unsigned char *src, size_t srclen, size_t *dstlen) {
 unsigned char *pcp_unpadfour(unsigned char *src, size_t srclen, size_t *dstlen) {
   size_t outlen;
   size_t numzeroes;
-  unsigned char *dst;
+  size_t i;
 
-  numzeroes = src[0];  /*  first byte tells us how many zeroes we've got */
-  outlen = srclen - 1 - numzeroes;
-  
-  dst = malloc(outlen);
+  outlen = srclen;
 
-  memcpy(dst, &src[1], outlen);
+  for(i=srclen; i>0; --i) {
+    if(src[i] != '\0') {
+      outlen = i + 1;
+      break;
+    }
+  }
 
   *dstlen = outlen;
-
-  return dst;
+  return src;
 }
 
 unsigned char *pcp_z85_decode(char *z85block, size_t *dstlen) {
@@ -84,7 +84,6 @@ unsigned char *pcp_z85_decode(char *z85block, size_t *dstlen) {
   }
 
   free(z85);
-  free(bin); 
 
   *dstlen = outlen;
   return raw;

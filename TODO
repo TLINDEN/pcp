@@ -19,3 +19,9 @@ check pub key count in pcp.c before calling verify signature, croak if count==0
 fix encrypt+sign protocol (http://world.std.com/~dtd/sign_encrypt/sign_encrypt7.html),
 by: hash the message, at the end, sign that hash, then encrypt the result, append to
 cipher output. include recipient list also in the signature.
+
+Implement pbp fix https://github.com/stef/pbp/commit/7d7b7c9ecb7604ad22938f5b68a624093a417bfa
+
+Implement z85 for pbp stuff: https://github.com/stef/pbp/commit/9fa45f6a108ba910f41e863405c5527af8d70e84 :) !!!!
+
+Change Z85 encoder: leave the leading count octet and just zero pad the input, remove any zeroes when decoding

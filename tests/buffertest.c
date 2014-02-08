@@ -34,7 +34,7 @@ int main() {
   for(x=0; x < bs; x+=32) {
     fprintf(stderr, "before get\n");
     buffer_info(test);
-    if(buffer_get(test, g, 32) > 0) {
+    if(buffer_get_chunk(test, g, 32) > 0) {
     fprintf(stderr, "after get\n");
       buffer_info(test);
       _dump("got", g, 32);

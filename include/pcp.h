@@ -7,6 +7,7 @@ extern "C" {
 
 #include "pcp/base85.h"
 #include "pcp/buffer.h"
+#include "pcp/config.h"
 #include "pcp/crypto.h"
 #include "pcp/defines.h"
 #include "pcp/digital_crc32.h"
@@ -17,6 +18,7 @@ extern "C" {
 #include "pcp/keyhash.h"
 #include "pcp/mac.h"
 #include "pcp/mem.h"
+#include "pcp/mgmt.h"
 #include "pcp/pad.h"
 #include "pcp/platform.h"
 #include "pcp/plist.h"

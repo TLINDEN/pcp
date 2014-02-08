@@ -44,7 +44,7 @@ ser=`grep Serial bart.pub | awk '{print $3}'`
 
 gen Niemand niemand@local n y unknown1 unknown2
 $pcp1 -V unknown3 -l
-echo hallo | $pcp -e -x a | egrep -v "^ " | egrep -v -- "----"  | grep . > unknown4
+echo hallo | $pcp -e -x a -z | egrep -v "^ " | egrep -v -- "----"  | grep . > unknown4
 echo blah | $pcp -g -x a | egrep -v "^ " | egrep -v -- "----"  | grep . > unknown5
 
 echo "bartid = $ids

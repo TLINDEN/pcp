@@ -26,6 +26,7 @@
 #include "defines.h"
 #include "zmq_z85.h"
 #include "mem.h"
+#include "buffer.h"
 
 /*  convert a binary stream to one which gets accepted by zmq_z85_encode */
 /*  we pad it with zeroes and put the number of zerores in front of it  */

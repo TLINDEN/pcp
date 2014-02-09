@@ -57,11 +57,17 @@ Buffer *buffer_new(size_t blocksize, char *name);
 /* zero the buffer and free it, if allocated */
 void buffer_free(Buffer *b);
 
-/* zero the buffer, always called from buffer_free() */
+/* zero the buffer, reset counters, always called from buffer_free() */
 void buffer_clear(Buffer *b);
+
+/* put read offset to start */
+void buffer_rewind(Buffer *b);
 
 /* add data to the buffer, memorize end position */
 void buffer_add(Buffer *b, const void *data, size_t len);
+
+/* the same but use another buffer as source */
+void buffer_add_buf(Buffer *dst, Buffer *src);
 
 /* resize the buffer if necessary */
 void buffer_resize(Buffer *b, size_t len);
@@ -73,6 +79,10 @@ size_t buffer_get_chunk(Buffer *b, void *buf, size_t len);
 
 /* return the whole buffer contents */
 unsigned char *buffer_get(Buffer *b);
+
+/* access the buffer content as string (char *) the returned pointer
+   points to b->buf and should not be free'd directly*/
+char *buffer_get_str(Buffer *b);
 
 /* same as buffer_get() but fetch some data chunk from somewhere
    in the middle of the buffer */

@@ -46,13 +46,22 @@ void buffer_free(Buffer *b) {
 
 void buffer_clear(Buffer *b) {
   b->offset = 0;
+  b->end = 0;
   memset(b->buf, 0, b->size);
+}
+
+void buffer_rewind(Buffer *b) {
+  b->offset = 0;
 }
 
 void buffer_add(Buffer *b, const void *data, size_t len) {
   buffer_resize(b, len);
   memcpy(b->buf + b->end, data, len);
   b->end += len;
+}
+
+void buffer_add_buf(Buffer *dst, Buffer *src) {
+  buffer_add(dst, buffer_get(src), buffer_size(src));
 }
 
 void buffer_resize(Buffer *b, size_t len) {
@@ -81,6 +90,17 @@ size_t buffer_get_chunk(Buffer *b, void *buf, size_t len) {
   memcpy(buf, b->buf + b->offset, len);
   b->offset += len;
   return len;
+}
+
+char *buffer_get_str(Buffer *b) {
+  buffer_resize(b, 1); /* make room for trailing zero */
+  return (char *)b->buf;
+  /*
+  char *out = ucmalloc(b->end+1);
+  memcpy(out, buffer_get(b), buffer_size(b));
+  out[buffer_size(b)] = '\0';
+  return out;
+  */
 }
 
 size_t buffer_extract(Buffer *b, void *buf, size_t offset, size_t len) {
@@ -182,18 +202,18 @@ void buffer_add64(Buffer *b, uint64_t v) {
 
 void buffer_add16be(Buffer *b, uint16_t v) {
   uint16_t e = v;
-  htobe16(e);
+  e = htobe16(e);
   buffer_add(b, &e, 2);
 }
 
 void buffer_add32be(Buffer *b, uint32_t v) {
   uint32_t e = v;
-  htobe32(e);
-  buffer_add(b, &v, 4);
+  e = htobe32(e);
+  buffer_add(b, &e, 4);
 }
 
 void buffer_add64be(Buffer *b, uint64_t v) {
   uint64_t e = v;
-  htobe64(e);
-  buffer_add(b, &v, 8);
+  e = htobe64(e);
+  buffer_add(b, &e, 8);
 }

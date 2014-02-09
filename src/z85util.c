@@ -129,6 +129,7 @@ int pcpz85_decode(char *infile, char *outfile) {
     goto errdz3;
   }
 
+  free(encoded);
   free(decoded);
   return 0;
 

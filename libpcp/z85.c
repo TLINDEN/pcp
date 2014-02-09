@@ -45,7 +45,7 @@ unsigned char *pcp_unpadfour(unsigned char *src, size_t srclen, size_t *dstlen) 
 
   outlen = srclen;
 
-  for(i=srclen; i>0; --i) {
+  for(i=srclen-1; i>0; --i) {
     if(src[i] != '\0') {
       outlen = i + 1;
       break;
@@ -57,50 +57,27 @@ unsigned char *pcp_unpadfour(unsigned char *src, size_t srclen, size_t *dstlen) 
 }
 
 unsigned char *pcp_z85_decode(char *z85block, size_t *dstlen) {
-  unsigned char *bin;
-  int i, pos;
-  size_t zlen, binlen, outlen; 
+  unsigned char *bin = NULL;
+  unsigned char *raw = NULL;
+  size_t binlen, outlen; 
 
-  zlen = strlen(z85block);
-  char *z85 = ucmalloc(zlen+1);
-
-  /*  remove newlines */
-  pos = 0;
-  for(i=0; i<zlen+1; ++i) {
-    if(z85block[i] != '\r' && z85block[i] != '\n') {
-      z85[pos] = z85block[i];
-      pos++;
-    }
-  }
-
-
-  binlen = strlen (z85) * 4 / 5; 
+  binlen = strlen(z85block) * 4 / 5; 
   bin = ucmalloc(binlen);
-  bin = zmq_z85_decode(bin, z85);
 
-  if(bin == NULL) {
-    free(z85);
+  if(zmq_z85_decode(bin, z85block) == NULL) {
     fatal("zmq_z85_decode() failed, input size ! % 5");
     return NULL;
   }
 
-  _dump("bin", bin, binlen);
-  
-  fwrite(bin, 1, binlen, stderr);
-
-  unsigned char *raw = NULL;
-  if(bin != NULL) {
-    raw = pcp_unpadfour(bin, binlen, &outlen);
-  }
-
-  free(z85);
+  raw = pcp_unpadfour(bin, binlen, &outlen);
 
   *dstlen = outlen;
+
   return raw;
 }
 
 char *pcp_z85_encode(unsigned char *raw, size_t srclen, size_t *dstlen) {
-  int pos, b;
+  int pos;
   size_t outlen, blocklen, zlen;
 
   /*  make z85 happy (size % 4) */
@@ -115,24 +92,6 @@ char *pcp_z85_encode(unsigned char *raw, size_t srclen, size_t *dstlen) {
   /*  make it a 72 chars wide block */
   blocklen = (zlen + ((zlen / 72) * 2)) + 1;
   char *z85block = ucmalloc(blocklen);
-
-  /* fprintf(stderr, "zlen: %d, outlen: %d, srclen: %d, blocklen: %d\n", */
-  /* 	  zlen, outlen, srclen, blocklen); */
-
-  pos = b = 0;
-  /*
-  for(i=0; i<zlen; ++i) {
-    if(pos >= 71) {
-      *z85block++ = '\r';
-      *z85block++ = '\n';
-      pos = 1;
-    }
-    else {
-      pos++;
-    }
-    *z85block++ = z85[i];
-  }
-  */
 
   char *z = &z85[0];
   char *B = &z85block[0];
@@ -149,9 +108,6 @@ char *pcp_z85_encode(unsigned char *raw, size_t srclen, size_t *dstlen) {
     *B++ = *z++;
   }
   *B = '\0';
-
-  /* fprintf(stderr, "z85block len: %d\n", blocklen, strlen(z85block)); */
-  /* fprintf(stderr, "z85block: <%s>\n", z85block); */
 
   *dstlen = blocklen;
   free(z85); 

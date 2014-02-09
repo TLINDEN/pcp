@@ -21,6 +21,7 @@ chmod 700 clean.sh
 # generate the install include file
 (echo "#ifndef _HAVE_PCP"; echo "#define _HAVE_PCP"; echo) > include/pcp.h
 (echo "#ifdef __cplusplus"; echo "extern \"C\" {"; echo "#endif"; echo) >> include/pcp.h
+echo "#include \"pcp/config.h\"" >> include/pcp.h
 
 ls include/pcp/*.h | sed 's#include/##' | while read include; do
   echo "#include \"$include\"" >> include/pcp.h

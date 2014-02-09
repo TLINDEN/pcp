@@ -41,7 +41,6 @@ unsigned char *pcp_padfour(unsigned char *src, size_t srclen, size_t *dstlen) {
 
 unsigned char *pcp_unpadfour(unsigned char *src, size_t srclen, size_t *dstlen) {
   size_t outlen;
-  size_t numzeroes;
   size_t i;
 
   outlen = srclen;
@@ -178,51 +177,77 @@ char *pcp_readz85file(FILE *infile) {
 }
 
 char *pcp_readz85string(unsigned char *input, size_t bufsize) {
-  char *ret;
-  int i, outsize, lpos, x;
-  lpos = outsize = 0;
+  int i;
   size_t MAXLINE = 1024;
 
-  unsigned char *out = ucmalloc(bufsize);
-  char *line = ucmalloc(MAXLINE);
+  Buffer *z = buffer_new(MAXLINE, "z");
+  Buffer *line = buffer_new(MAXLINE, "line");
+  char *oneline;
+  int begin, end;
+  begin = end = 0;
+  char *out = NULL;
 
   for(i=0; i<bufsize; ++i) {
-    if(lpos > MAXLINE) {
-      /*  huh, now that's suspicious */
-      fatal("Invalid input, line is too long (%d bytes so far)!\n", lpos);
-      goto rferr;
-    }
-    if(input[i] != '\n' && input[i] != '\r') {
-      line[lpos++] = input[i];
-    }
-    else {
-      if(line[0] != ' ' && strncmp(line, "-----", 5) != 0) {
-	if(lpos > 0) {
-	  for(x=0;x<lpos;++x) 
-	    out[outsize+x] = line[x];
-	  outsize += lpos;
-	  lpos = 0;
+    if(input[i] == '\r')
+      continue;
+    else if(input[i] == '\n') {
+      /* a line is complete */
+      oneline = buffer_get_str(line);
+      if(strncmp(oneline, "-----", 5) == 0 ) {
+	if(begin == 0) {
+	/* a begin header, reset whatever we've got so far in z buffer */
+	  begin = 1;
+	  buffer_clear(line);
+	  buffer_clear(z);
+	  continue;
+	}
+	else {
+	  /* an end header */
+	  end = 1;
+	  break;
 	}
       }
-      else {
-	lpos = 0;
+      else if(strchr(oneline, ' ') != NULL) {
+	/* a comment */
+	buffer_clear(line);
+	continue;
       }
+      else {
+	/* regular z85 encoded content */
+	buffer_add_buf(z, line);
+	buffer_clear(line);
+      }
+    }
+    else {
+      /* regular line content */
+      buffer_add8(line, input[i]);
     }
   }
 
-  out[outsize+1] = '\0';
+  if(buffer_size(line) > 0) {
+    /* something left in line buffer, probably
+       newline at eof missing or no multiline input */
+    buffer_add_buf(z, line);  
+  }
 
-  ret = ucmalloc(outsize+1);
-  memcpy(ret, out, outsize+1);
+  if(buffer_size(z) == 0) {
+    fatal("empty z85 encoded string");
+    goto rferr;
+  }
 
-  free(out);
-  free(line);
+  out = ucmalloc(buffer_size(z)+1);
+  strncpy(out, buffer_get_str(z), buffer_size(z)+1);
 
-  return ret;
+  fprintf(stderr, "got: \n<%s>\n", out);
+
+  buffer_free(z);
+  buffer_free(line);
+
+  return out;
 
  rferr:
-  free(out);
-  free(line);
+  buffer_free(z);
+  buffer_free(line);
 
   return NULL;
 }

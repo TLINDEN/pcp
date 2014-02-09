@@ -6,6 +6,20 @@
 	the cleartext content (both hashed together) and
 	encrypted afterwards.
 
+	Re-implemented pcp_readz85string() function, it's
+	now much more fault tolerant and flexible and
+	save against overflows. It is able to catch a
+	multitude of z85 encoded inputs, such as multiline
+	z85 data, oneline z85 data, including or without
+	headers/footers and it considers any single line
+	of content which ends with [\r]\n and contains
+	a whitespace as comment.
+
+	Added Buffer 'class' internal api to make it easier
+	to work with binary data in various, flexible and
+	error prone ways. Cribbed from the code in
+	openssh/buffer.c.
+	
 0.2.0	ED25519 and Curve25519 keys are now generated
 	separately (previously they were generated from
 	one random seed, the curve had been derived from

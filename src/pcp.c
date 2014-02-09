@@ -263,12 +263,12 @@ int main (int argc, char **argv)  {
 
 
   sodium_init(); /*  FIXME: better called from the lib? */
+  errno = 0; /* FIXME: workaround for https://github.com/jedisct1/libsodium/issues/114 */
 
   if(mode == PCP_MODE_ENCRYPT && useid == 0 && userec == 0) {
     usevault = 0;
     mode = PCP_MODE_ENCRYPT_ME;
   }
-
 
   if(argc >= 1) {
     /* ok, there are arguments left on the commandline.
@@ -332,7 +332,6 @@ int main (int argc, char **argv)  {
       free(extra); /* not used */
     }
   }
-
 
   /* check if there's some enviroment we could use */
   if(usevault == 1) {

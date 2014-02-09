@@ -117,6 +117,8 @@ int pcpz85_decode(char *infile, char *outfile) {
   size_t clen;
   unsigned char *decoded = pcp_z85_decode(encoded, &clen);
 
+  
+
   if(decoded == NULL)
     goto errdz2;
   

@@ -68,7 +68,6 @@ void buffer_resize(Buffer *b, size_t len) {
   if((b->end > 0 && b->end + len > b->size) || (b->end == 0 && len > b->size) ) {
     /* increase by buf blocksize */
     size_t newsize = (((len / b->blocksize) +1) * b->blocksize) + b->size;
-    fprintf(stderr, "[buffer %s] resizing from %ld to %ld\n", b->name, b->size, newsize);
     b->buf = ucrealloc(b->buf, b->size, newsize);
     b->size = newsize;
   }

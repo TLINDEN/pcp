@@ -73,9 +73,20 @@ unsigned char *pcp_z85_decode(char *z85block, size_t *dstlen) {
     }
   }
 
+
   binlen = strlen (z85) * 4 / 5; 
   bin = ucmalloc(binlen);
   bin = zmq_z85_decode(bin, z85);
+
+  if(bin == NULL) {
+    free(z85);
+    fatal("zmq_z85_decode() failed, input size ! % 5");
+    return NULL;
+  }
+
+  _dump("bin", bin, binlen);
+  
+  fwrite(bin, 1, binlen, stderr);
 
   unsigned char *raw = NULL;
   if(bin != NULL) {
@@ -224,7 +235,7 @@ char *pcp_readz85string(unsigned char *input, size_t bufsize) {
     }
   }
 
-  if(buffer_size(line) > 0) {
+  if(buffer_size(line) > 0 && end != 1) {
     /* something left in line buffer, probably
        newline at eof missing or no multiline input */
     buffer_add_buf(z, line);  
@@ -237,8 +248,6 @@ char *pcp_readz85string(unsigned char *input, size_t bufsize) {
 
   out = ucmalloc(buffer_size(z)+1);
   strncpy(out, buffer_get_str(z), buffer_size(z)+1);
-
-  fprintf(stderr, "got: \n<%s>\n", out);
 
   buffer_free(z);
   buffer_free(line);

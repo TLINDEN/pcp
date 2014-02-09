@@ -183,7 +183,7 @@ int main (int argc, char **argv)  {
 	armor = 1;
 	break;
       case 'Z':
-	armor = 1;
+	armor = 2;
 	break;
       case 'b':
 	pbpcompat = 1;
@@ -248,8 +248,17 @@ int main (int argc, char **argv)  {
 
 
   if(mode == 0) {
-    version();
-    return 1;
+    /* turn -z|-Z into a mode if there's nothing else specified */
+    if(armor == 1) {
+      mode = PCP_MODE_ZENCODE;
+    }
+    else if(armor == 2) {
+      mode = PCP_MODE_ZDECODE;
+    }
+    else {
+      version();
+      return 1;
+    }
   }
 
   if(mode == PCP_MODE_ENCRYPT + PCP_MODE_SIGN) {

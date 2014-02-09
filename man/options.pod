@@ -107,11 +107,13 @@
                            against using -I as well (plus -f <sigfile>).
  
  Encoding Options:
- -z --z85-encode           Encode something to Z85 encoding. Use
-                           -I and -O respectively, otherwise it
+ -z --z85-encode           Encode (armor) something to Z85 encoding.
+                           If used with encryption or singing operation
+                           encode its output. Otherwise encode a plain
+                           file. Use -I and -O respectively, otherwise it
                            stdin/stdout.
- -Z --z85-decode           Decode something from Z85 encoding. Use
-                           -I and -O respectively, otherwise it
+ -Z --z85-decode           Decode (dearmor) something from Z85 encoding.
+                           Use -I and -O respectively, otherwise it
                            stdin/stdout
  
 

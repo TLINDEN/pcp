@@ -162,11 +162,13 @@ Pretty Curved Privacy - File encryption using eliptic curve cryptography.
                            against using -I as well (plus -f <sigfile>).
  
  Encoding Options:
- -z --z85-encode           Encode something to Z85 encoding. Use
-                           -I and -O respectively, otherwise it
+ -z --z85-encode           Encode (armor) something to Z85 encoding.
+                           If used with encryption or singing operation
+                           encode its output. Otherwise encode a plain
+                           file. Use -I and -O respectively, otherwise it
                            stdin/stdout.
- -Z --z85-decode           Decode something from Z85 encoding. Use
-                           -I and -O respectively, otherwise it
+ -Z --z85-decode           Decode (dearmor) something from Z85 encoding.
+                           Use -I and -O respectively, otherwise it
                            stdin/stdout
  
 
@@ -805,34 +807,23 @@ a couple of modifications (portability, readability etc).
 
 To fulfil the requirements of the ZeroMQ Z85 functions, B<pcp1>
 does some additional preparations of raw input before actually doing the 
-encoding, since the input for zmq_z85_encode() must be divisible by 4:
-
-Expand the input so that the resulting size is divisible by 4.
-
-Fill the added bytes with zeroes.
-
-Prepend the input with a one byte value which holds the number of zeroes
-added in the previous step.
-
-Example:
-
-Raw input:
-
- hello\0
-
-Here, the input size is 6, which is insufficient, therefore it has to be expanded
-to be 8. After the process the input looks like this:
-
- 1hello\0\0
-
-So, we padded the input with 1 zero (makes 7 bytes) and preprended it with the
-value 1 (the number of zeros added): makes 8 bytes total.
-
-After decoding Z85 input the process will be reversed.
+encoding, since the input for zmq_z85_encode() must be divisible by 4. Therefore
+we pad the input with zeroes and remove them after decoding.
 
 B<Trying to use another tool to decode an Z85 encoded string produced
 by z85, might not work therefore, unless the tool takes the padding scheme
 outlined above into account>.
+
+Z85 encoding and decoding can be used separately as well to work with
+files. Examples:
+
+Encode some file to Z85 encoding:
+
+pcp1 -z -I file -O file.z85
+
+Reverse the process:
+
+pcp1 -Z -I file.z85 -O file
 
 =head2 PBP COMPATIBILITY
 

@@ -65,3 +65,10 @@ void *ucrealloc(void *d, size_t oldlen, size_t newlen) {
 
   return value;
 }
+
+void ucfree(void *d, size_t len) {
+  if(d != NULL) {
+    memset(d, 0, len);
+    free(d);
+  }
+}

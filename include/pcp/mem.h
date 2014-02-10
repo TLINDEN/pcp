@@ -41,4 +41,7 @@ void *urmalloc(size_t s);
 /* resize a a pointer and fill the added remainder with zeroes */
 void *ucrealloc(void *d, size_t oldlen, size_t newlen);
 
+/* clear and free */
+void ucfree(void *d, size_t len);
+
 #endif /*  _HAVE_PCP_MEM */

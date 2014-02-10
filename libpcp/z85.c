@@ -75,7 +75,7 @@ unsigned char *pcp_z85_decode(char *z85block, size_t *dstlen) {
 }
 
 char *pcp_z85_encode(unsigned char *raw, size_t srclen, size_t *dstlen) {
-  int pos;
+  int pos = 0;
   size_t outlen, blocklen, zlen;
 
   /*  make z85 happy (size % 4) */

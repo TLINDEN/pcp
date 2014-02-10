@@ -30,10 +30,10 @@
 
 /*  convert a binary stream to one which gets accepted by zmq_z85_encode */
 /*  we pad it with zeroes and put the number of zerores in front of it  */
-unsigned char *pcp_unpadfour(unsigned char *src, size_t srclen, size_t *dstlen);
+unsigned char *pcp_padfour(unsigned char *src, size_t srclen, size_t *dstlen);
 
 /*  the reverse of the above */
-unsigned char *pcp_unpadfour(unsigned char *src, size_t srclen, size_t *dstlen);
+size_t pcp_unpadfour(unsigned char *src, size_t srclen);
 
 /*  wrapper around zmq Z85 encoding function */
 unsigned char *pcp_z85_decode(char *z85block, size_t *dstlen);

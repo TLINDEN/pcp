@@ -39,7 +39,7 @@ unsigned char *pcp_padfour(unsigned char *src, size_t srclen, size_t *dstlen) {
   return dst;
 }
 
-unsigned char *pcp_unpadfour(unsigned char *src, size_t srclen, size_t *dstlen) {
+size_t pcp_unpadfour(unsigned char *src, size_t srclen) {
   size_t outlen;
   size_t i;
 
@@ -52,13 +52,11 @@ unsigned char *pcp_unpadfour(unsigned char *src, size_t srclen, size_t *dstlen) 
     }
   }
 
-  *dstlen = outlen;
-  return src;
+  return outlen;
 }
 
 unsigned char *pcp_z85_decode(char *z85block, size_t *dstlen) {
   unsigned char *bin = NULL;
-  unsigned char *raw = NULL;
   size_t binlen, outlen; 
 
   binlen = strlen(z85block) * 4 / 5; 
@@ -69,11 +67,11 @@ unsigned char *pcp_z85_decode(char *z85block, size_t *dstlen) {
     return NULL;
   }
 
-  raw = pcp_unpadfour(bin, binlen, &outlen);
+  outlen = pcp_unpadfour(bin, binlen);
 
   *dstlen = outlen;
 
-  return raw;
+  return bin;
 }
 
 char *pcp_z85_encode(unsigned char *raw, size_t srclen, size_t *dstlen) {

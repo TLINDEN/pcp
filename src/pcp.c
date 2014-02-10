@@ -46,7 +46,7 @@ char *default_vault() {
 }
 
 int main (int argc, char **argv)  {
-  int opt, mode, usevault, useid, userec, lo, armor, detach, signcrypt, pbpcompat, rfc;
+  int opt, mode, usevault, useid, userec, lo, armor, detach, signcrypt, exportformat;
   char *vaultfile = default_vault();
   char *outfile = NULL;
   char *infile = NULL;
@@ -69,8 +69,7 @@ int main (int argc, char **argv)  {
   armor = 0;
   detach = 0;
   signcrypt = 0;
-  pbpcompat = 0;
-  rfc = 0;
+  exportformat = EXP_FORMAT_NATIVE;
 
   static struct option longopts[] = {
     /*  generics */
@@ -92,8 +91,7 @@ int main (int argc, char **argv)  {
     { "remove-key",      no_argument,       NULL,           'R' },
     { "edit-key",        no_argument,       NULL,           'E' },    
     { "export-yaml",     no_argument,       NULL,           'y' },
-    { "pbpcompat",       no_argument,       NULL,           'b' },
-    { "rfc-format",      no_argument,       NULL,           '1' }, /* no short option */
+    { "export-format",   required_argument, NULL,           'F' },
 
     /*  crypto */
     {  "encrypt",        no_argument,       NULL,           'e' },
@@ -153,9 +151,6 @@ int main (int argc, char **argv)  {
 	mode += PCP_MODE_IMPORT_SECRET;
 	usevault = 1;
 	break;
-      case '1':
-	rfc = 1;
-	break;
       case 'R':
 	mode += PCP_MODE_DELETE_KEY;
 	usevault = 1;
@@ -185,8 +180,17 @@ int main (int argc, char **argv)  {
       case 'Z':
 	armor = 2;
 	break;
-      case 'b':
-	pbpcompat = 1;
+      case 'F':
+	if(strncmp(optarg, "pbp", 3) == 0) {
+	  exportformat = EXP_FORMAT_PBP;
+	}
+	else if(strncmp(optarg, "pcp", 3) == 0) {
+	  exportformat = EXP_FORMAT_NATIVE;
+	}
+	else {
+	  warn("Unknown export format specified, using native\n");
+	  exportformat = EXP_FORMAT_NATIVE;
+	}
 	break;
       case 'g':
 	mode += PCP_MODE_SIGN;
@@ -385,24 +389,16 @@ int main (int argc, char **argv)  {
 	break;
 
       case PCP_MODE_EXPORT_PUBLIC:
-	if(rfc) {
-	  pcp_exportpublic2(xpass, outfile, armor);
+	if(useid) {
+	  id = pcp_normalize_id(keyid);
+	  if(id == NULL)
+	    break;
 	}
-	else {
-	  if(useid) {
-	    id = pcp_normalize_id(keyid);
-	    if(id == NULL)
-	      break;
-	  }
-	  if (recipient != NULL)
-	    pcp_exportpublic(id, recipient->value, xpass, outfile, pbpcompat);
-	  else
-	    pcp_exportpublic(id, NULL, xpass, outfile, pbpcompat);
-	  if(xpass != NULL)
-	    free(xpass);
-	  if(recipient != NULL)
-	    free(recipient);
-	}
+	pcp_exportpublic(id, xpass, outfile, exportformat, armor);
+	if(xpass != NULL)
+	  free(xpass);
+	if(recipient != NULL)
+	  free(recipient);
 	break;
 
       case PCP_MODE_IMPORT_PUBLIC:
@@ -415,7 +411,7 @@ int main (int argc, char **argv)  {
 	    break;
 	  }
 	}
-	pcp_importpublic(vault, in, pbpcompat);
+	pcp_importpublic(vault, in);
 	break;
 
       case PCP_MODE_IMPORT_SECRET:

@@ -259,63 +259,118 @@ void pcp_exportsecretkey(pcp_key_t *key, char *outfile) {
   keyid we use the primary key. if no keyid has been given but
   a recipient instead, we try to look up the vault for a match.
  */
-void pcp_exportpublic(char *keyid, char *recipient, char *passwd, char *outfile, int pbpcompat) {
-  pcp_pubkey_t *key = NULL;
-  
+void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int armor) {
+  FILE *out;
+  int is_foreign = 0;
+  pcp_pubkey_t *pk = NULL;
+  pcp_key_t *sk = NULL;
+  Buffer *exported_pk;
+
+  if(outfile == NULL) {
+    out = stdout;
+  }
+  else {
+    if((out = fopen(outfile, "wb+")) == NULL) {
+      fatal("Could not create output file %s", outfile);
+      goto errpcpexpu1;
+    }
+  }
+
+
   if(keyid != NULL) {
-    /*  look if we've got that one */
-    HASH_FIND_STR(pcppubkey_hash, keyid, key);
-    if(key == NULL) {
-      /*  maybe it's a secret key? */
-      pcp_key_t *s = NULL;
-      HASH_FIND_STR(pcpkey_hash, keyid, s);
-      if(s == NULL) {
-	fatal("Could not find a public key with id 0x%s in vault %s!\n", keyid, vault->filename);
-	free(s);
+    /* keyid specified, check if it exists and if yes, what type it is */
+    HASH_FIND_STR(pcppubkey_hash, keyid, pk);
+    if(pk == NULL) {
+      /* ok, so, then look for a secret key with that id */
+      HASH_FIND_STR(pcpkey_hash, keyid, sk);
+      if(sk == NULL) {
+	fatal("Could not find a key with id 0x%s in vault %s!\n",
+		keyid, vault->filename);
+	goto errpcpexpu1;
       }
       else {
-	key = pcpkey_pub_from_secret(s); 
+	/* ok, so it's our own key */
+	is_foreign = 0;
       }
+    }
+    else {
+      /* it's a foreign public key, we cannot sign it ourselfes */
+      is_foreign = 1;
     }
   }
   else {
-    /*  look for the primary secret */
-    pcp_key_t *s = NULL;
-    s = pcp_find_primary_secret();
-    if(s == NULL) {
+    /* we use our primary key anyway */
+    sk = pcp_find_primary_secret();
+    if(sk == NULL) {
       fatal("There's no primary secret key in the vault %s!\n", vault->filename);
-      free(s);
+      goto errpcpexpu1;
     }
-    else {
-      key = pcpkey_pub_from_secret(s); 
-    }
+    is_foreign = 0;
   }
 
-  if(key != NULL) {
-    FILE *out;
-    if(outfile == NULL) {
-      out = stdout;
+
+  if(is_foreign == 0) {
+    /* decrypt the secret key */
+    char *passphrase;
+    pcp_readpass(&passphrase,
+		 "Enter passphrase to decrypt your secret key", NULL, 1);
+    sk = pcpkey_decrypt(sk, passphrase);
+    if(sk == NULL) {
+      goto errpcpexpu1;
+      memset(passphrase, 0, strlen(passphrase));
+      free(passphrase);
     }
-    else {
-      if((out = fopen(outfile, "wb+")) == NULL) {
-	fatal("Could not create output file %s", outfile);
-	out = NULL;
+    memset(passphrase, 0, strlen(passphrase));
+    free(passphrase);
+  }
+
+  /* now, we're ready for the actual export */
+  if(format == EXP_FORMAT_NATIVE) {
+    if(is_foreign == 0) {
+      exported_pk = pcp_export_rfc_pub(sk);
+      if(exported_pk != NULL) {
+	if(armor == 1) {
+	  size_t zlen;
+	  char *z85 = pcp_z85_encode(buffer_get(exported_pk), buffer_size(exported_pk), &zlen);
+	  fprintf(out, "%s\r\n%s\r\n%s\r\n", EXP_PK_HEADER, z85, EXP_PK_FOOTER);
+	  FILE *t = fopen("binexp", "wb+");
+	  fwrite(buffer_get(exported_pk), 1, buffer_size(exported_pk), t);
+	  fclose(t);
+	  free(z85);
+	}
+	else
+	  fwrite(buffer_get(exported_pk), 1, buffer_size(exported_pk), out);
+	buffer_free(exported_pk);
+	fprintf(stderr, "public key exported.\n");
       }
     }
-
-    if(out != NULL) {
-      /*  scip */
-      /* printf("EXPORT:\n"); */
-      /* pcpprint_bin(stdout, key, PCP_RAW_PUBKEYSIZE); printf("\n"); */
-      pcppubkey_print(key, out, pbpcompat);
-      if(pbpcompat)
-	fprintf(stderr, "public key exported in PBP format.\n");
-      else
-	fprintf(stderr, "public key exported.\n");
+    else {
+      /* FIXME: export foreign keys unsupported yet */
+      fatal("Exporting foreign public keys in native format unsupported yet");
+      goto errpcpexpu1;
     }
-
-    free(key);
   }
+  else if(format == EXP_FORMAT_PBP) {
+    if(is_foreign == 0) {
+      exported_pk = pcp_export_pbp_pub(sk);
+      if(exported_pk != NULL) {
+	/* PBP format requires armoring always */
+	size_t zlen;
+	char *z85pbp = pcp_z85_encode(buffer_get(exported_pk), buffer_size(exported_pk), &zlen);
+	fprintf(out, "%s", z85pbp);
+	free(z85pbp);
+	buffer_free(exported_pk);
+	fprintf(stderr, "public key exported in PBP format.\n");
+      }
+    }
+    else {
+      fatal("Exporting foreign public keys in PBP format not possible");
+      goto errpcpexpu1;
+    }
+  }
+
+errpcpexpu1:
+  buffer_free(exported_pk);
 }
 
 
@@ -373,8 +428,9 @@ int pcp_importsecret (vault_t *vault, FILE *in) {
 }
 
 
-int pcp_importpublic (vault_t *vault, FILE *in, int pbpcompat) {
+int pcp_importpublic (vault_t *vault, FILE *in) {
   pcp_pubkey_t *pub = NULL;
+  int pbpcompat = 0;
   if(pbpcompat == 1) {
     char *date = NULL;
     char *parts = NULL;
@@ -626,67 +682,3 @@ char *pcp_find_id_byrec(char *recipient) {
 
 
 
-/*
-  Experimental RFC4880-alike public key export. Once stable and
-  flexible enough, this will become the PCP default, I hope. */
-void pcp_exportpublic2(char *passwd, char *outfile, int armor) {
-  pcp_pubkey_t *key = NULL;
-  
-  pcp_key_t *s = NULL;
-  s = pcp_find_primary_secret();
-  if(s == NULL) {
-    fatal("There's no primary secret key in the vault %s!\n", vault->filename);
-    free(s);
-  }
-  else {
-    key = pcpkey_pub_from_secret(s); 
-  }
-  
-  if(key != NULL) {
-    FILE *out;
-    if(outfile == NULL) {
-      out = stdout;
-    }
-    else {
-      if((out = fopen(outfile, "wb+")) == NULL) {
-	fatal("Could not create output file %s", outfile);
-	out = NULL;
-      }
-    }
-
-    if(out != NULL) {
-      pcp_key_t *sk = pcp_find_primary_secret();
-      if(sk != NULL) {
-	char *passphrase;
-	pcp_readpass(&passphrase, "Enter passphrase to decrypt your secret key for signing the export", NULL, 1);
-	
-	sk = pcpkey_decrypt(sk, passphrase);
-	if(sk != NULL) {
-	  Buffer *exported_pk = pcp_get_rfc_pub(key, sk);
-	  if(exported_pk != NULL) {
-	    if(armor == 1) {
-	      size_t zlen;
-	      char *z85 = pcp_z85_encode(buffer_get(exported_pk), buffer_size(exported_pk), &zlen);
-	      fprintf(out, "%s\r\n%s\r\n%s\r\n", EXP_PK_HEADER, z85, EXP_PK_FOOTER);
-	      free(z85);
-	    }
-	    else
-	      fwrite(buffer_get(exported_pk), 1, buffer_size(exported_pk), out);
-
-	    fclose(out);
-	    if(debug) {
-	      buffer_dump(exported_pk);
-	      buffer_info(exported_pk);
-	      pcp_dumppubkey(key);
-	    }
-	    buffer_free(exported_pk);
-	  }
-	}
-
-	free(passphrase);
-      }
-
-      free(key);
-    }
-  }
-}

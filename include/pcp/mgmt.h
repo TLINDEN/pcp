@@ -35,6 +35,7 @@
 #include "key.h"
 #include "buffer.h"
 
+/* key management api, export, import, yaml and stuff */
 
 
 
@@ -128,7 +129,15 @@ typedef struct _pcp_rfc_pubkey_sig_0x21_t rfc_pub_sig;
 #define EXP_PK_FOOTER "------END ED25519-CURVE29915 PUBLICKEY------"
 
 
+/* pubkey export formats */
+#define EXP_FORMAT_NATIVE   0x01
+#define EXP_FORMAT_PBP      0x03
+
+
 /* export public key */
-Buffer *pcp_get_rfc_pub (pcp_pubkey_t *key, pcp_key_t *sk);
+Buffer *pcp_export_rfc_pub (pcp_key_t *sk);
+
+/* export public key in pbp format */
+Buffer *pcp_export_pbp_pub(pcp_key_t *sk);
 
 #endif // _HAVE_PCP_MGMT_H

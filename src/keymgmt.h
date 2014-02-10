@@ -49,18 +49,20 @@ char *pcp_getstdin(const char *prompt);
 int pcp_storekey (pcp_key_t *key);
 void pcp_keygen();
 void pcp_listkeys();
+
 void pcp_exportsecret(char *keyid, int useid, char *outfile);
 void pcp_exportsecretkey(pcp_key_t *key, char *outfile);
+void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int armor);
+
 pcp_key_t *pcp_getrsk(pcp_key_t *s, char *recipient, char *passwd);
-void pcp_exportpublic(char *keyid, char *recipient, char *passwd, char *outfile, int pbpcompat);
 char *pcp_normalize_id(char *keyid);
 pcp_key_t *pcp_find_primary_secret();
-int pcp_importpublic (vault_t *vault, FILE *in, int pbpcompat);
+
+int pcp_importpublic (vault_t *vault, FILE *in);
 int pcp_importsecret (vault_t *vault, FILE *in);
+
 void pcpdelete_key(char *keyid);
 char *pcp_find_id_byrec(char *recipient);
 
-/* Experimental: new rfc4880 style pk export */
-void pcp_exportpublic2(char *passwd, char *outfile, int armor);
 
 #endif /*  _HAVE_KEYMGMT_H */

@@ -51,7 +51,7 @@ struct _pcp_buffer {
 
 typedef struct _pcp_buffer Buffer;
 
-/* create a new buffer */
+/* create a new buffer, initially alloc'd to blocksize and zero-filled */
 Buffer *buffer_new(size_t blocksize, char *name);
 
 /* zero the buffer and free it, if allocated */

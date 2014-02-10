@@ -21,9 +21,16 @@
 
 #include "buffer.h"
 
+
+
 Buffer *buffer_new(size_t blocksize, char *name) {
   Buffer *b = ucmalloc(sizeof(Buffer));
   b->buf = ucmalloc(blocksize);
+  buffer_init(b, blocksize, name);
+  return b;
+}
+
+void buffer_init(Buffer *b, size_t blocksize, char *name) {
   b->name = ucmalloc(strlen(name)+1);
   b->size = blocksize;
   b->allocated = 1;
@@ -31,7 +38,6 @@ Buffer *buffer_new(size_t blocksize, char *name) {
   b->end = 0;
   b->blocksize = blocksize;
   memcpy(b->name, name, strlen(name)+1);
-  return b;
 }
 
 void buffer_free(Buffer *b) {

@@ -37,6 +37,15 @@ unsigned char * pcp_ed_verify(unsigned char *signature, size_t siglen, pcp_pubke
   return NULL;
 }
 
+unsigned char *pcp_ed_sign_key(unsigned char *message, size_t messagesize, pcp_key_t *s) {
+  unsigned long long mlen = messagesize + crypto_sign_BYTES;
+  unsigned char *signature = ucmalloc(mlen);
+
+  crypto_sign(signature, &mlen, message, messagesize, s->mastersecret);
+
+  return signature;
+}
+
 unsigned char *pcp_ed_sign(unsigned char *message, size_t messagesize, pcp_key_t *s) {
   unsigned long long mlen = messagesize + crypto_sign_BYTES;
   unsigned char *signature = ucmalloc(mlen);

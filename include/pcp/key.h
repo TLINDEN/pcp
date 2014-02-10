@@ -75,12 +75,14 @@
 
  */
 struct _pcp_key_t {
+  byte masterpub[32];
+  byte mastersecret[64];
   byte pub[32];
   byte secret[32];
   byte edpub[32];
   byte edsecret[64];
   byte nonce[24];
-  byte encrypted[112]; /*  both ed+curve encrypted */
+  byte encrypted[176]; /*  both sign+ed+curve encrypted */
   char owner[255];
   char mail[255];
   char id[17];
@@ -92,6 +94,7 @@ struct _pcp_key_t {
 };
 
 struct _pcp_pubkey_t {
+  byte sigpub[32];
   byte pub[32];
   byte edpub[32];
   char owner[255];
@@ -101,6 +104,8 @@ struct _pcp_pubkey_t {
   uint64_t ctime;
   uint32_t version;
   uint32_t serial;
+  uint8_t valid;
+  byte signature[crypto_generichash_BYTES_MAX + crypto_sign_BYTES];
   UT_hash_handle hh;
 };
 
@@ -146,8 +151,7 @@ typedef struct _pcp_rec_t pcp_rec_t;
 void pcp_cleanhashes();
 pcp_key_t *pcpkey_new ();
 
-void pcp_keypairs(byte *csk, byte *cpk, byte *esk, byte *epk);
-void pcp_ed_keypairs(byte *csk, byte *esk);
+void pcp_keypairs(byte *msk, byte *mpk, byte *csk, byte *cpk, byte *esk, byte *epk);
 
 char *pcppubkey_get_art(pcp_pubkey_t *k);
 char *pcpkey_get_art(pcp_key_t *k);

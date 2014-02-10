@@ -43,6 +43,9 @@
    returns NULL otherwise */
 unsigned char *pcp_ed_sign(unsigned char *message, size_t messagesize, pcp_key_t *s);
 
+/* the same, but use the mastersecret instead, usually for keysigning */
+unsigned char *pcp_ed_sign_key(unsigned char *message, size_t messagesize, pcp_key_t *s);
+
 /* verify a signature of siglen size using p->edpub, if the signature verifies
    return the raw message with the signature removed (size: siglen - crypto_sign_BYTES),
    returns NULL otherwise */

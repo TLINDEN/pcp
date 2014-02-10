@@ -49,7 +49,7 @@ typedef unsigned int    qbyte;          /*   Quad byte = 32 bits */
 
 #define PCP_ME "Pretty Curved Privacy"
 
-#define PCP_KEY_VERSION 5
+#define PCP_KEY_VERSION 6
 #define PCP_KEY_PRIMITIVE "CURVE25519-ED25519-SALSA20-POLY1305"
 
 #define PCP_KEY_TYPE_MAINSECRET 1
@@ -57,7 +57,7 @@ typedef unsigned int    qbyte;          /*   Quad byte = 32 bits */
 #define PCP_KEY_TYPE_PUBLIC     3
 
 /*  save typing, dammit */
-#define PCP_ENCRYPT_PAD crypto_secretbox_ZEROBYTES + crypto_secretbox_NONCEBYTES
+#define PCP_ENCRYPT_MAC crypto_secretbox_ZEROBYTES + crypto_secretbox_NONCEBYTES
 
 /*  vault id */
 #define PCP_VAULT_ID 14

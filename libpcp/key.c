@@ -68,39 +68,51 @@ char *pcp_getpubkeyid(pcp_pubkey_t *k) {
   return id;
 }
 
-void pcp_keypairs(byte *csk, byte *cpk, byte *esk, byte *epk) {
-  /*  generate ed25519 + curve25519 keypair from random seed */
-  byte *seed = urmalloc(32);
-  byte *tmp  = urmalloc(32);
+void pcp_keypairs(byte *msk, byte *mpk, byte *csk, byte *cpk, byte *esk, byte *epk) {
+  /*  generate keypairs from random seed */
+  byte *ms = urmalloc(32);
+  byte *ss = urmalloc(32);
+  byte *cs = urmalloc(32);
+
+  /*  ed25519 master key */
+  crypto_sign_seed_keypair(mpk, msk, ms);
 
   /*  ed25519 signing key */
-  crypto_sign_seed_keypair(epk, esk, seed);
+  crypto_sign_seed_keypair(epk, esk, ss);
 
   /*  curve25519 secret key */
-  tmp[0]  &= 248;
-  tmp[31] &= 63;
-  tmp[31] |= 64;
-  memcpy(csk, tmp, 32);
+  memcpy(csk, cs, 32);
+  csk[0]  &= 248;
+  csk[31] &= 63;
+  csk[31] |= 64;
 
   /*  curve25519 public key */
-  crypto_scalarmult_curve25519_base(cpk, csk); 
-  memset(tmp, 0, 32);
+  crypto_scalarmult_curve25519_base(cpk, csk);
+
+  ucfree(ms, 32);
+  ucfree(ss, 32);
+  ucfree(cs, 32);
 }
 
 pcp_key_t * pcpkey_new () {
-  byte pub[32]    = { 0 };
-  byte secret[32] = { 0 };
-  byte edpub[32]  = { 0 };
-  byte edsec[64]  = { 0 };
+  byte *mp = ucmalloc(32);
+  byte *ms = ucmalloc(64);
+  byte *sp = ucmalloc(32);
+  byte *ss = ucmalloc(64);
+  byte *cp = ucmalloc(32);
+  byte *cs = ucmalloc(32);
 
-  pcp_keypairs(secret, pub, edsec, edpub);
+  /* generate key material */
+  pcp_keypairs(ms, mp, cs, cp, ss, sp);
 
   /*  fill in our struct */
   pcp_key_t *key = urmalloc(sizeof(pcp_key_t));
-  memcpy (key->pub, pub, 32);
-  memcpy (key->secret, secret, 32);
-  memcpy (key->edpub, edpub, 32);
-  memcpy (key->edsecret, edsec, 64);
+  memcpy (key->masterpub, mp, 32);
+  memcpy (key->mastersecret, ms, 64);
+  memcpy (key->pub, cp, 32);
+  memcpy (key->secret, cs, 32);
+  memcpy (key->edpub, ss, 32);
+  memcpy (key->edsecret, sp, 64);
   memcpy (key->id, pcp_getkeyid(key), 17);
   
   key->ctime = (long)time(0);
@@ -108,6 +120,15 @@ pcp_key_t * pcpkey_new () {
   key->version = PCP_KEY_VERSION;
   key->serial  = arc4random();
   key->type    = PCP_KEY_TYPE_SECRET;
+
+  /* clean up */
+  ucfree(ms, 64);
+  ucfree(ss, 64);
+  ucfree(mp, 32);
+  ucfree(sp, 32);
+  ucfree(cs, 32);
+  ucfree(cp, 32);
+
   return key;
 }
 
@@ -128,24 +149,26 @@ pcp_key_t *pcpkey_encrypt(pcp_key_t *key, char *passphrase) {
   unsigned char *encrypted;
   size_t es;
 
-  unsigned char *both = ucmalloc(96);
-  memcpy(both, key->edsecret, 64);
-  memcpy(&both[64], key->secret, 32);
+  Buffer *both = buffer_new(128, "keypack");
+  buffer_add(both, key->mastersecret, 64);
+  buffer_add(both, key->edsecret, 64);
+  buffer_add(both, key->secret, 32);
 
-  es = pcp_sodium_mac(&encrypted, both, 96, key->nonce, encryptkey);
+  es = pcp_sodium_mac(&encrypted, buffer_get(both), buffer_size(both), key->nonce, encryptkey);
 
   memset(encryptkey, 0, 32);
-  memset(both, 0, 96);
+  buffer_free(both);
   free(encryptkey);
-  free(both);
 
-  if(es == 112) {
+  if(es == 176) {
     /*  success */
-    memcpy(key->encrypted, encrypted, 112);
+    memcpy(key->encrypted, encrypted, 176);
     arc4random_buf(key->secret, 32);
     arc4random_buf(key->edsecret, 64);
+    arc4random_buf(key->mastersecret, 64);
     key->secret[0] = 0;
     key->edsecret[0] = 0;
+    key->mastersecret[0] = 0;
   }
   else {
     fatal("failed to encrypt the secret key!\n");
@@ -162,15 +185,16 @@ pcp_key_t *pcpkey_decrypt(pcp_key_t *key, char *passphrase) {
   unsigned char *decrypted;
   size_t es;
   
-  es = pcp_sodium_verify_mac(&decrypted, key->encrypted, 112, key->nonce, encryptkey);
+  es = pcp_sodium_verify_mac(&decrypted, key->encrypted, 176, key->nonce, encryptkey);
 
   memset(encryptkey, 0, 32);
   free(encryptkey);
 
   if(es == 0) {
     /*  success */
-    memcpy(key->edsecret, decrypted, 64);
-    memcpy(key->secret, &decrypted[64], 32);
+    memcpy(key->mastersecret, decrypted, 64);
+    memcpy(key->edsecret, decrypted + 64, 64);    
+    memcpy(key->secret, decrypted +128, 32);
   }
   else {
     fatal("failed to decrypt the secret key (got %d, expected 32)!\n", es);

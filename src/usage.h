@@ -28,8 +28,8 @@
 "-S --import-secret        Import a secret key.\n" \
 "-P --import-public        Import a public key.\n" \
 "-y --export-yaml          Export all keys as YAML formatted text.\n" \
-"-b --pbpcompat            Enable PBP compatibility for public key\n" \
-"                          exports and imports.\n" \
+"-F --export-format <fmt>  Specify exportformat, either 'pbp' or 'pcp'.\n" \
+"                          'pcp' is the default if unspecified.\n" \
 "Encryption Options:\n" \
 "-e --encrypt              Asym-Encrypt a message. If none of -i or -r\n" \
 "                          has been given, encrypt the message symetrically.\n" \

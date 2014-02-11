@@ -21,6 +21,22 @@
 
 #include "ed.h"
 
+unsigned char * pcp_ed_verify_key(unsigned char *signature, size_t siglen, pcp_pubkey_t *p) {
+  unsigned char *message = ucmalloc(siglen - crypto_sign_BYTES);
+  unsigned long long mlen;
+
+  if(crypto_sign_open(message, &mlen, signature, siglen, p->masterpub) != 0) {
+    fatal("Failed to open the signature using the public key 0x%s!\n", p->id);
+    goto errve1;
+  }
+
+  return message;
+
+ errve1:
+  free(message);
+  return NULL;
+}
+
 unsigned char * pcp_ed_verify(unsigned char *signature, size_t siglen, pcp_pubkey_t *p) {
   unsigned char *message = ucmalloc(siglen - crypto_sign_BYTES);
   unsigned long long mlen;

@@ -49,7 +49,10 @@ unsigned char *pcp_ed_sign_key(unsigned char *message, size_t messagesize, pcp_k
 /* verify a signature of siglen size using p->edpub, if the signature verifies
    return the raw message with the signature removed (size: siglen - crypto_sign_BYTES),
    returns NULL otherwise */
-unsigned char * pcp_ed_verify(unsigned char *signature, size_t siglen, pcp_pubkey_t *p);
+unsigned char *pcp_ed_verify(unsigned char *signature, size_t siglen, pcp_pubkey_t *p);
+
+/* the same, but use the mastersecret instead, usually for keysigning */
+unsigned char *pcp_ed_verify_key(unsigned char *signature, size_t siglen, pcp_pubkey_t *p);
 
 /* same as pcp_ed_sign() but work on i/o directly, we're making a hash
    of the input 32k-wise, copy in=>out, sign the hash and append the

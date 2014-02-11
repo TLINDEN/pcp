@@ -55,6 +55,8 @@ typedef unsigned int    qbyte;          /*   Quad byte = 32 bits */
 #define PCP_KEY_TYPE_MAINSECRET 1
 #define PCP_KEY_TYPE_SECRET     2
 #define PCP_KEY_TYPE_PUBLIC     3
+#define PCP_KEYSIG_NATIVE       4
+#define PCP_KEYSIG_PBP          5
 
 /*  save typing, dammit */
 #define PCP_ENCRYPT_MAC crypto_secretbox_ZEROBYTES + crypto_secretbox_NONCEBYTES

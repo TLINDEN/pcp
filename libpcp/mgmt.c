@@ -22,6 +22,262 @@
 
 #include "mgmt.h"
 
+int _get_pk(Buffer *blob, pcp_pubkey_t *p) {
+  if(buffer_left(blob) >= 96) {
+    buffer_get_chunk(blob, p->masterpub, 32);
+    buffer_get_chunk(blob, p->edpub, 32);
+    buffer_get_chunk(blob, p->pub, 32);
+    return 0;
+  }
+  else
+    return 1;
+}
+
+int _check_keysig_h(Buffer *blob, rfc_pub_sig_h *h) {
+  if(buffer_left(blob) >= sizeof(rfc_pub_sig_h)) {
+    buffer_get_chunk(blob, h, sizeof(rfc_pub_sig_h));
+
+    h->numsubs = be16toh(h->numsubs);
+
+    if(h->version != EXP_SIG_VERSION) {
+      fatal("Unsupported pubkey signature version %d, expected %d", h->version, EXP_SIG_VERSION);
+      return 1;
+    }
+    if(h->type != EXP_SIG_TYPE) {
+      fatal("Unsupported pubkey signature type %d, expected %d", h->type, EXP_SIG_TYPE);
+      return 1;
+    }
+    if(h->pkcipher != EXP_SIG_CIPHER) {
+      fatal("Unsupported pubkey signature cipher %d, expected %d", h->pkcipher, EXP_SIG_CIPHER);
+      return 1;
+    }
+    if(h->hashcipher != EXP_HASH_CIPHER) {
+      fatal("Unsupported pubkey signature hash cipher %d, expected %d", h->hashcipher, EXP_HASH_CIPHER);
+      return 1;
+    }
+    if(h->numsubs > 0 && buffer_left(blob) < sizeof(rfc_pub_sig_s) * h->numsubs) {
+      fatal("Signature size specification invalid (sig: %ld, bytes left: %ld, numsubs: %ld",
+	    sizeof(rfc_pub_sig_s) * h->numsubs, buffer_left(blob), h->numsubs);
+      return 1;
+    }
+    return 0;
+  }
+  else {
+    fatal("Error: input data too small, import failed");
+    return 1;
+  }
+}
+
+int _check_sigsubs(Buffer *blob, pcp_pubkey_t *p, rfc_pub_sig_s *subheader) {
+  byte *ignore = ucmalloc(32);
+
+  if(subheader->type == EXP_SIG_SUB_NOTATION) {
+    /* mail or owner */
+    uint16_t nsize = buffer_get16na(blob);
+    uint16_t vsize = buffer_get16na(blob);
+
+    char *notation = ucmalloc(nsize);
+    char *value = ucmalloc(vsize);
+
+    if(buffer_get_chunk(blob, notation, nsize) == 0)
+      return 1;
+    if(buffer_get_chunk(blob, value, nsize) == 0)
+      return 1;
+
+    notation[nsize] = '\0';
+    value[nsize] = '\0';
+
+    if(strncmp(notation, "owner", 5) == 0) {
+      memcpy(p->owner, value, vsize);
+    }
+    else if(strncmp(notation, "mail", 4) == 0) {
+      memcpy(p->mail, value, vsize);
+    }
+
+    ucfree(notation, nsize);
+    ucfree(value, vsize);
+  }
+  else {
+    /* unsupported or ignored sig sub */
+    if(buffer_get_chunk(blob, ignore, subheader->size) == 0)
+      return 1;
+  }
+
+  return 0;
+}
+
+int _check_hash_keysig(Buffer *blob, pcp_pubkey_t *p, pcp_keysig_t *sk) {
+  // read hash + sig
+  size_t blobstop = blob->offset;
+  size_t sigsize = crypto_sign_BYTES + crypto_generichash_BYTES_MAX;
+
+  unsigned char *signature = ucmalloc(sigsize);
+  if(buffer_get_chunk(blob, signature, sigsize) == 0)
+    goto chker1;
+
+  /* fill the keysig */
+  sk->type = PCP_KEYSIG_NATIVE;
+  
+  /* everything minus version, ctime and cipher, 1st 3 fields */
+  sk->size = blobstop - 6;
+  memcpy(sk->belongs, p->id, 17);
+
+  /* put the whole signature blob into our keysig */
+  blob->offset = 6; /* woah, hack :) */
+  sk->blob = ucmalloc(sk->size);
+  buffer_get_chunk(blob, sk->blob, sk->size);
+
+  /* verify the signature */
+  unsigned char *verifyhash = pcp_ed_verify_key(signature, sigsize, p);
+  if(verifyhash == NULL)
+    goto chker1;
+
+  /* re-calculate the hash */
+  crypto_generichash_state *st = ucmalloc(sizeof(crypto_generichash_state));
+  unsigned char *hash = ucmalloc(crypto_generichash_BYTES_MAX);
+  crypto_generichash_init(st, NULL, 0, 0);
+  crypto_generichash_update(st, sk->blob, sk->size);
+  crypto_generichash_final(st, hash, crypto_generichash_BYTES_MAX);
+
+  /* compare them */
+  if(memcmp(hash, verifyhash, crypto_generichash_BYTES_MAX) != 0) {
+    fatal("Signature verifies but signed hash doesn't match signature contents\n");
+    goto chker2;
+  }
+
+  /* calculate the checksum */
+  crypto_hash_sha256(sk->checksum, sk->blob, sk->size);
+  
+  /* we got here, so everything is good */
+  p->valid = 1;
+
+  ucfree(verifyhash, crypto_generichash_BYTES_MAX);
+  ucfree(hash, crypto_generichash_BYTES_MAX);
+  free(st);
+  ucfree(signature, sigsize);
+  
+  return 0;
+
+ chker2:
+  ucfree(verifyhash, crypto_generichash_BYTES_MAX);
+  ucfree(hash, crypto_generichash_BYTES_MAX);
+  free(st);
+
+ chker1:
+  ucfree(signature, sigsize);
+
+  return 1;
+  
+}
+
+pcp_ks_bundle_t *pcp_import_pub(unsigned char *raw, size_t rawsize) {
+  size_t clen;
+  unsigned char *bin = NULL;
+  Buffer *blob = buffer_new(512, "importblob");
+
+  /* first, try to decode the input */
+  bin = pcp_z85_decode((char *)raw, &clen);
+
+  if(bin == NULL) {
+    /* treat as binary blob */
+    fatals_reset();
+    buffer_add(blob, raw, rawsize);
+  }
+  else {
+    /* use decoded */
+    buffer_add(blob, bin, rawsize);
+    ucfree(bin, clen);
+  }
+
+  /* now, try to disassemble, if it fails, assume pbp format */
+  uint8_t version = buffer_get8(blob);
+
+  if(version == PCP_KEY_VERSION) {
+    /* ah, homerun */
+    pcp_ks_bundle_t *b = pcp_import_pub_rfc(blob);
+    pcp_keysig_t *sk = b->s;
+    return b;
+  }
+  else {
+    /* nope, it's probably pbp */
+    return pcp_import_pub_pbp(blob);
+  }
+}
+
+pcp_ks_bundle_t *pcp_import_pub_rfc(Buffer *blob) {
+  pcp_pubkey_t *p = ucmalloc(sizeof(pcp_pubkey_t));
+  pcp_keysig_t *sk = ucmalloc(sizeof(pcp_keysig_t));
+  rfc_pub_sig_h *sigheader = ucmalloc(sizeof(rfc_pub_sig_h));
+  rfc_pub_sig_s *subheader = ucmalloc(sizeof(rfc_pub_sig_s));
+
+  if(buffer_done(blob)) goto be;
+  p->ctime = buffer_get32na(blob);
+
+  uint8_t pkcipher = buffer_get8(blob);
+  if(buffer_done(blob)) goto be;
+
+  if(pkcipher != EXP_PK_CIPHER) {
+    fatal("Unsupported pk cipher %d, expected %d", pkcipher, EXP_PK_CIPHER);
+    goto bef;
+  }
+
+  /* fetch pk material */
+  if(_get_pk(blob, p) != 0)
+    goto be;
+
+  /* check sig header.
+     currently not stored anywhere, but we could sometimes */
+  if(_check_keysig_h(blob, sigheader) != 0)
+    goto bef;
+
+  /* iterate over subs, if any */
+  int i;
+  for (i=0; i<sigheader->numsubs; i++) {
+    subheader->size = buffer_get32na(blob);
+    subheader->type = buffer_get8(blob);
+    _check_sigsubs(blob, p, subheader);
+  }
+
+  /* calc id */
+  char *id = pcp_getpubkeyid(p);
+  memcpy(p->id, id, 17);
+  free(id);
+
+  /* fill */
+  p->type = PCP_KEY_TYPE_PUBLIC;
+  p->version = PCP_KEY_VERSION;
+  p->serial  = arc4random(); /* FIXME: maybe add this as a sig sub? */
+
+  pcp_ks_bundle_t *b = ucmalloc(sizeof(pcp_ks_bundle_t));
+
+  /* retrieve signature, store and verify it */
+  if(_check_hash_keysig(blob, p, sk) != 0) {
+    b->p = p;
+    b->s = NULL;
+  }
+  else {
+    b->p = p;
+    b->s = sk;
+  }
+
+  return b;
+
+
+ be:
+  fatal("Error: input data too small, import failed");
+
+ bef:
+  buffer_free(blob);
+  ucfree(sigheader, sizeof(rfc_pub_sig_h));
+  ucfree(subheader, sizeof(rfc_pub_sig_s));
+  ucfree(p, sizeof(pcp_pubkey_t));
+  return NULL;
+}
+
+pcp_ks_bundle_t *pcp_import_pub_pbp(Buffer *blob) {
+  return NULL;
+}
+
 Buffer *pcp_export_pbp_pub(pcp_key_t *sk) {
   struct tm *v, *c;
   unsigned char *signature = NULL;
@@ -81,7 +337,7 @@ Buffer *pcp_export_rfc_pub (pcp_key_t *sk) {
 
   /* add the header */
   buffer_add8(out, PCP_KEY_VERSION);
-  buffer_add32(out, sk->ctime);
+  buffer_add32be(out, sk->ctime);
   buffer_add8(out, EXP_PK_CIPHER);
 
   /* add the keys */
@@ -94,7 +350,7 @@ Buffer *pcp_export_rfc_pub (pcp_key_t *sk) {
   buffer_add8(raw, EXP_SIG_TYPE);
   buffer_add8(raw, EXP_SIG_CIPHER);
   buffer_add8(raw, EXP_HASH_CIPHER);
-  buffer_add16(raw, 5); /* we add 5 sub sigs always */
+  buffer_add16be(raw, 5); /* we add 5 sub sigs always */
 
   /* add sig ctime */
   buffer_add32be(raw, 4);
@@ -111,23 +367,28 @@ Buffer *pcp_export_rfc_pub (pcp_key_t *sk) {
   buffer_add8(raw, EXP_SIG_SUB_KEYEXPIRE);
   buffer_add32be(raw, sk->ctime + 31536000);
 
+  size_t notation_size = 0;
   /* add name notation sub*/
-  size_t notation_size = strlen(sk->owner) + 4 + 5;
-  buffer_add32be(raw, notation_size);
-  buffer_add8(raw, EXP_SIG_SUB_NOTATION);
-  buffer_add16be(raw, 5);
-  buffer_add16be(raw, strlen(sk->owner));
-  buffer_add(raw, "owner", 5);
-  buffer_add(raw, sk->owner, strlen(sk->owner));
+  if(strlen(sk->owner) > 0) {
+    size_t notation_size = strlen(sk->owner) + 4 + 5;
+    buffer_add32be(raw, notation_size);
+    buffer_add8(raw, EXP_SIG_SUB_NOTATION);
+    buffer_add16be(raw, 5);
+    buffer_add16be(raw, strlen(sk->owner));
+    buffer_add(raw, "owner", 5);
+    buffer_add(raw, sk->owner, strlen(sk->owner));
+  }
 
   /* add mail notation sub */
-  notation_size = strlen(sk->mail) + 4 + 4;
-  buffer_add32be(raw, notation_size);
-  buffer_add8(raw, EXP_SIG_SUB_NOTATION);
-  buffer_add16be(raw, 4);
-  buffer_add16be(raw, strlen(sk->mail));
-  buffer_add(raw, "mail", 4);
-  buffer_add(raw, sk->mail, strlen(sk->mail));
+  if(strlen(sk->mail) > 0) {
+    notation_size = strlen(sk->mail) + 4 + 4;
+    buffer_add32be(raw, notation_size);
+    buffer_add8(raw, EXP_SIG_SUB_NOTATION);
+    buffer_add16be(raw, 4);
+    buffer_add16be(raw, strlen(sk->mail));
+    buffer_add(raw, "mail", 4);
+    buffer_add(raw, sk->mail, strlen(sk->mail));
+  }
 
   /* add key flags */
   buffer_add32be(raw, 1);
@@ -149,13 +410,15 @@ Buffer *pcp_export_rfc_pub (pcp_key_t *sk) {
   buffer_add(out, buffer_get(raw), buffer_size(raw));
 
   /* append the signed hash */
-  buffer_add(out, sig, crypto_generichash_BYTES_MAX + crypto_generichash_BYTES_MAX);
+  buffer_add(out, sig, crypto_sign_BYTES + crypto_generichash_BYTES_MAX);
+
+  _dump("raw", buffer_get(raw), buffer_size(raw));
 
   /* and that's it. wasn't that easy? :) */
   buffer_free(raw);
   memset(hash, 0, crypto_generichash_BYTES_MAX);
   free(hash);
-  memset(sig, 0, crypto_generichash_BYTES_MAX + crypto_generichash_BYTES_MAX);
+  memset(sig, 0, crypto_sign_BYTES + crypto_generichash_BYTES_MAX);
   free(sig);
 
   return out;

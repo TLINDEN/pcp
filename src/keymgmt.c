@@ -427,8 +427,62 @@ int pcp_importsecret (vault_t *vault, FILE *in) {
   return 1;
 }
 
-
 int pcp_importpublic (vault_t *vault, FILE *in) {
+  unsigned char *buf = ucmalloc(2048);
+  size_t buflen = fread(buf, 1, 2048, in);
+  pcp_keysig_t *sk = NULL;
+  pcp_pubkey_t *pub = NULL;
+
+  if(buflen > 0) {
+    pcp_ks_bundle_t *bundle = pcp_import_pub(buf, buflen);
+    pcp_keysig_t *sk = bundle->s;
+
+    if(bundle != NULL) {
+      pcp_pubkey_t *pub = bundle->p;
+
+      if(debug)
+	pcp_dumppubkey(pub);
+
+      if(sk == NULL) {
+	fatals_ifany();
+	char *yes = pcp_getstdin("WARNING: signature doesn't verify, import anyway [yes|NO]?");
+	if(strncmp(yes, "yes", 1024) != 0) {
+	  free(yes);
+	  goto errip1;
+	}
+	free(yes);
+      }
+
+      if(pcp_sanitycheck_pub(pub) == 0) {
+	if(pcpvault_addkey(vault, (void *)pub,  PCP_KEY_TYPE_PUBLIC) == 0) {
+	  fprintf(stderr, "key 0x%s added to %s.\n", pub->id, vault->filename);
+	}
+	else
+	  goto errip2;
+
+	if(sk != NULL) {
+	  if(pcpvault_addkey(vault, sk, sk->type) != 0)
+	    goto errip2;
+	}
+      }
+      else
+	goto errip2;
+    }
+  }
+
+ errip2:
+  ucfree(pub, sizeof(pcp_pubkey_t));
+
+ errip1:
+  if(sk != NULL) {
+    ucfree(sk->blob, sk->size);
+    ucfree(sk, sizeof(pcp_keysig_t));
+  }
+  ucfree(buf, 2048);
+  return 1;
+}
+
+int pcp_importpublicOLD (vault_t *vault, FILE *in) {
   pcp_pubkey_t *pub = NULL;
   int pbpcompat = 0;
   if(pbpcompat == 1) {

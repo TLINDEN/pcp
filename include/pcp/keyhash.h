@@ -25,6 +25,7 @@
 #include "uthash.h"
 #include "key.h"
 
+/* storage of keys in a global hash */
 extern pcp_key_t *pcpkey_hash;
 extern pcp_pubkey_t *pcppubkey_hash;
 extern pcp_key_t *__k;
@@ -47,9 +48,18 @@ void pcphash_clean();
 pcp_key_t *pcphash_keyexists(char *id);
 pcp_pubkey_t *pcphash_pubkeyexists(char *id);
 
-
 void pcphash_add(void *key, int type);
 int pcphash_count();
 int pcphash_countpub();
+
+/* the same, for keysigs */
+extern pcp_keysig_t *pcpkeysig_hash;
+extern pcp_keysig_t *__s;
+
+#define pcphash_iteratekeysig(key) \
+  __s = NULL; \
+  HASH_ITER(hh, pcpkeysig_hash, key, __s)
+
+pcp_keysig_t *pcphash_keysigexists(char *id);
 
 #endif /*  _HAVE_KEYHASH_H */

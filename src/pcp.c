@@ -524,10 +524,10 @@ int main (int argc, char **argv)  {
 	goto ELSEMODE;
 	break;
       }
+      pcpvault_close(vault);
+      pcphash_clean();
+      free(vaultfile);
     }
-    pcpvault_close(vault);
-    pcphash_clean();
-    free(vaultfile);
   }
   else {
   ELSEMODE:
@@ -574,7 +574,6 @@ int main (int argc, char **argv)  {
     }
   }
   
-
   fatals_ifany();
   return PCP_EXIT;
 

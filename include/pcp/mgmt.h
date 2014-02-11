@@ -95,15 +95,16 @@ struct _pcp_rfc_pubkey_sigsub_0x21_t {
   uint8_t type;
 };
 
-struct _pcp_rfc_pubkey_sig_0x21_t {
-  byte signature[crypto_generichash_BYTES_MAX + crypto_sign_BYTES];
-};
-
 typedef struct _pcp_rfc_pubkey_header_t rfc_pub_h;
 typedef struct _pcp_rfc_pubkey_0x21_t  rfc_pub_k;
 typedef struct _pcp_rfc_pubkey_sigheader_0x21_t rfc_pub_sig_h;
 typedef struct _pcp_rfc_pubkey_sigsub_0x21_t rfc_pub_sig_s;
-typedef struct _pcp_rfc_pubkey_sig_0x21_t rfc_pub_sig;
+
+struct _pcp_ks_bundle_t {
+  pcp_pubkey_t *p;
+  pcp_keysig_t *s;
+};
+typedef struct _pcp_ks_bundle_t pcp_ks_bundle_t;
 
 #define EXP_PK_CIPHER        0x21
 #define EXP_PK_CIPHER_NAME  "CURVE25519-ED25519-POLY1305-SALSA20"
@@ -139,5 +140,11 @@ Buffer *pcp_export_rfc_pub (pcp_key_t *sk);
 
 /* export public key in pbp format */
 Buffer *pcp_export_pbp_pub(pcp_key_t *sk);
+
+/* import public keys */
+pcp_ks_bundle_t *pcp_import_pub(unsigned char *raw, size_t rawsize);
+pcp_ks_bundle_t *pcp_import_pub_rfc(Buffer *blob);
+pcp_ks_bundle_t *pcp_import_pub_pbp(Buffer *blob);
+
 
 #endif // _HAVE_PCP_MGMT_H

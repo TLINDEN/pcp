@@ -26,8 +26,8 @@ Keymanagement Options:
 -S --import-secret        Import a secret key.
 -P --import-public        Import a public key.
 -y --export-yaml          Export all keys as YAML formatted text.
--b --pbpcompat            Enable PBP compatibility for public key
-                          exports and imports.
+-F --export-format <fmt>  Specify exportformat, either 'pbp' or 'pcp'.
+                          'pcp' is the default if unspecified.
 Encryption Options:
 -e --encrypt              Asym-Encrypt a message. If none of -i or -r
                           has been given, encrypt the message symetrically.

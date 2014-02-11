@@ -10,6 +10,35 @@ put the key import and export stuff into the lib, support from/to file and strin
 
 check pub key count in pcp.c before calling verify signature, croak if count==0
 
-Implement pbp fix https://github.com/stef/pbp/commit/7d7b7c9ecb7604ad22938f5b68a624093a417bfa
+Implement pbp crypto fix https://github.com/stef/pbp/commit/7d7b7c9ecb7604ad22938f5b68a624093a417bfa
 
-Implement z85 for pbp stuff: https://github.com/stef/pbp/commit/9fa45f6a108ba910f41e863405c5527af8d70e84 :) !!!!
+move remaining Export+Import stuff from src => lib.
+
+Update pubimport to new format
+
+Update secret im+ex-port to new format.
+
+Update pod key format spec.
+
+-l show keysig, if any
+
+vault checksum: add keysigs as well
+
+keysig: fix struct to be even (i.e. type => uint16_t or something) OR add a keysig2blob function
+
+
+Python binding, e.g.:
+py % cdll.LoadLibrary("libsodium.so.8")
+<CDLL 'libsodium.so.8', handle 800776c00 at 80192a3d0>
+py % nacl = CDLL("libsodium.so.8")
+py % hash = create_string_buffer('\000' * 64)
+py % hash
+<ctypes.c_char_Array_65 object at 0x80182c560>
+py % hash.raw
+'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+py % key = create_string_buffer('a' * 32)
+py % nacl.crypto_hash_sha256(pointer(hash), pointer(key), 32)
+0
+py % hash.raw
+';\xa3\xf5\xf4;\x92`&\x83\xc1\x9a\xeeb\xa2\x03B\xb0\x84\xddYq\xdd\xd38\x08\xd8\x1a2\x88y\xa5G\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+py % 

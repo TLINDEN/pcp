@@ -34,7 +34,7 @@
 #include "mem.h"
 #include "key.h"
 #include "uthash.h"
-
+#include "buffer.h"
 
 struct _vault_t {
   char *filename;

@@ -36,7 +36,6 @@ static void prep_base85(void)
 int decode_85(char *dst, const char *buffer, int len)
 {
 	prep_base85();
-	int pos = 0;
 	say1("len: %d\n", len);
 	say2("decode 85 <%.*s>\n", len / 4 * 5, buffer);
 	while (len) {

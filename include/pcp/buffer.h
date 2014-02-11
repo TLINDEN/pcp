@@ -54,6 +54,9 @@ typedef struct _pcp_buffer Buffer;
 /* create a new buffer, initially alloc'd to blocksize and zero-filled */
 Buffer *buffer_new(size_t blocksize, char *name);
 
+/* initialize buffer vars */
+void buffer_init(Buffer *b, size_t blocksize, char *name);
+
 /* zero the buffer and free it, if allocated */
 void buffer_free(Buffer *b);
 
@@ -72,9 +75,10 @@ void buffer_add_buf(Buffer *dst, Buffer *src);
 /* resize the buffer if necessary */
 void buffer_resize(Buffer *b, size_t len);
 
-/* get some chunk of data from the buffer, starting from offset til len,
-   it doesn't allocate the returned data (void *buf, the 2nd argument).
-*/
+/* return true if there are no more bytes to read */
+int buffer_done(Buffer *b);
+
+/* get some chunk of data from the buffer, starting from offset til len */
 size_t buffer_get_chunk(Buffer *b, void *buf, size_t len);
 
 /* return the whole buffer contents */
@@ -96,6 +100,20 @@ void buffer_info(const Buffer *b);
 
 /* tell how much data there is in the buffer */
 size_t buffer_size(const Buffer *b);
+
+/* tell how much data is left to read */
+size_t buffer_left(const Buffer *b);
+
+/* same as get_chunk, but return numbers directly */
+uint8_t buffer_get8(Buffer *b);
+uint16_t buffer_get16(Buffer *b);
+uint32_t buffer_get32(Buffer *b);
+uint64_t buffer_get64(Buffer *b);
+
+/* same, but convert to native endian before return */
+uint16_t buffer_get16na(Buffer *b);
+uint32_t buffer_get32na(Buffer *b);
+uint64_t buffer_get64na(Buffer *b);
 
 /* access the last byte(s) as numbers directly, save typing,
    in contrast to buffer_get() it doesn't increment offset */

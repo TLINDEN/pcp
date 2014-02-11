@@ -88,24 +88,85 @@ unsigned char *buffer_get(Buffer *b) {
 
 size_t buffer_get_chunk(Buffer *b, void *buf, size_t len) {
   if(len > b->end - b->offset || len == 0) {
-    fatal("[buffer %s] attempt to read %ld data from buffer with size %ld %p at offset %ld",
-	  len, b->size, b->offset);
+    fatal("[buffer %s] attempt to read %ld bytes data from buffer with %ld bytes left at offset %ld\n",
+	  b->name, len, b->end - b->offset, b->offset);
     return 0;
   }
   memcpy(buf, b->buf + b->offset, len);
+
   b->offset += len;
   return len;
+}
+
+uint8_t buffer_get8(Buffer *b) {
+  uint8_t i;
+  if(buffer_get_chunk(b, &i, 1) > 0) {
+    return i;
+  }
+  else
+    return 0;
+}
+
+uint16_t buffer_get16(Buffer *b) {
+  uint16_t i;
+  if(buffer_get_chunk(b, &i, 2) > 0) {
+    return i;
+  }
+  else
+    return 0;
+}
+
+uint32_t buffer_get32(Buffer *b) {
+  uint32_t i;
+  if(buffer_get_chunk(b, &i, 4) > 0) {
+    return i;
+  }
+  else
+    return 0;
+}
+
+uint64_t buffer_get64(Buffer *b) {
+  uint64_t i;
+  if(buffer_get_chunk(b, &i, 8) > 0) {
+    return i;
+  }
+  else
+    return 0;
+}
+
+uint16_t buffer_get16na(Buffer *b) {
+  uint16_t i;
+  if(buffer_get_chunk(b, &i, 2) > 0) {
+    i = be16toh(i);
+    return i;
+  }
+  else
+    return 0;
+}
+
+uint32_t buffer_get32na(Buffer *b) {
+  uint32_t i;
+  if(buffer_get_chunk(b, &i, 4) > 0) {
+    i = be32toh(i);
+    return i;
+  }
+  else
+    return 0;
+}
+
+uint64_t buffer_get64na(Buffer *b) {
+  uint64_t i;
+  if(buffer_get_chunk(b, &i, 8) > 0) {
+    i = be64toh(i);
+    return i;
+  }
+  else
+    return 0;
 }
 
 char *buffer_get_str(Buffer *b) {
   buffer_resize(b, 1); /* make room for trailing zero */
   return (char *)b->buf;
-  /*
-  char *out = ucmalloc(b->end+1);
-  memcpy(out, buffer_get(b), buffer_size(b));
-  out[buffer_size(b)] = '\0';
-  return out;
-  */
 }
 
 size_t buffer_extract(Buffer *b, void *buf, size_t offset, size_t len) {
@@ -137,6 +198,17 @@ void buffer_info(const Buffer *b) {
 
 size_t buffer_size(const Buffer *b) {
   return b->end;
+}
+
+size_t buffer_left(const Buffer *b) {
+  return b->end - b->offset;
+}
+
+int buffer_done(Buffer *b) {
+  if(b->offset == b->end)
+    return 1;
+  else
+    return 0;
 }
 
 uint8_t buffer_last8(Buffer *b) {

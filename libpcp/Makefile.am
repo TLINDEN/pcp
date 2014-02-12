@@ -30,6 +30,6 @@ libpcp1_la_SOURCES = mac.c mem.c pad.c version.c \
 		    vault.c fatal.c jenhash.c digital_crc32.c \
                     crypto.c ed.c keyhash.c scrypt.c \
 		    scrypt/crypto/sha256.c scrypt/crypto/crypto_scrypt-nosse.c \
-		    base85.c util.c buffer.c mgmt.c
+		    base85.c util.c buffer.c mgmt.c keysig.c
 
 include_HEADERS      = ../include/pcp.h

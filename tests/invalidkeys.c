@@ -110,23 +110,23 @@ void mkinvp(pcp_pubkey_t *k, int type) {
   switch(type) {
   case 0:
     key->type = 0;
-    pcppubkey_print(key, F("testpubkey-wrong-type"), 0);
+    pcppubkey_print(key, F("testpubkey-wrong-type"));
     break;
   case 1:
     key->version = 0;
-    pcppubkey_print(key, F("testpubkey-wrong-version"), 0);
+    pcppubkey_print(key, F("testpubkey-wrong-version"));
     break;
   case 2:
     key->serial = 0;
-    pcppubkey_print(key, F("testpubkey-wrong-serial"), 0);
+    pcppubkey_print(key, F("testpubkey-wrong-serial"));
     break;
   case 3:
     key->id[16] = 0x3e;
-    pcppubkey_print(key, F("testpubkey-invalid-id"), 0);
+    pcppubkey_print(key, F("testpubkey-invalid-id"));
     break;
   case 4:
     key->ctime = 0;
-    pcppubkey_print(key, F("testpubkey-invalid-ctime"), 0);
+    pcppubkey_print(key, F("testpubkey-invalid-ctime"));
     break;
   }
 }

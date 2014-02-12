@@ -1,8 +1,8 @@
 #!/bin/sh
 pcp1="../src/pcp1"
-pcp="$pcp1 -V vxxx"
+pcp="$pcp1"
 
-rm -f vxxx unknown*
+rm -f vxxx* unknown*
 
 gen() {
     owner=$1
@@ -12,34 +12,30 @@ gen() {
     pub=$5
     sec=$6
 
-    (echo $owner; echo $mail) | $pcp -k -x $pass > /dev/null 2>&1
+    (echo $owner; echo $mail) | $pcp -V vxxx$owner -k -x $pass
 
-    id=`$pcp -l | grep $owner | awk '{print $1}'`
+    id=`$pcp -V vxxx$owner -l | grep $owner | awk '{print $1}'`
 
+    zopt=""
+    if test "x$z" = "xy"; then
+	zopt=" -z "
+    fi
 
     if test -n "$pub"; then
-	if test "x$z" = "xy"; then
-	    $pcp -p -i $id | egrep -v "^ " | egrep -v -- "----" | grep . > $pub
-	else
-	    $pcp -p -O $pub -i $id > /dev/null 2>&1
-	fi
+	$pcp -V vxxx$owner -p -O $pub -i $id -x $pass $zopt
     fi
 
     if test -n "$sec"; then
-	if test "x$z" = "xy"; then
-	    $pcp -s -i $id | egrep -v "^ " | egrep -v -- "----" | grep . > $sec
-	else
-	    $pcp -s -O $sec -i $id > /dev/null 2>&1
-	fi
+	$pcp -V vxxx$owner -s -O $sec -i $id -x $pass $zopt
     fi
 
     echo $id
 }
 
 
-ida=`gen Alicia alicia@local a n key-alicia-pub key-alicia-sec`
-idb=`gen Bobby  bobby@local  b n key-bobby-pub key-bobby-sec`
-ids=`gen Bart   bart@local   a n bart.pub`
+ida=`gen Alicia alicia@local a y key-alicia-pub key-alicia-sec`
+idb=`gen Bobby  bobby@local  b y key-bobby-pub key-bobby-sec`
+ids=`gen Bart   bart@local   a y bart.pub`
 ser=`grep Serial bart.pub | awk '{print $3}'`
 
 gen Niemand niemand@local n y unknown1 unknown2
@@ -56,4 +52,4 @@ mailalicia = alicia@local" > keys.cfg
 
 ./gencheader > static.h
 
-rm -f vxxx
+rm -f vxxx*

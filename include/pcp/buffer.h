@@ -88,6 +88,9 @@ unsigned char *buffer_get(Buffer *b);
    points to b->buf and should not be free'd directly*/
 char *buffer_get_str(Buffer *b);
 
+/* fetch whatever is left in the buffer */
+unsigned char *buffer_get_remainder(Buffer *b);
+
 /* same as buffer_get() but fetch some data chunk from somewhere
    in the middle of the buffer */
 size_t buffer_extract(Buffer *b, void *buf, size_t offset, size_t len);

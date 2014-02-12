@@ -98,6 +98,16 @@ size_t buffer_get_chunk(Buffer *b, void *buf, size_t len) {
   return len;
 }
 
+unsigned char *buffer_get_remainder(Buffer *b) {
+  void *buf;
+  if(buffer_get_chunk(b, buf, b->end - b->offset) == 0) {
+    return NULL;
+  }
+  else {
+    return buf;
+  }
+}
+
 uint8_t buffer_get8(Buffer *b) {
   uint8_t i;
   if(buffer_get_chunk(b, &i, 1) > 0) {

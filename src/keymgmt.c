@@ -196,7 +196,7 @@ pcp_key_t *pcp_find_primary_secret() {
   return NULL;
 }
 
-void pcp_exportsecret(char *keyid, int useid, char *outfile, int armor) {
+void pcp_exportsecret(char *keyid, int useid, char *outfile, int armor, char *passwd) {
   pcp_key_t *key = NULL;
 
   if(useid == 1) {
@@ -233,26 +233,40 @@ void pcp_exportsecret(char *keyid, int useid, char *outfile, int armor) {
 
     if(key->secret[0] == 0) {
       /* decrypt the secret key */
-      char *passphrase;
-      pcp_readpass(&passphrase,
-		   "Enter passphrase to decrypt your secret key", NULL, 1);
-      key = pcpkey_decrypt(key, passphrase);
-
-      if(key == NULL) {
+      if(passwd == NULL) {
+	char *passphrase;
+	pcp_readpass(&passphrase,
+		     "Enter passphrase to decrypt your secret key", NULL, 1);
+	key = pcpkey_decrypt(key, passphrase);
+	if(key == NULL) {
+	  memset(passphrase, 0, strlen(passphrase));
+	  free(passphrase);
+	  goto errexpse1;
+	}
 	memset(passphrase, 0, strlen(passphrase));
 	free(passphrase);
-	goto errexpse1;
       }
-      
+      else {
+	key = pcpkey_decrypt(key, passwd);
+	if(key == NULL) {
+	  goto errexpse1;
+	}
+      }
+    }
+
+    Buffer *exported_sk;
+
+    if(passwd != NULL) {
+      exported_sk = pcp_export_secret(key, passwd);
+    }
+    else {
+      char *passphrase;
+      pcp_readpass(&passphrase,
+                  "Enter passphrase to encrypt the exported secret key", "Repeat passphrase", 1);
+      exported_sk = pcp_export_secret(key, passphrase);
       memset(passphrase, 0, strlen(passphrase));
       free(passphrase);
     }
-
-    char *passphrase;
-    pcp_readpass(&passphrase,
-                   "Enter passphrase to encrypt the exported secret key", "Repeat passphrase", 1);
-
-    Buffer *exported_sk = pcp_export_secret(key, passphrase);
 
     if(exported_sk != NULL) {
       if(armor == 1) {
@@ -268,8 +282,6 @@ void pcp_exportsecret(char *keyid, int useid, char *outfile, int armor) {
       fprintf(stderr, "secret key exported.\n");
     }
 
-    memset(passphrase, 0, strlen(passphrase));
-    free(passphrase);
   }
 
   errexpse1:
@@ -335,17 +347,20 @@ void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int 
 
   if(is_foreign == 0) {
     /* decrypt the secret key */
-    char *passphrase;
-    pcp_readpass(&passphrase,
-		 "Enter passphrase to decrypt your secret key", NULL, 1);
-    sk = pcpkey_decrypt(sk, passphrase);
-    if(sk == NULL) {
+    if(passwd != NULL) {
+      sk = pcpkey_decrypt(sk, passwd);
+    }
+    else {
+      char *passphrase;
+      pcp_readpass(&passphrase,
+		   "Enter passphrase to decrypt your secret key", NULL, 1);
+      sk = pcpkey_decrypt(sk, passphrase);
       memset(passphrase, 0, strlen(passphrase));
       free(passphrase);
+    }
+    if(sk == NULL) {
       goto errpcpexpu1;
     }
-    memset(passphrase, 0, strlen(passphrase));
-    free(passphrase);
   }
 
   /* now, we're ready for the actual export */
@@ -390,62 +405,85 @@ void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int 
     }
   }
 
-errpcpexpu1:
+ errpcpexpu1:
   buffer_free(exported_pk);
 }
 
 
 
-int pcp_importsecret (vault_t *vault, FILE *in) {
-  fprintf(stderr, " pcp_importsecret line 400, port to new format\n");exit(1);
-  size_t clen;
-  char *z85 = pcp_readz85file(in);
+int pcp_importsecret (vault_t *vault, FILE *in, char *passwd) {
+  unsigned char *buf = ucmalloc(2048);
+  size_t buflen = fread(buf, 1, 2048, in);
+  pcp_key_t *sk = NULL;
 
-  if(z85 == NULL)
-    return 1;
-
-  unsigned char *z85decoded = pcp_z85_decode((char *)z85, &clen);
-  free(z85);
-
-  if(z85decoded == NULL) {
-    fatal("Error: could not decode input - it's probably not Z85.\n");
-    return 1;
-  }
-
-  if(clen != PCP_RAW_KEYSIZE) {
-    fatal("Error: decoded input didn't result to a proper sized key! (got %ld bytes, expected %ld)\n", clen, PCP_RAW_KEYSIZE);
-    free(z85decoded);
-    return 1;
-  }
-
-  /*  all good now, import the blob */
-  pcp_key_t *key = ucmalloc(sizeof(pcp_key_t));
-  memcpy(key, z85decoded, PCP_RAW_KEYSIZE);
-  key2native(key);
-
-  if(debug)
-    pcp_dumpkey(key);
-
-  if(pcp_sanitycheck_key(key) == 0) {
-    if(key->secret[0] != 0) {
-      /*  unencrypted, encrypt it */
-      fprintf(stderr, "Key to be imported is unencrypted.\n");
+  if(buflen > 0) {
+    /* decrypt the input */
+    if(passwd != NULL) {
+      sk = pcp_import_secret(buf, buflen, passwd);
+    }
+    else {
       char *passphrase;
-      pcp_readpass(&passphrase, "Enter passphrase for key encryption", NULL, 1);
-      key = pcpkey_encrypt(key, passphrase);
+      pcp_readpass(&passphrase,
+		   "Enter passphrase to decrypt the secret key file", NULL, 1);
+      sk = pcp_import_secret(buf, buflen, passphrase);
+      memset(passphrase, 0, strlen(passphrase));
+      free(passphrase);
     }
-    int nkeys = HASH_COUNT(pcpkey_hash);
-    if(nkeys == 0)
-      key->type = PCP_KEY_TYPE_MAINSECRET;
+    if(sk == NULL) {
+      goto errpcsexpu1;
+    }
 
-    if(pcpvault_addkey(vault, (void *)key, PCP_KEY_TYPE_SECRET) == 0) {
-      fprintf(stderr, "key 0x%s added to %s.\n", key->id, vault->filename);
-      free(key);
-      return 0;
+    if(debug)
+      pcp_dumpkey(sk);
+
+    pcp_key_t *maybe = pcphash_keyexists(sk->id);
+    if(maybe != NULL) {
+      fatal("Secretkey sanity check: there already exists a key with the id 0x%s\n", sk->id);
+      goto errpcsexpu1;
+    }
+
+
+    /* store it */
+    if(passwd != NULL) {
+      sk = pcpkey_encrypt(sk, passwd);
+    }
+    else {
+      char *passphrase;
+      pcp_readpass(&passphrase,
+		   "Enter passphrase for key encryption",
+		   "Enter the passphrase again", 1);
+    
+      if(strnlen(passphrase, 1024) > 0) {
+	/* encrypt the key */
+	sk = pcpkey_encrypt(sk, passphrase);
+      }
+      else {
+	/* ask for confirmation if we shall store it in the clear */
+	char *yes = pcp_getstdin(
+		 "WARNING: secret key will be stored unencrypted. Are you sure [yes|NO]?");
+	if(strncmp(yes, "yes", 1024) != 0) {
+	  memset(sk, 0, sizeof(pcp_key_t));
+	  free(sk);
+	  memset(passphrase, 0, strlen(passphrase));
+	  goto errpcsexpu1;
+	}
+      }
+    }
+
+    if(sk != NULL) {
+      /* store it to the vault if we got it til here */
+      if(pcp_sanitycheck_key(sk) == 0) {
+	if(pcp_storekey(sk) == 0) {
+	  pcpkey_printshortinfo(sk);
+	  memset(sk, 0, sizeof(pcp_key_t));
+	  free(sk);
+	  return 0;
+	}
+      }
     }
   }
 
-  free(key);
+ errpcsexpu1:
   return 1;
 }
 
@@ -501,178 +539,6 @@ int pcp_importpublic (vault_t *vault, FILE *in) {
     ucfree(sk, sizeof(pcp_keysig_t));
   }
   ucfree(buf, 2048);
-  return 1;
-}
-
-int pcp_importpublicOLD (vault_t *vault, FILE *in) {
-  pcp_pubkey_t *pub = NULL;
-  int pbpcompat = 0;
-  if(pbpcompat == 1) {
-    char *date = NULL;
-    char *parts = NULL;
-    int pnum;
-    pbp_pubkey_t *b = ucmalloc(sizeof(pbp_pubkey_t));
-    pcp_pubkey_t *tmp = ucmalloc(sizeof(pcp_pubkey_t));
-    pub = ucmalloc(sizeof(pcp_pubkey_t));
-    unsigned char *buf = ucmalloc(2048);
-    unsigned char *bin = ucmalloc(2048);
-    size_t buflen;
-    size_t klen;
-
-    buflen = fread(buf, 1, 2048, in); /*  base85 encoded */
-
-    /*  remove trailing newline, if any */
-    size_t i, nlen;
-    nlen = buflen;
-    for(i=buflen; i>0; --i) {
-      if(buf[i] == '\n' || buf[i] == '\r') {
-	buf[i] = '\0';
-	nlen -= 1;
-      }
-    } 
-
-    klen = nlen /5 * 4; /*((nlen + (5 - (nlen % 5))) / 5) * 4;*/
-
-    if(decode_85((char *)bin, (char *)buf, klen) != 0)
-      goto errimp1;
-
-    if(klen < sizeof(pbp_pubkey_t) - 1024 - crypto_sign_BYTES) {
-      fatal("PBP key seems to be too small, maybe it's not a PBP key (got %ld, expected %ld)\n",
-	    klen, sizeof(pbp_pubkey_t) - 1024);
-      goto errimp1;
-    }
-
-    if(debug)
-      _dump("sig", bin, nlen);
-
-    /*  unpad result, if any */
-    for(i=klen; i>0; --i) {
-      if(bin[i] != '\0' && i < klen) {
-	klen = i + 1;
-	break;
-      }
-    }
-
-    /*  use first part as sig and verify */
-    memcpy(b, &bin[crypto_sign_BYTES], klen - crypto_sign_BYTES);
-
-    if(debug)
-      _dump("sig", bin, klen);
-
-    /* parse the date */
-    date = ucmalloc(19);
-    memcpy(date, b->iso_ctime, 18);
-    date[19] = '\0';
-    struct tm c;
-    if(strptime(date, "%Y-%m-%dT%H:%M:%S", &c) == NULL) {
-      fatal("Failed to parse creation time in PBP public key file (<%s>)\n", date);
-      goto errimp2;
-    }
-
-    /*  parse the name */
-    parts = strtok (b->name, "<>");
-    pnum = 0;
-    while (parts != NULL) {
-      if(pnum == 0)
-	memcpy(pub->owner, parts, strlen(parts));
-      else if (pnum == 1)
-	memcpy(pub->mail, parts, strlen(parts));
-      parts = strtok(NULL, "<>");
-      pnum++;
-    }
-    free(parts);
-
-    if(strlen(b->name) == 0) {
-      char *owner =  pcp_getstdin("Enter the name of the key owner");
-      memcpy(pub->owner, owner, strlen(owner) + 1);
-      free(owner);
-    }
-
-    /*  fill in the fields */
-    pub->ctime = (long)mktime(&c);
-    pub->type = PCP_KEY_TYPE_PUBLIC;
-    pub->version = PCP_KEY_VERSION;
-    pub->serial  = arc4random();
-    memcpy(pub->pub, b->pub, crypto_box_PUBLICKEYBYTES);
-    memcpy(pub->edpub, b->edpub, crypto_sign_PUBLICKEYBYTES);
-    memcpy(pub->id, pcp_getpubkeyid(pub), 17);
-    _lc(pub->owner);
-
-    /* edpub used for signing, might differ */
-    memcpy(tmp->edpub, b->sigpub, crypto_sign_PUBLICKEYBYTES);
-
-    if(debug) {
-      _dump("  mp", tmp->edpub, crypto_sign_PUBLICKEYBYTES);
-      _dump("  cp", pub->pub, crypto_sign_PUBLICKEYBYTES);
-      _dump("  sp", pub->edpub, crypto_sign_PUBLICKEYBYTES);
-      _dump("name", (unsigned char *)pub->owner, strlen(pub->owner));
-      _dump(" sig", bin, klen);
-      fprintf(stderr, "<%s>\n",  (unsigned char *)pub->owner);
-      pcp_dumppubkey(pub);
-    }
-
-    unsigned char *sig = pcp_ed_verify(bin, klen, tmp);
-    free(tmp);
-
-    if(sig == NULL)
-      goto errimp1;
-
-    free(sig);
-    free(b);
-    free(buf);
-    free(bin);
-    goto kimp;
-
-  errimp2:
-    free(date);
-
-  errimp1:
-    free(bin);
-    free(pub);
-    free(b);
-    free(buf);
-    return 1;
-  }
-  else {
-    size_t clen;
-    char *z85 = pcp_readz85file(in);
-
-    if(z85 == NULL)
-      return 1;
-
-    unsigned char *z85decoded = pcp_z85_decode((char *)z85, &clen);
-    free(z85);
-
-    if(z85decoded == NULL) {
-      fatal("Error: could not decode input - it's probably not Z85 (got %d bytes)\n", clen);
-      return 1;
-    }
-
-    if(clen != PCP_RAW_PUBKEYSIZE) {
-      fatal("Error: decoded input didn't result to a proper sized key (got %d, expected %d)!\n", clen, PCP_RAW_PUBKEYSIZE);
-      free(z85decoded);
-      return 1;
-    }
-
-    /*  all good now */
-    pub = ucmalloc(sizeof(pcp_pubkey_t));
-    memcpy(pub, z85decoded, PCP_RAW_PUBKEYSIZE);
-    pubkey2native(pub);
-  }
-
- kimp:
-
-  if(debug)
-    pcp_dumppubkey(pub);
-  if(pcp_sanitycheck_pub(pub) == 0) {
-    if(pcpvault_addkey(vault, (void *)pub,  PCP_KEY_TYPE_PUBLIC) == 0) {
-      fprintf(stderr, "key 0x%s added to %s.\n", pub->id, vault->filename);
-      free(pub);
-      return 0;
-    }
-  }
-
-  free(pub);
   return 1;
 }
 

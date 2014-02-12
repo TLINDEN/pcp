@@ -20,9 +20,43 @@ Update pod key format spec.
 
 vault checksum: add keysigs as well
 
-keysig: fix struct to be even (i.e. type => uint16_t or something) OR add a keysig2blob function
-
 Secretkey import: fill in calculated fields (keyid etc), add  pcp_importsecret() wrapper to keymgmt.c
+
+**** PUBKEY SIGSUB Put Serial as string ****
+
+when fatals_ifany() is called multiple times:
+==44663== Invalid read of size 8
+==44663==    at 0x102AEE1: memcpy (in /usr/local/lib/valgrind/vgpreload_memcheck-amd64-freebsd.so)
+==44663==    by 0x17A6EB0: ??? (in /lib/libc.so.7)
+==44663==    by 0x1799EFA: ??? (in /lib/libc.so.7)
+==44663==    by 0x179B4A8: ??? (in /lib/libc.so.7)
+==44663==    by 0x179D7A8: ??? (in /lib/libc.so.7)
+==44663==    by 0x179D8DB: vfprintf (in /lib/libc.so.7)
+==44663==    by 0x178F3D7: fprintf (in /lib/libc.so.7)
+==44663==    by 0x410416: fatals_ifany (fatal.c:53)
+==44663==    by 0x402F37: main (pcp.c:577)
+==44663==  Address 0x1a11718 is 24 bytes inside a block of size 128 free'd
+==44663==    at 0x1028EDE: free (in /usr/local/lib/valgrind/vgpreload_memcheck-amd64-freebsd.so)
+==44663==    by 0x410452: fatals_ifany (fatal.c:57)
+==44663==    by 0x41AAAD: pcp_import_secret_native (mgmt.c:585)
+==44663==    by 0x41A7BE: pcp_import_secret (mgmt.c:511)
+==44663==    by 0x404D74: pcp_importsecret (keymgmt.c:410)
+==44663==    by 0x402B28: main (pcp.c:427)
+
+and 
+
+==44663== Invalid free() / delete / delete[] / realloc()
+==44663==    at 0x1028EDE: free (in /usr/local/lib/valgrind/vgpreload_memcheck-amd64-freebsd.so)
+==44663==    by 0x410452: fatals_ifany (fatal.c:57)
+==44663==    by 0x402F37: main (pcp.c:577)
+==44663==  Address 0x1a11700 is 0 bytes inside a block of size 128 free'd
+==44663==    at 0x1028EDE: free (in /usr/local/lib/valgrind/vgpreload_memcheck-amd64-freebsd.so)
+==44663==    by 0x410452: fatals_ifany (fatal.c:57)
+==44663==    by 0x41AAAD: pcp_import_secret_native (mgmt.c:585)
+==44663==    by 0x41A7BE: pcp_import_secret (mgmt.c:511)
+==44663==    by 0x404D74: pcp_importsecret (keymgmt.c:410)
+==44663==    by 0x402B28: main (pcp.c:427)
+
 
 Python binding, e.g.:
 py % cdll.LoadLibrary("libsodium.so.8")
@@ -32,10 +66,10 @@ py % hash = create_string_buffer('\000' * 64)
 py % hash
 <ctypes.c_char_Array_65 object at 0x80182c560>
 py % hash.raw
-'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x...
 py % key = create_string_buffer('a' * 32)
 py % nacl.crypto_hash_sha256(pointer(hash), pointer(key), 32)
 0
 py % hash.raw
-';\xa3\xf5\xf4;\x92`&\x83\xc1\x9a\xeeb\xa2\x03B\xb0\x84\xddYq\xdd\xd38\x08\xd8\x1a2\x88y\xa5G\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+';\xa3\xf5\xf4;\x92`&\x83\xc1\x9a\xeeb\xa2\x03B\xb0\x84\...
 py % 

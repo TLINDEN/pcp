@@ -379,12 +379,12 @@ int main (int argc, char **argv)  {
 	if(useid) {
 	  id = pcp_normalize_id(keyid);
 	  if(id != NULL) {
-	    pcp_exportsecret(id, useid, outfile, armor);
+	    pcp_exportsecret(id, useid, outfile, armor, xpass);
 	    free(id);
 	  }
 	}
 	else {
-	  pcp_exportsecret(NULL, useid, outfile, armor);
+	  pcp_exportsecret(NULL, useid, outfile, armor, xpass);
 	}
 	break;
 
@@ -424,7 +424,7 @@ int main (int argc, char **argv)  {
 	    break;
 	  }
 	}
-	pcp_importsecret(vault, in);
+	pcp_importsecret(vault, in, xpass);
 	break;
 
       case PCP_MODE_DELETE_KEY:

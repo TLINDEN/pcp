@@ -50,7 +50,7 @@ int pcp_storekey (pcp_key_t *key);
 void pcp_keygen(char *passwd);
 void pcp_listkeys();
 
-void pcp_exportsecret(char *keyid, int useid, char *outfile, int armor);
+void pcp_exportsecret(char *keyid, int useid, char *outfile, int armor, char *passwd);
 void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int armor);
 
 pcp_key_t *pcp_getrsk(pcp_key_t *s, char *recipient, char *passwd);
@@ -58,7 +58,7 @@ char *pcp_normalize_id(char *keyid);
 pcp_key_t *pcp_find_primary_secret();
 
 int pcp_importpublic (vault_t *vault, FILE *in);
-int pcp_importsecret (vault_t *vault, FILE *in);
+int pcp_importsecret (vault_t *vault, FILE *in, char *passwd);
 
 void pcpdelete_key(char *keyid);
 char *pcp_find_id_byrec(char *recipient);

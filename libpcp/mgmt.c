@@ -87,6 +87,8 @@ int _check_sigsubs(Buffer *blob, pcp_pubkey_t *p, rfc_pub_sig_s *subheader) {
     notation[nsize] = '\0';
     value[nsize] = '\0';
 
+    fprintf(stderr, "got notation %s with value %s\n", notation, value);
+
     if(strncmp(notation, "owner", 5) == 0) {
       memcpy(p->owner, value, vsize);
     }
@@ -96,17 +98,18 @@ int _check_sigsubs(Buffer *blob, pcp_pubkey_t *p, rfc_pub_sig_s *subheader) {
     else if(strncmp(notation, "serial", 6) == 0) {
       uint32_t serial;
       memcpy(&serial, value, 4);
-      p->serial = htobe32(serial);
+      p->serial = be32toh(serial);
     }
-
     ucfree(notation, nsize);
     ucfree(value, vsize);
   }
   else {
     /* unsupported or ignored sig sub */
+    fprintf(stderr, "ignore sub %ld bytes\n", subheader->size);
     if(buffer_get_chunk(blob, ignore, subheader->size) == 0)
       return 1;
   }
+
 
   return 0;
 }
@@ -178,10 +181,14 @@ int _check_hash_keysig(Buffer *blob, pcp_pubkey_t *p, pcp_keysig_t *sk) {
 pcp_ks_bundle_t *pcp_import_pub(unsigned char *raw, size_t rawsize) {
   size_t clen;
   unsigned char *bin = NULL;
+  char *z85 = NULL;
+
   Buffer *blob = buffer_new(512, "importblob");
 
   /* first, try to decode the input */
-  bin = pcp_z85_decode((char *)raw, &clen);
+  z85 = pcp_readz85string(raw, rawsize);
+  if(z85 != NULL)
+    bin = pcp_z85_decode(z85, &clen);
 
   if(bin == NULL) {
     /* treat as binary blob */
@@ -190,7 +197,7 @@ pcp_ks_bundle_t *pcp_import_pub(unsigned char *raw, size_t rawsize) {
   }
   else {
     /* use decoded */
-    buffer_add(blob, bin, rawsize);
+    buffer_add(blob, bin, clen);
     ucfree(bin, clen);
   }
 
@@ -235,9 +242,12 @@ pcp_ks_bundle_t *pcp_import_pub_rfc(Buffer *blob) {
 
   /* iterate over subs, if any */
   int i;
+  fprintf(stderr, "numsubs in: %ld\n", sigheader->numsubs);
   for (i=0; i<sigheader->numsubs; i++) {
     subheader->size = buffer_get32na(blob);
     subheader->type = buffer_get8(blob);
+    fprintf(stderr, "read sub type %02x, size %08x %ld\n", subheader->type, subheader->size, subheader->size );
+    fprintf(stderr, "bytes left: %ld\n", buffer_left(blob));
     _check_sigsubs(blob, p, subheader);
   }
 
@@ -263,6 +273,8 @@ pcp_ks_bundle_t *pcp_import_pub_rfc(Buffer *blob) {
     b->s = sk;
   }
 
+  _dump("sk in", sk->blob, sk->size);
+
   return b;
 
 
@@ -278,6 +290,89 @@ pcp_ks_bundle_t *pcp_import_pub_rfc(Buffer *blob) {
 }
 
 pcp_ks_bundle_t *pcp_import_pub_pbp(Buffer *blob) {
+  char *date  = ucmalloc(19);
+  char *ignore = ucmalloc(46);
+  char *parts = NULL;
+  unsigned char *sig;
+  int pnum;
+  pbp_pubkey_t *b = ucmalloc(sizeof(pbp_pubkey_t));
+  pcp_pubkey_t *tmp = ucmalloc(sizeof(pcp_pubkey_t));
+  pcp_pubkey_t *pub = ucmalloc(sizeof(pcp_pubkey_t));
+
+  buffer_get_chunk(blob, sig, crypto_sign_BYTES);
+  buffer_get_chunk(blob, b->sigpub, crypto_sign_PUBLICKEYBYTES);
+  buffer_get_chunk(blob, b->edpub, crypto_sign_PUBLICKEYBYTES);
+  buffer_get_chunk(blob, b->pub, crypto_box_PUBLICKEYBYTES);
+  buffer_get_chunk(blob, date, 18);
+
+  date[19] = '\0';
+  struct tm c;
+  if(strptime(date, "%Y-%m-%dT%H:%M:%S", &c) == NULL) {
+    fatal("Failed to parse creation time in PBP public key file (<%s>)\n", date);
+    free(date);
+    goto errimp2;
+  }
+  
+  buffer_get_chunk(blob, ignore, 46);
+  free(ignore);
+  memcpy(b->name, buffer_get(blob), buffer_left(blob));
+
+  /*  parse the name */
+  parts = strtok (b->name, "<>");
+  pnum = 0;
+  while (parts != NULL) {
+    if(pnum == 0)
+      memcpy(pub->owner, parts, strlen(parts));
+    else if (pnum == 1)
+      memcpy(pub->mail, parts, strlen(parts));
+    parts = strtok(NULL, "<>");
+    pnum++;
+  }
+  free(parts);
+
+  if(strlen(b->name) == 0) {
+    memcpy(pub->owner, "N/A", 3);
+  }
+
+  /*  fill in the fields */
+  pub->ctime = (long)mktime(&c);
+  pub->type = PCP_KEY_TYPE_PUBLIC;
+  pub->version = PCP_KEY_VERSION;
+  pub->serial  = arc4random();
+  memcpy(pub->pub, b->pub, crypto_box_PUBLICKEYBYTES);
+  memcpy(pub->edpub, b->edpub, crypto_sign_PUBLICKEYBYTES);
+  memcpy(pub->id, pcp_getpubkeyid(pub), 17);
+  _lc(pub->owner);
+
+  /* edpub used for signing, might differ */
+  memcpy(tmp->edpub, b->sigpub, crypto_sign_PUBLICKEYBYTES);
+
+  unsigned char *verify = pcp_ed_verify(buffer_get(blob), buffer_size(blob), tmp);
+  free(tmp);
+
+  pcp_ks_bundle_t *bundle = ucmalloc(sizeof(pcp_ks_bundle_t));
+  bundle->p = pub;
+  
+  if(verify == NULL) {
+    bundle->p = pub;
+    bundle->s = NULL;
+  }
+  else {
+    pcp_keysig_t *sk = ucmalloc(sizeof(pcp_keysig_t));
+    sk->type = PCP_KEYSIG_PBP;
+    sk->size = buffer_size(blob);
+    memcpy(sk->belongs, pub->id, 17);
+    sk->blob = ucmalloc(sk->size);
+    memcpy(sk->blob, buffer_get(blob), sk->size);
+    crypto_hash_sha256(sk->checksum, sk->blob, sk->size);
+    pub->valid = 1;
+    bundle->s = sk;
+    bundle->p = pub;
+  }
+  
+  return bundle;
+
+ errimp2:
   return NULL;
 }
 
@@ -353,7 +448,18 @@ Buffer *pcp_export_rfc_pub (pcp_key_t *sk) {
   buffer_add8(raw, EXP_SIG_TYPE);
   buffer_add8(raw, EXP_SIG_CIPHER);
   buffer_add8(raw, EXP_HASH_CIPHER);
-  buffer_add16be(raw, 5); /* we add 5 sub sigs always */
+
+  /* we add 5-7 subs:
+     ctime, sigexpire, keyexpire, serial, keyflags
+     optional: owner, mail */
+  uint16_t nsubs = 5;
+  if(strlen(sk->owner) > 0)
+    nsubs++;
+  if(strlen(sk->mail) > 0)
+    nsubs++;
+  buffer_add16be(raw, nsubs);
+
+  fprintf(stderr, "numsubs out: %ld\n", nsubs);
 
   /* add sig ctime */
   buffer_add32be(raw, 4);
@@ -371,6 +477,17 @@ Buffer *pcp_export_rfc_pub (pcp_key_t *sk) {
   buffer_add32be(raw, sk->ctime + 31536000);
 
   size_t notation_size = 0;
+  /* add serial number notation sub */
+  notation_size = 6 + 4 + 4;
+  buffer_add32be(raw, notation_size);
+  buffer_add8(raw, EXP_SIG_SUB_NOTATION);
+  buffer_add16be(raw, 6);
+  buffer_add16be(raw, 4);
+  buffer_add(raw, "serial", 6);
+  //buffer_add32be(raw, sk->serial);
+  buffer_add32be(raw, 1);
+  fprintf(stderr, "put serial notation %ld\n", notation_size);
+
   /* add name notation sub*/
   if(strlen(sk->owner) > 0) {
     size_t notation_size = strlen(sk->owner) + 4 + 5;
@@ -380,6 +497,7 @@ Buffer *pcp_export_rfc_pub (pcp_key_t *sk) {
     buffer_add16be(raw, strlen(sk->owner));
     buffer_add(raw, "owner", 5);
     buffer_add(raw, sk->owner, strlen(sk->owner));
+    fprintf(stderr, "put owner notation %ld\n", notation_size);
   }
 
   /* add mail notation sub */
@@ -391,20 +509,14 @@ Buffer *pcp_export_rfc_pub (pcp_key_t *sk) {
     buffer_add16be(raw, strlen(sk->mail));
     buffer_add(raw, "mail", 4);
     buffer_add(raw, sk->mail, strlen(sk->mail));
+    fprintf(stderr, "put mail notation %ld\n", notation_size);
   }
 
-  /* add serial number notation sub */
-  notation_size = 6 + 4 + 4;
-  buffer_add32be(raw, notation_size);
-  buffer_add8(raw, EXP_SIG_SUB_NOTATION);
-  buffer_add16be(raw, 6);
-  buffer_add16be(raw, 4);
-  buffer_add(raw, "serial", 6);
-  buffer_add32be(raw, sk->serial);
 
+ 
   /* add key flags */
   buffer_add32be(raw, 1);
-  buffer_add8(raw, 27);
+  buffer_add8(raw, EXP_SIG_SUB_KEYFLAGS);
   buffer_add8(raw, 0x02 & 0x08 & 0x80);
 
   /* create a hash from the PK material and the raw signature packet */
@@ -418,13 +530,13 @@ Buffer *pcp_export_rfc_pub (pcp_key_t *sk) {
   /* sign the hash */
   unsigned char *sig = pcp_ed_sign_key(hash, crypto_generichash_BYTES_MAX, sk);
 
+  buffer_dump(raw);
+  buffer_info(raw);
   /* append the signature packet to the output */
   buffer_add(out, buffer_get(raw), buffer_size(raw));
 
   /* append the signed hash */
   buffer_add(out, sig, crypto_sign_BYTES + crypto_generichash_BYTES_MAX);
-
-  _dump("raw", buffer_get(raw), buffer_size(raw));
 
   /* and that's it. wasn't that easy? :) */
   buffer_free(raw);
@@ -488,13 +600,40 @@ Buffer *pcp_export_secret(pcp_key_t *sk, char *passphrase) {
   return out;
 }
 
-pcp_key_t *pcp_import_secret(Buffer *cipher, char *passphrase) {
+pcp_key_t *pcp_import_secret(unsigned char *raw, size_t rawsize, char *passphrase) {
+  size_t clen;
+  unsigned char *bin = NULL;
+  char *z85 = NULL;
+
+  Buffer *blob = buffer_new(512, "importskblob");
+
+  /* first, try to decode the input */
+  z85 = pcp_readz85string(raw, rawsize);
+  if(z85 != NULL)
+    bin = pcp_z85_decode(z85, &clen);
+
+  if(bin == NULL) {
+    /* treat as binary blob */
+    fatals_reset();
+    buffer_add(blob, raw, rawsize);
+  }
+  else {
+    /* use decoded */
+    buffer_add(blob, bin, clen);
+    ucfree(bin, clen);
+  }
+
+  /* now we've got the blob, parse it */
+  return pcp_import_secret_native(blob, passphrase);
+}
+
+pcp_key_t *pcp_import_secret_native(Buffer *cipher, char *passphrase) {
   pcp_key_t *sk = ucmalloc(sizeof(pcp_key_t));
   unsigned char *nonce = ucmalloc(crypto_secretbox_NONCEBYTES);
   unsigned char *symkey = NULL;
   unsigned char *clear = NULL;
   size_t cipherlen = 0;
-  size_t minlen = (64 * 2) * (32 * 4) + 8 + 4 + 4;
+  size_t minlen = (64 * 2) + (32 * 4) + 8 + 4 + 4;
   uint16_t notationlen = 0;
 
   Buffer *blob = buffer_new(512, "secretdecryptbuf");
@@ -510,12 +649,17 @@ pcp_key_t *pcp_import_secret(Buffer *cipher, char *passphrase) {
     goto impserr1;
   }
 
+  /* decrypt the blob */
   if(pcp_sodium_verify_mac(&clear, buffer_get_remainder(cipher),
-			   cipherlen, nonce, symkey) != 0)
+			   cipherlen, nonce, symkey) != 0) {
+    fatal("failed to decrypt the secret key file\n");
     goto impserr1;
+  }
 
+  /* prepare the extraction buffer */
   buffer_add(blob, clear, cipherlen - PCP_CRYPTO_ADD);
 
+  /* extract the raw data into the structure */
   buffer_get_chunk(blob, sk->mastersecret, 64);
   buffer_get_chunk(blob, sk->secret, 32);
   buffer_get_chunk(blob, sk->edsecret, 64);
@@ -542,8 +686,11 @@ pcp_key_t *pcp_import_secret(Buffer *cipher, char *passphrase) {
   /* ready */
   ucfree(clear, cipherlen - PCP_CRYPTO_ADD);
   ucfree(nonce, crypto_secretbox_NONCEBYTES);
-  ucfree(sk, sizeof(pcp_key_t));
   buffer_free(blob);
+
+  /* fill in the calculated fields */
+  memcpy (sk->id, pcp_getkeyid(sk), 17);
+  sk->type = PCP_KEY_TYPE_SECRET;
 
   return sk;
 

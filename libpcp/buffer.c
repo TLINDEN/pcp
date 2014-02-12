@@ -42,9 +42,11 @@ void buffer_init(Buffer *b, size_t blocksize, char *name) {
 
 void buffer_free(Buffer *b) {
   if(b != NULL) {
-    if(b->allocated > 0) {
-      buffer_clear(b);
-      free(b->buf);
+    if(b->allocated == 1) {
+      if(b->end > 0) {
+	buffer_clear(b);
+	free(b->buf);
+      }
       free(b);
     }
   }
@@ -99,8 +101,9 @@ size_t buffer_get_chunk(Buffer *b, void *buf, size_t len) {
 }
 
 unsigned char *buffer_get_remainder(Buffer *b) {
-  void *buf;
+  void *buf = ucmalloc(b->end - b->offset);
   if(buffer_get_chunk(b, buf, b->end - b->offset) == 0) {
+    free(buf);
     return NULL;
   }
   else {
@@ -199,11 +202,12 @@ void buffer_dump(const Buffer *b) {
 }
 
 void buffer_info(const Buffer *b) {
+  fprintf(stderr, "   buffer: %s\n", b->name);
   fprintf(stderr, "blocksize: %ld\n", b->blocksize);
   fprintf(stderr, "     size: %ld\n", b->size);
   fprintf(stderr, "   offset: %ld\n", b->offset);
   fprintf(stderr, "      end: %ld\n", b->end);
-  fprintf(stderr, "allocated: %d\n", b->allocated);
+  fprintf(stderr, "allocated: %d\n\n", b->allocated);
 }
 
 size_t buffer_size(const Buffer *b) {

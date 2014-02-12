@@ -211,6 +211,7 @@ pcp_ks_bundle_t *pcp_import_pub_rfc(Buffer *blob);
 pcp_ks_bundle_t *pcp_import_pub_pbp(Buffer *blob);
 
 /* import secret key */
-pcp_key_t *pcp_import_secret(Buffer *cipher, char *passphrase);
+pcp_key_t *pcp_import_secret(unsigned char *raw, size_t rawsize, char *passphrase);
+pcp_key_t *pcp_import_secret_native(Buffer *cipher, char *passphrase);
 
 #endif // _HAVE_PCP_MGMT_H

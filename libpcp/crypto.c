@@ -366,7 +366,6 @@ size_t pcp_encrypt_file(FILE *in, FILE* out, pcp_key_t *s, pcp_pubkey_t *p, int 
   /*  step 5, actual encrypted data */
   size_t sym_size = 0;
   if(sign) {
-    _dump("reclist", recipients_cipher, rec_size * recipient_count);
     pcp_rec_t *rec = pcp_rec_new(recipients_cipher, rec_size * recipient_count, s, NULL);
     sym_size = pcp_encrypt_file_sym(in, out, symkey, 1, rec);
     pcp_rec_free(rec);

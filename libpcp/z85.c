@@ -63,7 +63,7 @@ unsigned char *pcp_z85_decode(char *z85block, size_t *dstlen) {
   bin = ucmalloc(binlen);
 
   if(zmq_z85_decode(bin, z85block) == NULL) {
-    fatal("zmq_z85_decode() failed, input size ! % 5");
+    fatal("zmq_z85_decode() failed, input size ! mod 5 (got %ld)", strlen(z85block));
     return NULL;
   }
 

@@ -14,10 +14,6 @@ Implement pbp crypto fix https://github.com/stef/pbp/commit/7d7b7c9ecb7604ad2293
 
 move remaining Export+Import stuff from src => lib.
 
-Update pubimport to new format
-
-Update secret im+ex-port to new format.
-
 Update pod key format spec.
 
 -l show keysig, if any
@@ -26,6 +22,7 @@ vault checksum: add keysigs as well
 
 keysig: fix struct to be even (i.e. type => uint16_t or something) OR add a keysig2blob function
 
+Secretkey import: fill in calculated fields (keyid etc), add  pcp_importsecret() wrapper to keymgmt.c
 
 Python binding, e.g.:
 py % cdll.LoadLibrary("libsodium.so.8")

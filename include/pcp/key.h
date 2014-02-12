@@ -38,6 +38,7 @@
 #include "uthash.h"
 #include "jenhash.h"
 #include "scrypt.h"
+#include "keysig.h"
 
 /*
   PCP private key structure. Most fields are self explanatory.
@@ -142,22 +143,6 @@ typedef struct _pcp_rec_t pcp_rec_t;
 
 #define PCP_RAW_KEYSIZE    sizeof(pcp_key_t)    - sizeof(UT_hash_handle)
 #define PCP_RAW_PUBKEYSIZE sizeof(pcp_pubkey_t) - sizeof(UT_hash_handle)
-#define PCP_RAW_KEYSIGSIZE sizeof(pcp_keysig_t) - sizeof(UT_hash_handle)
-
-/* holds a public key signature */
-struct _pcp_keysig_t {
-  uint8_t type;
-  uint32_t size;
-  char belongs[17];
-  byte checksum[32];
-  byte *blob;
-  UT_hash_handle hh;
-};
-
-typedef struct _pcp_keysig_t pcp_keysig_t;
-
-
-
 
 
 
@@ -186,10 +171,6 @@ pcp_key_t *key2native(pcp_key_t *k);
 pcp_pubkey_t * pubkey2be(pcp_pubkey_t *k);
 pcp_pubkey_t *pubkey2native(pcp_pubkey_t *k);
 
-pcp_keysig_t *keysig2be(pcp_keysig_t *s);
-pcp_keysig_t *keysig2native(pcp_keysig_t *s);
-
-
 unsigned char * pcp_gennonce();
 
 void pcpedit_key(char *keyid);
@@ -206,9 +187,6 @@ void *pcp_keyblob(void *k, int type); /*  allocates blob */
 
 int pcp_sanitycheck_pub(pcp_pubkey_t *key);
 int pcp_sanitycheck_key(pcp_key_t *key);
-
-/* fetch a keysig from a buffer, usually loaded from vault */
-pcp_keysig_t *pcp_keysig_new(Buffer *blob);
 
 
 #endif /*  _HAVE_PCP_KEYPAIR_H */

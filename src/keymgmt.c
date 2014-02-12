@@ -62,7 +62,7 @@ int pcp_storekey (pcp_key_t *key) {
   return 1;
 }
 
-void pcp_keygen(char *passwd, char *outfile) {
+void pcp_keygen(char *passwd) {
   pcp_key_t *k = pcpkey_new ();
   pcp_key_t *key = NULL;
 
@@ -101,19 +101,10 @@ void pcp_keygen(char *passwd, char *outfile) {
 
   if(key != NULL) {
     fprintf(stderr, "Generated new secret key:\n");
-    if(outfile != NULL) {
-      pcp_exportsecretkey(key, outfile);
+    if(pcp_storekey(key) == 0) {
       pcpkey_printshortinfo(key);
-      fprintf(stderr, "key stored to file %s, vault unaltered\n", outfile);
       memset(key, 0, sizeof(pcp_key_t));
       free(key);
-    }
-    else {
-      if(pcp_storekey(key) == 0) {
-	pcpkey_printshortinfo(key);
-	memset(key, 0, sizeof(pcp_key_t));
-	free(key);
-      }
     }
   }
 
@@ -205,7 +196,7 @@ pcp_key_t *pcp_find_primary_secret() {
   return NULL;
 }
 
-void pcp_exportsecret(char *keyid, int useid, char *outfile) {
+void pcp_exportsecret(char *keyid, int useid, char *outfile, int armor) {
   pcp_key_t *key = NULL;
 
   if(useid == 1) {
@@ -213,7 +204,7 @@ void pcp_exportsecret(char *keyid, int useid, char *outfile) {
     HASH_FIND_STR(pcpkey_hash, keyid, key);
     if(key == NULL) {
       fatal("Could not find a secret key with id 0x%s in vault %s!\n", keyid, vault->filename);
-      free(key);
+      goto errexpse1;
     }
   }
   else {
@@ -221,15 +212,10 @@ void pcp_exportsecret(char *keyid, int useid, char *outfile) {
     key = pcp_find_primary_secret();
     if(key == NULL) {
       fatal("There's no primary secret key in the vault %s!\n", vault->filename);
+      goto errexpse1;
     }
   }
 
-  if(key != NULL) {
-    pcp_exportsecretkey(key, outfile);
-  }
-}
-
-void pcp_exportsecretkey(pcp_key_t *key, char *outfile) {
   FILE *out;
   if(outfile == NULL) {
     out = stdout;
@@ -237,19 +223,57 @@ void pcp_exportsecretkey(pcp_key_t *key, char *outfile) {
   else {
     if((out = fopen(outfile, "wb+")) == NULL) {
       fatal("Could not create output file %s", outfile);
-      out = NULL;
+       goto errexpse1;
     }
   }
   
   if(out != NULL) {
     if(debug)
       pcp_dumpkey(key);
-    else
-      pcpkey_print(key, out);
-    /*  scip */
-    /* printf("EXPORT:\n"); */
-    /*  pcpprint_bin(stdout, key, PCP_RAW_KEYSIZE); printf("\n"); */
+
+    if(key->secret[0] == 0) {
+      /* decrypt the secret key */
+      char *passphrase;
+      pcp_readpass(&passphrase,
+		   "Enter passphrase to decrypt your secret key", NULL, 1);
+      key = pcpkey_decrypt(key, passphrase);
+
+      if(key == NULL) {
+	memset(passphrase, 0, strlen(passphrase));
+	free(passphrase);
+	goto errexpse1;
+      }
+      
+      memset(passphrase, 0, strlen(passphrase));
+      free(passphrase);
+    }
+
+    char *passphrase;
+    pcp_readpass(&passphrase,
+                   "Enter passphrase to encrypt the exported secret key", "Repeat passphrase", 1);
+
+    Buffer *exported_sk = pcp_export_secret(key, passphrase);
+
+    if(exported_sk != NULL) {
+      if(armor == 1) {
+	size_t zlen;
+	char *z85 = pcp_z85_encode(buffer_get(exported_sk), buffer_size(exported_sk), &zlen);
+	fprintf(out, "%s\r\n%s\r\n%s\r\n", EXP_SK_HEADER, z85, EXP_SK_FOOTER);
+	free(z85);
+      }
+      else {
+	fwrite(buffer_get(exported_sk), 1, buffer_size(exported_sk), out);
+      }
+      buffer_free(exported_sk);
+      fprintf(stderr, "secret key exported.\n");
+    }
+
+    memset(passphrase, 0, strlen(passphrase));
+    free(passphrase);
   }
+
+  errexpse1:
+  ;
 }
 
 
@@ -264,7 +288,7 @@ void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int 
   int is_foreign = 0;
   pcp_pubkey_t *pk = NULL;
   pcp_key_t *sk = NULL;
-  Buffer *exported_pk;
+  Buffer *exported_pk = NULL;
 
   if(outfile == NULL) {
     out = stdout;
@@ -316,9 +340,9 @@ void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int 
 		 "Enter passphrase to decrypt your secret key", NULL, 1);
     sk = pcpkey_decrypt(sk, passphrase);
     if(sk == NULL) {
-      goto errpcpexpu1;
       memset(passphrase, 0, strlen(passphrase));
       free(passphrase);
+      goto errpcpexpu1;
     }
     memset(passphrase, 0, strlen(passphrase));
     free(passphrase);
@@ -333,9 +357,6 @@ void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int 
 	  size_t zlen;
 	  char *z85 = pcp_z85_encode(buffer_get(exported_pk), buffer_size(exported_pk), &zlen);
 	  fprintf(out, "%s\r\n%s\r\n%s\r\n", EXP_PK_HEADER, z85, EXP_PK_FOOTER);
-	  FILE *t = fopen("binexp", "wb+");
-	  fwrite(buffer_get(exported_pk), 1, buffer_size(exported_pk), t);
-	  fclose(t);
 	  free(z85);
 	}
 	else
@@ -376,6 +397,7 @@ errpcpexpu1:
 
 
 int pcp_importsecret (vault_t *vault, FILE *in) {
+  fprintf(stderr, " pcp_importsecret line 400, port to new format\n");exit(1);
   size_t clen;
   char *z85 = pcp_readz85file(in);
 

@@ -168,22 +168,13 @@ int pcpvault_addkey(vault_t *vault, void *item, uint8_t type) {
   else if(type == PCP_KEYSIG_NATIVE || type == PCP_KEYSIG_NATIVE) {
     pcp_keysig_t *sk = (pcp_keysig_t *)item;
    
-    itemsize = PCP_RAW_KEYSIGSIZE + sk->size;
-    size_t blobsize = sk->size;
-
+    Buffer *b = pcp_keysig2blob(sk);
+    itemsize = buffer_size(b);
     blob = ucmalloc(itemsize);
-    sk = keysig2be(sk);
+    
+    memcpy(blob, buffer_get(b), buffer_size(b));
+    buffer_free(b);
 
-    /* FIXME: use Buffer or function */
-    uint8_t t = sk->type;
-    uint32_t s = sk->size;
-    memcpy(blob, &t, 1);
-    memcpy(blob+1, &s, 4);
-    memcpy(blob+5, sk->belongs, 17);
-    memcpy(blob+5+17, sk->checksum, 32);
-    memcpy(blob+5+17+32, sk->blob, blobsize);
-
-    sk = keysig2native(sk);
     saveitem = (void *)sk;
   }
   else {

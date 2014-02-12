@@ -47,11 +47,10 @@
 
 char *pcp_getstdin(const char *prompt);
 int pcp_storekey (pcp_key_t *key);
-void pcp_keygen();
+void pcp_keygen(char *passwd);
 void pcp_listkeys();
 
-void pcp_exportsecret(char *keyid, int useid, char *outfile);
-void pcp_exportsecretkey(pcp_key_t *key, char *outfile);
+void pcp_exportsecret(char *keyid, int useid, char *outfile, int armor);
 void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int armor);
 
 pcp_key_t *pcp_getrsk(pcp_key_t *s, char *recipient, char *passwd);

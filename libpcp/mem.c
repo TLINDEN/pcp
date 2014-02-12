@@ -54,7 +54,10 @@ void *urmalloc(size_t s) {
 
 void *ucrealloc(void *d, size_t oldlen, size_t newlen) {
   newlen = newlen * sizeof(unsigned char);
-  void *value = realloc (d, newlen);
+
+  /* we're using a 1 byte sized pointer, so that we can
+     memset(zero) it after resizing */
+  unsigned char *value = realloc (d, newlen);
 
   if (value == NULL) {
     err(errno, "Cannot reallocate %ld bytes of memory", newlen);
@@ -63,7 +66,7 @@ void *ucrealloc(void *d, size_t oldlen, size_t newlen) {
 
   memset (&value[oldlen], 0, newlen-oldlen);
 
-  return value;
+  return (void *)value;
 }
 
 void ucfree(void *d, size_t len) {

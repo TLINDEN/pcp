@@ -19,6 +19,9 @@
     You can contact me by mail: <tom AT vondein DOT org>.
 */
 
+/*
+  key management, namely import and export routines.
+  we're working with buffers only, no direct file i/o */
 
 #ifndef _HAVE_PCP_MGMT_H
 #define _HAVE_PCP_MGMT_H
@@ -33,16 +36,32 @@
 #include "mem.h"
 #include "ed.h"
 #include "key.h"
+#include "keysig.h"
 #include "buffer.h"
+#include "scrypt.h"
 
 /* key management api, export, import, yaml and stuff */
 
 
 
-/* RFC4880 alike public key export with some simplifications:
+/* RFC4880 alike public key export with some modifications:
 
-   In sig subpackets we're using fixed sized fields instead
-   of the mess they use in rfc4880. Sorry. We use only these types:
+   - Key material is native to us and not specified in the
+     rfc for curve25519/ed25519. Therefore we're doing it like
+     so: mp|sp|cp
+     where mp = master keysigning public key (ed25519), 32 bytes
+           sp = signing public key (ed25519), 32 bytes
+	   cp = encryption public key (curve25519), 32 bytes
+
+   - The various cipher (algorithm) id's are unspecified for
+     our native ciphers. Therefore I created them, starting at
+     33 (afaik 22 is the last officially assigned one). Once
+     those cipher numbers become official, I'll use them instead
+     of my own.
+
+   - The exported public key packet contains a signature. We're
+     filling out all required fields. A signature has a variable
+     number of sig sub packets. We use only these types:
 
             2 = Signature Creation Time     (4 byte)
             3 = Signature Expiration Time   (4 byte)
@@ -50,26 +69,64 @@
            20 = Notation Data               (4 byte flags, N bytes name+value)
            27 = Key Flags                   (1 byte, use 0x02, 0x08 and 0x80
   
-  The actual signature field doesn't contain the 1st 16 bits
-  of the hash, since crypto_sign() created signatures consist
-  of the hash+signature anyway.
+   - We use 3 notation fields:
+     * "owner", which contains the owner name, if set
+     * "mail", which contains the emailaddress, if set
+     * "serial", which contains the 32bit serial number
+
+   - The actual signature field consists of the blake2 hash of
+     (mp|sp|cp|keysig) followed by the nacl signature. However, we do
+     not put an extra 16byte value of the hash, since the nacl
+     signature already contains the full hash. So, an implementation
+     could simply pull the fist 16 bytes of said hash to get
+     the same result.
+
+   - The mp keypair will be used for signing. The recipient can
+     verify the signature, since mp is included.
+
+   - While we put expiration dates for the key and the signature
+     into the export as the rfc demands, we ignore them. Key expiring
+     is not implemented in PCP yet.
 
   So, a full pubkey export looks like this
 
-  version
-  ctime
-  cipher
-  3 x raw keys           \
-  sigheader               > calc hash from this
-   sigsubs (header+data) /
-  hash
-  signature
+    version
+    ctime
+    cipher
+    3 x raw keys            \
+    sigheader                > calc hash from this
+      sigsubs (header+data) /
+    hash
+    signature
 
   We use big-endian always.
 
+  Unlike RC4880 public key exports, we're using Z85 encoding if
+  armoring have been requested by the user. Armored output has
+  a header and a footer line, however they are ignored by the
+  parser and are therefore optional. Newlines, if present, are
+  optional as well.
+
   http://tools.ietf.org/html/rfc4880#section-5.2.3
- 
- */
+
+  The key sig blob will be saved in the Vault if we import a public key
+  unaltered, so we can verify the signature at will anytime. When exporting
+  a foreign public key, we will just put out that key sig blob to the
+  export untouched.
+
+  Currently PCP only support self-signed public key exports.
+
+  We only support one key signature per key. However, it would be easily
+  possible to support foreign keysigs as well in the future.
+
+  -----------
+
+  Secret key are exported in proprietary format. We just encrypt the
+  whole structure symmetrically and prepend it with a nonce.
+  
+*/
+
+/* various helper structs, used internally only */
 struct _pcp_rfc_pubkey_header_t {
   uint8_t version;
   uint32_t ctime;
@@ -127,24 +184,33 @@ typedef struct _pcp_ks_bundle_t pcp_ks_bundle_t;
 
 /* in armored mode, we're using the usual head+foot */
 #define EXP_PK_HEADER "-----BEGIN ED25519-CURVE29915 PUBLIC KEY-----"
-#define EXP_PK_FOOTER "------END ED25519-CURVE29915 PUBLICKEY------"
+#define EXP_PK_FOOTER "------END ED25519-CURVE29915 PUBLIC KEY------"
+#define EXP_SK_HEADER "-----BEGIN ED25519-CURVE29915 PRIVATE KEY-----"
+#define EXP_SK_FOOTER "------END ED25519-CURVE29915 PRIVATE KEY------"
 
 
 /* pubkey export formats */
 #define EXP_FORMAT_NATIVE   0x01
 #define EXP_FORMAT_PBP      0x03
 
-
-/* export public key */
+/* export self signed public key from master secret */
 Buffer *pcp_export_rfc_pub (pcp_key_t *sk);
+
+/* export foreign public key
+   Buffer *pcp_export_rfc_pub_foreign (pcp_pubkey_t *pub); */
 
 /* export public key in pbp format */
 Buffer *pcp_export_pbp_pub(pcp_key_t *sk);
+
+/* export secret key */
+Buffer *pcp_export_secret(pcp_key_t *sk, char *passphrase);
 
 /* import public keys */
 pcp_ks_bundle_t *pcp_import_pub(unsigned char *raw, size_t rawsize);
 pcp_ks_bundle_t *pcp_import_pub_rfc(Buffer *blob);
 pcp_ks_bundle_t *pcp_import_pub_pbp(Buffer *blob);
 
+/* import secret key */
+pcp_key_t *pcp_import_secret(Buffer *cipher, char *passphrase);
 
 #endif // _HAVE_PCP_MGMT_H

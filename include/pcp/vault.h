@@ -35,6 +35,7 @@
 #include "key.h"
 #include "uthash.h"
 #include "buffer.h"
+#include "keysig.h"
 
 struct _vault_t {
   char *filename;

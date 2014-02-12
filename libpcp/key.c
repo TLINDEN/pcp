@@ -296,28 +296,6 @@ pcp_pubkey_t *pubkey2native(pcp_pubkey_t *k) {
 #endif
 }
 
-pcp_keysig_t * keysig2be(pcp_keysig_t *s) {
-#ifdef __CPU_IS_BIG_ENDIAN
-  return s;
-#else
-  uint32_t size = s->size;
-  unsigned char* p = (unsigned char*)&size;
-  if(p[0] != 0) {
-    s->size = htobe32(s->size);
-  }
-  return s;
-#endif
-}
-
-pcp_keysig_t *keysig2native(pcp_keysig_t *s) {
-#ifdef __CPU_IS_BIG_ENDIAN
-  return s;
-#else
-  s->size = be32toh(s->size);
-  return s;
-#endif
-}
-
 void pcp_seckeyblob(void *blob, pcp_key_t *k) {
   memcpy(blob, k, PCP_RAW_KEYSIZE);
 }
@@ -441,25 +419,3 @@ int pcp_sanitycheck_key(pcp_key_t *key) {
   return 0;
 }
 
-pcp_keysig_t *pcp_keysig_new(Buffer *blob) {
-  /* FIXME: sanity check before actually loading it */
-
-  pcp_keysig_t *sk = ucmalloc(sizeof(pcp_keysig_t));
-
-  uint8_t type = buffer_get8(blob);
-  uint32_t size = buffer_get32na(blob);
-  
-  byte *checksum = ucmalloc(32);
-  buffer_get_chunk(blob, checksum, 32);
-  
-  sk->blob = ucmalloc(size);
-  buffer_get_chunk(blob, sk->blob, size);
-
-  sk->size = size;
-  sk->type = type;
-  memcpy(sk->checksum, checksum, 32);
-
-  ucfree(checksum, 32);
-
-  return sk;
-}

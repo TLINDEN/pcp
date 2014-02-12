@@ -93,6 +93,11 @@ int _check_sigsubs(Buffer *blob, pcp_pubkey_t *p, rfc_pub_sig_s *subheader) {
     else if(strncmp(notation, "mail", 4) == 0) {
       memcpy(p->mail, value, vsize);
     }
+    else if(strncmp(notation, "serial", 6) == 0) {
+      uint32_t serial;
+      memcpy(&serial, value, 4);
+      p->serial = htobe32(serial);
+    }
 
     ucfree(notation, nsize);
     ucfree(value, vsize);
@@ -194,9 +199,7 @@ pcp_ks_bundle_t *pcp_import_pub(unsigned char *raw, size_t rawsize) {
 
   if(version == PCP_KEY_VERSION) {
     /* ah, homerun */
-    pcp_ks_bundle_t *b = pcp_import_pub_rfc(blob);
-    pcp_keysig_t *sk = b->s;
-    return b;
+    return pcp_import_pub_rfc(blob);
   }
   else {
     /* nope, it's probably pbp */
@@ -332,8 +335,8 @@ Buffer *pcp_export_pbp_pub(pcp_key_t *sk) {
 
 
 Buffer *pcp_export_rfc_pub (pcp_key_t *sk) {
-  Buffer *out = buffer_new(320, "bo1");
-  Buffer *raw = buffer_new(256, "bs1");
+  Buffer *out = buffer_new(320, "exportbuf");
+  Buffer *raw = buffer_new(256, "keysigbuf");
 
   /* add the header */
   buffer_add8(out, PCP_KEY_VERSION);
@@ -390,6 +393,15 @@ Buffer *pcp_export_rfc_pub (pcp_key_t *sk) {
     buffer_add(raw, sk->mail, strlen(sk->mail));
   }
 
+  /* add serial number notation sub */
+  notation_size = 6 + 4 + 4;
+  buffer_add32be(raw, notation_size);
+  buffer_add8(raw, EXP_SIG_SUB_NOTATION);
+  buffer_add16be(raw, 6);
+  buffer_add16be(raw, 4);
+  buffer_add(raw, "serial", 6);
+  buffer_add32be(raw, sk->serial);
+
   /* add key flags */
   buffer_add32be(raw, 1);
   buffer_add8(raw, 27);
@@ -422,4 +434,125 @@ Buffer *pcp_export_rfc_pub (pcp_key_t *sk) {
   free(sig);
 
   return out;
+}
+
+Buffer *pcp_export_secret(pcp_key_t *sk, char *passphrase) {
+  unsigned char *nonce = NULL;
+  unsigned char *symkey = NULL;
+  unsigned char *cipher = NULL;
+  size_t es;
+
+  Buffer *raw = buffer_new(512, "secretbuf");
+  Buffer *out = buffer_new(512, "secretciperblob");
+
+  buffer_add(raw, sk->mastersecret, 64);
+  buffer_add(raw, sk->secret, 32);
+  buffer_add(raw, sk->edsecret, 64);
+
+  buffer_add(raw, sk->masterpub, 32);
+  buffer_add(raw, sk->pub, 32);
+  buffer_add(raw, sk->edpub, 32);
+
+  if(strlen(sk->owner) > 0) {
+    buffer_add16be(raw, strlen(sk->owner));
+    buffer_add(raw, sk->owner,  strlen(sk->owner));
+  }
+  else
+    buffer_add16be(raw, 0);
+
+  if(strlen(sk->mail) > 0) {
+    buffer_add16be(raw, strlen(sk->mail));
+    buffer_add(raw, sk->mail, strlen(sk->mail));
+  }
+  else
+    buffer_add16be(raw, 0);
+
+  buffer_add64be(raw, sk->ctime);
+  buffer_add32be(raw, sk->version);
+  buffer_add32be(raw, sk->serial);
+
+  nonce = ucmalloc(crypto_secretbox_NONCEBYTES);
+  arc4random_buf(nonce, crypto_secretbox_NONCEBYTES);
+  symkey = pcp_scrypt(passphrase, strlen(passphrase), nonce, crypto_secretbox_NONCEBYTES);
+
+  es = pcp_sodium_mac(&cipher, buffer_get(raw), buffer_size(raw), nonce, symkey);
+
+  buffer_add(out, nonce, crypto_secretbox_NONCEBYTES);
+  buffer_add(out, cipher, es);
+
+  buffer_free(raw);
+  ucfree(nonce, crypto_secretbox_NONCEBYTES);
+  ucfree(symkey, 64);
+  ucfree(cipher, es);
+
+  return out;
+}
+
+pcp_key_t *pcp_import_secret(Buffer *cipher, char *passphrase) {
+  pcp_key_t *sk = ucmalloc(sizeof(pcp_key_t));
+  unsigned char *nonce = ucmalloc(crypto_secretbox_NONCEBYTES);
+  unsigned char *symkey = NULL;
+  unsigned char *clear = NULL;
+  size_t cipherlen = 0;
+  size_t minlen = (64 * 2) * (32 * 4) + 8 + 4 + 4;
+  uint16_t notationlen = 0;
+
+  Buffer *blob = buffer_new(512, "secretdecryptbuf");
+
+  if(buffer_get_chunk(cipher, nonce, crypto_secretbox_NONCEBYTES) == 0)
+    goto impserr1;
+
+  symkey = pcp_scrypt(passphrase, strlen(passphrase), nonce, crypto_secretbox_NONCEBYTES);
+
+  cipherlen = buffer_left(cipher);
+  if(cipherlen < minlen) {
+    fatal("expected decrypted secret key size %ld is less than minimum len %ld\n", cipherlen, minlen);
+    goto impserr1;
+  }
+
+  if(pcp_sodium_verify_mac(&clear, buffer_get_remainder(cipher),
+			   cipherlen, nonce, symkey) != 0)
+    goto impserr1;
+
+  buffer_add(blob, clear, cipherlen - PCP_CRYPTO_ADD);
+
+  buffer_get_chunk(blob, sk->mastersecret, 64);
+  buffer_get_chunk(blob, sk->secret, 32);
+  buffer_get_chunk(blob, sk->edsecret, 64);
+
+  buffer_get_chunk(blob, sk->masterpub, 32);
+  buffer_get_chunk(blob, sk->pub, 32);
+  buffer_get_chunk(blob, sk->edpub, 32);
+
+  notationlen = buffer_get16na(blob);
+  if(notationlen > 0)
+    buffer_get_chunk(blob, sk->owner, notationlen);
+
+  notationlen = buffer_get16na(blob);
+  if(notationlen > 0)
+    buffer_get_chunk(blob, sk->mail, notationlen);
+
+  if(buffer_done(blob) == 1)
+    goto impserr2;
+
+  sk->ctime = buffer_get64na(blob);
+  sk->version = buffer_get32na(blob);
+  sk->serial = buffer_get32na(blob);
+
+  /* ready */
+  ucfree(clear, cipherlen - PCP_CRYPTO_ADD);
+  ucfree(nonce, crypto_secretbox_NONCEBYTES);
+  ucfree(sk, sizeof(pcp_key_t));
+  buffer_free(blob);
+
+  return sk;
+
+ impserr2:
+  ucfree(clear, cipherlen - PCP_CRYPTO_ADD);
+
+ impserr1:
+  ucfree(nonce, crypto_secretbox_NONCEBYTES);
+  ucfree(sk, sizeof(pcp_key_t));
+  buffer_free(blob);
+  return NULL;
 }

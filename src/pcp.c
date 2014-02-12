@@ -366,7 +366,7 @@ int main (int argc, char **argv)  {
     if(vault != NULL) {
       switch (mode) {
       case  PCP_MODE_KEYGEN:
-	pcp_keygen(xpass, outfile);
+	pcp_keygen(xpass);
 	if(xpass != NULL)
 	  free(xpass);
 	break;
@@ -379,12 +379,12 @@ int main (int argc, char **argv)  {
 	if(useid) {
 	  id = pcp_normalize_id(keyid);
 	  if(id != NULL) {
-	    pcp_exportsecret(id, useid, outfile);
+	    pcp_exportsecret(id, useid, outfile, armor);
 	    free(id);
 	  }
 	}
 	else {
-	  pcp_exportsecret(NULL, useid, outfile);
+	  pcp_exportsecret(NULL, useid, outfile, armor);
 	}
 	break;
 

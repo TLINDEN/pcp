@@ -6,13 +6,7 @@ malloc() new pointers in functions only if not NULL, e.g. pcp_gennonce()
 
 generalize file i/0, open+close only in src/, print msg if using stdin or stdout
 
-put the key import and export stuff into the lib, support from/to file and string
-
 check pub key count in pcp.c before calling verify signature, croak if count==0
-
-Implement pbp crypto fix https://github.com/stef/pbp/commit/7d7b7c9ecb7604ad22938f5b68a624093a417bfa
-
-move remaining Export+Import stuff from src => lib.
 
 Update pod key format spec.
 
@@ -22,38 +16,14 @@ vault checksum: add keysigs as well
 
 catch up with changes in c++ api
 
-when fatals_ifany() is called multiple times:
-==44663== Invalid read of size 8
-==44663==    at 0x102AEE1: memcpy (in /usr/local/lib/valgrind/vgpreload_memcheck-amd64-freebsd.so)
-==44663==    by 0x17A6EB0: ??? (in /lib/libc.so.7)
-==44663==    by 0x1799EFA: ??? (in /lib/libc.so.7)
-==44663==    by 0x179B4A8: ??? (in /lib/libc.so.7)
-==44663==    by 0x179D7A8: ??? (in /lib/libc.so.7)
-==44663==    by 0x179D8DB: vfprintf (in /lib/libc.so.7)
-==44663==    by 0x178F3D7: fprintf (in /lib/libc.so.7)
-==44663==    by 0x410416: fatals_ifany (fatal.c:53)
-==44663==    by 0x402F37: main (pcp.c:577)
-==44663==  Address 0x1a11718 is 24 bytes inside a block of size 128 free'd
-==44663==    at 0x1028EDE: free (in /usr/local/lib/valgrind/vgpreload_memcheck-amd64-freebsd.so)
-==44663==    by 0x410452: fatals_ifany (fatal.c:57)
-==44663==    by 0x41AAAD: pcp_import_secret_native (mgmt.c:585)
-==44663==    by 0x41A7BE: pcp_import_secret (mgmt.c:511)
-==44663==    by 0x404D74: pcp_importsecret (keymgmt.c:410)
-==44663==    by 0x402B28: main (pcp.c:427)
+enable formats for secret key exports as well
 
-and 
+Unitttests:
+  - sometimes "no matching pub key in vault, while it's there
+  - sometimes secret key is empty
 
-==44663== Invalid free() / delete / delete[] / realloc()
-==44663==    at 0x1028EDE: free (in /usr/local/lib/valgrind/vgpreload_memcheck-amd64-freebsd.so)
-==44663==    by 0x410452: fatals_ifany (fatal.c:57)
-==44663==    by 0x402F37: main (pcp.c:577)
-==44663==  Address 0x1a11700 is 0 bytes inside a block of size 128 free'd
-==44663==    at 0x1028EDE: free (in /usr/local/lib/valgrind/vgpreload_memcheck-amd64-freebsd.so)
-==44663==    by 0x410452: fatals_ifany (fatal.c:57)
-==44663==    by 0x41AAAD: pcp_import_secret_native (mgmt.c:585)
-==44663==    by 0x41A7BE: pcp_import_secret (mgmt.c:511)
-==44663==    by 0x404D74: pcp_importsecret (keymgmt.c:410)
-==44663==    by 0x402B28: main (pcp.c:427)
+
+
 
 
 Python binding, e.g.:

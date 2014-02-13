@@ -58,8 +58,9 @@
  -y --export-yaml          Export all keys stored in your vault
                            as YAML formatted text. Use -O to put
                            the export into a file.
- -b --pbpcompat            Enable PBP compatibility for public key
-                           exports and imports.
+ -F --format               Export the key in a particular format.
+                           Currently supported: pcp, pbp, yaml,
+                           perl and C.
  
  Encryption Options:
  -e --encrypt              Asym-Encrypt a message. Read from stdin or

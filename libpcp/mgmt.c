@@ -77,35 +77,27 @@ int _check_sigsubs(Buffer *blob, pcp_pubkey_t *p, rfc_pub_sig_s *subheader) {
     uint16_t vsize = buffer_get16na(blob);
 
     char *notation = ucmalloc(nsize);
-    char *value = ucmalloc(vsize);
 
     if(buffer_get_chunk(blob, notation, nsize) == 0)
       return 1;
-    if(buffer_get_chunk(blob, value, nsize) == 0)
-      return 1;
 
     notation[nsize] = '\0';
-    value[nsize] = '\0';
-
-    fprintf(stderr, "got notation %s with value %s\n", notation, value);
 
     if(strncmp(notation, "owner", 5) == 0) {
-      memcpy(p->owner, value, vsize);
+      if(buffer_get_chunk(blob, p->owner, vsize) == 0)
+	return 1;
     }
     else if(strncmp(notation, "mail", 4) == 0) {
-      memcpy(p->mail, value, vsize);
+      if(buffer_get_chunk(blob, p->mail, vsize) == 0)
+	return 1;
     }
     else if(strncmp(notation, "serial", 6) == 0) {
-      uint32_t serial;
-      memcpy(&serial, value, 4);
-      p->serial = be32toh(serial);
+      p->serial = buffer_get32na(blob);
     }
     ucfree(notation, nsize);
-    ucfree(value, vsize);
   }
   else {
     /* unsupported or ignored sig sub */
-    fprintf(stderr, "ignore sub %ld bytes\n", subheader->size);
     if(buffer_get_chunk(blob, ignore, subheader->size) == 0)
       return 1;
   }
@@ -183,6 +175,11 @@ pcp_ks_bundle_t *pcp_import_pub(unsigned char *raw, size_t rawsize) {
   unsigned char *bin = NULL;
   char *z85 = NULL;
 
+  if(rawsize == 0) {
+    fatal("Input file is empty!\n");
+    return NULL;
+  }
+
   Buffer *blob = buffer_new(512, "importblob");
 
   /* first, try to decode the input */
@@ -235,19 +232,15 @@ pcp_ks_bundle_t *pcp_import_pub_rfc(Buffer *blob) {
   if(_get_pk(blob, p) != 0)
     goto be;
 
-  /* check sig header.
-     currently not stored anywhere, but we could sometimes */
+  /* check sig header */
   if(_check_keysig_h(blob, sigheader) != 0)
     goto bef;
 
   /* iterate over subs, if any */
   int i;
-  fprintf(stderr, "numsubs in: %ld\n", sigheader->numsubs);
   for (i=0; i<sigheader->numsubs; i++) {
     subheader->size = buffer_get32na(blob);
     subheader->type = buffer_get8(blob);
-    fprintf(stderr, "read sub type %02x, size %08x %ld\n", subheader->type, subheader->size, subheader->size );
-    fprintf(stderr, "bytes left: %ld\n", buffer_left(blob));
     _check_sigsubs(blob, p, subheader);
   }
 
@@ -259,7 +252,6 @@ pcp_ks_bundle_t *pcp_import_pub_rfc(Buffer *blob) {
   /* fill */
   p->type = PCP_KEY_TYPE_PUBLIC;
   p->version = PCP_KEY_VERSION;
-  p->serial  = arc4random(); /* FIXME: maybe add this as a sig sub? */
 
   pcp_ks_bundle_t *b = ucmalloc(sizeof(pcp_ks_bundle_t));
 
@@ -272,8 +264,6 @@ pcp_ks_bundle_t *pcp_import_pub_rfc(Buffer *blob) {
     b->p = p;
     b->s = sk;
   }
-
-  _dump("sk in", sk->blob, sk->size);
 
   return b;
 
@@ -293,13 +283,20 @@ pcp_ks_bundle_t *pcp_import_pub_pbp(Buffer *blob) {
   char *date  = ucmalloc(19);
   char *ignore = ucmalloc(46);
   char *parts = NULL;
-  unsigned char *sig;
+  unsigned char *sig = ucmalloc(crypto_sign_BYTES);;
   int pnum;
   pbp_pubkey_t *b = ucmalloc(sizeof(pbp_pubkey_t));
   pcp_pubkey_t *tmp = ucmalloc(sizeof(pcp_pubkey_t));
   pcp_pubkey_t *pub = ucmalloc(sizeof(pcp_pubkey_t));
 
   buffer_get_chunk(blob, sig, crypto_sign_BYTES);
+
+  /* make sure it's a pbp */
+  if(_buffer_is_binary(sig, crypto_sign_BYTES) == 0) {
+    fatal("failed to recognize input, that's probably no key\n");
+    goto errimp2;
+  }
+
   buffer_get_chunk(blob, b->sigpub, crypto_sign_PUBLICKEYBYTES);
   buffer_get_chunk(blob, b->edpub, crypto_sign_PUBLICKEYBYTES);
   buffer_get_chunk(blob, b->pub, crypto_box_PUBLICKEYBYTES);
@@ -459,8 +456,6 @@ Buffer *pcp_export_rfc_pub (pcp_key_t *sk) {
     nsubs++;
   buffer_add16be(raw, nsubs);
 
-  fprintf(stderr, "numsubs out: %ld\n", nsubs);
-
   /* add sig ctime */
   buffer_add32be(raw, 4);
   buffer_add8(raw, EXP_SIG_SUB_CTIME);
@@ -484,9 +479,7 @@ Buffer *pcp_export_rfc_pub (pcp_key_t *sk) {
   buffer_add16be(raw, 6);
   buffer_add16be(raw, 4);
   buffer_add(raw, "serial", 6);
-  //buffer_add32be(raw, sk->serial);
-  buffer_add32be(raw, 1);
-  fprintf(stderr, "put serial notation %ld\n", notation_size);
+  buffer_add32be(raw, sk->serial);
 
   /* add name notation sub*/
   if(strlen(sk->owner) > 0) {
@@ -497,7 +490,6 @@ Buffer *pcp_export_rfc_pub (pcp_key_t *sk) {
     buffer_add16be(raw, strlen(sk->owner));
     buffer_add(raw, "owner", 5);
     buffer_add(raw, sk->owner, strlen(sk->owner));
-    fprintf(stderr, "put owner notation %ld\n", notation_size);
   }
 
   /* add mail notation sub */
@@ -509,10 +501,7 @@ Buffer *pcp_export_rfc_pub (pcp_key_t *sk) {
     buffer_add16be(raw, strlen(sk->mail));
     buffer_add(raw, "mail", 4);
     buffer_add(raw, sk->mail, strlen(sk->mail));
-    fprintf(stderr, "put mail notation %ld\n", notation_size);
   }
-
-
  
   /* add key flags */
   buffer_add32be(raw, 1);
@@ -530,8 +519,6 @@ Buffer *pcp_export_rfc_pub (pcp_key_t *sk) {
   /* sign the hash */
   unsigned char *sig = pcp_ed_sign_key(hash, crypto_generichash_BYTES_MAX, sk);
 
-  buffer_dump(raw);
-  buffer_info(raw);
   /* append the signature packet to the output */
   buffer_add(out, buffer_get(raw), buffer_size(raw));
 
@@ -604,6 +591,11 @@ pcp_key_t *pcp_import_secret(unsigned char *raw, size_t rawsize, char *passphras
   size_t clen;
   unsigned char *bin = NULL;
   char *z85 = NULL;
+
+  if(rawsize == 0) {
+    fatal("Input file is empty!\n");
+    return NULL;
+  }
 
   Buffer *blob = buffer_new(512, "importskblob");
 

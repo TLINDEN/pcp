@@ -312,7 +312,6 @@ void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int 
     }
   }
 
-
   if(keyid != NULL) {
     /* keyid specified, check if it exists and if yes, what type it is */
     HASH_FIND_STR(pcppubkey_hash, keyid, pk);
@@ -345,7 +344,7 @@ void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int 
   }
 
 
-  if(is_foreign == 0) {
+  if(is_foreign == 0 && sk->secret[0] == 0) {
     /* decrypt the secret key */
     if(passwd != NULL) {
       sk = pcpkey_decrypt(sk, passwd);
@@ -482,8 +481,14 @@ int pcp_importsecret (vault_t *vault, FILE *in, char *passwd) {
       }
     }
   }
+  else {
+    fatal("Input file is empty!\n");
+    goto errpcsexpu1;
+  }
 
  errpcsexpu1:
+  ucfree(buf, 2048);
+
   return 1;
 }
 
@@ -495,6 +500,10 @@ int pcp_importpublic (vault_t *vault, FILE *in) {
 
   if(buflen > 0) {
     pcp_ks_bundle_t *bundle = pcp_import_pub(buf, buflen);
+
+    if(bundle == NULL)
+      goto errip1;
+
     pcp_keysig_t *sk = bundle->s;
 
     if(bundle != NULL) {
@@ -528,6 +537,10 @@ int pcp_importpublic (vault_t *vault, FILE *in) {
       else
 	goto errip2;
     }
+  }
+  else {
+    fatal("Input file is empty!\n");
+    goto errip1;
   }
 
  errip2:

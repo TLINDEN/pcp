@@ -225,7 +225,6 @@ void pcppubkey_print(pcp_pubkey_t *key, FILE* out) {
   
   free(hash);
   free(r);
-  free(c);
 }
 
 void pcpkey_print(pcp_key_t *key, FILE* out) {

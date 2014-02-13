@@ -22,6 +22,20 @@
 
 #include "z85.h"
 
+size_t _buffer_is_binary(unsigned char *buf, size_t len) {
+  size_t pos;
+  for (pos=0; pos<len; ++pos) {
+    if(buf[pos] == '\0' || (buf[pos] != '\r' && buf[pos] != '\n' && isprint(buf[pos]) == 0)) {
+      break;
+    }
+  }
+  if(pos < len)
+    return pos;
+  else
+    return 0;
+}
+
+
 unsigned char *pcp_padfour(unsigned char *src, size_t srclen, size_t *dstlen) {
   size_t outlen, zerolen;
   unsigned char *dst;
@@ -144,6 +158,16 @@ char *pcp_readz85file(FILE *infile) {
 char *pcp_readz85string(unsigned char *input, size_t bufsize) {
   int i;
   size_t MAXLINE = 1024;
+
+  if(bufsize == 0) {
+    fatal("Input file is empty!\n");
+    return NULL;
+  }
+
+  if(_buffer_is_binary(input, bufsize) > 0) {
+    fatal("input is not z85 encoded and contains pure binary data");
+    return NULL;
+  }
 
   Buffer *z = buffer_new(MAXLINE, "z");
   Buffer *line = buffer_new(MAXLINE, "line");

@@ -23,6 +23,8 @@
 /*  from https://github.com/tlinden/curve-keygen/ */
 #ifndef _HAVE_PCP_Z85_H
 
+#include <ctype.h>
+
 #include "defines.h"
 #include "zmq_z85.h"
 #include "mem.h"
@@ -43,5 +45,7 @@ char *pcp_z85_encode(unsigned char *raw, size_t srclen, size_t *dstlen);
 
 char *pcp_readz85file(FILE *infile);
 char *pcp_readz85string(unsigned char *input, size_t bufsize);
+
+size_t _buffer_is_binary(unsigned char *buf, size_t len);
 
 #endif /*  _HAVE_PCP_Z85_H */

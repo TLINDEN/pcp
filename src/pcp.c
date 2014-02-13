@@ -199,6 +199,9 @@ int main (int argc, char **argv)  {
 	else if(strncmp(optarg, "perl", 3) == 0) {
 	  exportformat = EXP_FORMAT_PERL;
 	}
+	else if(strncmp(optarg, "c", 3) == 0) {
+	  exportformat = EXP_FORMAT_C;
+	}
 	else {
 	  warn("Unknown export format specified, using native\n");
 	  exportformat = EXP_FORMAT_NATIVE;
@@ -587,6 +590,7 @@ int main (int argc, char **argv)  {
   }
   
   fatals_ifany();
+  fatals_done();
   return PCP_EXIT;
 
 }

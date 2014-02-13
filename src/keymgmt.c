@@ -415,6 +415,12 @@ void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int 
       fprintf(out, "%s", buffer_get_str(exported_pk));
     }
   }
+  else if(format == EXP_FORMAT_C) {
+    exported_pk = pcp_export_c_pub(sk);
+    if(exported_pk != NULL) {
+      fprintf(out, "%s", buffer_get_str(exported_pk));
+    }
+  }
 
  errpcpexpu1:
   buffer_free(exported_pk);

@@ -344,7 +344,7 @@ void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int 
   }
 
 
-  if(is_foreign == 0 && sk->secret[0] == 0) {
+  if(is_foreign == 0 && sk->secret[0] == 0 && format <=  EXP_FORMAT_PBP) {
     /* decrypt the secret key */
     if(passwd != NULL) {
       sk = pcpkey_decrypt(sk, passwd);
@@ -401,6 +401,18 @@ void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int 
     else {
       fatal("Exporting foreign public keys in PBP format not possible");
       goto errpcpexpu1;
+    }
+  }
+  else if(format == EXP_FORMAT_YAML) {
+    exported_pk = pcp_export_yaml_pub(sk);
+    if(exported_pk != NULL) {
+      fprintf(out, "%s", buffer_get_str(exported_pk));
+    }
+  }
+  else if(format == EXP_FORMAT_PERL) {
+    exported_pk = pcp_export_perl_pub(sk);
+    if(exported_pk != NULL) {
+      fprintf(out, "%s", buffer_get_str(exported_pk));
     }
   }
 

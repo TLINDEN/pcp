@@ -114,7 +114,7 @@ int main (int argc, char **argv)  {
     { NULL,              0,                 NULL,            0 }
   };
 
-  while ((opt = getopt_long(argc, argv, "klV:vdehsO:i:I:pSPRtEx:DzZr:gcymf:b1",
+  while ((opt = getopt_long(argc, argv, "klV:vdehsO:i:I:pSPRtEx:DzZr:gcymf:b1F:",
 			    longopts, NULL)) != -1) {
   
     switch (opt)  {
@@ -186,6 +186,18 @@ int main (int argc, char **argv)  {
 	}
 	else if(strncmp(optarg, "pcp", 3) == 0) {
 	  exportformat = EXP_FORMAT_NATIVE;
+	}
+	else if(strncmp(optarg, "yaml", 3) == 0) {
+	  exportformat = EXP_FORMAT_YAML;
+	}
+	else if(strncmp(optarg, "c", 3) == 0) {
+	  exportformat = EXP_FORMAT_C;
+	}
+	else if(strncmp(optarg, "py", 3) == 0) {
+	  exportformat = EXP_FORMAT_PY;
+	}
+	else if(strncmp(optarg, "perl", 3) == 0) {
+	  exportformat = EXP_FORMAT_PERL;
 	}
 	else {
 	  warn("Unknown export format specified, using native\n");

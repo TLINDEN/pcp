@@ -190,8 +190,13 @@ typedef struct _pcp_ks_bundle_t pcp_ks_bundle_t;
 
 
 /* pubkey export formats */
-#define EXP_FORMAT_NATIVE   0x01
-#define EXP_FORMAT_PBP      0x03
+#define EXP_FORMAT_NATIVE   1
+#define EXP_FORMAT_PBP      2
+#define EXP_FORMAT_YAML     3
+#define EXP_FORMAT_C        4
+#define EXP_FORMAT_PY       5
+#define EXP_FORMAT_PERL     6
+
 
 /* export self signed public key from master secret */
 Buffer *pcp_export_rfc_pub (pcp_key_t *sk);
@@ -201,6 +206,12 @@ Buffer *pcp_export_rfc_pub (pcp_key_t *sk);
 
 /* export public key in pbp format */
 Buffer *pcp_export_pbp_pub(pcp_key_t *sk);
+
+/* export public key in yaml format */
+Buffer *pcp_export_yaml_pub(pcp_key_t *sk);
+
+/* export public key in perl format */
+Buffer *pcp_export_perl_pub(pcp_key_t *sk);
 
 /* export secret key */
 Buffer *pcp_export_secret(pcp_key_t *sk, char *passphrase);

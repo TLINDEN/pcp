@@ -373,6 +373,83 @@ pcp_ks_bundle_t *pcp_import_pub_pbp(Buffer *blob) {
   return NULL;
 }
 
+Buffer *pcp_export_yaml_pub(pcp_key_t *sk) {
+  Buffer *b = buffer_new_str("yamlbuf");
+  struct tm *c;
+  time_t t = time(0);
+  c = localtime(&t);
+
+  buffer_add_str(b, "#\n# YAML export of public key\n");
+  buffer_add_str(b, "# Generated on: %04d-%02d-%02dT%02d:%02d:%02d\n",
+		 c->tm_year+1900, c->tm_mon+1, c->tm_mday,
+		 c->tm_hour, c->tm_min, c->tm_sec);
+  buffer_add_str(b, "---\n");
+
+  buffer_add_str(b, "id:         %s\n", sk->id);
+  buffer_add_str(b, "owner:      %s\n", sk->owner);
+  buffer_add_str(b, "mail:       %s\n", sk->mail);
+  buffer_add_str(b, "ctime:      %ld\n", (long int)sk->ctime);
+  buffer_add_str(b, "version:    %08x\n", sk->version);
+  buffer_add_str(b, "serial:     %08x\n", sk->serial);
+  buffer_add_str(b, "type:       public\n");
+  buffer_add_str(b, "cryptpub:   "); buffer_add_hex(b, sk->pub, 32); buffer_add_str(b, "\n");
+  buffer_add_str(b, "sigpub:     "); buffer_add_hex(b, sk->edpub, 32); buffer_add_str(b, "\n");
+  buffer_add_str(b, "masterpub:  "); buffer_add_hex(b, sk->masterpub, 32); buffer_add_str(b, "\n");
+
+  return b;
+}
+
+Buffer *pcp_export_perl_pub(pcp_key_t *sk) {
+  Buffer *b = buffer_new_str("perlbuf");
+  struct tm *c;
+  time_t t = time(0);
+  c = localtime(&t);
+  size_t i;
+
+  buffer_add_str(b, "#\n# Perl export of public key\n");
+  buffer_add_str(b, "# Generated on: %04d-%02d-%02dT%02d:%02d:%02d\n",
+		 c->tm_year+1900, c->tm_mon+1, c->tm_mday,
+		 c->tm_hour, c->tm_min, c->tm_sec);
+  buffer_add_str(b, "# \nmy %%key = (\n");
+
+  buffer_add_str(b, "            id       => \"%s\",\n", sk->id);
+  buffer_add_str(b, "            owner    => \"%s\",\n", sk->owner);
+  buffer_add_str(b, "            mail     => \"%s\",\n", sk->mail);
+  buffer_add_str(b, "            ctime    => %ld,\n", (long int)sk->ctime);
+  buffer_add_str(b, "            version  => x%08x,\n", sk->version);
+  buffer_add_str(b, "            serial   => x%08x,\n", sk->serial);
+  buffer_add_str(b, "            type     => \"public\",\n");
+
+  buffer_add_str(b, "            cryptpub => [");
+  for (i=0; i<31; ++i) {
+    buffer_add_str(b, "x%02x,", sk->pub[i]);
+    if(i % 8 == 7 && i > 0)
+      buffer_add_str(b, "\n                          ");
+  }
+  buffer_add_str(b, "x%02x],\n", sk->pub[31]);
+
+  buffer_add_str(b, "            sigpub =>    [");
+  for (i=0; i<31; ++i) {
+    buffer_add_str(b, "x%02x,", sk->edpub[i]);
+    if(i % 8 == 7 && i > 0)
+      buffer_add_str(b, "\n                          ");
+  }
+  buffer_add_str(b, "x%02x],\n", sk->edpub[31]);
+  
+  buffer_add_str(b, "            masterpub => [");
+  for (i=0; i<31; ++i) {
+    buffer_add_str(b, "x%02x,", sk->masterpub[i]);
+    if(i % 8 == 7 && i > 0)
+      buffer_add_str(b, "\n                          ");
+  }
+  buffer_add_str(b, "x%02x]\n", sk->masterpub[31]);
+
+  buffer_add_str(b, ");\n");
+  
+
+  return b;
+}
+
 Buffer *pcp_export_pbp_pub(pcp_key_t *sk) {
   struct tm *v, *c;
   unsigned char *signature = NULL;

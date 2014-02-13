@@ -20,9 +20,7 @@ Update pod key format spec.
 
 vault checksum: add keysigs as well
 
-Secretkey import: fill in calculated fields (keyid etc), add  pcp_importsecret() wrapper to keymgmt.c
-
-**** PUBKEY SIGSUB Put Serial as string ****
+catch up with changes in c++ api
 
 when fatals_ifany() is called multiple times:
 ==44663== Invalid read of size 8

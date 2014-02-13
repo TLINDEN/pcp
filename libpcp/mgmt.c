@@ -414,7 +414,7 @@ Buffer *pcp_export_perl_pub(pcp_key_t *sk) {
 
   buffer_add_str(b, "            id       => \"%s\",\n", sk->id);
   buffer_add_str(b, "            owner    => \"%s\",\n", sk->owner);
-  buffer_add_str(b, "            mail     => \"%s\",\n", sk->mail);
+  buffer_add_str(b, "            mail     => '%s',\n", sk->mail); 
   buffer_add_str(b, "            ctime    => %ld,\n", (long int)sk->ctime);
   buffer_add_str(b, "            version  => x%08x,\n", sk->version);
   buffer_add_str(b, "            serial   => x%08x,\n", sk->serial);

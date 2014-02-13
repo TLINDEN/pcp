@@ -43,9 +43,9 @@ void pcphash_del(void *key, int type) {
   }
   else if(type == PCP_KEYSIG_NATIVE || type == PCP_KEYSIG_PBP) {
     pcp_keysig_t *keysig = (pcp_keysig_t *)key;
-    HASH_DEL(pcpkeysig_hash, keysig);
     memset(keysig->blob, 0, keysig->size);
     free(keysig->blob);
+    HASH_DEL(pcpkeysig_hash, (pcp_keysig_t *)key);
   }
   else {
     HASH_DEL(pcppubkey_hash, (pcp_pubkey_t *)key);

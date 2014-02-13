@@ -43,7 +43,8 @@ unsigned char *pcp_derivekey(char *passphrase, unsigned char *nonce) {
   key[31] &= 127;
   key[31] |= 64;
 
-  memset(passphrase, 0, plen);
+  /* disabled, must be done outside 
+     memset(passphrase, 0, plen); */
 
   return key;
 }
@@ -52,7 +53,7 @@ unsigned char *pcp_derivekey(char *passphrase, unsigned char *nonce) {
 char *pcp_getkeyid(pcp_key_t *k) {
   uint32_t s, p;
   p = jen_hash(k->pub, 32, JEN_PSALT);
-  s = jen_hash(k->secret, 32, JEN_SSALT);
+  s = jen_hash(k->edpub, 32, JEN_SSALT);
   char *id = ucmalloc(17);
   snprintf(id, 17, "%08X%08X", p, s);
   return id;
@@ -111,8 +112,8 @@ pcp_key_t * pcpkey_new () {
   memcpy (key->mastersecret, ms, 64);
   memcpy (key->pub, cp, 32);
   memcpy (key->secret, cs, 32);
-  memcpy (key->edpub, ss, 32);
-  memcpy (key->edsecret, sp, 64);
+  memcpy (key->edpub, sp, 32);
+  memcpy (key->edsecret, ss, 64);
   memcpy (key->id, pcp_getkeyid(key), 17);
   
   key->ctime = (long)time(0);

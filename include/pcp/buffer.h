@@ -34,6 +34,8 @@
 #ifndef HAVE_PCP_BUFFER_H
 #define HAVE_PCP_BUFFER_H
 
+#include <stdio.h>
+#include <stdarg.h>
 #include "mem.h"
 #include "util.h"
 #include "defines.h"
@@ -46,6 +48,7 @@ struct _pcp_buffer {
   size_t size;
   size_t offset;  /* read position */
   size_t end;     /* write position, data end */
+  uint8_t isstring; /* treat as char array */
   void *buf;
 };
 
@@ -53,6 +56,9 @@ typedef struct _pcp_buffer Buffer;
 
 /* create a new buffer, initially alloc'd to blocksize and zero-filled */
 Buffer *buffer_new(size_t blocksize, char *name);
+
+/* same, but enable isstring */
+Buffer *buffer_new_str(char *name);
 
 /* initialize buffer vars */
 void buffer_init(Buffer *b, size_t blocksize, char *name);
@@ -71,6 +77,12 @@ void buffer_add(Buffer *b, const void *data, size_t len);
 
 /* the same but use another buffer as source */
 void buffer_add_buf(Buffer *dst, Buffer *src);
+
+/* add a string, support printf style */
+void buffer_add_str(Buffer *b, const char * fmt, ...);
+
+/* add some binary data to the buffer, but as hex string */
+void buffer_add_hex(Buffer *b, void *data, size_t len);
 
 /* resize the buffer if necessary */
 void buffer_resize(Buffer *b, size_t len);

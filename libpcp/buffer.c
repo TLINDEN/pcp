@@ -34,10 +34,17 @@ void buffer_init(Buffer *b, size_t blocksize, char *name) {
   b->name = ucmalloc(strlen(name)+1);
   b->size = blocksize;
   b->allocated = 1;
+  b->isstring = 0;
   b->offset = 0;
   b->end = 0;
   b->blocksize = blocksize;
   memcpy(b->name, name, strlen(name)+1);
+}
+
+Buffer *buffer_new_str(char *name) {
+  Buffer *b = buffer_new(256, name);
+  b->isstring = 1;
+  return b;
 }
 
 void buffer_free(Buffer *b) {
@@ -66,6 +73,26 @@ void buffer_add(Buffer *b, const void *data, size_t len) {
   buffer_resize(b, len);
   memcpy(b->buf + b->end, data, len);
   b->end += len;
+}
+
+void buffer_add_str(Buffer *b, const char * fmt, ...) {
+  va_list ap;
+  char *dst;
+  va_start(ap, fmt);
+  vasprintf(&dst, fmt, ap);
+  va_end(ap);
+  if(b->end > 0)
+    b->end--;
+  buffer_add(b, dst, strlen(dst)+1);
+  free(dst);
+}
+
+void buffer_add_hex(Buffer *b, void *data, size_t len) {
+  size_t i;
+  unsigned char *d = data;
+  for(i=0; i<len; ++i) {
+    buffer_add_str(b, "%02x", d[i]);
+  }
 }
 
 void buffer_add_buf(Buffer *dst, Buffer *src) {

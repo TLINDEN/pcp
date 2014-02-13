@@ -450,6 +450,45 @@ Buffer *pcp_export_perl_pub(pcp_key_t *sk) {
   return b;
 }
 
+void pcp_export_c_pub_var(Buffer *b, char *var, unsigned char *d, size_t len) {
+  buffer_add_str(b, "unsigned char %s[%ld] = {\n  ", var, len);
+  size_t i;
+  for(i=0; i<len-1; ++i) {
+    buffer_add_str(b, "0x%02x, ", (unsigned int)d[i]);
+    if (i % 8 == 7) buffer_add_str(b, "\n  ");
+  }
+  buffer_add_str(b, "0x%02x\n};\n", (unsigned int)d[i]);
+
+}
+
+Buffer *pcp_export_c_pub(pcp_key_t *sk) {
+  Buffer *b = buffer_new_str("c-buf");
+  struct tm *c;
+  time_t t = time(0);
+  c = localtime(&t);
+  size_t i;
+
+  buffer_add_str(b, "/*\n * C export of public key\n");
+  buffer_add_str(b, " * Generated on: %04d-%02d-%02dT%02d:%02d:%02d\n",
+		 c->tm_year+1900, c->tm_mon+1, c->tm_mday,
+		 c->tm_hour, c->tm_min, c->tm_sec);
+  buffer_add_str(b, " */\n");
+
+  buffer_add_str(b, "char id[] = \"%s\";\n", sk->id);
+  buffer_add_str(b, "char owner[] = \"%s\";\n", sk->owner);
+  buffer_add_str(b, "char mail[] = \"%s\";\n", sk->mail);
+  buffer_add_str(b, "uint64_t ctime = %ld;\n", sk->ctime);
+  buffer_add_str(b, "uint32_t version = 0x%08x;\n", sk->version);
+  buffer_add_str(b, "uint32_t serial = 0x%08x;\n", sk->serial);
+  buffer_add_str(b, "char[] type = \"public\";\n");
+
+  pcp_export_c_pub_var(b, "cryptpub", sk->pub, 32);
+  pcp_export_c_pub_var(b, "sigpub", sk->pub, 32);
+  pcp_export_c_pub_var(b, "masterpub", sk->pub, 32);
+
+  return b;
+}
+
 Buffer *pcp_export_pbp_pub(pcp_key_t *sk) {
   struct tm *v, *c;
   unsigned char *signature = NULL;

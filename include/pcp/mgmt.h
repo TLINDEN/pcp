@@ -213,6 +213,9 @@ Buffer *pcp_export_yaml_pub(pcp_key_t *sk);
 /* export public key in perl format */
 Buffer *pcp_export_perl_pub(pcp_key_t *sk);
 
+/* export public key in C format */
+Buffer *pcp_export_c_pub(pcp_key_t *sk);
+
 /* export secret key */
 Buffer *pcp_export_secret(pcp_key_t *sk, char *passphrase);
 

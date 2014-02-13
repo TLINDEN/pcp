@@ -54,7 +54,10 @@ void fatals_ifany() {
     if(errno) {
       fprintf(stderr, "Error: %s\n", strerror(errno));
     }
-    free(PCP_ERR);
     PCP_EXIT = 1;
   }
+}
+
+void fatals_done() {
+  free(PCP_ERR);
 }

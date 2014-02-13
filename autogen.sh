@@ -2,15 +2,15 @@
 
 cat <<EOF > clean.sh
 #!/bin/sh
-find . -name Makefile -exec rm {} \;
-find . -name Makefile.in -exec rm {} \;
-find . -name "*~"     -exec rm {} \;
-find . -name config.h -exec rm {} \;
-find . -name "stamp*"  -exec rm {} \;
-find . -name .deps    -exec rm -rf {} \;
-find . -name .libs    -exec rm -rf {} \;
-find . -name .o    -exec rm -rf {} \;
-find . -name .lo    -exec rm -rf {} \;
+find . -name Makefile -exec rm {} \;      > /dev/null 2>&1
+find . -name Makefile.in -exec rm {} \;      > /dev/null 2>&1
+find . -name "*~"     -exec rm {} \;      > /dev/null 2>&1
+find . -name config.h -exec rm {} \;      > /dev/null 2>&1
+find . -name "stamp*"  -exec rm {} \;      > /dev/null 2>&1
+find . -name .deps    -exec rm -rf {} \;      > /dev/null 2>&1
+find . -name .libs    -exec rm -rf {} \;      > /dev/null 2>&1
+find . -name .o    -exec rm -rf {} \;      > /dev/null 2>&1
+find . -name .lo    -exec rm -rf {} \;      > /dev/null 2>&1
 
 rm -rf aclocal.m4 libtool man/pcp1.1 configure config.* config autom4te.cache tests/test* tests/v* tests/stresstest/* libpcp/libpcp1.pc
 rm clean.sh

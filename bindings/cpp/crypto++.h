@@ -48,12 +48,10 @@ namespace pcp {
 
     // PK encryption methods
     // sender pubkey is P
-    std::string encrypt(std::vector<unsigned char> message);
-    std::string encrypt(std::string message);
-    std::string encrypt(unsigned char *message, size_t mlen);
+    bool encrypt(FILE *in, FILE *out, bool sign);
 
     // decrypt using P or use vault if defined
-    ResultSet decrypt(std::string cipher);
+    bool decrypt(FILE *in, FILE *out, bool verify);
   };
 };
 

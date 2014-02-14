@@ -19,7 +19,35 @@
 	to work with binary data in various, flexible and
 	error prone ways. Cribbed from the code in
 	openssh/buffer.c.
-	
+
+	Import and export of keys is now being done in the
+	lib and no more in src. Src only opens files and
+	asks for passwords and stuff like this.
+
+	Changed public key export format to RFC4880, see
+	include/pcp/mgmt.h for details. Pcp uses only a
+	small subset of what the rfc provides, I left out
+	most of the bloat. Also our keys are incompatible
+	with OpenPGP of course, since our ciphers are
+	different. But it's a standardized format, easy
+	to work with and flexible. From this point on
+	it should be possible to import old public keys
+	even if the internal structure changed. This wasn't
+	possible in the past.
+
+	The secret key export format changed as well. It
+	is proprietary but more flexible than the old one
+	as well. It now only contains static data, whatever
+	can be calculated later isn't stored. Everything
+	is being put into one stream and completely encrypted
+	symmetrically. As with the new pubkey export format
+	this one as well is independent of internal structs
+	in pcp and should therefore be future proof.
+
+	Lots of refactoring have been done to clear things
+	out and make the system work with the changes
+	above.
+
 0.2.0	ED25519 and Curve25519 keys are now generated
 	separately (previously they were generated from
 	one random seed, the curve had been derived from

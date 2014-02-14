@@ -29,6 +29,8 @@ Crypto::Crypto(Key &skey, PubKey &pkey) {
   P = pkey;
   S = skey;
   havevault = false;
+  pcphash_init();
+  pcphash_add(P.K, PCP_KEY_TYPE_PUBLIC);
 }
 
 Crypto::Crypto(Vault &v, Key &skey, PubKey &pkey) {
@@ -38,120 +40,19 @@ Crypto::Crypto(Vault &v, Key &skey, PubKey &pkey) {
   havevault = true;
 }
 
-string Crypto::encrypt(string message) {
-  unsigned char *m = (unsigned char *)ucmalloc(message.size() + 1);
-  memcpy(m, message.c_str(), message.size());
-  return Crypto::encrypt(m, message.size() + 1);
+bool Crypto::encrypt(FILE *in, FILE *out, bool sign) {
+  pcp_pubkey_t *pubhash = NULL;
+  HASH_ADD_STR( pubhash, id, P.K);
+  size_t clen = pcp_encrypt_file(in, out, S.K, pubhash, sign);
+  if(clen <= 0)
+     throw exception();
+  return true;
 }
 
-string Crypto::encrypt(vector<unsigned char> message) {
-  unsigned char *m = (unsigned char *)ucmalloc(message.size());
-  for(size_t i=0; i<message.size(); ++i)
-    m[i] = message[i];
-  return Crypto::encrypt(m, message.size());
-}
-
-string Crypto::encrypt(unsigned char *message, size_t mlen) {
-  if(S.is_encrypted())
-    throw exception("Error: cannot encrypt with an encrypted secret key, decrypt it before using.");
-
-  size_t clen, zlen, rlen;
-  unsigned char *cipher;
-
-  cipher = pcp_box_encrypt(S.K, P.K, message, mlen, &clen);
-
-  if(cipher == NULL)
+bool Crypto::decrypt(FILE *in, FILE *out, bool verify) {
+  if(pcp_decrypt_file(in, out, S.K, NULL, verify) <= 0)
     throw exception();
-
-  rlen = clen + crypto_hash_BYTES;
-  unsigned char *combined = (unsigned char *)ucmalloc(rlen);
-  unsigned char *hash = (unsigned char *)ucmalloc(crypto_hash_BYTES);
-
-  crypto_hash(hash, (unsigned char*)S.K->id, 16);
-  memcpy(combined, hash, crypto_hash_BYTES);
-  memcpy(&combined[crypto_hash_BYTES], cipher, clen);
-
-  // combined consists of:
-  // keyid|nonce|cipher
-  char *encoded = pcp_z85_encode(combined, rlen, &zlen);
-
-  if(encoded == NULL)
-    throw exception();
-
-  return string((char *)encoded);
-}
-
-ResultSet Crypto::decrypt(string cipher) {
- if(S.is_encrypted())
-    throw exception("Error: cannot decrypt with an encrypted secret key, decrypt it before using.");
-
-  size_t clen;
-  unsigned char *combined = pcp_z85_decode((char *)cipher.c_str(), &clen);
-
-  if(combined == NULL)
-    throw exception();
-
-  unsigned char *encrypted = (unsigned char*)ucmalloc(clen - crypto_hash_BYTES);
-  unsigned char *hash = (unsigned char*)ucmalloc(crypto_hash_BYTES);
-  unsigned char *check = (unsigned char*)ucmalloc(crypto_hash_BYTES);
-
-  memcpy(hash, combined, crypto_hash_BYTES);
-  memcpy(encrypted, &combined[crypto_hash_BYTES], clen - crypto_hash_BYTES);
-
-  PubKey sender;
-  crypto_hash(check, (unsigned char*)P.K->id, 16);
-
-  if(memcmp(check, hash, crypto_hash_BYTES) != 0) {
-    if(havevault) {
-      PubKeyMap pmap = vault.pubkeys();
-      for(PubKeyIterator it=pmap.begin(); it != pmap.end(); ++it) {
-	crypto_hash(check, (unsigned char*)it->first.c_str(), 16);
-	if(memcmp(check, hash, crypto_hash_BYTES) == 0) {
-	  sender = it->second;
-	  break;
-	}
-      }
-    }
-  }
-  else {
-    sender = P;
-  }
-
-  if(!sender) {
-    free(combined);
-    free(hash);
-    free(check);
-    free(encrypted);
-    throw exception("No public key usable for decryption found!");
-  }
-
-  size_t dlen;
-  unsigned char *decrypted = (unsigned char*)pcp_box_decrypt(S.K, sender.K,
-                                             encrypted,
-                                             clen - crypto_hash_BYTES, &dlen);
-
-  if(decrypted == NULL) {
-    free(combined);
-    free(hash);
-    free(check);
-    free(encrypted);
-    throw exception();
-  }
-
-  ResultSet r;
-  r.Uchar  = decrypted;
-  r.String = string((char *)decrypted);
-  r.Size   = dlen;
-
-  for(size_t i=0; i<dlen; ++i)
-    r.Vector.push_back(decrypted[i]);
-
-  free(combined);
-  free(hash);
-  free(check);
-  free(encrypted);
-  
-  return r;
+  return true;
 }
 
 

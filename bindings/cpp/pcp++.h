@@ -36,5 +36,6 @@
 #include "crypto++.h"
 #include "sign++.h"
 #include "helpers++.h"
+#include "buffer++.h"
 
 #endif // _HAVE_PCPPP_H

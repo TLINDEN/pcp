@@ -254,42 +254,34 @@ PubKey::PubKey(pcp_pubkey_t *k, bool store) {
   K = k;
 }
 
+
+// FIXME: use Buffer class for stuff like this
 PubKey::PubKey(string &z85encoded) {
   stored = false;
 
   if(z85encoded.length() == 0)
     throw pcp::exception("Error: zero length input");
 
+  Buffer *blob = buffer_new(256, "pub");
+  buffer_add(blob, z85encoded.c_str(), z85encoded.length());
 
-  size_t clen;
-  unsigned char *z85decoded =
-    pcp_z85_decode(
-		   pcp_readz85string((unsigned char *)z85encoded.c_str(),
-				     z85encoded.length()),
-		   &clen); // FIXME: too complicated, must be more wrapperish
+  pcp_ks_bundle_t *KS = pcp_import_pub(buffer_get(blob), buffer_size(blob));
 
-  if(z85decoded == NULL)
-    throw pcp::exception("Error: could not decode input - it's probably not Z85.\n");
-
-  if(clen != PCP_RAW_PUBKEYSIZE) {
-    free(z85decoded);
-    char m[256];
-    sprintf(m, "Error: decoded input didn't result to a proper sized key (got %ld bytes)!\n", clen);
-    throw pcp::exception(string(m));
+  if(KS == NULL) {
+    buffer_free(blob);
+    throw pcp::exception();
   }
+  pcp_pubkey_t *pub = KS->p;
 
-  // all good now, import the blob
-  pcp_pubkey_t *key = (pcp_pubkey_t *)ucmalloc(sizeof(pcp_pubkey_t));
-  memcpy(key, z85decoded, PCP_RAW_PUBKEYSIZE);
-  pubkey2native(key);
-
-  if(pcp_sanitycheck_pub(key) != 0) {
-    free(key);
-    free(z85decoded);
+  if(pcp_sanitycheck_pub(pub) != 0) {
+    free(KS->p);
+    free(KS->s);
+    free(KS);
+    buffer_free(blob);
     throw pcp::exception();
   }
 
-  K = key;
+  K = pub;
 }
 
 PubKey::~PubKey() {

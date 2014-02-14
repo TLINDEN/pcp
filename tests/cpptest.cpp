@@ -14,8 +14,25 @@ void pr(string name, unsigned char *data, size_t len) {
   cout << endl;
 }
 
+FILE *_openwr(string file) {
+  FILE *fd;
+  if((fd = fopen(file.c_str(), "wb+")) == NULL) {
+    throw pcp::exception("Could not open output file " + file + "\n");
+  }
+  return fd;
+}
+
+FILE *_openrd(string file) {
+  FILE *fd;
+  if((fd = fopen(file.c_str(), "rb")) == NULL) {
+    throw pcp::exception("Could not open input file " + file + "\n");
+  }
+  return fd;
+}
+
 void test0() {
   // test keygen and crypto
+  FILE *CLEAR, *CIPHER, *DECRYPTED;
   Key A = Key("a", "alicia", "alicia@local");
   Key B = Key("b", "bobby",  "bobby@local");
   PubKey PA = A.get_public();
@@ -26,14 +43,35 @@ void test0() {
   
   Crypto A2B(A, PB);
   Crypto B2A(B, PA);
-  
-  string cipher = A2B.encrypt("Hallo");
-  ResultSet res = B2A.decrypt(cipher);
 
-  if(res.String == "Hallo")
-    cout << "0 ok" << endl;
+  CLEAR = _openwr("testcppclear");
+  fprintf(CLEAR, "HALLO\n");
+  fclose(CLEAR);
+  
+  CIPHER = _openwr("testcpcipher");
+  CLEAR = _openrd("testcppclear");
+
+  if(A2B.encrypt(CLEAR, CIPHER, false)) {
+
+    CIPHER = _openrd("testcpcipher");
+    DECRYPTED = _openwr("testcppdecrypted");
+
+    if(B2A.decrypt(CIPHER, DECRYPTED, false)) {
+
+      DECRYPTED = _openrd("testcppdecrypted");
+      char *got = (char *)ucmalloc(10);
+      fread(got, 1, 6, DECRYPTED);
+      if(strncmp(got, "HALLO", 5) != 0) {
+	throw pcp::exception();
+      }
+    }
+    else
+      throw pcp::exception("failed to decrypt");
+  }
   else
-    throw pcp::exception("wtf - decryption failed (uncatched as well)");
+    throw pcp::exception("failed to encrypt");
+
+  cout << "0 ok" << endl;
 }
 
 void test1() {
@@ -102,6 +140,22 @@ void test3() {
     cout << "3 ok" << endl;
 }
 
+void test4() {
+  unsigned char *r = (unsigned char*)ucmalloc(32);
+  int i;
+  Buf b;
+
+  for(i=0; i<10; i++) {
+    arc4random_buf(r, 32);
+    b.add(r, 32);
+  }
+
+  if(b.size() == 32 * 10)
+    cout << "3 ok" << endl;
+  else
+    cout << "3 failed" << endl;
+}
+
 int main(int argc, char **argv) {
   sodium_init();
 
@@ -122,6 +176,10 @@ int main(int argc, char **argv) {
       break;
 
     case '3':
+      test3();
+      break;
+
+    case '4':
       test3();
       break;
 

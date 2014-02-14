@@ -244,6 +244,8 @@ int main (int argc, char **argv)  {
       case 'x':
 	xpass = ucmalloc(strlen(optarg)+1);
 	strncpy(xpass, optarg, strlen(optarg)+1);
+	if(strncmp(xpass, "n/a", 3) == 0)
+	  xpass[0] = '\0';
 	break;
       case 'r':
 	p_add(&recipient, optarg);

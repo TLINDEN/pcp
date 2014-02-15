@@ -22,6 +22,7 @@ extern "C" {
 #include "pcp/mem.h"
 #include "pcp/mgmt.h"
 #include "pcp/pad.h"
+#include "pcp/pcpstream.h"
 #include "pcp/platform.h"
 #include "pcp/plist.h"
 #include "pcp/randomart.h"

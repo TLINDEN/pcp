@@ -43,15 +43,23 @@ Crypto::Crypto(Vault &v, Key &skey, PubKey &pkey) {
 bool Crypto::encrypt(FILE *in, FILE *out, bool sign) {
   pcp_pubkey_t *pubhash = NULL;
   HASH_ADD_STR( pubhash, id, P.K);
-  size_t clen = pcp_encrypt_file(in, out, S.K, pubhash, sign);
+  Pcpstream *pin = ps_new_file(in);
+  Pcpstream *pout = ps_new_file(out);
+  size_t clen = pcp_encrypt_stream(pin, pout, S.K, pubhash, sign);
   if(clen <= 0)
      throw exception();
+  ps_close(pin);
+  ps_close(pout);
   return true;
 }
 
 bool Crypto::decrypt(FILE *in, FILE *out, bool verify) {
-  if(pcp_decrypt_file(in, out, S.K, NULL, verify) <= 0)
+  Pcpstream *pin = ps_new_file(in);
+  Pcpstream *pout = ps_new_file(out);
+  if(pcp_decrypt_stream(pin, pout, S.K, NULL, verify) <= 0)
     throw exception();
+  ps_close(pin);
+  ps_close(pout);
   return true;
 }
 

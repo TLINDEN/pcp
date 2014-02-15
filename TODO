@@ -29,6 +29,13 @@ Unitttests:
 
   - sometimes secret key is empty
 
+libpcp/crypto.c: the stream versions must return the output streams, not close them
+
+
+
+crypto.c: In function 'pcp_encrypt_stream':
+crypto.c:379: warning: assignment makes integer from pointer without a cast
+crypto.c:383: warning: assignment makes integer from pointer without a cast
 
 
 

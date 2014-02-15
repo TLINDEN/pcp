@@ -30,8 +30,6 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
   size_t dlen;
   uint8_t head;
 
-
-
   if(infile == NULL)
     in = stdin;
   else {
@@ -112,10 +110,16 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
     goto errde3;
   }
 
+  Pcpstream *pin = ps_new_file(in);
+  Pcpstream *pout = ps_new_file(out);
+
   if(symkey == NULL)
-    dlen = pcp_decrypt_file(in, out, secret, NULL, verify);
+    dlen = pcp_decrypt_stream(pin, pout, secret, NULL, verify);
   else
-    dlen = pcp_decrypt_file(in, out, NULL, symkey, verify);
+    dlen = pcp_decrypt_stream(pin, pout, NULL, symkey, verify);
+
+  ps_close(pin);
+  ps_close(pout);
 
   if(dlen > 0) {
     if(verify)
@@ -259,10 +263,17 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
 
   size_t clen = 0;
 
+  Pcpstream *pin = ps_new_file(in);
+  Pcpstream *pout = ps_new_file(out);
+
+
   if(self == 1)
-    clen = pcp_encrypt_file_sym(in, out, symkey, 0, NULL);
+    clen = pcp_encrypt_stream_sym(pin, pout, symkey, 0, NULL);
   else
-    clen = pcp_encrypt_file(in, out, secret, pubhash, signcrypt);
+    clen = pcp_encrypt_stream(pin, pout, secret, pubhash, signcrypt);
+
+  ps_close(pin);
+  ps_close(pout);
 
   if(clen > 0) {
     if(id == NULL && recipient == NULL)

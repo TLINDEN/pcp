@@ -44,6 +44,11 @@
 	this one as well is independent of internal structs
 	in pcp and should therefore be future proof.
 
+	Internal api change: added pcpstream, which is a
+	wrapper around file i/o or buffer i/o. It's used
+	in libpcp/crypto.c (more to follow), so it depends
+	on the caller if it works on files or on buffers.
+	
 	Lots of refactoring have been done to clear things
 	out and make the system work with the changes
 	above.

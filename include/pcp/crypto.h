@@ -34,6 +34,7 @@
 #include "key.h"
 #include "keyhash.h"
 #include "ed.h"
+#include "pcpstream.h"
 
 size_t pcp_sodium_box(unsigned char **cipher,
                       unsigned char *cleartext,
@@ -54,13 +55,11 @@ unsigned char *pcp_box_decrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
                                unsigned char *cipher, size_t ciphersize,
 			       size_t *dsize);
 
-size_t pcp_encrypt_file(FILE *in, FILE* out, pcp_key_t *s, pcp_pubkey_t *p, int signcrypt);
+size_t pcp_encrypt_stream(Pcpstream *in, Pcpstream* out, pcp_key_t *s, pcp_pubkey_t *p, int signcrypt);
+size_t pcp_encrypt_stream_sym(Pcpstream *in, Pcpstream* out, unsigned char *symkey, int havehead, pcp_rec_t *recsign);
 
-size_t pcp_decrypt_file(FILE *in, FILE* out, pcp_key_t *s, unsigned char *symkey, int verify);
-
-size_t pcp_encrypt_file_sym(FILE *in, FILE* out, unsigned char *symkey, int havehead, pcp_rec_t *recsign);
-
-size_t pcp_decrypt_file_sym(FILE *in, FILE* out, unsigned char *symkey, pcp_rec_t *recverify);
+size_t pcp_decrypt_stream(Pcpstream *in, Pcpstream* out, pcp_key_t *s, unsigned char *symkey, int verify);
+size_t pcp_decrypt_stream_sym(Pcpstream *in, Pcpstream* out, unsigned char *symkey, pcp_rec_t *recverify);
 
 pcp_rec_t *pcp_rec_new(unsigned char *cipher, size_t clen, pcp_key_t *secret, pcp_pubkey_t *pub);
 void pcp_rec_free(pcp_rec_t *r);

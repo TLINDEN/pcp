@@ -21,6 +21,7 @@ PCPEXPORT = pcp.h \
 	    pcp/base85.h \
             pcp/buffer.h \
             pcp/mgmt.h \
+            pcp/pcpstream.h \
             pcp/keysig.h
 
 nobase_include_HEADERS = $(PCPEXPORT)

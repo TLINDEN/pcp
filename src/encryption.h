@@ -35,6 +35,7 @@
 #include "keyprint.h"
 #include "keyhash.h"
 #include "plist.h"
+#include "pcpstream.h"
 
 int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, int verify);
 int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *recipient, int signcrypt);

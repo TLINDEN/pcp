@@ -38,7 +38,7 @@ unsigned char * pcp_ed_verify_key(unsigned char *signature, size_t siglen, pcp_p
 }
 
 unsigned char * pcp_ed_verify(unsigned char *signature, size_t siglen, pcp_pubkey_t *p) {
-  unsigned char *message = ucmalloc(siglen - crypto_sign_BYTES);
+  unsigned char *message = ucmalloc(siglen); /* we alloc the full size, the resulting len will be returned by nacl anyway - crypto_sign_BYTES); */
   unsigned long long mlen;
 
   if(crypto_sign_open(message, &mlen, signature, siglen, p->edpub) != 0) {
@@ -71,7 +71,7 @@ unsigned char *pcp_ed_sign(unsigned char *message, size_t messagesize, pcp_key_t
   return signature;
 }
 
-size_t pcp_ed_sign_buffered(FILE *in, FILE *out, pcp_key_t *s, int z85) {
+size_t pcp_ed_sign_buffered(Pcpstream *in, Pcpstream* out, pcp_key_t *s, int z85) {
   unsigned char in_buf[PCP_BLOCK_SIZE];
   size_t cur_bufsize = 0;
   size_t outsize = 0;
@@ -81,18 +81,18 @@ size_t pcp_ed_sign_buffered(FILE *in, FILE *out, pcp_key_t *s, int z85) {
   crypto_generichash_init(st, NULL, 0, 0);
 
   if(z85)
-    fprintf(out, "%s\nHash: Blake2\n\n", PCP_SIG_HEADER);
+    ps_print(out, "%s\nHash: Blake2\n\n", PCP_SIG_HEADER);
 
-  while(!feof(in)) {
-    cur_bufsize = fread(&in_buf, 1, PCP_BLOCK_SIZE, in);
+  while(!ps_end(in)) {
+    cur_bufsize = ps_read(in, &in_buf, PCP_BLOCK_SIZE); /* fread(&in_buf, 1, PCP_BLOCK_SIZE, in); */
     if(cur_bufsize <= 0)
       break;
     outsize += cur_bufsize;
     crypto_generichash_update(st, in_buf, cur_bufsize);
-    fwrite(in_buf, cur_bufsize, 1, out);
+    ps_write(out, in_buf, cur_bufsize); /* fwrite(in_buf, cur_bufsize, 1, out); */
   }
 
-  if(ferror(out) != 0) {
+  if(ps_err(out) != 0) {
     fatal("Failed to write encrypted output!\n");
     free(st);
     return 0;
@@ -104,27 +104,22 @@ size_t pcp_ed_sign_buffered(FILE *in, FILE *out, pcp_key_t *s, int z85) {
   size_t mlen = + crypto_sign_BYTES + crypto_generichash_BYTES_MAX;
 
   if(z85) {
-    fprintf(out, "\n%s\n Version: PCP v%d.%d.%d\n\n", PCP_SIG_START, PCP_VERSION_MAJOR, PCP_VERSION_MINOR, PCP_VERSION_PATCH);
+    ps_print(out, "\n%s\n Version: PCP v%d.%d.%d\n\n", PCP_SIG_START, PCP_VERSION_MAJOR, PCP_VERSION_MINOR, PCP_VERSION_PATCH);
     size_t zlen;
     char *z85encoded = pcp_z85_encode((unsigned char*)signature, mlen, &zlen);
-    fprintf(out, "%s\n%s\n", z85encoded, PCP_SIG_END);
+    ps_print(out, "%s\n%s\n", z85encoded, PCP_SIG_END);
   }
   else {
-    fprintf(out, "%s", PCP_SIGPREFIX);
-    fwrite(signature, mlen, 1, out);
+    ps_print(out, "%s", PCP_SIGPREFIX);
+    ps_write(out, signature, mlen); /* fwrite(signature, mlen, 1, out); */
   }
-
-  if(fileno(in) != 0)
-    fclose(in);
-  if(fileno(out) != 1)
-    fclose(out);
 
   free(st);
 
   return outsize;
 }
 
-pcp_pubkey_t *pcp_ed_verify_buffered(FILE *in, pcp_pubkey_t *p) {
+pcp_pubkey_t *pcp_ed_verify_buffered(Pcpstream *in, pcp_pubkey_t *p) {
   unsigned char in_buf[PCP_BLOCK_SIZE/2];
   unsigned char in_next[PCP_BLOCK_SIZE/2];
   unsigned char in_full[PCP_BLOCK_SIZE];
@@ -154,7 +149,7 @@ pcp_pubkey_t *pcp_ed_verify_buffered(FILE *in, pcp_pubkey_t *p) {
   crypto_generichash_init(st, NULL, 0, 0);
 
   /* use two half blocks, to overcome sigs spanning block boundaries */
-  cur_bufsize = fread(&in_buf, 1, PCP_BLOCK_SIZE/2, in);
+  cur_bufsize = ps_read(in, &in_buf, PCP_BLOCK_SIZE/2); /* fread(&in_buf, 1, PCP_BLOCK_SIZE/2, in); */
 
   /*  look for z85 header and cut it out */
   if(_findoffset(in_buf, cur_bufsize, zhead, hlen) == 0) {
@@ -164,7 +159,8 @@ pcp_pubkey_t *pcp_ed_verify_buffered(FILE *in, pcp_pubkey_t *p) {
     memcpy(in_buf, in_next, next_bufsize); /*  put into inbuf without header */
     if(cur_bufsize == PCP_BLOCK_SIZE/2) {
       /*  more to come */
-      cur_bufsize = fread(&in_buf[next_bufsize], 1, ((PCP_BLOCK_SIZE/2) - next_bufsize), in);
+      cur_bufsize = ps_read(in, &in_buf[next_bufsize], ((PCP_BLOCK_SIZE/2) - next_bufsize));
+      /* cur_bufsize = fread(&in_buf[next_bufsize], 1, ((PCP_BLOCK_SIZE/2) - next_bufsize), in); */
       cur_bufsize += next_bufsize;
       next_bufsize = 0;
       /*  now we've got the 1st half block in in_buf */
@@ -189,7 +185,7 @@ pcp_pubkey_t *pcp_ed_verify_buffered(FILE *in, pcp_pubkey_t *p) {
   while (cur_bufsize > 0) {
     if(cur_bufsize == PCP_BLOCK_SIZE/2) {
       /*  probably not eof */
-      next_bufsize = fread(&in_next, 1, PCP_BLOCK_SIZE/2, in);
+      next_bufsize = ps_read(in, &in_next, PCP_BLOCK_SIZE/2); /* fread(&in_next, 1, PCP_BLOCK_SIZE/2, in); */
     }
     else
       next_bufsize = 0; /*  <= this is eof */
@@ -302,7 +298,7 @@ pcp_pubkey_t *pcp_ed_verify_buffered(FILE *in, pcp_pubkey_t *p) {
   return NULL;
 }
 
-size_t pcp_ed_detachsign_buffered(FILE *in, FILE *out, pcp_key_t *s) {
+size_t pcp_ed_detachsign_buffered(Pcpstream *in, Pcpstream *out, pcp_key_t *s) {
   unsigned char in_buf[PCP_BLOCK_SIZE];
   size_t cur_bufsize = 0;
   size_t outsize = 0;
@@ -311,8 +307,8 @@ size_t pcp_ed_detachsign_buffered(FILE *in, FILE *out, pcp_key_t *s) {
 
   crypto_generichash_init(st, NULL, 0, 0);
 
-  while(!feof(in)) {
-    cur_bufsize = fread(&in_buf, 1, PCP_BLOCK_SIZE, in);
+  while(!ps_end(in)) {
+    cur_bufsize = ps_read(in, &in_buf, PCP_BLOCK_SIZE); /*  fread(&in_buf, 1, PCP_BLOCK_SIZE, in); */
     if(cur_bufsize <= 0)
       break;
     outsize += cur_bufsize;
@@ -324,23 +320,18 @@ size_t pcp_ed_detachsign_buffered(FILE *in, FILE *out, pcp_key_t *s) {
   unsigned char *signature = pcp_ed_sign(hash, crypto_generichash_BYTES_MAX, s);
   size_t mlen = + crypto_sign_BYTES + crypto_generichash_BYTES_MAX;
 
-  fprintf(out, "\n%s\n Version: PCP v%d.%d.%d\n\n",
+  ps_print(out, "\n%s\n Version: PCP v%d.%d.%d\n\n",
 	  PCP_SIG_START, PCP_VERSION_MAJOR, PCP_VERSION_MINOR, PCP_VERSION_PATCH);
   size_t zlen;
   char *z85encoded = pcp_z85_encode((unsigned char*)signature, mlen, &zlen);
-  fprintf(out, "%s\n%s\n", z85encoded, PCP_SIG_END);
-
-  if(fileno(in) != 0)
-    fclose(in);
-  if(fileno(out) != 1)
-    fclose(out);
+  ps_print(out, "%s\n%s\n", z85encoded, PCP_SIG_END);
 
   free(st);
 
   return outsize;
 }
 
-pcp_pubkey_t *pcp_ed_detachverify_buffered(FILE *in, FILE *sigfd, pcp_pubkey_t *p) {
+pcp_pubkey_t *pcp_ed_detachverify_buffered(Pcpstream *in, Pcpstream *sigfd, pcp_pubkey_t *p) {
   unsigned char in_buf[PCP_BLOCK_SIZE];
   size_t cur_bufsize = 0;
   size_t outsize = 0;
@@ -350,8 +341,8 @@ pcp_pubkey_t *pcp_ed_detachverify_buffered(FILE *in, FILE *sigfd, pcp_pubkey_t *
 
   crypto_generichash_init(st, NULL, 0, 0);
 
-  while(!feof(in)) {
-    cur_bufsize = fread(&in_buf, 1, PCP_BLOCK_SIZE, in);
+  while(!ps_end(in)) {
+    cur_bufsize = ps_read(in, &in_buf, PCP_BLOCK_SIZE); /* fread(&in_buf, 1, PCP_BLOCK_SIZE, in); */
     if(cur_bufsize <= 0)
       break;
     outsize += cur_bufsize;
@@ -365,15 +356,17 @@ pcp_pubkey_t *pcp_ed_detachverify_buffered(FILE *in, FILE *sigfd, pcp_pubkey_t *
   size_t inputBufSize = 0;
   unsigned char byte[1];
   
-  while(!feof(sigfd)) {
-    if(!fread(&byte, 1, 1, sigfd))
+  while(!ps_end(sigfd)) {
+    if(!ps_read(sigfd, &byte, 1))
       break;
+    /*
+    if(!fread(&byte, 1, 1, sigfd))
+      break;*/
     unsigned char *tmp = realloc(sig, inputBufSize + 1);
     sig = tmp;
     memmove(&sig[inputBufSize], byte, 1);
     inputBufSize ++;
   }
-  fclose(sigfd);
 
   if(sig == NULL) {
     fatal("Invalid detached signature\n");

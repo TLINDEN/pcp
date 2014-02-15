@@ -43,6 +43,7 @@ namespace pcp {
     Key S;
     Vault vault;
     unsigned char *sig;
+    PubKey Signedby;
 
     // constructors
     Signature(Key &skey); // sign only
@@ -57,6 +58,7 @@ namespace pcp {
     // sender pubkey is P
     unsigned char *sign(std::vector<unsigned char> message);
     unsigned char *sign(unsigned char *message, size_t mlen);
+    unsigned char *sign(Pcpstream *message);
 
     // verify using P or use vault if defined
     bool verify(std::vector<unsigned char> message);

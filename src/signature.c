@@ -71,11 +71,17 @@ int pcpsign(char *infile, char *outfile, char *passwd, int z85, int detach) {
       goto errs1;
   }
 
+  Pcpstream *pin = ps_new_file(in);
+  Pcpstream *pout = ps_new_file(out);
+
   size_t sigsize;
   if(detach == 1)
-    sigsize = pcp_ed_detachsign_buffered(in, out, secret);
+    sigsize = pcp_ed_detachsign_buffered(pin, pout, secret);
   else
-    sigsize = pcp_ed_sign_buffered(in, out, secret, z85);
+    sigsize = pcp_ed_sign_buffered(pin, pout, secret, z85);
+
+  ps_close(pin);
+  ps_close(pout);
 
   if(sigsize == 0)
     goto errs1;
@@ -111,11 +117,19 @@ int pcpverify(char *infile, char *sigfile, char *id, int detach) {
   
   if(id != NULL)
     HASH_FIND_STR(pcppubkey_hash, id, pub);
- 
-  if(detach)
-    pub = pcp_ed_detachverify_buffered(in, sigfd, pub);
+
+  Pcpstream *pin = ps_new_file(in);
+
+  if(detach) {
+    Pcpstream *psigfd = ps_new_file(sigfd);
+    pub = pcp_ed_detachverify_buffered(pin, psigfd, pub);
+     ps_close(psigfd);
+  }
   else
-    pub = pcp_ed_verify_buffered(in, pub);
+    pub = pcp_ed_verify_buffered(pin, pub);
+
+  ps_close(pin);
+ 
 
   if(pub != NULL)
     fprintf(stderr, "Signature verified (signed by %s <%s>).\n", pub->owner, pub->mail);

@@ -56,10 +56,27 @@ Signature::~Signature() {
 }
 
 unsigned char *Signature::sign(std::vector<unsigned char> message) {
-  unsigned char *m = (unsigned char *)ucmalloc(message.size());
+  if(! S)
+    throw exception("Error: cannot sign without a secret key, use another constructor.");
+
+  if(S.is_encrypted())
+    throw exception("Error: cannot sign with an encrypted secret key, decrypt it before using.");
+
+  char n[] = "signvec";
+  Buffer *m = buffer_new(32, n);
+
   for(size_t i=0; i<message.size(); ++i)
-    m[i] = message[i];
-  return Signature::sign(m, message.size());
+    buffer_add(m, (void *)message[i], 1);
+
+  Pcpstream *p = ps_new_inbuffer(m);
+  unsigned char *sig = Signature::sign(p);
+  ps_close(p);
+  buffer_free(m);
+
+  if(sig == NULL)
+    throw exception();
+
+  return sig;
 }
 
 unsigned char *Signature::sign(unsigned char *message, size_t mlen) {
@@ -69,10 +86,36 @@ unsigned char *Signature::sign(unsigned char *message, size_t mlen) {
   if(S.is_encrypted())
     throw exception("Error: cannot sign with an encrypted secret key, decrypt it before using.");
 
-  sig = pcp_ed_sign(message, mlen, S.K);
+  char n[] = "signchar";
+  Buffer *m = buffer_new(32, n);
+  buffer_add(m, message, mlen);
+  Pcpstream *p = ps_new_inbuffer(m);
+
+  unsigned char *sig = Signature::sign(p);
+  ps_close(p);
+  buffer_free(m);
 
   if(sig == NULL)
     throw exception();
+
+  return sig;
+}
+
+unsigned char *Signature::sign(Pcpstream *message) {
+  Pcpstream *out = ps_new_outbuffer();
+  unsigned char *sig = NULL;
+
+  size_t sigsize = pcp_ed_sign_buffered(message, out, S.K, 1);
+
+  if(sigsize > 0) {
+    Buffer *o = ps_buffer(out);
+    sigsize = buffer_size(o);
+    buffer_dump(o);
+    sig = (unsigned char*)ucmalloc(sigsize);
+    buffer_get_chunk(o, sig, sigsize);
+  }
+
+  ps_close(out);
 
   return sig;
 }
@@ -87,14 +130,22 @@ bool Signature::verify(vector<unsigned char> message) {
 }
 
 bool Signature::verify(unsigned char *signature, size_t mlen) {
-  unsigned char *message;
-
   if(!P) {
     throw exception("No public key specified, unable to verify.");
   }
 
-  message = pcp_ed_verify(signature, mlen, P.K);
-  if(message != NULL) {
+  char n[] = "verify";
+  Buffer *m = buffer_new(32, n);
+  buffer_add(m, signature, mlen);
+  Pcpstream *p = ps_new_inbuffer(m);
+
+  pcp_pubkey_t *pub = pcp_ed_verify_buffered(p, P.K);
+
+  ps_close(p);
+  
+
+  if(pub != NULL) {
+    Signedby = PubKey(pub);
     return true;
   }
   else {

@@ -21,8 +21,6 @@
 
 #include "buffer.h"
 
-
-
 Buffer *buffer_new(size_t blocksize, char *name) {
   Buffer *b = ucmalloc(sizeof(Buffer));
   b->buf = ucmalloc(blocksize);

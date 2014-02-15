@@ -34,6 +34,7 @@
 #ifndef HAVE_PCP_PCPSTEAM_H
 #define HAVE_PCP_PCPSTEAM_H
 
+#include <stdarg.h>
 #include <stdio.h>
 #include "mem.h"
 #include "util.h"
@@ -74,8 +75,14 @@ size_t ps_read(Pcpstream *stream, void *buf, size_t readbytes);
    sets eof and err respectively as ps_read() does. */
 size_t ps_write(Pcpstream *stream, void *buf, size_t writebytes);
 
+/* use fprintf() style format string to print something out */
+size_t ps_print(Pcpstream *stream, const char * fmt, ...);
+
 /* return the current read or write offset */
 size_t ps_tell(Pcpstream *stream);
+
+/* return a pointer to the internal buffer object */
+Buffer *ps_buffer(Pcpstream *stream);
 
 /* closes the stream and frees allocated memory, if present */
 void ps_close(Pcpstream *stream);

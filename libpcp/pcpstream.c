@@ -55,6 +55,10 @@ size_t ps_read(Pcpstream *stream, void *buf, size_t readbytes) {
   size_t gotbytes = 0;
 
   if(stream->is_buffer) {
+    /* check if there's enough space in our buffer */
+    if(buffer_left(stream->b) < readbytes)
+      readbytes = buffer_left(stream->b);
+
     gotbytes = buffer_get_chunk(stream->b, buf, readbytes);
     if(gotbytes == 0) {
       /* this should not happen with buffers */
@@ -91,6 +95,23 @@ size_t ps_write(Pcpstream *stream, void *buf, size_t writebytes) {
   return writebytes;
 }
 
+size_t ps_print(Pcpstream *stream, const char * fmt, ...) {
+  va_list ap;
+  char *dst;
+  va_start(ap, fmt);
+  vasprintf(&dst, fmt, ap);
+  va_end(ap);
+  size_t len = strlen(dst);
+
+  if(stream->is_buffer) {
+    buffer_add(stream->b, dst, len);
+    return len;
+  }
+  else {
+    return ps_write(stream, dst, len);
+  }
+}
+
 void ps_close(Pcpstream *stream) {
   if(stream->is_buffer) {
     buffer_clear(stream->b);
@@ -122,4 +143,8 @@ size_t ps_tell(Pcpstream *stream) {
   else {
     return ftell(stream->fd);
   }
+}
+
+Buffer *ps_buffer(Pcpstream *stream) {
+  return stream->b;
 }

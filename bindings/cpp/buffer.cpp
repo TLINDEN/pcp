@@ -96,6 +96,10 @@ unsigned char *Buf::get() {
   return buffer_get(B);
 }
 
+Buffer *Buf::get_buffer() {
+  return B;
+}
+
 string Buf::get_str() {
   return string(buffer_get_str(B));
 }

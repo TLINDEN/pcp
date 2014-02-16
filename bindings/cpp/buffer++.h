@@ -64,6 +64,8 @@ namespace pcp {
     std::string get_str();
 
     unsigned char *get_remainder();
+    Buffer *get_buffer();
+
     size_t extract(void *buf, size_t offset, size_t len);
     uint8_t get8();
     uint16_t get16();

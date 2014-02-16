@@ -5,6 +5,7 @@ allow signing using an alternate secret key, like in pcpdecrypt()
 malloc() new pointers in functions only if not NULL, e.g. pcp_gennonce()
 
 generalize file i/0, open+close only in src/, print msg if using stdin or stdout
+  - sign + crypt done. key exports und imports to follow
 
 check pub key count in pcp.c before calling verify signature, croak if count==0
 
@@ -13,8 +14,6 @@ Update pod key format spec.
 -l show keysig, if any
 
 vault checksum: add keysigs as well
-
-catch up with changes in c++ api
 
 enable formats for secret key exports as well
 
@@ -27,8 +26,10 @@ Unitttests:
 
   - sometimes secret key is empty
 
-
-cpptest test3 fails, pcpstream backed with buffer behaves komisch
+  Possible causes: the unittest segfaults and unittest.pl doesn't
+  catch it, esp. if the prepare call segfaults. Or, there's some bug
+  in unittest.pl, however the issue started as I switched to the
+  pcpstream api.
 
 
 Python binding, e.g.:

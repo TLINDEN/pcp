@@ -31,6 +31,7 @@
 #include "key++.h"
 #include "sign++.h"
 #include "helpers++.h"
+#include "buffer++.h"
 
 namespace pcp {
 
@@ -42,8 +43,8 @@ namespace pcp {
     PubKey P;
     Key S;
     Vault vault;
-    unsigned char *sig;
     PubKey Signedby;
+    Buf sig;
 
     // constructors
     Signature(Key &skey); // sign only
@@ -56,13 +57,14 @@ namespace pcp {
 
     // PK signature methods
     // sender pubkey is P
-    unsigned char *sign(std::vector<unsigned char> message);
-    unsigned char *sign(unsigned char *message, size_t mlen);
-    unsigned char *sign(Pcpstream *message);
+    bool sign(std::vector<unsigned char> message);
+    bool sign(unsigned char *message, size_t mlen);
+    bool sign(Pcpstream *message);
 
     // verify using P or use vault if defined
     bool verify(std::vector<unsigned char> message);
     bool verify(unsigned char *signature, size_t mlen);
+    bool verify(Buf _sig);
   };
 };
 

@@ -48,10 +48,15 @@
 	wrapper around file i/o or buffer i/o. It's used
 	in libpcp/crypto.c (more to follow), so it depends
 	on the caller if it works on files or on buffers.
-	
+
 	Lots of refactoring have been done to clear things
 	out and make the system work with the changes
 	above.
+
+	Added various convenience pubkey export formats,
+	beside pbp and pcp also supported are now perl,
+	c and yaml code. A programmer can use this to
+	put a public key in a small program.
 
 0.2.0	ED25519 and Curve25519 keys are now generated
 	separately (previously they were generated from

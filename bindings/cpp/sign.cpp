@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013 T.Linden.
+    Copyright (C) 2013-2014 T.c.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    You can contact me by mail: <tlinden AT cpan DOT org>.
+    You can contact me by mail: <tom AT vondein DOT org>.
 */
 
 #include "sign++.h"
@@ -27,35 +27,29 @@ using namespace pcp;
 Signature::Signature(Key &skey) {
   S = skey;
   havevault = false;
-  sig = NULL;
 }
 
 Signature::Signature(PubKey &pkey) {
   P = pkey;
   havevault = false;
-  sig = NULL;
 }
 
 Signature::Signature(Key &skey, PubKey &pkey) {
   P = pkey;
   S = skey;
   havevault = false;
-  sig = NULL;
 }
 
 Signature::Signature(Vault &v) {
   vault = v;
   havevault = true;
-  sig = NULL;
   S = vault.get_primary();
 }
 
 Signature::~Signature() {
-  if(sig != NULL)
-    free(sig);
 }
 
-unsigned char *Signature::sign(std::vector<unsigned char> message) {
+bool Signature::sign(std::vector<unsigned char> message) {
   if(! S)
     throw exception("Error: cannot sign without a secret key, use another constructor.");
 
@@ -69,17 +63,17 @@ unsigned char *Signature::sign(std::vector<unsigned char> message) {
     buffer_add(m, (void *)message[i], 1);
 
   Pcpstream *p = ps_new_inbuffer(m);
-  unsigned char *sig = Signature::sign(p);
+  bool ok = Signature::sign(p);
   ps_close(p);
   buffer_free(m);
 
-  if(sig == NULL)
+  if(!ok)
     throw exception();
 
-  return sig;
+  return true;
 }
 
-unsigned char *Signature::sign(unsigned char *message, size_t mlen) {
+bool Signature::sign(unsigned char *message, size_t mlen) {
   if(! S)
     throw exception("Error: cannot sign without a secret key, use another constructor.");
 
@@ -91,42 +85,45 @@ unsigned char *Signature::sign(unsigned char *message, size_t mlen) {
   buffer_add(m, message, mlen);
   Pcpstream *p = ps_new_inbuffer(m);
 
-  unsigned char *sig = Signature::sign(p);
+  bool ok = Signature::sign(p);
   ps_close(p);
   buffer_free(m);
 
-  if(sig == NULL)
+  if(! ok)
     throw exception();
 
-  return sig;
+  return true;
 }
 
-unsigned char *Signature::sign(Pcpstream *message) {
+bool Signature::sign(Pcpstream *message) {
   Pcpstream *out = ps_new_outbuffer();
-  unsigned char *sig = NULL;
 
-  size_t sigsize = pcp_ed_sign_buffered(message, out, S.K, 1);
+  size_t sigsize = pcp_ed_sign_buffered(message, out, S.K, 0);
 
   if(sigsize > 0) {
     Buffer *o = ps_buffer(out);
-    sigsize = buffer_size(o);
-    buffer_dump(o);
-    sig = (unsigned char*)ucmalloc(sigsize);
-    buffer_get_chunk(o, sig, sigsize);
+    sig.add_buf(o);
   }
-
+  else {
+    ps_close(out);
+    return false;
+  }
   ps_close(out);
 
-  return sig;
+  return true;
 }
 
 bool Signature::verify(vector<unsigned char> message) {
-  unsigned char *m = (unsigned char *)ucmalloc(message.size());
+  if(!P) {
+    throw exception("No public key specified, unable to verify.");
+  }
+
+  Buf _sig = Buf();
+
   for(size_t i=0; i<message.size(); ++i)
-    m[i] = message[i];
-  bool _b = Signature::verify(m, message.size());
-  free(m);
-  return _b;
+    _sig.add((void *)message[i], 1);
+
+  return Signature::verify(_sig);
 }
 
 bool Signature::verify(unsigned char *signature, size_t mlen) {
@@ -134,15 +131,19 @@ bool Signature::verify(unsigned char *signature, size_t mlen) {
     throw exception("No public key specified, unable to verify.");
   }
 
-  char n[] = "verify";
-  Buffer *m = buffer_new(32, n);
-  buffer_add(m, signature, mlen);
-  Pcpstream *p = ps_new_inbuffer(m);
+  Buf _sig = Buf();
+  _sig.add(signature, mlen);
+
+  return Signature::verify(_sig);
+}
+
+
+bool Signature::verify(Buf _sig) {
+  Pcpstream *p = ps_new_inbuffer(_sig.get_buffer());
 
   pcp_pubkey_t *pub = pcp_ed_verify_buffered(p, P.K);
 
   ps_close(p);
-  
 
   if(pub != NULL) {
     Signedby = PubKey(pub);

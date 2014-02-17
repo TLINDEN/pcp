@@ -46,6 +46,8 @@
 /**
  * \defgroup PubKeyExport Key export functions
  * @{
+
+ Functions to export and import keys in various formats.
  */
 
 

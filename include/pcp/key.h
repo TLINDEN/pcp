@@ -44,6 +44,9 @@
 /**
  * \defgroup PCPKEY PCP public and secret key functions
  * @{
+
+   Functions to generate PCP keypairs, de- and encrypt them
+   and various related helpers.
  */
 
 

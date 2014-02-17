@@ -95,6 +95,9 @@ typedef unsigned int    qbyte;          /*   Quad byte = 32 bits */
 /**
  * \defgroup FATALS global variables and functions for error handling.
  * @{
+
+ A couple of functions to catch errors and display them.
+
  */
 
 /*  error handling */

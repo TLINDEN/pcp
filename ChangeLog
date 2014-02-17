@@ -58,6 +58,16 @@
 	c and yaml code. A programmer can use this to
 	put a public key in a small program.
 
+	Finally found the bug that leaded to the unittests
+	sometimes fail as previously described in the TODO
+	file: the function libpcp/z85.c:_buffer_is_binary()
+	shall return a non-zero value if it finds a binary
+	character in the input. However, if the first char
+	of the input was binary it returned 0, which was then
+	interpreted later such that the input is ascii.
+	To fix this, the function now starts at position 1
+	to search.
+
 0.2.0	ED25519 and Curve25519 keys are now generated
 	separately (previously they were generated from
 	one random seed, the curve had been derived from

@@ -184,6 +184,7 @@ pcp_ks_bundle_t *pcp_import_pub(unsigned char *raw, size_t rawsize) {
 
   /* first, try to decode the input */
   z85 = pcp_readz85string(raw, rawsize);
+
   if(z85 != NULL)
     bin = pcp_z85_decode(z85, &clen);
 

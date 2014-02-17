@@ -17,19 +17,6 @@ vault checksum: add keysigs as well
 
 enable formats for secret key exports as well
 
-Unitttests:
-  - sometimes "no matching pub key in vault, while it's there
-    Cause:
-      echo HALLO | ../src/pcp1 -V vcl -e -O testencrypted -i 0xA907B927849B39F9
-        ok 28 - check-crypto-unencrypted-secret-message
-      public key exported.  <=== ???
-
-  - sometimes secret key is empty
-
-  Possible causes: the unittest segfaults and unittest.pl doesn't
-  catch it, esp. if the prepare call segfaults. Or, there's some bug
-  in unittest.pl, however the issue started as I switched to the
-  pcpstream api.
 
 
 Python binding, e.g.:

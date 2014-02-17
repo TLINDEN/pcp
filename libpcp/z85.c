@@ -24,7 +24,9 @@
 
 size_t _buffer_is_binary(unsigned char *buf, size_t len) {
   size_t pos;
-  for (pos=0; pos<len; ++pos) {
+  /* start at 1, to circumvent returning 0 if we find a match at position 0,
+     which would lead the caller to believe the buffer is not binary */
+  for (pos=1; pos<len; ++pos) {
     if(buf[pos] == '\0' || (buf[pos] != '\r' && buf[pos] != '\n' && isprint(buf[pos]) == 0)) {
       break;
     }

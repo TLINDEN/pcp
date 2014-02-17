@@ -92,21 +92,62 @@ typedef unsigned int    qbyte;          /*   Quad byte = 32 bits */
 
 #define PCP_RFC_CIPHER 0x21 /* curve25519+ed25519+poly1305+salsa20+blake2 */
 
+/**
+ * \defgroup FATALS global variables and functions for error handling.
+ * @{
+ */
+
 /*  error handling */
+
+/** \var PCP_ERR
+
+    Global variable holding the last error message.
+    Can be retrieved with fatals_ifany().
+*/
 extern char *PCP_ERR;
+
+/** \var PCP_ERRSET
+
+    Global variable indicating if an error occurred.
+*/
 extern byte PCP_ERRSET;
+
+/** \var PCP_EXIT
+
+    Exitcode for the pcp commandline utility.
+*/
 extern int PCP_EXIT;
 
-/* set error */
+/** Set an error message.
+
+    This function gets a printf() like error message,
+    which it stores in the global PCP_ERR variable
+    and sets PCP_ERRSET to 1.
+
+    \param[in] fmt printf() like format description.
+
+    \param[in] ... format parameters, if any.
+*/
 void fatal(const char * fmt, ...);
 
-/*  fetch error */
+/** Prints error messages to STDERR, if there are some.
+
+    FIXME: add something like this which returns the
+    message.
+*/
 void fatals_ifany();
 
-/*  reset */
+/** Reset the error variables.
+
+    This can be used to ignore previous errors.
+    Use with care.
+*/
 void fatals_reset();
 
-/* free mem */
+/** Cleans up memory allocation of global error variables.
+ */
 void fatals_done();
 
 #endif /*  _DEFINES_H */
+
+/**@}*/

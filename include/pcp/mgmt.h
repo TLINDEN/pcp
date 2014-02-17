@@ -43,88 +43,12 @@
 /* key management api, export, import, yaml and stuff */
 
 
+/**
+ * \defgroup PubKeyExport Key export functions
+ * @{
+ */
 
-/* RFC4880 alike public key export with some modifications:
 
-   - Key material is native to us and not specified in the
-     rfc for curve25519/ed25519. Therefore we're doing it like
-     so: mp|sp|cp
-     where mp = master keysigning public key (ed25519), 32 bytes
-           sp = signing public key (ed25519), 32 bytes
-	   cp = encryption public key (curve25519), 32 bytes
-
-   - The various cipher (algorithm) id's are unspecified for
-     our native ciphers. Therefore I created them, starting at
-     33 (afaik 22 is the last officially assigned one). Once
-     those cipher numbers become official, I'll use them instead
-     of my own.
-
-   - The exported public key packet contains a signature. We're
-     filling out all required fields. A signature has a variable
-     number of sig sub packets. We use only these types:
-
-            2 = Signature Creation Time     (4 byte)
-            3 = Signature Expiration Time   (4 byte)
-            9 = Key Expiration Time         (4 bytes)
-           20 = Notation Data               (4 byte flags, N bytes name+value)
-           27 = Key Flags                   (1 byte, use 0x02, 0x08 and 0x80
-  
-   - We use 3 notation fields:
-     * "owner", which contains the owner name, if set
-     * "mail", which contains the emailaddress, if set
-     * "serial", which contains the 32bit serial number
-
-   - The actual signature field consists of the blake2 hash of
-     (mp|sp|cp|keysig) followed by the nacl signature. However, we do
-     not put an extra 16byte value of the hash, since the nacl
-     signature already contains the full hash. So, an implementation
-     could simply pull the fist 16 bytes of said hash to get
-     the same result.
-
-   - The mp keypair will be used for signing. The recipient can
-     verify the signature, since mp is included.
-
-   - While we put expiration dates for the key and the signature
-     into the export as the rfc demands, we ignore them. Key expiring
-     is not implemented in PCP yet.
-
-  So, a full pubkey export looks like this
-
-    version
-    ctime
-    cipher
-    3 x raw keys            \
-    sigheader                > calc hash from this
-      sigsubs (header+data) /
-    hash
-    signature
-
-  We use big-endian always.
-
-  Unlike RC4880 public key exports, we're using Z85 encoding if
-  armoring have been requested by the user. Armored output has
-  a header and a footer line, however they are ignored by the
-  parser and are therefore optional. Newlines, if present, are
-  optional as well.
-
-  http://tools.ietf.org/html/rfc4880#section-5.2.3
-
-  The key sig blob will be saved in the Vault if we import a public key
-  unaltered, so we can verify the signature at will anytime. When exporting
-  a foreign public key, we will just put out that key sig blob to the
-  export untouched.
-
-  Currently PCP only support self-signed public key exports.
-
-  We only support one key signature per key. However, it would be easily
-  possible to support foreign keysigs as well in the future.
-
-  -----------
-
-  Secret key are exported in proprietary format. We just encrypt the
-  whole structure symmetrically and prepend it with a nonce.
-  
-*/
 
 /* various helper structs, used internally only */
 struct _pcp_rfc_pubkey_header_t {
@@ -197,29 +121,181 @@ typedef struct _pcp_ks_bundle_t pcp_ks_bundle_t;
 #define EXP_FORMAT_PY       5
 #define EXP_FORMAT_PERL     6
 
+/** RFC4880 alike public key export with some modifications.
 
-/* export self signed public key from master secret */
+  RFC4880 alike public key export with the following modifications:
+
+   - Key material is native to us and not specified in the
+     rfc for curve25519/ed25519. Therefore we're doing it like
+     so: mp|sp|cp
+     where mp = master keysigning public key (ed25519), 32 bytes
+           sp = signing public key (ed25519), 32 bytes
+	   cp = encryption public key (curve25519), 32 bytes
+
+   - The various cipher (algorithm) id's are unspecified for
+     our native ciphers. Therefore I created them, starting at
+     33 (afaik 22 is the last officially assigned one). Once
+     those cipher numbers become official, I'll use them instead
+     of my own.
+
+   - The exported public key packet contains a signature. We're
+     filling out all required fields. A signature has a variable
+     number of sig sub packets. We use only these types:
+
+            2 = Signature Creation Time     (4 byte)
+            3 = Signature Expiration Time   (4 byte)
+            9 = Key Expiration Time         (4 bytes)
+           20 = Notation Data               (4 byte flags, N bytes name+value)
+           27 = Key Flags                   (1 byte, use 0x02, 0x08 and 0x80
+  
+   - We use 3 notation fields:
+     * "owner", which contains the owner name, if set
+     * "mail", which contains the emailaddress, if set
+     * "serial", which contains the 32bit serial number
+
+   - The actual signature field consists of the blake2 hash of
+     (mp|sp|cp|keysig) followed by the nacl signature. However, we do
+     not put an extra 16byte value of the hash, since the nacl
+     signature already contains the full hash. So, an implementation
+     could simply pull the fist 16 bytes of said hash to get
+     the same result.
+
+   - The mp keypair will be used for signing. The recipient can
+     verify the signature, since mp is included.
+
+   - While we put expiration dates for the key and the signature
+     into the export as the rfc demands, we ignore them. Key expiring
+     is not implemented in PCP yet.
+
+  So, a full pubkey export looks like this
+
+         version
+         ctime
+         cipher
+         3 x raw keys            \
+         sigheader                > calc hash from this
+           sigsubs (header+data) /
+         hash
+         signature
+
+  We use big-endian always.
+
+  Unlike RC4880 public key exports, we're using Z85 encoding if
+  armoring have been requested by the user. Armored output has
+  a header and a footer line, however they are ignored by the
+  parser and are therefore optional. Newlines, if present, are
+  optional as well.
+
+  http://tools.ietf.org/html/rfc4880#section-5.2.3
+
+  The key sig blob will be saved in the Vault if we import a public key
+  unaltered, so we can verify the signature at will anytime. When exporting
+  a foreign public key, we will just put out that key sig blob to the
+  export untouched.
+
+  Currently PCP only support self-signed public key exports.
+
+  We only support one key signature per key. However, it would be easily
+  possible to support foreign keysigs as well in the future.
+
+
+\param sk a secret key structure of type pcp_key_t. The secret keys
+          in there have to be already decrypted.
+
+\return the function returns a Buffer object containing the binary
+        blob in the format described above.
+  
+*/
 Buffer *pcp_export_rfc_pub (pcp_key_t *sk);
 
-/* export foreign public key
-   Buffer *pcp_export_rfc_pub_foreign (pcp_pubkey_t *pub); */
 
-/* export public key in pbp format */
+/** Export a public key in PBP format.
+  Export a public key in the format described at
+  https://github.com/stef/pbp/blob/master/doc/fileformats.txt
+
+  \param sk a secret key structure of type pcp_key_t. The secret keys
+            in there have to be already decrypted.
+
+  \return the function returns a Buffer object containing the binary
+          blob in the format described above.
+ */
 Buffer *pcp_export_pbp_pub(pcp_key_t *sk);
 
-/* export public key in yaml format */
+/** Export a public key in yaml format.
+    Export a public key in yaml format.
+
+    \param sk a secret key structure of type pcp_key_t. The secret keys
+            in there have to be already decrypted.
+
+    \return the function returns a Buffer object containing the binary
+            blob containing a YAML string.
+*/
 Buffer *pcp_export_yaml_pub(pcp_key_t *sk);
 
-/* export public key in perl format */
+/** Export a public key in perl code format.
+    Export a public key in perl code format.
+
+    \param sk a secret key structure of type pcp_key_t. The secret keys
+            in there have to be already decrypted.
+
+    \return the function returns a Buffer object containing the binary
+            blob containing a perl code string (a hash definition).
+*/
 Buffer *pcp_export_perl_pub(pcp_key_t *sk);
 
-/* export public key in C format */
+/** Export a public key in C code format.
+    Export a public key in C code format.
+
+    \param sk a secret key structure of type pcp_key_t. The secret keys
+            in there have to be already decrypted.
+
+    \return the function returns a Buffer object containing the binary
+            blob containing a C code string.
+*/
 Buffer *pcp_export_c_pub(pcp_key_t *sk);
 
-/* export secret key */
+/** Export secret key.
+
+   Export a secret key.
+
+   Secret key are exported in proprietary format.
+
+   The exported binary blob is symmetrically encrypted using the NACL
+   function crypto_secret(). The passphrase will be used to derive an
+   encryption key using the STAR function scrypt().
+
+   The binary data before encryption consists of:
+
+   - ED25519 master signing secret
+   - Curve25519 encryption secret
+   - ED25519 signing secret
+   - ED25519 master signing public
+   - Curve25519 encryption public
+   - ED25519 signing public
+   - Optional notations, currently supported are the 'owner' and 'mail' attributes.
+     If an attribute is empty, the len field contains zero.
+     -# len(VAL) (2 byte uint)
+     -# VAL (string without trailing zero)
+   - 8 byte creation time (epoch)
+   - 4 byte key version
+   - 4 byte serial number
+
+   The encrypted cipher will be prepended with the random nonce used
+   to encrypt the data and looks after encryption as such:
+
+     Nonce | Cipher
+
+   \param sk a secret key structure of type pcp_key_t. The secret keys
+          in there have to be already decrypted.
+
+   \param passphrase the passphrase to be used to encrypt the export,
+          a null terminated char array.
+
+    \return the function returns a Buffer object containing the binary
+            blob in the format described above.
+*/
 Buffer *pcp_export_secret(pcp_key_t *sk, char *passphrase);
 
-/* import public keys */
 pcp_ks_bundle_t *pcp_import_pub(unsigned char *raw, size_t rawsize);
 pcp_ks_bundle_t *pcp_import_pub_rfc(Buffer *blob);
 pcp_ks_bundle_t *pcp_import_pub_pbp(Buffer *blob);
@@ -229,3 +305,5 @@ pcp_key_t *pcp_import_secret(unsigned char *raw, size_t rawsize, char *passphras
 pcp_key_t *pcp_import_secret_native(Buffer *cipher, char *passphrase);
 
 #endif // _HAVE_PCP_MGMT_H
+
+/**@}*/

@@ -30,8 +30,10 @@
 #include "buffer.h"
 
 /**
- * \defgroup Pcpstream I/O wrapper for files or buffers
+ * \defgroup Pcpstream PCPSTREAMS
  * @{
+ 
+ I/O wrapper for files or buffers.
 
   Simple wrapper around FILE streams or Buffers, depending
   how the user initialized them. The Pcpstream object behaves
@@ -173,7 +175,7 @@ size_t ps_tell(Pcpstream *stream);
  */
 Buffer *ps_buffer(Pcpstream *stream);
 
-/** Close the stream and frees allocated memory
+/** Close the stream and frees allocated memory.
 
     If the backend of the stream was a FILE stream, close it, unless it is
     stdin, stdout or stderr.

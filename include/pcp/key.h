@@ -42,8 +42,10 @@
 
 
 /**
- * \defgroup PCPKEY PCP public and secret key functions
+ * \defgroup KEYS KEYS
  * @{
+
+ PCP public and secret key functions.
 
    Functions to generate PCP keypairs, de- and encrypt them
    and various related helpers.
@@ -151,18 +153,24 @@ struct _pbp_pubkey_t {
 
 typedef struct _pbp_pubkey_t pbp_pubkey_t;
 
-/*
-  encrypted recipient list, required for crypt+sign
-  contains the encrypted recipients and the secret
-  key required for signing the message+recipients.
+/** \struct _pcp_rec_t
+
+    Encrypted recipient list.
+
+    Encrypted recipient list, required for crypt+sign
+    contains the encrypted recipients and the secret
+    key required for signing the message+recipients.
+
+    Used internally only.
 */
 struct _pcp_rec_t {
-  size_t ciphersize;
-  byte *cipher;
-  pcp_key_t *secret;
-  pcp_pubkey_t *pub;
+  size_t ciphersize; /**< the size of the encrypted recipient list */
+  byte *cipher;      /**< contains the whole encrypted recipient list */
+  pcp_key_t *secret; /**< the secret key of the recipient for signing */
+  pcp_pubkey_t *pub; /**< if verification were ok, contains the public key of the signer */
 };
 
+/** Typedef for public keys */
 typedef struct _pcp_rec_t pcp_rec_t;
 
 #define PCP_RAW_KEYSIZE    sizeof(pcp_key_t)    - sizeof(UT_hash_handle)
@@ -419,6 +427,9 @@ int pcp_sanitycheck_pub(pcp_pubkey_t *key);
             Use fatals_ifany() to check why.
 */
 int pcp_sanitycheck_key(pcp_key_t *key);
+
+void pcp_dumpkey(pcp_key_t *k);
+void pcp_dumppubkey(pcp_pubkey_t *k);
 
 
 #endif /*  _HAVE_PCP_KEYPAIR_H */

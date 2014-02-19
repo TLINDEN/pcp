@@ -29,7 +29,7 @@
 #include "defines.h"
 
 /**
- * \defgroup Buffer Buffer, a flexible buffer management class.
+ * \defgroup Buffer BUFFER
  * @{
 
   Flexible buffer management, idea from openssh/buffer.c.

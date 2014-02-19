@@ -23,6 +23,33 @@
 #ifndef _DEFINES_H
 #define _DEFINES_H
 
+
+/** \mainpage
+
+    \section intro_sec Introduction
+
+    This is the API documentation of libpcp, the library behind
+    Pretty Curved Privacy (pcp). The library can be used independently
+    of pcp to manage keys and to encrypt or sign files or buffers.
+
+    For most actual crypto related things, libpcp uses libsodium,
+    the portable NaCL library.
+
+    \section sample_sec Sample usage
+
+    Example use of the libpcp library:
+
+    \include tests/sample.c
+
+    To compile the example, use the following commands:
+
+    @code
+    g++ -c sample.o `pkg-config --cflags libpcp1`
+    g++ sample.o `pkg-config --libs libpcp1` -o sample
+    @endcode
+ */
+
+
 #include "config.h"
 
 typedef unsigned char   byte;           /*   Single unsigned byte = 8 bits */
@@ -93,7 +120,7 @@ typedef unsigned int    qbyte;          /*   Quad byte = 32 bits */
 #define PCP_RFC_CIPHER 0x21 /* curve25519+ed25519+poly1305+salsa20+blake2 */
 
 /**
- * \defgroup FATALS global variables and functions for error handling.
+ * \defgroup FATALS FATALS
  * @{
 
  A couple of functions to catch errors and display them.

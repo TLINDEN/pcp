@@ -122,6 +122,9 @@ pcp_key_t * pcpkey_new () {
   key->serial  = arc4random();
   key->type    = PCP_KEY_TYPE_SECRET;
 
+  key->owner[0] = '\0';
+  key->mail[0] = '\0';
+
   /* clean up */
   ucfree(ms, 64);
   ucfree(ss, 64);
@@ -420,3 +423,86 @@ int pcp_sanitycheck_key(pcp_key_t *key) {
   return 0;
 }
 
+void pcp_dumpkey(pcp_key_t *k) {
+  int i;
+
+  printf("Dumping pcp_key_t raw values:\n");
+
+  printf("masterpub: ");
+  for ( i = 0;i < 32;++i) printf("%02x",(unsigned int) k->masterpub[i]);
+  printf("\n");
+
+  printf("   public: ");
+  for ( i = 0;i < 32;++i) printf("%02x",(unsigned int) k->pub[i]);
+  printf("\n");
+
+  printf("    edpub: ");
+  for ( i = 0;i < 32;++i) printf("%02x",(unsigned int) k->edpub[i]);
+  printf("\n");
+
+  printf("mastersec: ");
+  for ( i = 0;i < 32;++i) printf("%02x",(unsigned int) k->mastersecret[i]);
+  printf("\n");
+
+  printf("   secret: ");
+  for ( i = 0;i < 32;++i) printf("%02x",(unsigned int) k->secret[i]);
+  printf("\n");
+
+  printf(" edsecret: ");
+  for ( i = 0;i < 64;++i) printf("%02x",(unsigned int) k->edsecret[i]);
+  printf("\n");
+
+  printf("    nonce: ");
+  for ( i = 0;i < 24;++i) printf("%02x",(unsigned int) k->nonce[i]);
+  printf("\n");
+
+  printf("encrypted: ");
+  for ( i = 0;i < 80;++i) printf("%02x",(unsigned int) k->encrypted[i]);
+  printf("\n");
+
+  printf("    owner: %s\n", k->owner);
+
+  printf("     mail: %s\n", k->mail);
+
+  printf("       id: %s\n", k->id);
+
+  printf("    ctime: %ld\n", (long int)k->ctime);
+
+  printf("  version: 0x%08X\n", k->version);
+
+  printf("   serial: 0x%08X\n", k->serial);
+
+  printf("     type: 0x%02X\n", k->type);
+}
+
+
+void pcp_dumppubkey(pcp_pubkey_t *k) {
+  int i;
+  printf("Dumping pcp_pubkey_t raw values:\n");
+
+  printf("masterpub: ");
+  for ( i = 0;i < 32;++i) printf("%02x",(unsigned int) k->masterpub[i]);
+  printf("\n");
+
+  printf("   public: ");
+  for ( i = 0;i < 32;++i) printf("%02x",(unsigned int) k->pub[i]);
+  printf("\n");
+
+  printf("    edpub: ");
+  for ( i = 0;i < 32;++i) printf("%02x",(unsigned int) k->edpub[i]);
+  printf("\n");
+
+  printf("    owner: %s\n", k->owner);
+
+  printf("     mail: %s\n", k->mail);
+
+  printf("       id: %s\n", k->id);
+
+  printf("    ctime: %ld\n", (long int)k->ctime);
+
+  printf("  version: 0x%08X\n", k->version);
+
+  printf("   serial: 0x%08X\n", k->serial);
+
+  printf("     type: 0x%02X\n", k->type);
+}

@@ -74,7 +74,7 @@ typedef struct _pcp_buffer Buffer;
 */
 Buffer *buffer_new(size_t blocksize, char *name);
 
-/** Create a new buffer.
+/** Create a new string buffer.
 
     Create a new buffer, initially alloc'd to a blocksize of 32 bytes and zero-filled.
     The buffer will be a string buffer. See buffer_get_str().
@@ -84,6 +84,75 @@ Buffer *buffer_new(size_t blocksize, char *name);
     \return Returns a new Buffer object.
 */
 Buffer *buffer_new_str(char *name);
+
+
+/** Create a new buffer from existing data.
+
+    Create a new buffer, but don't allocate memory nor copy data.
+    Instead the provided data pointer will be used as internal
+    storage directly.
+
+    This kind of buffer can be used to put the Buffer API into
+    use with existing data from other sources. In most cases you'll
+    use it for reading. However, please be aware, that it can be
+    used for writing as well and in this case the data pointer
+    maybe resized (by calling realloc()).
+    
+    When calling buffer_free() on this Buffer, the memory pointed to
+    by the given data pointer will not be free'd and remains accessible.
+    It's the responsibility of the caller to do so.
+
+    Example using mmap(2):
+    @code
+    #include <stdio.h>
+    #include <pcp.h>
+    #include <sys/mman.h>
+
+    FILE *RFD;
+    size_t rs;
+    Buffer *rb;
+    byte *chunk;
+    void *r;
+
+    if((RFD = fopen("README", "rb")) == NULL) {
+      fprintf(stderr, "oops, could not open README!\n");
+      return 1;
+    }
+
+    fseek(RFD, 0, SEEK_END);
+    rs =  ftell(RFD);
+    fseek(RFD, 0, SEEK_SET);
+
+    void *r = mmap(NULL, rs, PROT_READ, 0, fileno(RFD), 0);
+
+    *rb = buffer_new_buf("r", r, rs);
+
+    size_t blocksize = 36;
+    void *chunk = malloc(blocksize);
+
+    while(buffer_done(rb) != 1) {
+      if(buffer_left(rb) < blocksize)
+        blocksize = buffer_left(rb);
+      buffer_get_chunk(rb, chunk, blocksize);
+      _dump("chunk", chunk, blocksize); // or do something else with it
+    }
+
+    buffer_free(rb);
+
+    munmap(r, rs);
+    fclose(RFD);
+    @endcode
+
+    \param[in] name A name for the Buffer. Just used for debugging purposes or in error messages.
+
+    \param[in] data The data pointer to use by the buffer.
+
+    \param[in] datasize The size of the data.
+
+    \return Returns a new Buffer object.
+
+ */
+Buffer *buffer_new_buf(char *name, void *data, size_t datasize);
 
 /* initialize buffer vars */
 void buffer_init(Buffer *b, size_t blocksize, char *name);

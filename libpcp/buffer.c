@@ -21,13 +21,6 @@
 
 #include "buffer.h"
 
-Buffer *buffer_new(size_t blocksize, char *name) {
-  Buffer *b = ucmalloc(sizeof(Buffer));
-  b->buf = ucmalloc(blocksize);
-  buffer_init(b, blocksize, name);
-  return b;
-}
-
 void buffer_init(Buffer *b, size_t blocksize, char *name) {
   b->name = ucmalloc(strlen(name)+1);
   b->size = blocksize;
@@ -39,21 +32,38 @@ void buffer_init(Buffer *b, size_t blocksize, char *name) {
   memcpy(b->name, name, strlen(name)+1);
 }
 
+Buffer *buffer_new(size_t blocksize, char *name) {
+  Buffer *b = ucmalloc(sizeof(Buffer));
+  b->buf = ucmalloc(blocksize);
+  buffer_init(b, blocksize, name);
+  return b;
+}
+
 Buffer *buffer_new_str(char *name) {
   Buffer *b = buffer_new(256, name);
   b->isstring = 1;
   return b;
 }
 
+Buffer *buffer_new_buf(char *name, void *data, size_t datasize) {
+  Buffer *b = buffer_new(256, name);
+  b->allocated = 0;
+  b->buf = data;
+  b->size = datasize;
+  b->end = datasize;
+  return b;
+}
+
 void buffer_free(Buffer *b) {
   if(b != NULL) {
     if(b->allocated == 1) {
+      /* free the underlying data pointer only if we allocated it */
       if(b->end > 0) {
 	buffer_clear(b);
-	free(b->buf);
       }
-      free(b);
+      free(b->buf);
     }
+    free(b);
   }
 }
 

@@ -68,6 +68,10 @@
 	To fix this, the function now starts at position 1
 	to search.
 
+	Added API doc for libpcp, generated using doxygen
+	in man/html/. Latest API docs can be found on
+	http://www.daemon.de/libpcp/.
+
 0.2.0	ED25519 and Curve25519 keys are now generated
 	separately (previously they were generated from
 	one random seed, the curve had been derived from

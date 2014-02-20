@@ -45,6 +45,10 @@
   Streams are, just like iostreams in c++, either output or
   input mode.
 
+  Sample usage:
+
+  \include tests/streamtest.c
+
  */
 
 

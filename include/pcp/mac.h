@@ -23,6 +23,10 @@
 #ifndef _HAVE_PCP_MAC
 #define _HAVE_PCP_MAC
 
+/**
+ * \addtogroup CRYPTO
+ * @{
+ */
 #include <strings.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -34,35 +38,47 @@
 /*  how many times do we hash the passphrase */
 #define HCYCLES 128000
 
-/*  encrypt some arbitrary cleartext using */
-/*  a curve25519 secret key  and a given nonce. */
-/*  */
-/*  expects a pointer to the target binary */
-/*  stream containing the encrypted data, */
-/*  the cleartext string, its size, the nonce */
-/*  (24 bytes) and the secret key (32 bytes). */
-/*  */
-/*  allocates memory for the returned cipher */
-/*  and it is up to the user to free it after use. */
-/*  */
-/*  returns the size of the returned cipherstream. */
-/*  in case of an error, the cipher will be set */
-/*  to NULL. */
+/** Symmetrically encrypt a message.
+
+    This function encrypts a message symmetrically
+    using crypto_secretbox() using the given Curve25519 raw
+    secret key and the nonce.
+
+    It allocates apropriate memory for the result,
+    which will be stored in \a cipher.
+
+    \param[out] cipher Encrypted result.
+    \param[in] cleartext Clear message.
+    \param[in] clearsize Size of message.
+    \param[in] nonce A random nonce (24 Bytes).
+    \param[in] key A Curve25519 key (32 Bytes).
+
+    \return Returns the size of \a cipher.
+ */
 size_t pcp_sodium_mac(unsigned char **cipher,
                       unsigned char *cleartext,
                       size_t clearsize,
                       unsigned char *nonce,
                       unsigned char *key);
 
-/*  does the opposite of pcp_sodium_mac and decrypts */
-/*  a given encrypted binary stream using a nonce and */
-/*  a secret key (sizes: see above). */
-/*  */
-/*  allocates memory for the returned cleartext and */
-/*  it is up to the user to free it after use. */
-/*  */
-/*  returns 0 if decryption and verification were */
-/*  successful, otherwise -1.  */
+/** Decrypt a symmetrically encrypted message.
+
+    This function decrypts a symmetrically encrypted message
+    using crypto_secretbox_open() using the given Curve25519 raw
+    secret key and the nonce.
+
+    It allocates apropriate memory for the result,
+    which will be stored in \a cleartext.
+
+    \param[out] cleartext The decrypted result.
+    \param[in] message The encrypted message.
+    \param[in] messagesize Size of message.
+    \param[in] nonce A random nonce (24 Bytes).
+    \param[in] key A Curve25519 key (32 Bytes).
+
+    \return Returns 0 in case of success of -1 in case of an error. Check fatals_if_any().
+
+ */
 int pcp_sodium_verify_mac(unsigned char **cleartext,
                           unsigned char* message,
                           size_t messagesize,
@@ -73,3 +89,5 @@ int pcp_sodium_verify_mac(unsigned char **cleartext,
 
 
 #endif /*  _HAVE_PCP_MAC */
+
+/**@}*/

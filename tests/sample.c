@@ -25,7 +25,7 @@ int main() {
 
   /* prepare the pubkey recipient list (only 1 recipient: Bob) */
   pubhash = NULL;
-  strncpy(bobpub->id, pcp_getkeyid(bobpub), 17);
+  strncpy(bobpub->id, pcp_getpubkeyid(bobpub), 17);
   HASH_ADD_STR( pubhash, id, bobpub);
 
   /* actually encrypt the message, don't sign it
@@ -33,7 +33,7 @@ int main() {
   pcp_encrypt_stream(clear_in, crypt_out, alice, pubhash, 0);
 
   /* now, print the encrypted result */
-  fprintf(stderr, "Alice encrypted %d bytes for Bob:\n", strlen(message));
+  fprintf(stderr, "Alice encrypted %ld bytes for Bob:\n", strlen(message));
   buffer_dump(ps_buffer(crypt_out));
 
   /* ---- encryption don, now decrypt ---- */
@@ -52,7 +52,7 @@ int main() {
     fatals_ifany();
   else {
     /* and finally print out the decrypted message */
-    fprintf(stderr, "Bob decrypted %d bytes from Alice:\n", buffer_size(ps_buffer(crypt_out)));
+    fprintf(stderr, "Bob decrypted %ld bytes from Alice:\n", buffer_size(ps_buffer(crypt_out)));
     printf("Decrypted message: %s\n", buffer_get_str(ps_buffer(clear_out)));
   }
 

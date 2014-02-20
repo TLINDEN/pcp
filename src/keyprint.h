@@ -31,9 +31,6 @@
 #include "keyhash.h"
 #include "base85.h"
 
-void pcp_dumpkey(pcp_key_t *k);
-void pcp_dumppubkey(pcp_pubkey_t *k);
-
 void pcpkey_print(pcp_key_t *key, FILE *out);
 void pcppubkey_print(pcp_pubkey_t *key, FILE *out);
 

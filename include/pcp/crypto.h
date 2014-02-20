@@ -170,7 +170,6 @@ unsigned char *pcp_box_encrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
     \return Returns an allocated unsigned char array of the size csize which contains the encrypted result.
             In case of an error, it returns NULL sets csize to 0. Use fatals_ifany() to check for errors.
 */
-unsigne
 unsigned char *pcp_box_decrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
                                unsigned char *cipher, size_t ciphersize,
 			       size_t *dsize);

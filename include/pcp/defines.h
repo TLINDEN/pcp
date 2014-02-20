@@ -29,11 +29,12 @@
     \section intro_sec Introduction
 
     This is the API documentation of libpcp, the library behind
-    Pretty Curved Privacy (pcp). The library can be used independently
+    <a href="/PrettyCurvedPrivacy">Pretty Curved Privacy (pcp)</a>.
+    The library can be used independently
     of pcp to manage keys and to encrypt or sign files or buffers.
 
-    For most actual crypto related things, libpcp uses libsodium,
-    the portable NaCL library.
+    For most actual crypto related things, libpcp uses
+    <a href="https://github.com/jedisct1/libsodium">libsodium, the portable NaCL library</a>.
 
     \section sample_sec Sample usage
 
@@ -56,7 +57,7 @@ typedef unsigned char   byte;           /*   Single unsigned byte = 8 bits */
 typedef unsigned short  dbyte;          /*   Double byte = 16 bits */
 typedef unsigned int    qbyte;          /*   Quad byte = 32 bits */
 
-/*  key stuff */
+/*  key stuff, deprecated. */
 #define PCP_KEY_HEADER "----- BEGIN PCP SECRET KEY -----"
 #define PCP_KEY_FOOTER "------ END PCP SECRET KEY ------"
 
@@ -79,11 +80,25 @@ typedef unsigned int    qbyte;          /*   Quad byte = 32 bits */
 #define PCP_KEY_VERSION 6
 #define PCP_KEY_PRIMITIVE "CURVE25519-ED25519-SALSA20-POLY1305"
 
-#define PCP_KEY_TYPE_MAINSECRET 1
-#define PCP_KEY_TYPE_SECRET     2
-#define PCP_KEY_TYPE_PUBLIC     3
-#define PCP_KEYSIG_NATIVE       4
-#define PCP_KEYSIG_PBP          5
+/** 
+    \addtogroup KEYS
+    @{
+*/    
+
+/** \enum _PCP_KEY_TYPES
+
+    Internal key types.
+ */
+typedef enum _PCP_KEY_TYPES {
+  PCP_KEY_TYPE_MAINSECRET = 1, /**< 1 - Primary secret */
+  PCP_KEY_TYPE_SECRET     = 2, /**< 2 - Other secret */
+  PCP_KEY_TYPE_PUBLIC     = 3, /**< 3 - Public */
+  PCP_KEYSIG_NATIVE       = 4, /**< 4 - PCP native key signature */
+  PCP_KEYSIG_PBP          = 5  /**< 5 - PBP key signature */
+} PCP_KEY_TYPES;
+
+/** @}
+ */
 
 /*  save typing, dammit */
 #define PCP_ENCRYPT_MAC crypto_secretbox_ZEROBYTES + crypto_secretbox_NONCEBYTES

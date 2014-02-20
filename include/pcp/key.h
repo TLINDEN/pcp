@@ -428,7 +428,16 @@ int pcp_sanitycheck_pub(pcp_pubkey_t *key);
 */
 int pcp_sanitycheck_key(pcp_key_t *key);
 
+/** Dump a secret key structure to stderr.
+
+    \param[in] k Secret key to dump.
+*/
 void pcp_dumpkey(pcp_key_t *k);
+
+/** Dump a public key structure to stderr.
+
+    \param[in] k Public key to dump.
+*/
 void pcp_dumppubkey(pcp_pubkey_t *k);
 
 

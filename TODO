@@ -18,6 +18,10 @@ vault checksum: add keysigs as well
 enable formats for secret key exports as well
 
 
+PCPSTREAM changes:
+ - enable determine armor mode of input, parse headers, comments
+   and newlines away, decode and return the binary result with ps_read()
+   as before.
 
 Python binding, e.g.:
 py % cdll.LoadLibrary("libsodium.so.8")

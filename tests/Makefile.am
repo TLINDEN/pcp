@@ -20,7 +20,7 @@
 #
 
 AM_CFLAGS = -I../include/pcp -I../src -I../libpcp/scrypt/crypto -Wall -g
-check_PROGRAMS = col invalidkeys pwhashes gencheader statictest cpptest buffertest sample
+check_PROGRAMS = col invalidkeys pwhashes gencheader statictest cpptest buffertest sample streamtest
 
 gencheader_LDADD = ../libpcp/.libs/libpcp1.a
 gencheader_SOURCES = gencheader.c
@@ -34,7 +34,8 @@ buffertest_SOURCES = buffertest.c
 sample_LDADD = ../libpcp/.libs/libpcp1.a
 sample_SOURCES = sample.c
 
-
+streamtest_LDADD = ../libpcp/.libs/libpcp1.a
+streamtest_SOURCES = streamtest.c
 
 col_LDADD = ../libpcp/.libs/libpcp1.a
 col_SOURCES = collisions.c ../src/compat_getopt.c

@@ -9,8 +9,8 @@ int main() {
   FILE *out, *in;
   unsigned char clear[8] = "ABCDEFGH";
   unsigned char key[8]   = "IxD8Lq1K";
-  unsigned char crypt[8] = {0};
-  int blocks = 8;
+  unsigned char crypt[11] = {0};
+  int blocks = 24;
   int i = 0;
 
   if((out = fopen("teststream.out", "wb+")) == NULL) {
@@ -18,6 +18,7 @@ int main() {
     return 1;
   }
   Pcpstream *pout = ps_new_file(out);
+  ps_armor(pout);
 
   /* "encrypt" a couple of times into the file */
   for(i=0; i<blocks; i++) {
@@ -34,14 +35,15 @@ int main() {
     return 1;
   }
   Pcpstream *pin = ps_new_file(in);
-  
+  ps_determine(pin);
+
   /* we'll use this stream to put the "decrypted" data in.
      note, that this could be a file as well.  */
   Pcpstream *pclear = ps_new_outbuffer();
 
   /* read and "decrypt" */
   for(i=0; i<blocks; i++) {
-    ps_read(pin, crypt, 8);
+    ps_read(pin, crypt, 10);
     _xorbuf(key, crypt, 8);
     ps_write(pclear, crypt, 8);
   }
@@ -54,6 +56,7 @@ int main() {
   /* and verify if it's "decrypted" (re-use crypt) */
   for(i=0; i<blocks; i++) {
     buffer_get_chunk(result, crypt, 8);
+    _dump("chunk", crypt, 8);
     if(memcmp(crypt, clear, 8) != 0) {
       fprintf(stderr, "Oops, block %d doesn't match\n", i);
       goto error;

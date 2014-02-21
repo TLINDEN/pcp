@@ -28,6 +28,7 @@
 #include "util.h"
 #include "defines.h"
 #include "buffer.h"
+#include "z85.h"
 
 /**
  * \defgroup Pcpstream PCPSTREAMS
@@ -58,9 +59,15 @@
 struct _pcp_stream_t {
   FILE *fd;          /**< The backend FILE stream */
   Buffer *b;         /**< The backend Buffer object */
+  Buffer *z;         /**< Buffer Cache for Z85 en/de-coding */
+  Buffer *t;         /**< Temporary Buffer */
   uint8_t is_buffer; /**< Set to 1 if the backend is a Buffer */
   uint8_t eof;       /**< Set to 1 if EOF reached */
   uint8_t err;       /**< Set to 1 if an error occured */
+  uint8_t armor;     /**< Set to 1 if Z85 en/de-coding is requested */
+  uint8_t determine; /**< Set to 1 to automatically determine armor mode */
+  uint8_t firstread; /**< Internal flag, will be set after first read() */
+  size_t  linewr;    /**< Used for Z85 writing, remember how many chars we lastly wrote on the current line */
 };
 
 /** The name used everywhere */

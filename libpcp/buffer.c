@@ -62,6 +62,7 @@ void buffer_free(Buffer *b) {
 	buffer_clear(b);
       }
       free(b->buf);
+      b->allocated = 0;
     }
     free(b);
   }

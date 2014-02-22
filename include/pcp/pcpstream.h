@@ -146,6 +146,19 @@ size_t ps_read(Pcpstream *stream, void *buf, size_t readbytes);
 */
 size_t ps_write(Pcpstream *stream, void *buf, size_t writebytes);
 
+/** Finalize writing the stream.
+
+    You NEED to call this function after you're done writing
+    to the stream if you enabled Z85 armoring using ps_armor().
+
+    It writes the remaining bytes (encoded) to the stream destination.
+
+    \param[in] stream The input stream to write to.
+
+    \return Returns the number of bytes written. in case of errors it returns 0.
+ */
+size_t ps_finish(Pcpstream *stream);
+
 /** Write a formatted string to the stream.
 
     Use an printf() style format string to print something out
@@ -220,8 +233,25 @@ int ps_end(Pcpstream *stream);
 int ps_err(Pcpstream *stream);
 
 
+/** Enable auto Z85 encoding detection for an input stream.
+
+    If you're not sure if your input is Z85 encoded, enable
+    detection.
+
+    \param[in] stream The stream object.
+
+    \param[in] blocksize The blocksize to for Z85 decoding (if encoded).
+ */
 void ps_setdetermine(Pcpstream *stream, size_t blocksize);
-void ps_armor(Pcpstream *stream);
+
+
+/** Enable Z85 encoding for an output stream.
+
+    \param[in] stream The stream object.
+
+    \param[in] blocksize The blocksize to for Z85 encoding.
+ */
+void ps_armor(Pcpstream *stream, size_t blocksize);
 
 /* read from primary source, decode z85 and out into cache.
    if buf != NULL, consider it as the start of encoded data
@@ -239,8 +269,15 @@ size_t ps_read_next(Pcpstream *stream);
    fetch (and decode) the next chunk, append it to cache and return from
    that */
 size_t ps_read_cached(Pcpstream *stream, void *buf, size_t readbytes);
+
+/* really read from the source */
 size_t ps_read_raw(Pcpstream *stream, void *buf, size_t readbytes);
 
+/* helper, Z85 encodes current cache into the dst buffer */
+void ps_write_encode(Pcpstream *stream, Buffer *dst);
+
+/* really write the buffer z into the output stream */
+size_t ps_write_buf(Pcpstream *stream, Buffer *z);
 
 #endif // HAVE_PCP_PCPSTEAM_H
 

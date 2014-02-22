@@ -59,8 +59,9 @@ void ps_setdetermine(Pcpstream *stream, size_t blocksize) {
   stream->blocksize = blocksize;
 }
 
-void ps_armor(Pcpstream *stream) {
+void ps_armor(Pcpstream *stream, size_t blocksize) {
   stream->armor = 1;
+  stream->blocksize = blocksize;
 }
 
 size_t ps_read_raw(Pcpstream *stream, void *buf, size_t readbytes) {
@@ -261,31 +262,8 @@ size_t ps_write(Pcpstream *stream, void *buf, size_t writebytes) {
 	buffer_add(stream->cache, buf, writebytes);
       }
 
-      /* do z85 0 padding, manually */
-      if(buffer_size(stream->cache) % 4 != 0) {
-	size_t outlen = buffer_size(stream->cache);
-	while (outlen % 4 != 0) 
-	  buffer_add8(stream->cache, 0);
-      }
-
-      size_t zlen, i, pos;    
-      zlen = (buffer_size(stream->cache) * 5 / 4);
-      char *z85 = ucmalloc(zlen);
-
-      zmq_z85_encode(z85, buffer_get(stream->cache), buffer_size(stream->cache));
-
-      pos = stream->linewr;
-      for(i=0; i<zlen; ++i) {
-	if(pos >= 71) {
-	  buffer_add8(z, '\r');
-	  buffer_add8(z, '\n');
-	  pos = 1;
-	}
-	else
-	  pos++;
-	buffer_add8(z, z85[i]);
-      }
-      stream->linewr = pos;
+      /* encode the cache into z */
+      ps_write_encode(stream, z);
 
       buffer_clear(stream->cache);
       if(aside != NULL) {
@@ -299,6 +277,49 @@ size_t ps_write(Pcpstream *stream, void *buf, size_t writebytes) {
     buffer_add(z, buf, writebytes);
   }
 
+ size_t outsize = ps_write_buf(stream, z);
+
+ buffer_free(z);
+
+ return outsize;
+}
+
+void ps_write_encode(Pcpstream *stream, Buffer *dst) {
+  size_t zlen, i, pos;
+  
+  /* do z85 0 padding, manually */
+  if(buffer_size(stream->cache) % 4 != 0) {
+    size_t outlen = buffer_size(stream->cache);
+    while (outlen % 4 != 0) 
+      buffer_add8(stream->cache, 0);
+  }
+
+  /* z85 encode */
+  zlen = (buffer_size(stream->cache) * 5 / 4);
+  char *z85 = ucmalloc(zlen);
+
+  zmq_z85_encode(z85, buffer_get(stream->cache), buffer_size(stream->cache));
+
+  /* add newlines */
+  pos = stream->linewr;
+  for(i=0; i<zlen; ++i) {
+    if(pos >= 71) {
+      buffer_add8(dst, '\r');
+      buffer_add8(dst, '\n');
+      pos = 1;
+    }
+    else
+      pos++;
+    buffer_add8(dst, z85[i]);
+  }
+
+  /* remember where to start next */
+  stream->linewr = pos;
+}
+
+size_t ps_write_buf(Pcpstream *stream, Buffer *z) {
+  size_t writebytes;
+
   if(stream->is_buffer) {
     buffer_add(stream->b, buffer_get(z), buffer_size(z));
     writebytes =  buffer_size(z);
@@ -311,24 +332,18 @@ size_t ps_write(Pcpstream *stream, void *buf, size_t writebytes) {
     }
   }
 
-  buffer_free(z);
   return writebytes;
 }
 
-size_t ps_writeOLD(Pcpstream *stream, void *buf, size_t writebytes) {
-  size_t donebytes = 0;
-
-  if(stream->is_buffer) {
-    buffer_add(stream->b, buf, writebytes);
-    donebytes = writebytes;
-  }
-  else {
-    donebytes = fwrite(buf, 1, writebytes, stream->fd);
-    if(ferror(stream->fd) != 0 || donebytes < writebytes)
-      stream->err = 1;
-  }
-
-  return writebytes;
+size_t ps_finish(Pcpstream *stream) {
+  size_t outsize = 0;
+  if(buffer_left(stream->cache) > 0) {
+    Buffer *z = buffer_new(32, "Pcpwritetemp");
+    ps_write_encode(stream, z);
+    outsize = ps_write_buf(stream, z);
+    buffer_free(z);
+  }  
+  return outsize;
 }
 
 size_t ps_print(Pcpstream *stream, const char * fmt, ...) {

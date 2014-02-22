@@ -423,7 +423,6 @@ void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int 
   }
 
  errpcpexpu1:
-  buffer_free(exported_pk);
 }
 
 

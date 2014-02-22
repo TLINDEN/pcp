@@ -28,6 +28,7 @@
 #include "util.h"
 #include "defines.h"
 #include "buffer.h"
+#include "z85.h"
 
 /**
  * \defgroup Pcpstream PCPSTREAMS
@@ -58,9 +59,16 @@
 struct _pcp_stream_t {
   FILE *fd;          /**< The backend FILE stream */
   Buffer *b;         /**< The backend Buffer object */
+  Buffer *cache;     /**< The caching Buffer object (for look ahead read) */
+  Buffer *next;      /**< The caching Next-Buffer object (for look ahead read) */
   uint8_t is_buffer; /**< Set to 1 if the backend is a Buffer */
   uint8_t eof;       /**< Set to 1 if EOF reached */
   uint8_t err;       /**< Set to 1 if an error occured */
+  uint8_t armor;     /**< Set to 1 if Z85 en/de-coding is requested */
+  uint8_t determine; /**< Set to 1 to automatically determine armor mode */
+  uint8_t firstread; /**< Internal flag, will be set after first read() */
+  size_t  linewr;    /**< Used for Z85 writing, number of chars written on last line */
+  size_t  blocksize; /**< Blocksize used for z85, if requested */
 };
 
 /** The name used everywhere */
@@ -210,6 +218,28 @@ int ps_end(Pcpstream *stream);
     \return Returns 1 if there were any errors or 0 otherwise. Also check errno() and fatals_ifany().
 */
 int ps_err(Pcpstream *stream);
+
+
+void ps_setdetermine(Pcpstream *stream, size_t blocksize);
+void ps_armor(Pcpstream *stream);
+
+/* read from primary source, decode z85 and out into cache.
+   if buf != NULL, consider it as the start of encoded data
+   and remove headers and comments, then continue as normal. */
+size_t ps_read_decode(Pcpstream *stream, Buffer *cache, void *buf, size_t bufsize);
+
+/* determine if primary source is z85 encoded, put the data
+   read from it into the cache */
+void ps_determine(Pcpstream *stream);
+
+/* read and decode the next chunk and put it into stream->next */
+size_t ps_read_next(Pcpstream *stream);
+
+/* return readbytes from cache. if it is more than left in the cache
+   fetch (and decode) the next chunk, append it to cache and return from
+   that */
+size_t ps_read_cached(Pcpstream *stream, void *buf, size_t readbytes);
+size_t ps_read_raw(Pcpstream *stream, void *buf, size_t readbytes);
 
 
 #endif // HAVE_PCP_PCPSTEAM_H

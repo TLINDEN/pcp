@@ -122,6 +122,13 @@ char *pcp_readz85file(FILE *infile);
  */
 char *pcp_readz85string(unsigned char *input, size_t bufsize);
 
+/** Determine if a buffer is binary or ascii.
+
+    \param[in] buf The buffer to check.
+    \param[in] len Len of the buffer.
+    \return Returns 0 if the input is ascii or a number > 0 if
+            it contains binary data.
+*/
 size_t _buffer_is_binary(unsigned char *buf, size_t len);
 
 #endif /*  _HAVE_PCP_Z85_H */

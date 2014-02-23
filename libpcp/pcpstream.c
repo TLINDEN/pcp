@@ -24,7 +24,8 @@
 Pcpstream *ps_init(void) {
   Pcpstream *stream = ucmalloc(sizeof(Pcpstream));
   stream->b = NULL;
-  stream->cache = buffer_new(32, "Pcpstreamcache");
+  stream->cache = NULL;
+  stream->next = NULL;
   stream->fd = NULL;
   stream->is_buffer = 0;
   stream->eof = 0;
@@ -57,11 +58,19 @@ Pcpstream *ps_new_outbuffer() {
 void ps_setdetermine(Pcpstream *stream, size_t blocksize) {
   stream->determine = 1;
   stream->blocksize = blocksize;
+  if(stream->cache == NULL) {
+    stream->cache = buffer_new(32, "Pcpstreamcache");
+    stream->next = buffer_new(32, "Pcpstreamcachenext");
+  }
 }
 
 void ps_armor(Pcpstream *stream, size_t blocksize) {
   stream->armor = 1;
   stream->blocksize = blocksize;
+  if(stream->cache == NULL) {
+    stream->cache = buffer_new(32, "Pcpstreamcache");
+    stream->next = buffer_new(32, "Pcpstreamcachenext");
+  }
 }
 
 size_t ps_read_raw(Pcpstream *stream, void *buf, size_t readbytes) {
@@ -97,7 +106,7 @@ size_t ps_read_raw(Pcpstream *stream, void *buf, size_t readbytes) {
    fetch (and decode) the next chunk, append it to cache and return from
    that */
 size_t ps_read_cached(Pcpstream *stream, void *buf, size_t readbytes) {
-  if(buffer_left(stream->cache) <= readbytes) {
+  if(buffer_left(stream->cache) <= readbytes && buffer_left(stream->cache) > 0) {
     /* enough left in current cache */
     return buffer_get_chunk(stream->cache, buf, readbytes);
   }
@@ -175,7 +184,7 @@ void ps_determine(Pcpstream *stream) {
   size_t got = ps_read_raw(stream, buf, stream->blocksize);
 
   /* check if it's binary or not */
-  if(_buffer_is_binary(buf, got) != 0) {
+  if(_buffer_is_binary(buf, got) == 0) {
     /* no, it's armored */
     stream->armor = 1;
     ps_read_decode(stream, stream->cache, buf, got);
@@ -364,6 +373,12 @@ size_t ps_print(Pcpstream *stream, const char * fmt, ...) {
 }
 
 void ps_close(Pcpstream *stream) {
+  if(stream->cache != NULL)
+    buffer_free(stream->cache);
+
+  if(stream->next != NULL)
+    buffer_free(stream->next);
+
   if(stream->is_buffer) {
     buffer_clear(stream->b);
     free(stream);

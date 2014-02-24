@@ -17,6 +17,8 @@ vault checksum: add keysigs as well
 
 enable formats for secret key exports as well
 
+Add newlines to headers in define.h, so strlen() later catches the whole length.
+
 Z85 headers:
  - currently I use "----- BEGIN ... -----" and "----- END ... -----" as
    header and footer for various z85 encoded outputs. The problem is, that
@@ -42,10 +44,6 @@ Z85 headers:
    is marked as to be ignored which could be saved as a state when using
    blockmode.
 
-PCPSTREAM changes:
- - enable determine armor mode of input, parse headers, comments
-   and newlines away, decode and return the binary result with ps_read()
-   as before.
 
 Python binding, e.g.:
 py % cdll.LoadLibrary("libsodium.so.8")

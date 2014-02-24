@@ -81,13 +81,14 @@ size_t pcp_ed_sign_buffered(Pcpstream *in, Pcpstream* out, pcp_key_t *s, int z85
   crypto_generichash_init(st, NULL, 0, 0);
 
   if(z85)
-    ps_print(out, "%s\nHash: Blake2\n\n", PCP_SIG_HEADER);
+    ps_print(out, "%s\r\n Hash: Blake2\r\n\r\n", PCP_SIG_HEADER);
 
   while(!ps_end(in)) {
     cur_bufsize = ps_read(in, &in_buf, PCP_BLOCK_SIZE); /* fread(&in_buf, 1, PCP_BLOCK_SIZE, in); */
     if(cur_bufsize <= 0)
       break;
     outsize += cur_bufsize;
+
     crypto_generichash_update(st, in_buf, cur_bufsize);
     ps_write(out, in_buf, cur_bufsize); /* fwrite(in_buf, cur_bufsize, 1, out); */
   }
@@ -104,10 +105,10 @@ size_t pcp_ed_sign_buffered(Pcpstream *in, Pcpstream* out, pcp_key_t *s, int z85
   size_t mlen = + crypto_sign_BYTES + crypto_generichash_BYTES_MAX;
 
   if(z85) {
-    ps_print(out, "\n%s\n Version: PCP v%d.%d.%d\n\n", PCP_SIG_START, PCP_VERSION_MAJOR, PCP_VERSION_MINOR, PCP_VERSION_PATCH);
+    ps_print(out, "\r\n%s\r\n~ Version: PCP v%d.%d.%d ~\r\n\r\n", PCP_SIG_START, PCP_VERSION_MAJOR, PCP_VERSION_MINOR, PCP_VERSION_PATCH);
     size_t zlen;
     char *z85encoded = pcp_z85_encode((unsigned char*)signature, mlen, &zlen);
-    ps_print(out, "%s\n%s\n", z85encoded, PCP_SIG_END);
+    ps_print(out, "%s\r\n%s\r\n", z85encoded, PCP_SIG_END);
   }
   else {
     ps_print(out, "%s", PCP_SIGPREFIX);
@@ -134,12 +135,12 @@ pcp_pubkey_t *pcp_ed_verify_buffered(Pcpstream *in, pcp_pubkey_t *p) {
   unsigned char hash[crypto_generichash_BYTES_MAX];
   char zhead[] = PCP_SIG_HEADER;
   size_t hlen = strlen(PCP_SIG_HEADER);
-  size_t hlen2 = 15; /*  hash: blake2\n\n */
+  size_t hlen2 = 17; /* " hash: blake2\r\n\r\n" FIXME: parse and calculate */
   size_t mlen = + crypto_sign_BYTES + crypto_generichash_BYTES_MAX;
   size_t zlen = 262; /*  FIXME: calculate */
   unsigned char z85encoded[zlen];
   unsigned char sighash[mlen];
-  char z85sigstart[] = PCP_SIG_START;
+  char z85sigstart[] = "\n" PCP_SIG_START; /* FIXME: verifies, but it misses the \r! */
   char binsigstart[] = PCP_SIGPREFIX;
   char sigstart[] = PCP_SIG_START;
   size_t siglen, startlen;
@@ -154,8 +155,8 @@ pcp_pubkey_t *pcp_ed_verify_buffered(Pcpstream *in, pcp_pubkey_t *p) {
   /*  look for z85 header and cut it out */
   if(_findoffset(in_buf, cur_bufsize, zhead, hlen) == 0) {
     /*  it is armored */
-    next_bufsize = cur_bufsize - (hlen+hlen2); /*  size - the header */
-    memcpy(in_next, &in_buf[hlen+hlen2], next_bufsize); /*  tmp save */
+    next_bufsize = cur_bufsize - (hlen+hlen2+2); /*  size - the header */
+    memcpy(in_next, &in_buf[hlen+hlen2+2], next_bufsize); /*  tmp save */
     memcpy(in_buf, in_next, next_bufsize); /*  put into inbuf without header */
     if(cur_bufsize == PCP_BLOCK_SIZE/2) {
       /*  more to come */
@@ -320,11 +321,11 @@ size_t pcp_ed_detachsign_buffered(Pcpstream *in, Pcpstream *out, pcp_key_t *s) {
   unsigned char *signature = pcp_ed_sign(hash, crypto_generichash_BYTES_MAX, s);
   size_t mlen = + crypto_sign_BYTES + crypto_generichash_BYTES_MAX;
 
-  ps_print(out, "\n%s\n Version: PCP v%d.%d.%d\n\n",
+  ps_print(out, "\r\n%s\r\n~ Version: PCP v%d.%d.%d ~\r\n\r\n",
 	  PCP_SIG_START, PCP_VERSION_MAJOR, PCP_VERSION_MINOR, PCP_VERSION_PATCH);
   size_t zlen;
   char *z85encoded = pcp_z85_encode((unsigned char*)signature, mlen, &zlen);
-  ps_print(out, "%s\n%s\n", z85encoded, PCP_SIG_END);
+  ps_print(out, "%s\r\n%s\r\n", z85encoded, PCP_SIG_END);
 
   free(st);
 

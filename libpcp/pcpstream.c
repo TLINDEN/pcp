@@ -156,7 +156,10 @@ size_t ps_read_next(Pcpstream *stream) {
 }
 
 size_t ps_read(Pcpstream *stream, void *buf, size_t readbytes) {
-  if(buffer_size(stream->cache) > 0) {
+  if(stream->cache == NULL) {
+    return ps_read_raw(stream, buf, readbytes);
+  }
+  else if(buffer_size(stream->cache) > 0) {
     /* use cache */
     return ps_read_cached(stream, buf, readbytes);
   }

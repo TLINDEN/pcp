@@ -24,6 +24,7 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <assert.h>
 #include "mem.h"
 #include "util.h"
 #include "defines.h"

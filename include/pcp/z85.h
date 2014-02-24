@@ -131,6 +131,17 @@ char *pcp_readz85string(unsigned char *input, size_t bufsize);
 */
 size_t _buffer_is_binary(unsigned char *buf, size_t len);
 
+
+/** Determine if a char is a Z85 character
+
+    \param[out] z Buffer object where to put the char if it's z85 and not inside a comment.
+    \param[in] c The char to check.
+    \param[in] is_comment Denotes if we're currently within a comment.
+
+    \return Returns 1 if a comment starts or 0 otherwise.
+ */
+uint8_t _parse_zchar(Buffer *z, uint8_t c, uint8_t is_comment);
+
 #endif /*  _HAVE_PCP_Z85_H */
 
 /**@}*/

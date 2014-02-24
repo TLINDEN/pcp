@@ -37,6 +37,20 @@ size_t _buffer_is_binary(unsigned char *buf, size_t len) {
     return 0;
 }
 
+uint8_t _parse_zchar(Buffer *z, uint8_t c, uint8_t is_comment) {
+  if(is_comment == 1) {
+    if(c == '~')
+      is_comment = 0;
+  }
+  else {
+    if(c == '~')
+      is_comment = 1;
+    else if(c != '\r' && c != '\n') {
+      buffer_add8(z, c);
+    }
+  }
+  return is_comment;
+}
 
 unsigned char *pcp_padfour(unsigned char *src, size_t srclen, size_t *dstlen) {
   size_t outlen, zerolen;
@@ -172,54 +186,12 @@ char *pcp_readz85string(unsigned char *input, size_t bufsize) {
   }
 
   Buffer *z = buffer_new(MAXLINE, "z");
-  Buffer *line = buffer_new(MAXLINE, "line");
-  char *oneline;
-  int begin, end;
-  begin = end = 0;
+  uint8_t is_comment = 0;
   char *out = NULL;
 
-  for(i=0; i<bufsize; ++i) {
-    if(input[i] == '\r')
-      continue;
-    else if(input[i] == '\n') {
-      /* a line is complete */
-      oneline = buffer_get_str(line);
-      if(strncmp(oneline, "-----", 5) == 0 ) {
-	if(begin == 0) {
-	/* a begin header, reset whatever we've got so far in z buffer */
-	  begin = 1;
-	  buffer_clear(line);
-	  buffer_clear(z);
-	  continue;
-	}
-	else {
-	  /* an end header */
-	  end = 1;
-	  break;
-	}
-      }
-      else if(strchr(oneline, ' ') != NULL) {
-	/* a comment */
-	buffer_clear(line);
-	continue;
-      }
-      else {
-	/* regular z85 encoded content */
-	buffer_add_buf(z, line);
-	buffer_clear(line);
-      }
-    }
-    else {
-      /* regular line content */
-      buffer_add8(line, input[i]);
-    }
-  }
-
-  if(buffer_size(line) > 0 && end != 1) {
-    /* something left in line buffer, probably
-       newline at eof missing or no multiline input */
-    buffer_add_buf(z, line);  
-  }
+  for(i=0; i<bufsize; ++i)
+    is_comment = _parse_zchar(z, input[i], is_comment);
+  
 
   if(buffer_size(z) == 0) {
     fatal("empty z85 encoded string");
@@ -230,13 +202,11 @@ char *pcp_readz85string(unsigned char *input, size_t bufsize) {
   strncpy(out, buffer_get_str(z), buffer_size(z)+1);
 
   buffer_free(z);
-  buffer_free(line);
 
   return out;
 
  rferr:
   buffer_free(z);
-  buffer_free(line);
 
   return NULL;
 }

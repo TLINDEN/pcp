@@ -20,6 +20,7 @@ int main() {
 
   /* out output stream, z85 encoded, use z85 blocksize 8 */
   Pcpstream *pout = ps_new_file(out);
+  ps_print(pout, "~~~~~ BEGIN ~~~~~\r\n");
   ps_armor(pout, 8);
 
   /* "encrypt" a couple of times into the output stream */
@@ -31,6 +32,8 @@ int main() {
 
   /* done, put cached buffers out and close */
   ps_finish(pout);
+  pout->armor = 0;
+  ps_print(pout, "\r\n~~~~~ END ~~~~~\r\n");
   ps_close(pout);
   fclose(out);
 
@@ -41,10 +44,8 @@ int main() {
   }
   Pcpstream *pin = ps_new_file(in);
 
-  /* enable autmatically encoding detection.
-     set blocksize to 10, because:
-     8 + (5 - (8 % 5)) == 10 */
-  ps_setdetermine(pin, 10);
+  /* enable autmatically encoding detection. */
+  ps_setdetermine(pin, 8);
   
   /* we'll use this stream to put the "decrypted" data in.
      note, that this could be a file as well.  */

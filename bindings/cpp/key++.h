@@ -29,6 +29,7 @@
 #include <iostream>
 
 #include "helpers++.h"
+#include "buffer++.h"
 
 namespace pcp {
 
@@ -57,8 +58,6 @@ namespace pcp {
 
     void is_stored(bool s);
     bool is_stored();
-
-    std::string to_text();
   };
 
   bool operator!(PubKey& k);
@@ -83,7 +82,7 @@ namespace pcp {
 	const std::string& mail);
     Key(pcp_key_t *k);
     Key(pcp_key_t *k, bool store);
-    Key(std::string &z85encoded);
+    Key(std::string &z85encoded, std::string& passphrase);
 
     // destructor
     ~Key();
@@ -106,12 +105,14 @@ namespace pcp {
     bool is_encrypted();
     bool is_primary();
 
-    std::string to_text();
+    std::string export_secret(const std::string& passphrase);
+    std::string export_public();
+
   };
 
   // << and >> operators
   bool operator!(Key& k);
-  std::ostream& operator<<(std::ostream& output, Key& k);
+  //std::ostream& operator<<(std::ostream& output, Key& k);
 };
 
 

@@ -58,21 +58,15 @@ typedef unsigned short  dbyte;          /*   Double byte = 16 bits */
 typedef unsigned int    qbyte;          /*   Quad byte = 32 bits */
 
 /*  key stuff, deprecated. */
-#define PCP_KEY_HEADER "----- BEGIN PCP SECRET KEY -----"
-#define PCP_KEY_FOOTER "------ END PCP SECRET KEY ------"
+#define PCP_ENFILE_HEADER "~~~~~ BEGIN PCP ENCRYPTED FILE ~~~~~"
+#define PCP_ENFILE_FOOTER "~~~~~ END PCP ENCRYPTED FILE ~~~~~"
 
-#define PCP_PUBKEY_HEADER "----- BEGIN PCP PUBLIC KEY -----"
-#define PCP_PUBKEY_FOOTER "------ END PCP PUBLICKEY ------"
+#define PCP_ZFILE_HEADER "~~~~~ BEGIN Z85 ENCODED FILE ~~~~~"
+#define PCP_ZFILE_FOOTER "~~~~~ END Z85 ENCODED FILE ~~~~~"
 
-#define PCP_ENFILE_HEADER "----- BEGIN PCP ENCRYPTED FILE -----"
-#define PCP_ENFILE_FOOTER "------ END PCP ENCRYPTED FILE ------"
-
-#define PCP_ZFILE_HEADER "----- BEGIN Z85 ENCODED FILE -----"
-#define PCP_ZFILE_FOOTER "------ END Z85 ENCODED FILE ------"
-
-#define PCP_SIG_HEADER "----- BEGIN ED25519 SIGNED MESSAGE -----"
-#define PCP_SIG_START  "----- BEGIN ED25519 SIGNATURE -----"
-#define PCP_SIG_END    "------ END ED25519 SIGNATURE ------"
+#define PCP_SIG_HEADER "~~~~~ BEGIN ED25519 SIGNED MESSAGE ~~~~~"
+#define PCP_SIG_START  "~~~~~ BEGIN ED25519 SIGNATURE ~~~~~"
+#define PCP_SIG_END    "~~~~~ END ED25519 SIGNATURE ~~~~~"
 #define PCP_SIGPREFIX  "\nnacl-"
 
 #define PCP_ME "Pretty Curved Privacy"

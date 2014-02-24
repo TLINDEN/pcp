@@ -56,8 +56,9 @@ Pcpstream *ps_new_outbuffer() {
 }
 
 void ps_setdetermine(Pcpstream *stream, size_t blocksize) {
+  assert(blocksize % 4 == 0);
   stream->determine = 1;
-  stream->blocksize = blocksize;
+  stream->blocksize = blocksize + (5 - (blocksize % 5));
   if(stream->cache == NULL) {
     stream->cache = buffer_new(32, "Pcpstreamcache");
     stream->next = buffer_new(32, "Pcpstreamcachenext");
@@ -65,6 +66,7 @@ void ps_setdetermine(Pcpstream *stream, size_t blocksize) {
 }
 
 void ps_armor(Pcpstream *stream, size_t blocksize) {
+  assert(blocksize % 4 == 0);
   stream->armor = 1;
   stream->blocksize = blocksize;
   if(stream->cache == NULL) {
@@ -196,6 +198,53 @@ void ps_determine(Pcpstream *stream) {
 }
 
 size_t ps_read_decode(Pcpstream *stream, Buffer *cache, void *buf, size_t bufsize) {
+  size_t zdiff = 1;
+  size_t i = 0;
+  uint8_t is_comment = 0;
+  uint8_t c;
+  Buffer *z = buffer_new(32, "ztemp");
+  byte *_buf = buf;
+
+  if(bufsize > 0) {
+    for(i=0; i<bufsize; ++i) {
+      c = _buf[i];
+      is_comment = _parse_zchar(z, c, is_comment);
+    }
+  }
+ 
+  if(buffer_size(z) <  stream->blocksize) {
+    /* blocksize not full, continue with stream source */
+    /* read in bytewise, ignore newlines and add until the block is full */
+    while (buffer_size(z) < stream->blocksize) {
+      if (ps_read_raw(stream, &c, 1) == 1) {
+	is_comment = _parse_zchar(z, c, is_comment);
+      }
+      else
+	break;
+    }
+  }
+
+  /* finally, decode it and put into cache */
+  size_t binlen, outlen;
+  unsigned char *bin = pcp_z85_decode(buffer_get_str(z), &binlen);
+  if(bin == NULL) {
+    /* it's not z85 encoded, so threat it as binary */
+    stream->armor = 1;
+    buffer_add_buf(stream->cache, z);
+    outlen = buffer_size(stream->cache);
+  }
+  else {
+    /* yes, successfully decoded it, put into cache */
+    buffer_add(stream->cache, bin, binlen);
+    outlen = binlen;
+  }
+
+  buffer_free(z);
+
+  return outlen;
+}
+
+size_t ps_read_decodeOLD(Pcpstream *stream, Buffer *cache, void *buf, size_t bufsize) {
   size_t zdiff = 1;
   size_t i = 0;
   Buffer *z = buffer_new(32, "ztemp");

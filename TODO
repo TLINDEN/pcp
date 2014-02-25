@@ -4,9 +4,6 @@ allow signing using an alternate secret key, like in pcpdecrypt()
 
 malloc() new pointers in functions only if not NULL, e.g. pcp_gennonce()
 
-generalize file i/0, open+close only in src/, print msg if using stdin or stdout
-  - sign + crypt done. key exports und imports to follow
-
 check pub key count in pcp.c before calling verify signature, croak if count==0
 
 Update pod key format spec.
@@ -46,6 +43,8 @@ Z85 headers:
 
 Check is_utf8 license.
   also found in https://gd.meizo.com/_files/lpc/ext/utf8.c
+
+Vault checksum with global vault
 
 Python binding, e.g.:
 py % cdll.LoadLibrary("libsodium.so.8")

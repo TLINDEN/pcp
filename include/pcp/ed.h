@@ -56,7 +56,7 @@
     \return Returns message+signature with size of messagesize + crypto_sign_BYTES,
             or NULL in case of an error.
 */
-unsigned char *pcp_ed_sign(unsigned char *message, size_t messagesize, pcp_key_t *s);
+byte *pcp_ed_sign(byte *message, size_t messagesize, pcp_key_t *s);
 
 /** Sign a raw message using s->mastersecret.
 
@@ -72,7 +72,7 @@ unsigned char *pcp_ed_sign(unsigned char *message, size_t messagesize, pcp_key_t
     \return Returns message+signature with size of messagesize + crypto_sign_BYTES,
             or NULL in case of an error.
 
-*/unsigned char *pcp_ed_sign_key(unsigned char *message, size_t messagesize, pcp_key_t *s);
+*/byte *pcp_ed_sign_key(byte *message, size_t messagesize, pcp_key_t *s);
 
 /** Verify a signature.
 
@@ -89,7 +89,7 @@ unsigned char *pcp_ed_sign(unsigned char *message, size_t messagesize, pcp_key_t
     \return If the signature verifies return the raw message with the signature removed (size: siglen - crypto_sign_BYTES),
     returns NULL in case of errors. Check fatals_if_any().
 */
-unsigned char *pcp_ed_verify(unsigned char *signature, size_t siglen, pcp_pubkey_t *p);
+byte *pcp_ed_verify(byte *signature, size_t siglen, pcp_pubkey_t *p);
 
 /**  Verify a signature using the mastersecret.
 
@@ -106,7 +106,7 @@ unsigned char *pcp_ed_verify(unsigned char *signature, size_t siglen, pcp_pubkey
     \return If the signature verifies return the raw message with the signature removed (size: siglen - crypto_sign_BYTES),
     returns NULL in case of errors. Check fatals_if_any().
 */
-unsigned char *pcp_ed_verify_key(unsigned char *signature, size_t siglen, pcp_pubkey_t *p);
+byte *pcp_ed_verify_key(byte *signature, size_t siglen, pcp_pubkey_t *p);
 
 /** Sign a stream in 32k block mode.
 

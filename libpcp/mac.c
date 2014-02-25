@@ -24,13 +24,13 @@
 
 
 
-size_t pcp_sodium_mac(unsigned char **cipher,
-		unsigned char *cleartext,
+size_t pcp_sodium_mac(byte **cipher,
+		byte *cleartext,
 		size_t clearsize,
-		unsigned char *nonce,
-		unsigned char *key) {
-  unsigned char *pad_clear;
-  unsigned char *pad_cipher;
+		byte *nonce,
+		byte *key) {
+  byte *pad_clear;
+  byte *pad_cipher;
 
   pad_cipher = ucmalloc(crypto_secretbox_ZEROBYTES + clearsize);
 
@@ -48,17 +48,17 @@ size_t pcp_sodium_mac(unsigned char **cipher,
   return (clearsize + crypto_secretbox_ZEROBYTES) - crypto_secretbox_BOXZEROBYTES;
 }
 
-int pcp_sodium_verify_mac(unsigned char **cleartext, unsigned char* message,
-			  size_t messagesize, unsigned char *nonce,
-			  unsigned char *key) {
+int pcp_sodium_verify_mac(byte **cleartext, byte* message,
+			  size_t messagesize, byte *nonce,
+			  byte *key) {
   /*  verify the mac */
-  unsigned char *pad_cipher;
-  unsigned char *pad_clear;
+  byte *pad_cipher;
+  byte *pad_clear;
   int success = -1;
 
   pcp_pad_prepend(&pad_cipher, message, crypto_secretbox_BOXZEROBYTES, messagesize);
 
-  pad_clear = (unsigned char *)ucmalloc((crypto_secretbox_ZEROBYTES + messagesize));
+  pad_clear = (byte *)ucmalloc((crypto_secretbox_ZEROBYTES + messagesize));
 
   if (crypto_secretbox_open(pad_clear,
 			    pad_cipher,

@@ -240,7 +240,7 @@ int pcpvault_copy(vault_t *tmp, vault_t *vault);
 void pcpvault_unlink(vault_t *tmp);
 
 /* calculate the vault checksum */
-unsigned char *pcpvault_create_checksum(vault_t *vault);
+byte *pcpvault_create_checksum(vault_t *vault);
 
 /* write the new checksum to the header of the current vault */
 void pcpvault_update_checksum(vault_t *vault);

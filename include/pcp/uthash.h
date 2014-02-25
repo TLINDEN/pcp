@@ -59,7 +59,7 @@ do {                                                                            
 /* a number of the hash function use uint32_t which isn't defined on win32 */
 #ifdef _MSC_VER
 typedef unsigned int uint32_t;
-typedef unsigned char uint8_t;
+typedef byte uint8_t;
 #else
 #include <inttypes.h>   /* uint32_t */
 #endif
@@ -416,7 +416,7 @@ do {                                                                            
 #define HASH_JEN(key,keylen,num_bkts,hashv,bkt)                                  \
 do {                                                                             \
   unsigned _hj_i,_hj_j,_hj_k;                                                    \
-  unsigned char *_hj_key=(unsigned char*)(key);                                  \
+  byte *_hj_key=(byte*)(key);                                  \
   hashv = 0xfeedbeef;                                                            \
   _hj_i = _hj_j = 0x9e3779b9;                                                    \
   _hj_k = (unsigned)(keylen);                                                      \
@@ -467,7 +467,7 @@ do {                                                                            
 #endif
 #define HASH_SFH(key,keylen,num_bkts,hashv,bkt)                                  \
 do {                                                                             \
-  unsigned char *_sfh_key=(unsigned char*)(key);                                 \
+  byte *_sfh_key=(byte*)(key);                                 \
   uint32_t _sfh_tmp, _sfh_len = keylen;                                          \
                                                                                  \
   int _sfh_rem = _sfh_len & 3;                                                   \

@@ -429,7 +429,7 @@ void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int 
 
 
 int pcp_importsecret (vault_t *vault, FILE *in, char *passwd) {
-  unsigned char *buf = ucmalloc(2048);
+  byte *buf = ucmalloc(2048);
   size_t buflen = fread(buf, 1, 2048, in);
   pcp_key_t *sk = NULL;
 
@@ -511,7 +511,7 @@ int pcp_importsecret (vault_t *vault, FILE *in, char *passwd) {
 }
 
 int pcp_importpublic (vault_t *vault, FILE *in) {
-  unsigned char *buf = ucmalloc(2048);
+  byte *buf = ucmalloc(2048);
   size_t buflen = fread(buf, 1, 2048, in);
   pcp_keysig_t *sk = NULL;
   pcp_pubkey_t *pub = NULL;

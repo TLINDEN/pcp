@@ -37,7 +37,7 @@
 #include <string.h>
 #include <stdio.h>
 
-
+#include "defines.h"
 
 
 /** Convert a char array to lowercase.
@@ -74,7 +74,7 @@ char *_lc(char *in);
     \return Returns the offset or -1 of the offset were not found.
 
  */
-size_t _findoffset(unsigned char *bin, size_t binlen, char *sigstart, size_t hlen);
+size_t _findoffset(byte *bin, size_t binlen, char *sigstart, size_t hlen);
 
 /** XOR an input buffer with another buffer.
 
@@ -87,7 +87,7 @@ size_t _findoffset(unsigned char *bin, size_t binlen, char *sigstart, size_t hle
 
     \param[in] xlen The size of the buffers (they must have the same size).
  */
-void _xorbuf(unsigned char *iv, unsigned char *buf, size_t xlen);
+void _xorbuf(byte *iv, byte *buf, size_t xlen);
 
 /** Dump binary data as hex to stderr.
 
@@ -97,7 +97,7 @@ void _xorbuf(unsigned char *iv, unsigned char *buf, size_t xlen);
 
     \param[in] s Size of d.
  */
-void _dump(char *n, unsigned char *d, size_t s);
+void _dump(char *n, byte *d, size_t s);
 
 #endif /*  _HAVE_PCP_UTIL_H */
 

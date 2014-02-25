@@ -59,13 +59,13 @@
 /*  sample call: */
 /*  */
 /*  char unpadded[] = {0xef, 0xa5}; */
-/*  unsigned char *padded; */
+/*  byte *padded; */
 /*  pcp_pad_prepend(&padded, unpadded, 8, 2); */
 /*  */
 /*  the result, padded, would be 10 bytes long, 8 */
 /*  bytes for the leading zeros and 2 for the content */
 /*  of the original unpadded. */
-void pcp_pad_prepend(unsigned char **padded, unsigned char *unpadded,
+void pcp_pad_prepend(byte **padded, byte *unpadded,
 		 size_t padlen, size_t unpadlen);
 
 /*  removes zero's of a binary stream, which is */
@@ -86,12 +86,12 @@ void pcp_pad_prepend(unsigned char **padded, unsigned char *unpadded,
 /*  sample call: */
 /*  */
 /*  char padded[] = {0x0, 0x0, 0x0, 0x0, 0xef, 0xa5}; */
-/*  unsigned char *unpadded; */
+/*  byte *unpadded; */
 /*  pcp_pad_remove(unpadded, padded, 4, 2); */
 /*  */
 /*  the result, unpadded would be 2 bytes long containing */
 /*  only the 2 bytes we want to have with zeros removed. */
-void pcp_pad_remove(unsigned char **unpadded, unsigned char *padded,
+void pcp_pad_remove(byte **unpadded, byte *padded,
 		size_t padlen, size_t unpadlen);
 
 

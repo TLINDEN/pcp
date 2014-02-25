@@ -27,7 +27,7 @@ pcp_keysig_t * keysig2be(pcp_keysig_t *s) {
   return s;
 #else
   uint32_t size = s->size;
-  unsigned char* p = (unsigned char*)&size;
+  byte* p = (byte*)&size;
   if(p[0] != 0) {
     s->size = htobe32(s->size);
   }

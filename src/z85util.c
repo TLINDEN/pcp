@@ -44,16 +44,16 @@ int pcpz85_encode(char *infile, char *outfile) {
     }
   }
 
-  unsigned char *input = NULL;
+  byte *input = NULL;
   size_t inputBufSize = 0;
-  unsigned char byte[1];
+  byte onebyte[1];
   
   while(!feof(in)) {
-    if(!fread(&byte, 1, 1, in))
+    if(!fread(&onebyte, 1, 1, in))
       break;
-    unsigned char *tmp = realloc(input, inputBufSize + 1);
+    byte *tmp = realloc(input, inputBufSize + 1);
     input = tmp;
-    memmove(&input[inputBufSize], byte, 1);
+    memmove(&input[inputBufSize], onebyte, 1);
     inputBufSize ++;
   }
   fclose(in);
@@ -115,7 +115,7 @@ int pcpz85_decode(char *infile, char *outfile) {
     goto errdz1;
 
   size_t clen;
-  unsigned char *decoded = pcp_z85_decode(encoded, &clen);
+  byte *decoded = pcp_z85_decode(encoded, &clen);
 
   
 

@@ -115,16 +115,16 @@
    of 32k, N is a nonce (new per block) and S the symmetric key.
 */
 
-size_t pcp_sodium_box(unsigned char **cipher,
-                      unsigned char *cleartext,
+size_t pcp_sodium_box(byte **cipher,
+                      byte *cleartext,
                       size_t clearsize,
-                      unsigned char *nonce,
-                      unsigned char *secret,
-                      unsigned char *pub);
+                      byte *nonce,
+                      byte *secret,
+                      byte *pub);
 
-int pcp_sodium_verify_box(unsigned char **cleartext, unsigned char* message,
-                          size_t messagesize, unsigned char *nonce,
-                          unsigned char *secret, unsigned char *pub);
+int pcp_sodium_verify_box(byte **cleartext, byte* message,
+                          size_t messagesize, byte *nonce,
+                          byte *secret, byte *pub);
 
 /** Asymmetrically encrypt a message.
 
@@ -143,11 +143,11 @@ int pcp_sodium_verify_box(unsigned char **cleartext, unsigned char* message,
 
     \param[out] csize A pointer which will be set to the size of the encrypted result if successful.
 
-    \return Returns an allocated unsigned char array of the size csize which contains the encrypted result.
+    \return Returns an allocated byte array of the size csize which contains the encrypted result.
             In case of an error, it returns NULL sets csize to 0. Use fatals_ifany() to check for errors.
 */
-unsigned char *pcp_box_encrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
-                               unsigned char *message, size_t messagesize,
+byte *pcp_box_encrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
+                               byte *message, size_t messagesize,
 			       size_t *csize);
 
 /** Asymmetrically decrypt a message.
@@ -167,11 +167,11 @@ unsigned char *pcp_box_encrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
 
     \param[out] dsize A pointer which will be set to the size of the decrypted result if successful.
 
-    \return Returns an allocated unsigned char array of the size csize which contains the encrypted result.
+    \return Returns an allocated byte array of the size csize which contains the encrypted result.
             In case of an error, it returns NULL sets csize to 0. Use fatals_ifany() to check for errors.
 */
-unsigned char *pcp_box_decrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
-                               unsigned char *cipher, size_t ciphersize,
+byte *pcp_box_decrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
+                               byte *cipher, size_t ciphersize,
 			       size_t *dsize);
 
 
@@ -217,7 +217,7 @@ size_t pcp_encrypt_stream(Pcpstream *in, Pcpstream* out, pcp_key_t *s, pcp_pubke
 
     \return Returns the size of the output written to the output stream or 0 in case of errors.
 */
-size_t pcp_encrypt_stream_sym(Pcpstream *in, Pcpstream* out, unsigned char *symkey, int havehead, pcp_rec_t *recsign);
+size_t pcp_encrypt_stream_sym(Pcpstream *in, Pcpstream* out, byte *symkey, int havehead, pcp_rec_t *recsign);
 
 
 /** Asymmetrically decrypt a file or a buffer stream.
@@ -241,7 +241,7 @@ size_t pcp_encrypt_stream_sym(Pcpstream *in, Pcpstream* out, unsigned char *symk
 
     \return Returns the size of the output written to the output stream or 0 in case of errors.
 */
-size_t pcp_decrypt_stream(Pcpstream *in, Pcpstream* out, pcp_key_t *s, unsigned char *symkey, int verify);
+size_t pcp_decrypt_stream(Pcpstream *in, Pcpstream* out, pcp_key_t *s, byte *symkey, int verify);
 
 
 /** Symmetrically decrypt a file or a buffer stream.
@@ -263,9 +263,9 @@ size_t pcp_decrypt_stream(Pcpstream *in, Pcpstream* out, pcp_key_t *s, unsigned 
 
     \return Returns the size of the output written to the output stream or 0 in case of errors.
 */
-size_t pcp_decrypt_stream_sym(Pcpstream *in, Pcpstream* out, unsigned char *symkey, pcp_rec_t *recverify);
+size_t pcp_decrypt_stream_sym(Pcpstream *in, Pcpstream* out, byte *symkey, pcp_rec_t *recverify);
 
-pcp_rec_t *pcp_rec_new(unsigned char *cipher, size_t clen, pcp_key_t *secret, pcp_pubkey_t *pub);
+pcp_rec_t *pcp_rec_new(byte *cipher, size_t clen, pcp_key_t *secret, pcp_pubkey_t *pub);
 void pcp_rec_free(pcp_rec_t *r);
 
 #endif /*  _HAVE_PCP_CRYPTO_H */

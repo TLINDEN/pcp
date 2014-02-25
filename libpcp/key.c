@@ -28,15 +28,15 @@
  * derivation function. However, I create a hash from the pcp_scrypt()
  * result anyway because I need a cure25519 secret.
  */
-unsigned char *pcp_derivekey(char *passphrase, unsigned char *nonce) {
-  unsigned char *key = ucmalloc(crypto_secretbox_KEYBYTES);
+byte *pcp_derivekey(char *passphrase, byte *nonce) {
+  byte *key = ucmalloc(crypto_secretbox_KEYBYTES);
   size_t plen = strnlen(passphrase, 255);
 
   /*  create the scrypt hash */
-  unsigned char *scrypted = pcp_scrypt(passphrase, plen, nonce, crypto_secretbox_NONCEBYTES);
+  byte *scrypted = pcp_scrypt(passphrase, plen, nonce, crypto_secretbox_NONCEBYTES);
 
   /*  make a hash from the scrypt() result */
-  crypto_hash_sha256(key, (unsigned char*)scrypted, 64);
+  crypto_hash_sha256(key, (byte*)scrypted, 64);
 
   /*  turn the 32byte hash into a secret key */
   key[0]  &= 248;
@@ -136,21 +136,21 @@ pcp_key_t * pcpkey_new () {
   return key;
 }
 
-unsigned char * pcp_gennonce() {
-  unsigned char *nonce = ucmalloc(crypto_secretbox_NONCEBYTES);
+byte * pcp_gennonce() {
+  byte *nonce = ucmalloc(crypto_secretbox_NONCEBYTES);
   arc4random_buf(nonce, crypto_secretbox_NONCEBYTES);
   return nonce;
 }
 
 pcp_key_t *pcpkey_encrypt(pcp_key_t *key, char *passphrase) {
   if(key->nonce[0] == 0) {
-    unsigned char *nonce = pcp_gennonce();
+    byte *nonce = pcp_gennonce();
     memcpy (key->nonce, nonce, crypto_secretbox_NONCEBYTES);
   }
 
-  unsigned char *encryptkey = pcp_derivekey(passphrase, key->nonce);  
+  byte *encryptkey = pcp_derivekey(passphrase, key->nonce);  
 
-  unsigned char *encrypted;
+  byte *encrypted;
   size_t es;
 
   Buffer *both = buffer_new(128, "keypack");
@@ -184,9 +184,9 @@ pcp_key_t *pcpkey_encrypt(pcp_key_t *key, char *passphrase) {
 }
 
 pcp_key_t *pcpkey_decrypt(pcp_key_t *key, char *passphrase) {
-  unsigned char *encryptkey = pcp_derivekey(passphrase, key->nonce);  
+  byte *encryptkey = pcp_derivekey(passphrase, key->nonce);  
 
-  unsigned char *decrypted;
+  byte *decrypted;
   size_t es;
   
   es = pcp_sodium_verify_mac(&decrypted, key->encrypted, 176, key->nonce, encryptkey);
@@ -235,14 +235,14 @@ char *pcpkey_get_art(pcp_key_t *k) {
   return r;
 }
 
-unsigned char *pcppubkey_getchecksum(pcp_pubkey_t *k) {
-  unsigned char *hash = ucmalloc(32);
+byte *pcppubkey_getchecksum(pcp_pubkey_t *k) {
+  byte *hash = ucmalloc(32);
   crypto_hash_sha256(hash, k->pub, 32);
   return hash;
 }
 
-unsigned char *pcpkey_getchecksum(pcp_key_t *k) {
-  unsigned char *hash = ucmalloc(32);
+byte *pcpkey_getchecksum(pcp_key_t *k) {
+  byte *hash = ucmalloc(32);
   crypto_hash_sha256(hash, k->pub, 32);
   return hash;
 }
@@ -253,7 +253,7 @@ pcp_key_t * key2be(pcp_key_t *k) {
   return k;
 #else
   uint32_t version = k->version;
-  unsigned char* p = (unsigned char*)&version;
+  byte* p = (byte*)&version;
   if(p[0] != 0) {
     k->version = htobe32(k->version);
     k->serial  = htobe32(k->serial);
@@ -279,7 +279,7 @@ pcp_pubkey_t * pubkey2be(pcp_pubkey_t *k) {
   return k;
 #else
   uint32_t version = k->version;
-  unsigned char* p = (unsigned char*)&version;
+  byte* p = (byte*)&version;
   if(p[0] != 0) {
     k->version = htobe32(k->version);
     k->serial  = htobe32(k->serial);

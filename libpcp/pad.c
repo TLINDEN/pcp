@@ -22,10 +22,10 @@
 
 #include "pad.h"
 
-void pcp_pad_prepend(unsigned char **padded, unsigned char *unpadded,
+void pcp_pad_prepend(byte **padded, byte *unpadded,
 		 size_t padlen, size_t unpadlen) {
   *padded = ucmalloc(unpadlen + padlen);
-  unsigned char *tmp = ucmalloc(unpadlen + padlen);
+  byte *tmp = ucmalloc(unpadlen + padlen);
 
   /*  pcp_append orig */
   int i;
@@ -37,10 +37,10 @@ void pcp_pad_prepend(unsigned char **padded, unsigned char *unpadded,
   free(tmp);
 }
 
-void pcp_pad_remove(unsigned char **unpadded, unsigned char *padded,
+void pcp_pad_remove(byte **unpadded, byte *padded,
 		size_t padlen, size_t unpadlen) {
-  *unpadded = ucmalloc(unpadlen * sizeof(unsigned char));
-  unsigned char *tmp = ucmalloc(unpadlen);
+  *unpadded = ucmalloc(unpadlen * sizeof(byte));
+  byte *tmp = ucmalloc(unpadlen);
 
   int i;
   for(i=0; i<unpadlen; ++i) {
@@ -57,12 +57,12 @@ int main(int argc, char **argv) {
     size_t unpadlen;
     int padlen = strtol(argv[2], NULL, 0);
     unpadlen = strlen(argv[1]);
-    unsigned char *dst;
+    byte *dst;
     
     pcp_pad_prepend(&dst, argv[1], padlen, unpadlen);
     /* printf("   prev: %s\n  after: %s\n", argv[1], dst); */
     
-    unsigned char *reverse;
+    byte *reverse;
     pcp_pad_remove(&reverse, dst, padlen, unpadlen);
     /* printf("reverse: %s\n", reverse); */
     

@@ -26,7 +26,7 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
   FILE *in = NULL;
   FILE *out = NULL;
   pcp_key_t *secret = NULL;
-  unsigned char *symkey = NULL;
+  byte *symkey = NULL;
   size_t dlen;
   uint8_t head;
 
@@ -53,7 +53,7 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
   if(!feof(in) && !ferror(in)) {
     if(head == PCP_SYM_CIPHER) {
       /*  symetric mode */
-      unsigned char *salt = ucmalloc(90);
+      byte *salt = ucmalloc(90);
       char stsalt[] = PBP_COMPAT_SALT;
       memcpy(salt, stsalt, 90);
 
@@ -143,7 +143,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
   pcp_pubkey_t *tmp = NULL;
   pcp_pubkey_t *pub = NULL;
   pcp_key_t *secret = NULL;
-  unsigned char *symkey = NULL;
+  byte *symkey = NULL;
   int self = 0;
 
   if(id == NULL && recipient == NULL) {
@@ -158,7 +158,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
       passphrase = ucmalloc(strlen(passwd)+1);
       strncpy(passphrase, passwd, strlen(passwd)+1);
     }
-    unsigned char *salt = ucmalloc(90); /*  FIXME: use random salt, concat it with result afterwards */
+    byte *salt = ucmalloc(90); /*  FIXME: use random salt, concat it with result afterwards */
     char stsalt[] = PBP_COMPAT_SALT;
     memcpy(salt, stsalt, 90);
     symkey = pcp_scrypt(passphrase, crypto_secretbox_KEYBYTES, salt, 90);

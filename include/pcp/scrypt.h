@@ -36,7 +36,7 @@
 #include "mem.h"
 #include "defines.h"
 
-unsigned char * pcp_scrypt(char *passwd, size_t passwdlen, unsigned char *nonce, size_t noncelen);
+byte * pcp_scrypt(char *passwd, size_t passwdlen, byte *nonce, size_t noncelen);
 
 #endif /*  _HAVE_PCP_SCRYPT_H */
 

@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <sodium.h>
+#include "defines.h"
 #include "pad.h"
 #include "mem.h"
 
@@ -55,11 +56,11 @@
 
     \return Returns the size of \a cipher.
  */
-size_t pcp_sodium_mac(unsigned char **cipher,
-                      unsigned char *cleartext,
+size_t pcp_sodium_mac(byte **cipher,
+                      byte *cleartext,
                       size_t clearsize,
-                      unsigned char *nonce,
-                      unsigned char *key);
+                      byte *nonce,
+                      byte *key);
 
 /** Decrypt a symmetrically encrypted message.
 
@@ -79,11 +80,11 @@ size_t pcp_sodium_mac(unsigned char **cipher,
     \return Returns 0 in case of success of -1 in case of an error. Check fatals_if_any().
 
  */
-int pcp_sodium_verify_mac(unsigned char **cleartext,
-                          unsigned char* message,
+int pcp_sodium_verify_mac(byte **cleartext,
+                          byte* message,
                           size_t messagesize,
-                          unsigned char *nonce,
-                          unsigned char *key);
+                          byte *nonce,
+                          byte *key);
 
 
 

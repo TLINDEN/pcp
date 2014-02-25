@@ -298,12 +298,12 @@ Buffer *pcp_export_c_pub(pcp_key_t *sk);
 */
 Buffer *pcp_export_secret(pcp_key_t *sk, char *passphrase);
 
-pcp_ks_bundle_t *pcp_import_pub(unsigned char *raw, size_t rawsize);
+pcp_ks_bundle_t *pcp_import_pub(byte *raw, size_t rawsize);
 pcp_ks_bundle_t *pcp_import_pub_rfc(Buffer *blob);
 pcp_ks_bundle_t *pcp_import_pub_pbp(Buffer *blob);
 
 /* import secret key */
-pcp_key_t *pcp_import_secret(unsigned char *raw, size_t rawsize, char *passphrase);
+pcp_key_t *pcp_import_secret(byte *raw, size_t rawsize, char *passphrase);
 pcp_key_t *pcp_import_secret_native(Buffer *cipher, char *passphrase);
 
 #endif // _HAVE_PCP_MGMT_H

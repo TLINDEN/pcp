@@ -62,6 +62,6 @@ int pcp_importsecret (vault_t *vault, FILE *in, char *passwd);
 
 void pcpdelete_key(char *keyid);
 char *pcp_find_id_byrec(char *recipient);
-
+void pcpedit_key(char *keyid);
 
 #endif /*  _HAVE_KEYMGMT_H */

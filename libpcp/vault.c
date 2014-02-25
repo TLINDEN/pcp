@@ -134,7 +134,7 @@ int pcpvault_additem(vault_t *vault, void *item, size_t itemsize, uint8_t type) 
   header->type = type;
   header->size = itemsize;
 
-  crypto_hash_sha256((unsigned char*)header->checksum, item, itemsize);
+  crypto_hash_sha256((byte*)header->checksum, item, itemsize);
   ih2be(header);
 
   fwrite(header, sizeof(vault_item_header_t), 1, vault->fd);
@@ -255,7 +255,7 @@ int pcpvault_writeall(vault_t *vault) {
 }
 
 void pcpvault_update_checksum(vault_t *vault) {
-  unsigned char *checksum = pcpvault_create_checksum(vault);
+  byte *checksum = pcpvault_create_checksum(vault);
 
   vault_header_t *header = ucmalloc(sizeof(vault_header_t));
   header->fileid = PCP_VAULT_ID;
@@ -270,14 +270,14 @@ void pcpvault_update_checksum(vault_t *vault) {
   fseek(vault->fd, 0, SEEK_END);
 }
 
-unsigned char *pcpvault_create_checksum(vault_t *vault) {
+byte *pcpvault_create_checksum(vault_t *vault) {
   int numskeys = pcphash_count();
   int numpkeys = pcphash_countpub();
 
   size_t datasize = ((PCP_RAW_KEYSIZE) * numskeys) +
                     ((PCP_RAW_PUBKEYSIZE) * numpkeys);
-  unsigned char *data = ucmalloc(datasize);
-  unsigned char *checksum = ucmalloc(32);
+  byte *data = ucmalloc(datasize);
+  byte *checksum = ucmalloc(32);
   size_t datapos = 0;
 
   pcp_key_t *k = NULL;
@@ -317,7 +317,7 @@ int pcpvault_copy(vault_t *tmp, vault_t *vault) {
   fseek(tmp->fd, 0, SEEK_END);
   int tmpsize = ftell(tmp->fd);
   fseek(tmp->fd, 0, SEEK_SET);
-  unsigned char *in = ucmalloc(tmpsize);
+  byte *in = ucmalloc(tmpsize);
   fread(in, tmpsize, 1, tmp->fd);
 
   /*  and put it into the new file */
@@ -339,7 +339,7 @@ int pcpvault_copy(vault_t *tmp, vault_t *vault) {
 
 void pcpvault_unlink(vault_t *tmp) {
   int i, tmpsize;
-  unsigned char *r;
+  byte *r;
   fseek(tmp->fd, 0, SEEK_END);
   tmpsize = ftell(tmp->fd);
   r = ucmalloc(tmpsize);
@@ -489,7 +489,7 @@ int pcpvault_fetchall(vault_t *vault) {
     goto err;
   }
 
-  unsigned char *checksum = NULL;
+  byte *checksum = NULL;
   checksum = pcpvault_create_checksum(vault);
   /*
   printf(" calc checksum: "); pcpprint_bin(stdout, checksum, 32); printf("\n"); 

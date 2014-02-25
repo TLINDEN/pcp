@@ -342,9 +342,9 @@ char *pcp_getpubkeyid(pcp_pubkey_t *k);
 
     \param[in] k The public key structure.
 
-    \return Returns a pointer to an 32 byte unsigned char.
+    \return Returns a pointer to an 32 byte byte.
  */
-unsigned char *pcppubkey_getchecksum(pcp_pubkey_t *k);
+byte *pcppubkey_getchecksum(pcp_pubkey_t *k);
 
 /** Calculate a checksum of a public key part of the given secret key.
 
@@ -352,9 +352,9 @@ unsigned char *pcppubkey_getchecksum(pcp_pubkey_t *k);
 
     \param[in] k The secret key structure.
 
-    \return Returns a pointer to an 32 byte unsigned char.
+    \return Returns a pointer to an 32 byte byte.
  */
-unsigned char *pcpkey_getchecksum(pcp_key_t *k);
+byte *pcpkey_getchecksum(pcp_key_t *k);
 
 
 /** Checks if a secret key structure is registered in the secret key hash.
@@ -396,14 +396,14 @@ pcp_pubkey_t *pubkey2native(pcp_pubkey_t *k);
     functions. It allocates the memory and the caller is responsible
     to clear and free() it after use.
 
-    \return Returns a pointer to a 24 byte unsigned char array.
+    \return Returns a pointer to a 24 byte byte array.
 */
-unsigned char * pcp_gennonce();
+byte * pcp_gennonce();
 
 /*  use scrypt() to create a key from a passphrase and a nonce
     FIXME: use pure scrypt() instead.
 */
-unsigned char *pcp_derivekey(char *passphrase, unsigned char *nonce);
+byte *pcp_derivekey(char *passphrase, byte *nonce);
 
 /* FIXME: abandon and use Buffer instead */
 void pcp_seckeyblob(void *blob, pcp_key_t *k);

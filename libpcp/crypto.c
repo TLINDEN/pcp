@@ -22,15 +22,15 @@
 
 #include "crypto.h"
 
-size_t pcp_sodium_box(unsigned char **cipher,
-		      unsigned char *cleartext,
+size_t pcp_sodium_box(byte **cipher,
+		      byte *cleartext,
 		      size_t clearsize,
-		      unsigned char *nonce,
-		      unsigned char *secret,
-		      unsigned char *pub) {
+		      byte *nonce,
+		      byte *secret,
+		      byte *pub) {
 
-  unsigned char *pad_clear;
-  unsigned char *pad_cipher;
+  byte *pad_clear;
+  byte *pad_cipher;
 
   size_t ciphersize = (clearsize + crypto_box_ZEROBYTES) - crypto_box_BOXZEROBYTES;
 
@@ -52,16 +52,16 @@ size_t pcp_sodium_box(unsigned char **cipher,
 
 
 
-int pcp_sodium_verify_box(unsigned char **cleartext, unsigned char* message,
-			  size_t messagesize, unsigned char *nonce,
-			  unsigned char *secret, unsigned char *pub) {
+int pcp_sodium_verify_box(byte **cleartext, byte* message,
+			  size_t messagesize, byte *nonce,
+			  byte *secret, byte *pub) {
   /*  verify/decrypt the box */
-  unsigned char *pad_cipher;
-  unsigned char *pad_clear;
+  byte *pad_cipher;
+  byte *pad_clear;
   int success = -1;
 
   pcp_pad_prepend(&pad_cipher, message, crypto_box_BOXZEROBYTES, messagesize);
-  pad_clear = (unsigned char *)ucmalloc((crypto_box_ZEROBYTES+ messagesize));
+  pad_clear = (byte *)ucmalloc((crypto_box_ZEROBYTES+ messagesize));
 
   /*  crypto_box_open(m,c,clen,n,pk,sk); */
   if (crypto_box_open(pad_clear, pad_cipher,
@@ -81,13 +81,13 @@ int pcp_sodium_verify_box(unsigned char **cleartext, unsigned char* message,
 
 
 
-unsigned char *pcp_box_encrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
-			       unsigned char *message, size_t messagesize,
+byte *pcp_box_encrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
+			       byte *message, size_t messagesize,
 			       size_t *csize) {
 
-  unsigned char *nonce = pcp_gennonce();
+  byte *nonce = pcp_gennonce();
 
-  unsigned char *cipher;
+  byte *cipher;
 
   size_t es = pcp_sodium_box(&cipher, message, messagesize, nonce,
 		 secret->secret, pub->pub);
@@ -104,7 +104,7 @@ unsigned char *pcp_box_encrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
   /* fprintf(stderr, " nonce: "); pcpprint_bin(stderr, nonce, crypto_secretbox_NONCEBYTES); fprintf(stderr, "\n"); */
 
   /*  put nonce and cipher together */
-  unsigned char *combined = ucmalloc(es + crypto_secretbox_NONCEBYTES);
+  byte *combined = ucmalloc(es + crypto_secretbox_NONCEBYTES);
   memcpy(combined, nonce, crypto_secretbox_NONCEBYTES);
   memcpy(&combined[crypto_secretbox_NONCEBYTES], cipher, es);
 
@@ -124,14 +124,14 @@ unsigned char *pcp_box_encrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
 }
 
 
-unsigned char *pcp_box_decrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
-			       unsigned char *cipher, size_t ciphersize,
+byte *pcp_box_decrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
+			       byte *cipher, size_t ciphersize,
 			       size_t *dsize) {
 
-  unsigned char *message = NULL;
+  byte *message = NULL;
 
-  unsigned char *nonce = ucmalloc(crypto_secretbox_NONCEBYTES);
-  unsigned char *cipheronly = ucmalloc(ciphersize - crypto_secretbox_NONCEBYTES);
+  byte *nonce = ucmalloc(crypto_secretbox_NONCEBYTES);
+  byte *cipheronly = ucmalloc(ciphersize - crypto_secretbox_NONCEBYTES);
 
   memcpy(nonce, cipher, crypto_secretbox_NONCEBYTES);
   memcpy(cipheronly, &cipher[crypto_secretbox_NONCEBYTES],
@@ -161,21 +161,22 @@ unsigned char *pcp_box_decrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
   return NULL;
 }
 
-size_t pcp_decrypt_stream(Pcpstream *in, Pcpstream* out, pcp_key_t *s, unsigned char *symkey, int verify) {
+size_t pcp_decrypt_stream(Pcpstream *in, Pcpstream* out, pcp_key_t *s, byte *symkey, int verify) {
   pcp_pubkey_t *cur = NULL;
   pcp_pubkey_t *sender = NULL;
-  unsigned char *reccipher = NULL;
-  int nrec, recmatch;
+  byte *reccipher = NULL;
+  int nrec, recmatch, self;
   uint32_t lenrec;
   byte head[1];
   size_t cur_bufsize, rec_size;
   
-  unsigned char rec_buf[PCP_ASYM_RECIPIENT_SIZE];
+  byte rec_buf[PCP_ASYM_RECIPIENT_SIZE];
 
 #ifdef PCP_ASYM_ADD_SENDER_PUB
-  unsigned char *senderpub;
+  byte *senderpub;
 #endif
-  int self = 0;
+
+  nrec = recmatch = self = 0;
 
   if(ps_tell(in) == 1) {
     /*  header has already been determined outside the lib */
@@ -238,7 +239,7 @@ size_t pcp_decrypt_stream(Pcpstream *in, Pcpstream* out, pcp_key_t *s, unsigned 
     recmatch = 0;
 
     pcphash_iteratepub(cur) {
-      unsigned char *recipient;
+      byte *recipient;
       recipient = pcp_box_decrypt(s, cur, rec_buf, PCP_ASYM_RECIPIENT_SIZE, &rec_size);
       if(recipient != NULL && rec_size == crypto_secretbox_KEYBYTES) {
 	/*  found a match */
@@ -278,9 +279,9 @@ size_t pcp_decrypt_stream(Pcpstream *in, Pcpstream* out, pcp_key_t *s, unsigned 
 }
 
 size_t pcp_encrypt_stream(Pcpstream *in, Pcpstream *out, pcp_key_t *s, pcp_pubkey_t *p, int sign) {
-  unsigned char *symkey;
+  byte *symkey;
   int recipient_count;
-  unsigned char *recipients_cipher;
+  byte *recipients_cipher;
   pcp_pubkey_t *cur, *t;
   size_t es;
   int nrec;
@@ -307,7 +308,7 @@ size_t pcp_encrypt_stream(Pcpstream *in, Pcpstream *out, pcp_key_t *s, pcp_pubke
   nrec = 0;
 
   HASH_ITER(hh, p, cur, t) {
-    unsigned char *rec_cipher;
+    byte *rec_cipher;
     rec_cipher = pcp_box_encrypt(s, cur, symkey, crypto_secretbox_KEYBYTES, &es);
     if(es != rec_size) {
       fatal("invalid rec_size, expected %dl, got %dl\n", rec_size, es);
@@ -388,20 +389,20 @@ size_t pcp_encrypt_stream(Pcpstream *in, Pcpstream *out, pcp_key_t *s, pcp_pubke
 
 
 
-size_t pcp_encrypt_stream_sym(Pcpstream *in, Pcpstream *out, unsigned char *symkey, int havehead, pcp_rec_t *recsign) {
+size_t pcp_encrypt_stream_sym(Pcpstream *in, Pcpstream *out, byte *symkey, int havehead, pcp_rec_t *recsign) {
   /*
     havehead = 0: write the whole thing from here
     havehead = 1: no header, being called from asym...
   */
 
-  unsigned char *buf_nonce;
-  unsigned char *buf_cipher;
-  unsigned char in_buf[PCP_BLOCK_SIZE];
+  byte *buf_nonce;
+  byte *buf_cipher;
+  byte in_buf[PCP_BLOCK_SIZE];
   size_t cur_bufsize = 0;
   size_t out_size = 0;
   size_t es;
   crypto_generichash_state *st = NULL;
-  unsigned char *hash = NULL;
+  byte *hash = NULL;
   byte head[1];
 
   if(recsign != NULL) {
@@ -424,8 +425,8 @@ size_t pcp_encrypt_stream_sym(Pcpstream *in, Pcpstream *out, unsigned char *symk
   /*  write the IV, pad it with rubbish, since pcp_decrypt_file_sym */
   /*  reads in with  PCP_BLOCK_SIZE_IN buffersize and uses the last */
   /*  PCP_BLOCK_SIZE as IV. */
-  unsigned char *iv = urmalloc(PCP_BLOCK_SIZE);
-  unsigned char *ivpad = urmalloc(PCP_BLOCK_SIZE_IN - PCP_BLOCK_SIZE);
+  byte *iv = urmalloc(PCP_BLOCK_SIZE);
+  byte *ivpad = urmalloc(PCP_BLOCK_SIZE_IN - PCP_BLOCK_SIZE);
 
   ps_write(out, ivpad, PCP_BLOCK_SIZE_IN - PCP_BLOCK_SIZE);
   ps_write(out, iv, PCP_BLOCK_SIZE);
@@ -478,7 +479,7 @@ size_t pcp_encrypt_stream_sym(Pcpstream *in, Pcpstream *out, unsigned char *symk
     crypto_generichash_final(st, hash, crypto_generichash_BYTES_MAX);
 
     /* generate the actual signature */
-    unsigned char *signature = pcp_ed_sign(hash, crypto_generichash_BYTES_MAX, recsign->secret);
+    byte *signature = pcp_ed_sign(hash, crypto_generichash_BYTES_MAX, recsign->secret);
     size_t siglen = crypto_sign_BYTES + crypto_generichash_BYTES_MAX;
 
     /* encrypt it as well */
@@ -503,27 +504,27 @@ size_t pcp_encrypt_stream_sym(Pcpstream *in, Pcpstream *out, unsigned char *symk
     free(st);
     free(hash);
   }
-  return NULL;
+  return 0;
 }
 
-size_t pcp_decrypt_stream_sym(Pcpstream *in, Pcpstream* out, unsigned char *symkey, pcp_rec_t *recverify) {
-  unsigned char *buf_nonce;
-  unsigned char *buf_cipher;
-  unsigned char *buf_clear;
+size_t pcp_decrypt_stream_sym(Pcpstream *in, Pcpstream* out, byte *symkey, pcp_rec_t *recverify) {
+  byte *buf_nonce;
+  byte *buf_cipher;
+  byte *buf_clear;
   size_t out_size, cur_bufsize, es;
   size_t ciphersize = (PCP_BLOCK_SIZE_IN) - crypto_secretbox_NONCEBYTES;
-  unsigned char in_buf[PCP_BLOCK_SIZE_IN];
+  byte in_buf[PCP_BLOCK_SIZE_IN];
 
   buf_nonce  = ucmalloc(crypto_secretbox_NONCEBYTES);
   buf_cipher = ucmalloc(ciphersize);
   out_size = 0;
 
-  unsigned char *signature = NULL;
-  unsigned char *signature_cr = NULL;
+  byte *signature = NULL;
+  byte *signature_cr = NULL;
   size_t siglen = crypto_sign_BYTES + crypto_generichash_BYTES_MAX;
   size_t siglen_cr = siglen + PCP_CRYPTO_ADD + crypto_secretbox_NONCEBYTES;
   crypto_generichash_state *st = NULL;
-  unsigned char *hash = NULL;
+  byte *hash = NULL;
 
   if(recverify != NULL) {
     st = ucmalloc(sizeof(crypto_generichash_state));
@@ -533,7 +534,7 @@ size_t pcp_decrypt_stream_sym(Pcpstream *in, Pcpstream* out, unsigned char *symk
   }
 
 #ifdef PCP_CBC
-  unsigned char *iv = NULL; /*  will be filled during 1st loop */
+  byte *iv = NULL; /*  will be filled during 1st loop */
 #endif
 
   while(!ps_end(in)) {
@@ -612,7 +613,7 @@ size_t pcp_decrypt_stream_sym(Pcpstream *in, Pcpstream* out, unsigned char *symk
       crypto_generichash_update(st, recverify->cipher, recverify->ciphersize);
       crypto_generichash_final(st, hash, crypto_generichash_BYTES_MAX);
 
-      unsigned char *verifiedhash = NULL;
+      byte *verifiedhash = NULL;
       verifiedhash = pcp_ed_verify(signature, siglen, recverify->pub);
       if(verifiedhash == NULL)
 	out_size = 0;
@@ -639,7 +640,7 @@ size_t pcp_decrypt_stream_sym(Pcpstream *in, Pcpstream* out, unsigned char *symk
 
 }
 
-pcp_rec_t *pcp_rec_new(unsigned char *cipher, size_t clen, pcp_key_t *secret, pcp_pubkey_t *pub) {
+pcp_rec_t *pcp_rec_new(byte *cipher, size_t clen, pcp_key_t *secret, pcp_pubkey_t *pub) {
   pcp_rec_t *r = ucmalloc(sizeof(pcp_rec_t));
   r->cipher = ucmalloc(clen);
   memcpy(r->cipher, cipher, clen);

@@ -111,7 +111,7 @@ int _check_hash_keysig(Buffer *blob, pcp_pubkey_t *p, pcp_keysig_t *sk) {
   size_t blobstop = blob->offset;
   size_t sigsize = crypto_sign_BYTES + crypto_generichash_BYTES_MAX;
 
-  unsigned char *signature = ucmalloc(sigsize);
+  byte *signature = ucmalloc(sigsize);
   if(buffer_get_chunk(blob, signature, sigsize) == 0)
     goto chker1;
 
@@ -128,13 +128,13 @@ int _check_hash_keysig(Buffer *blob, pcp_pubkey_t *p, pcp_keysig_t *sk) {
   buffer_get_chunk(blob, sk->blob, sk->size);
 
   /* verify the signature */
-  unsigned char *verifyhash = pcp_ed_verify_key(signature, sigsize, p);
+  byte *verifyhash = pcp_ed_verify_key(signature, sigsize, p);
   if(verifyhash == NULL)
     goto chker1;
 
   /* re-calculate the hash */
   crypto_generichash_state *st = ucmalloc(sizeof(crypto_generichash_state));
-  unsigned char *hash = ucmalloc(crypto_generichash_BYTES_MAX);
+  byte *hash = ucmalloc(crypto_generichash_BYTES_MAX);
   crypto_generichash_init(st, NULL, 0, 0);
   crypto_generichash_update(st, sk->blob, sk->size);
   crypto_generichash_final(st, hash, crypto_generichash_BYTES_MAX);
@@ -170,9 +170,9 @@ int _check_hash_keysig(Buffer *blob, pcp_pubkey_t *p, pcp_keysig_t *sk) {
   
 }
 
-pcp_ks_bundle_t *pcp_import_pub(unsigned char *raw, size_t rawsize) {
+pcp_ks_bundle_t *pcp_import_pub(byte *raw, size_t rawsize) {
   size_t clen;
-  unsigned char *bin = NULL;
+  byte *bin = NULL;
   char *z85 = NULL;
 
   if(rawsize == 0) {
@@ -284,7 +284,7 @@ pcp_ks_bundle_t *pcp_import_pub_pbp(Buffer *blob) {
   char *date  = ucmalloc(19);
   char *ignore = ucmalloc(46);
   char *parts = NULL;
-  unsigned char *sig = ucmalloc(crypto_sign_BYTES);;
+  byte *sig = ucmalloc(crypto_sign_BYTES);;
   int pnum;
   pbp_pubkey_t *b = ucmalloc(sizeof(pbp_pubkey_t));
   pcp_pubkey_t *tmp = ucmalloc(sizeof(pcp_pubkey_t));
@@ -345,7 +345,7 @@ pcp_ks_bundle_t *pcp_import_pub_pbp(Buffer *blob) {
   /* edpub used for signing, might differ */
   memcpy(tmp->edpub, b->sigpub, crypto_sign_PUBLICKEYBYTES);
 
-  unsigned char *verify = pcp_ed_verify(buffer_get(blob), buffer_size(blob), tmp);
+  byte *verify = pcp_ed_verify(buffer_get(blob), buffer_size(blob), tmp);
   free(tmp);
 
   pcp_ks_bundle_t *bundle = ucmalloc(sizeof(pcp_ks_bundle_t));
@@ -451,8 +451,8 @@ Buffer *pcp_export_perl_pub(pcp_key_t *sk) {
   return b;
 }
 
-void pcp_export_c_pub_var(Buffer *b, char *var, unsigned char *d, size_t len) {
-  buffer_add_str(b, "unsigned char %s[%ld] = {\n  ", var, len);
+void pcp_export_c_pub_var(Buffer *b, char *var, byte *d, size_t len) {
+  buffer_add_str(b, "byte %s[%ld] = {\n  ", var, len);
   size_t i;
   for(i=0; i<len-1; ++i) {
     buffer_add_str(b, "0x%02x, ", (unsigned int)d[i]);
@@ -492,7 +492,7 @@ Buffer *pcp_export_c_pub(pcp_key_t *sk) {
 
 Buffer *pcp_export_pbp_pub(pcp_key_t *sk) {
   struct tm *v, *c;
-  unsigned char *signature = NULL;
+  byte *signature = NULL;
   char *date = NULL;
 
   Buffer *out = buffer_new(320, "pbp01");
@@ -627,14 +627,14 @@ Buffer *pcp_export_rfc_pub (pcp_key_t *sk) {
 
   /* create a hash from the PK material and the raw signature packet */
   crypto_generichash_state *st = ucmalloc(sizeof(crypto_generichash_state));
-  unsigned char *hash = ucmalloc(crypto_generichash_BYTES_MAX);
+  byte *hash = ucmalloc(crypto_generichash_BYTES_MAX);
 
   crypto_generichash_init(st, NULL, 0, 0);
   crypto_generichash_update(st, buffer_get(raw), buffer_size(raw));
   crypto_generichash_final(st, hash, crypto_generichash_BYTES_MAX);
 
   /* sign the hash */
-  unsigned char *sig = pcp_ed_sign_key(hash, crypto_generichash_BYTES_MAX, sk);
+  byte *sig = pcp_ed_sign_key(hash, crypto_generichash_BYTES_MAX, sk);
 
   /* append the signature packet to the output */
   buffer_add(out, buffer_get(raw), buffer_size(raw));
@@ -653,9 +653,9 @@ Buffer *pcp_export_rfc_pub (pcp_key_t *sk) {
 }
 
 Buffer *pcp_export_secret(pcp_key_t *sk, char *passphrase) {
-  unsigned char *nonce = NULL;
-  unsigned char *symkey = NULL;
-  unsigned char *cipher = NULL;
+  byte *nonce = NULL;
+  byte *symkey = NULL;
+  byte *cipher = NULL;
   size_t es;
 
   Buffer *raw = buffer_new(512, "secretbuf");
@@ -704,9 +704,9 @@ Buffer *pcp_export_secret(pcp_key_t *sk, char *passphrase) {
   return out;
 }
 
-pcp_key_t *pcp_import_secret(unsigned char *raw, size_t rawsize, char *passphrase) {
+pcp_key_t *pcp_import_secret(byte *raw, size_t rawsize, char *passphrase) {
   size_t clen;
-  unsigned char *bin = NULL;
+  byte *bin = NULL;
   char *z85 = NULL;
 
   if(rawsize == 0) {
@@ -738,9 +738,9 @@ pcp_key_t *pcp_import_secret(unsigned char *raw, size_t rawsize, char *passphras
 
 pcp_key_t *pcp_import_secret_native(Buffer *cipher, char *passphrase) {
   pcp_key_t *sk = ucmalloc(sizeof(pcp_key_t));
-  unsigned char *nonce = ucmalloc(crypto_secretbox_NONCEBYTES);
-  unsigned char *symkey = NULL;
-  unsigned char *clear = NULL;
+  byte *nonce = ucmalloc(crypto_secretbox_NONCEBYTES);
+  byte *symkey = NULL;
+  byte *clear = NULL;
   size_t cipherlen = 0;
   size_t minlen = (64 * 2) + (32 * 4) + 8 + 4 + 4;
   uint16_t notationlen = 0;

@@ -57,7 +57,7 @@ int pcptext_infile(char *infile) {
   }
 
   size_t clen;
-  unsigned char *bin = pcp_z85_decode((char *)z85, &clen);
+  byte *bin = pcp_z85_decode((char *)z85, &clen);
   free(z85);
 
   if(bin == NULL) {
@@ -159,7 +159,7 @@ void pcppubkey_print(pcp_pubkey_t *key, FILE* out) {
 	  c->tm_year+1900, c->tm_mon+1, c->tm_mday,
 	  c->tm_hour, c->tm_min, c->tm_sec);
 
-  unsigned char *hash = pcppubkey_getchecksum(key);
+  byte *hash = pcppubkey_getchecksum(key);
   fprintf(out, " Checksum: ");
 
   int i;
@@ -311,7 +311,7 @@ void pcpexport_yaml(char *outfile) {
   }
 }
 
-void pcpprint_bin(FILE *out, unsigned char *data, size_t len) {
+void pcpprint_bin(FILE *out, byte *data, size_t len) {
   int i;
   for ( i = 0;i < len;++i)
     fprintf(out, "%02x", (unsigned int) data[i]);

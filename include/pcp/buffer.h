@@ -283,7 +283,7 @@ int buffer_done(Buffer *b);
     Then the following code would:
 
     @code
-    unsigned char g[4];
+    byte g[4];
     buffer_get_chunk(b, g, 4);  // => g now contains 'AAAA' 
     buffer_get_chunk(b, g, 4);  // => g now contains 'BBBB' 
     buffer_get_chunk(b, g, 4);  // => g now contains 'CCCC' 
@@ -316,7 +316,7 @@ size_t buffer_get_chunk(Buffer *b, void *buf, size_t len);
      
     \return Pointer to the buffer data storage. 
 */
-unsigned char *buffer_get(Buffer *b);
+byte *buffer_get(Buffer *b);
 
 /** Read the whole Buffer content as string.
 
@@ -365,8 +365,8 @@ char *buffer_get_str(Buffer *b);
 
     @code
     [..]
-    unsigned char g[4];
-    unsigned char *r = NULL;
+    byte g[4];
+    byte *r = NULL;
     buffer_get_chunk(b, g, 4);    // => g now contains 'AAAA'
     size_t rs = buffer_left(b);   // => rs = 8
     r = buffer_get_remainder(b);  // => r now contains 'BBBBCCCC' and has a size of 8
@@ -378,7 +378,7 @@ char *buffer_get_str(Buffer *b);
      
     \return Pointer to the remaining chunk of data (copy).
 */
-unsigned char *buffer_get_remainder(Buffer *b);
+byte *buffer_get_remainder(Buffer *b);
 
 /** Read some data inside the Buffer.
 
@@ -399,7 +399,7 @@ unsigned char *buffer_get_remainder(Buffer *b);
     Then:
     @code
     [..]
-    unsigned char g[4];
+    byte g[4];
     buffer_extract(b, g, 4, 4);  // => g now contains 'BBBB'
     @endcode
 
@@ -455,8 +455,8 @@ size_t buffer_size(const Buffer *b);
     Then:
     @code
     [..]
-    unsigned char g[4];
-    unsigned char x[16];
+    byte g[4];
+    byte x[16];
     buffer_get_chunk(b, g, 4);  // => g now contains 'BBBB'
     if(buffer_left(b) >= 16)    // => will return 8 and therefore fail
       buffer_get_chunk(b, x, 16);

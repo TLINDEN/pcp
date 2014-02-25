@@ -31,7 +31,7 @@ char *_lc(char *in) {
 }
 
 /* find the offset of the beginning of a certain string within binary data */
-size_t _findoffset(unsigned char *bin, size_t binlen, char *sigstart, size_t hlen) {
+size_t _findoffset(byte *bin, size_t binlen, char *sigstart, size_t hlen) {
   size_t i;
   size_t offset = 0;
   int m = 0;
@@ -52,14 +52,14 @@ size_t _findoffset(unsigned char *bin, size_t binlen, char *sigstart, size_t hle
 }
 
 /* xor 2 likesized buffers */
-void _xorbuf(unsigned char *iv, unsigned char *buf, size_t xlen) {
+void _xorbuf(byte *iv, byte *buf, size_t xlen) {
   size_t i;
   for (i = 0; i < xlen; ++i)
    buf[i] = iv[i] ^ buf[i];
 }
 
 /* print some binary data to stderr */
-void _dump(char *n, unsigned char *d, size_t s) {
+void _dump(char *n, byte *d, size_t s) {
   int l = strlen(n) + 9;
   fprintf(stderr, "%s (%04ld): ", n, s);
   size_t i;

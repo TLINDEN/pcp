@@ -98,7 +98,7 @@ void buffer_add_str(Buffer *b, const char * fmt, ...) {
 
 void buffer_add_hex(Buffer *b, void *data, size_t len) {
   size_t i;
-  unsigned char *d = data;
+  byte *d = data;
   for(i=0; i<len; ++i) {
     buffer_add_str(b, "%02x", d[i]);
   }
@@ -117,7 +117,7 @@ void buffer_resize(Buffer *b, size_t len) {
   }
 }
 
-unsigned char *buffer_get(Buffer *b) {
+byte *buffer_get(Buffer *b) {
   if(b->end > 0)
     return b->buf;
   else
@@ -136,7 +136,7 @@ size_t buffer_get_chunk(Buffer *b, void *buf, size_t len) {
   return len;
 }
 
-unsigned char *buffer_get_remainder(Buffer *b) {
+byte *buffer_get_remainder(Buffer *b) {
   void *buf = ucmalloc(b->end - b->offset);
   if(buffer_get_chunk(b, buf, b->end - b->offset) == 0) {
     free(buf);

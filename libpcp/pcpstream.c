@@ -229,7 +229,7 @@ size_t ps_read_decode(Pcpstream *stream, Buffer *cache, void *buf, size_t bufsiz
 
   /* finally, decode it and put into cache */
   size_t binlen, outlen;
-  unsigned char *bin = pcp_z85_decode(buffer_get_str(z), &binlen);
+  byte *bin = pcp_z85_decode(buffer_get_str(z), &binlen);
   if(bin == NULL) {
     /* it's not z85 encoded, so threat it as binary */
     stream->armor = 1;
@@ -280,7 +280,7 @@ size_t ps_read_decodeOLD(Pcpstream *stream, Buffer *cache, void *buf, size_t buf
 
   /* finally, decode it and put into cache */
   size_t binlen, outlen;
-  unsigned char *bin = pcp_z85_decode(buffer_get_str(z), &binlen);
+  byte *bin = pcp_z85_decode(buffer_get_str(z), &binlen);
   if(bin == NULL) {
     /* it's not z85 encoded, so threat it as binary */
     stream->armor = 1;

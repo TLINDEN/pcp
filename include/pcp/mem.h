@@ -25,6 +25,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include "defines.h"
 #include "platform.h"
 
 /*  simple malloc()  wrapper  */

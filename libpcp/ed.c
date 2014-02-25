@@ -21,8 +21,8 @@
 
 #include "ed.h"
 
-unsigned char * pcp_ed_verify_key(unsigned char *signature, size_t siglen, pcp_pubkey_t *p) {
-  unsigned char *message = ucmalloc(siglen - crypto_sign_BYTES);
+byte * pcp_ed_verify_key(byte *signature, size_t siglen, pcp_pubkey_t *p) {
+  byte *message = ucmalloc(siglen - crypto_sign_BYTES);
   unsigned long long mlen;
 
   if(crypto_sign_open(message, &mlen, signature, siglen, p->masterpub) != 0) {
@@ -37,8 +37,8 @@ unsigned char * pcp_ed_verify_key(unsigned char *signature, size_t siglen, pcp_p
   return NULL;
 }
 
-unsigned char * pcp_ed_verify(unsigned char *signature, size_t siglen, pcp_pubkey_t *p) {
-  unsigned char *message = ucmalloc(siglen); /* we alloc the full size, the resulting len will be returned by nacl anyway - crypto_sign_BYTES); */
+byte * pcp_ed_verify(byte *signature, size_t siglen, pcp_pubkey_t *p) {
+  byte *message = ucmalloc(siglen); /* we alloc the full size, the resulting len will be returned by nacl anyway - crypto_sign_BYTES); */
   unsigned long long mlen;
 
   if(crypto_sign_open(message, &mlen, signature, siglen, p->edpub) != 0) {
@@ -53,18 +53,18 @@ unsigned char * pcp_ed_verify(unsigned char *signature, size_t siglen, pcp_pubke
   return NULL;
 }
 
-unsigned char *pcp_ed_sign_key(unsigned char *message, size_t messagesize, pcp_key_t *s) {
+byte *pcp_ed_sign_key(byte *message, size_t messagesize, pcp_key_t *s) {
   unsigned long long mlen = messagesize + crypto_sign_BYTES;
-  unsigned char *signature = ucmalloc(mlen);
+  byte *signature = ucmalloc(mlen);
 
   crypto_sign(signature, &mlen, message, messagesize, s->mastersecret);
 
   return signature;
 }
 
-unsigned char *pcp_ed_sign(unsigned char *message, size_t messagesize, pcp_key_t *s) {
+byte *pcp_ed_sign(byte *message, size_t messagesize, pcp_key_t *s) {
   unsigned long long mlen = messagesize + crypto_sign_BYTES;
-  unsigned char *signature = ucmalloc(mlen);
+  byte *signature = ucmalloc(mlen);
 
   crypto_sign(signature, &mlen, message, messagesize, s->edsecret);
 
@@ -72,11 +72,11 @@ unsigned char *pcp_ed_sign(unsigned char *message, size_t messagesize, pcp_key_t
 }
 
 size_t pcp_ed_sign_buffered(Pcpstream *in, Pcpstream* out, pcp_key_t *s, int z85) {
-  unsigned char in_buf[PCP_BLOCK_SIZE];
+  byte in_buf[PCP_BLOCK_SIZE];
   size_t cur_bufsize = 0;
   size_t outsize = 0;
   crypto_generichash_state *st = ucmalloc(sizeof(crypto_generichash_state));
-  unsigned char hash[crypto_generichash_BYTES_MAX];
+  byte hash[crypto_generichash_BYTES_MAX];
 
   crypto_generichash_init(st, NULL, 0, 0);
 
@@ -101,13 +101,13 @@ size_t pcp_ed_sign_buffered(Pcpstream *in, Pcpstream* out, pcp_key_t *s, int z85
 
   crypto_generichash_final(st, hash, crypto_generichash_BYTES_MAX);
 
-  unsigned char *signature = pcp_ed_sign(hash, crypto_generichash_BYTES_MAX, s);
+  byte *signature = pcp_ed_sign(hash, crypto_generichash_BYTES_MAX, s);
   size_t mlen = + crypto_sign_BYTES + crypto_generichash_BYTES_MAX;
 
   if(z85) {
     ps_print(out, "\r\n%s\r\n~ Version: PCP v%d.%d.%d ~\r\n\r\n", PCP_SIG_START, PCP_VERSION_MAJOR, PCP_VERSION_MINOR, PCP_VERSION_PATCH);
     size_t zlen;
-    char *z85encoded = pcp_z85_encode((unsigned char*)signature, mlen, &zlen);
+    char *z85encoded = pcp_z85_encode((byte*)signature, mlen, &zlen);
     ps_print(out, "%s\r\n%s\r\n", z85encoded, PCP_SIG_END);
   }
   else {
@@ -121,9 +121,9 @@ size_t pcp_ed_sign_buffered(Pcpstream *in, Pcpstream* out, pcp_key_t *s, int z85
 }
 
 pcp_pubkey_t *pcp_ed_verify_buffered(Pcpstream *in, pcp_pubkey_t *p) {
-  unsigned char in_buf[PCP_BLOCK_SIZE/2];
-  unsigned char in_next[PCP_BLOCK_SIZE/2];
-  unsigned char in_full[PCP_BLOCK_SIZE];
+  byte in_buf[PCP_BLOCK_SIZE/2];
+  byte in_next[PCP_BLOCK_SIZE/2];
+  byte in_full[PCP_BLOCK_SIZE];
 
   size_t cur_bufsize = 0;
   size_t next_bufsize = 0;
@@ -132,14 +132,14 @@ pcp_pubkey_t *pcp_ed_verify_buffered(Pcpstream *in, pcp_pubkey_t *p) {
   int z85 = 0;
   int gotsig = 0;
 
-  unsigned char hash[crypto_generichash_BYTES_MAX];
+  byte hash[crypto_generichash_BYTES_MAX];
   char zhead[] = PCP_SIG_HEADER;
   size_t hlen = strlen(PCP_SIG_HEADER);
   size_t hlen2 = 17; /* " hash: blake2\r\n\r\n" FIXME: parse and calculate */
   size_t mlen = + crypto_sign_BYTES + crypto_generichash_BYTES_MAX;
   size_t zlen = 262; /*  FIXME: calculate */
-  unsigned char z85encoded[zlen];
-  unsigned char sighash[mlen];
+  byte z85encoded[zlen];
+  byte sighash[mlen];
   char z85sigstart[] = "\n" PCP_SIG_START; /* FIXME: verifies, but it misses the \r! */
   char binsigstart[] = PCP_SIGPREFIX;
   char sigstart[] = PCP_SIG_START;
@@ -259,7 +259,7 @@ pcp_pubkey_t *pcp_ed_verify_buffered(Pcpstream *in, pcp_pubkey_t *p) {
       goto errvb1;
 
     size_t dstlen;
-    unsigned char *z85decoded = pcp_z85_decode(z85block, &dstlen);
+    byte *z85decoded = pcp_z85_decode(z85block, &dstlen);
     if(dstlen != mlen) {
       fatal("z85 decoded signature didn't result in a proper signed hash(got: %ld, expected: %ld)\n", dstlen, mlen);
       goto errvb1;
@@ -269,7 +269,7 @@ pcp_pubkey_t *pcp_ed_verify_buffered(Pcpstream *in, pcp_pubkey_t *p) {
   /*  else: if unarmored, sighash is already filled */
 
   /*  huh, how did we made it til here? */
-  unsigned char *verifiedhash = NULL;
+  byte *verifiedhash = NULL;
   if(p == NULL) {
     pcphash_iteratepub(p) {
       verifiedhash = pcp_ed_verify(sighash, mlen, p);
@@ -300,11 +300,11 @@ pcp_pubkey_t *pcp_ed_verify_buffered(Pcpstream *in, pcp_pubkey_t *p) {
 }
 
 size_t pcp_ed_detachsign_buffered(Pcpstream *in, Pcpstream *out, pcp_key_t *s) {
-  unsigned char in_buf[PCP_BLOCK_SIZE];
+  byte in_buf[PCP_BLOCK_SIZE];
   size_t cur_bufsize = 0;
   size_t outsize = 0;
   crypto_generichash_state *st = ucmalloc(sizeof(crypto_generichash_state));
-  unsigned char hash[crypto_generichash_BYTES_MAX];
+  byte hash[crypto_generichash_BYTES_MAX];
 
   crypto_generichash_init(st, NULL, 0, 0);
 
@@ -318,13 +318,13 @@ size_t pcp_ed_detachsign_buffered(Pcpstream *in, Pcpstream *out, pcp_key_t *s) {
 
   crypto_generichash_final(st, hash, crypto_generichash_BYTES_MAX);
 
-  unsigned char *signature = pcp_ed_sign(hash, crypto_generichash_BYTES_MAX, s);
+  byte *signature = pcp_ed_sign(hash, crypto_generichash_BYTES_MAX, s);
   size_t mlen = + crypto_sign_BYTES + crypto_generichash_BYTES_MAX;
 
   ps_print(out, "\r\n%s\r\n~ Version: PCP v%d.%d.%d ~\r\n\r\n",
 	  PCP_SIG_START, PCP_VERSION_MAJOR, PCP_VERSION_MINOR, PCP_VERSION_PATCH);
   size_t zlen;
-  char *z85encoded = pcp_z85_encode((unsigned char*)signature, mlen, &zlen);
+  char *z85encoded = pcp_z85_encode((byte*)signature, mlen, &zlen);
   ps_print(out, "%s\r\n%s\r\n", z85encoded, PCP_SIG_END);
 
   free(st);
@@ -333,11 +333,11 @@ size_t pcp_ed_detachsign_buffered(Pcpstream *in, Pcpstream *out, pcp_key_t *s) {
 }
 
 pcp_pubkey_t *pcp_ed_detachverify_buffered(Pcpstream *in, Pcpstream *sigfd, pcp_pubkey_t *p) {
-  unsigned char in_buf[PCP_BLOCK_SIZE];
+  byte in_buf[PCP_BLOCK_SIZE];
   size_t cur_bufsize = 0;
   size_t outsize = 0;
   crypto_generichash_state *st = ucmalloc(sizeof(crypto_generichash_state));
-  unsigned char hash[crypto_generichash_BYTES_MAX];
+  byte hash[crypto_generichash_BYTES_MAX];
   size_t mlen = + crypto_sign_BYTES + crypto_generichash_BYTES_MAX;
 
   crypto_generichash_init(st, NULL, 0, 0);
@@ -353,19 +353,19 @@ pcp_pubkey_t *pcp_ed_detachverify_buffered(Pcpstream *in, Pcpstream *sigfd, pcp_
   crypto_generichash_final(st, hash, crypto_generichash_BYTES_MAX);
 
   /*  read the sig */
-  unsigned char *sig = NULL;
+  byte *sig = NULL;
   size_t inputBufSize = 0;
-  unsigned char byte[1];
+  byte onebyte[1];
   
   while(!ps_end(sigfd)) {
-    if(!ps_read(sigfd, &byte, 1))
+    if(!ps_read(sigfd, &onebyte, 1))
       break;
     /*
     if(!fread(&byte, 1, 1, sigfd))
       break;*/
-    unsigned char *tmp = realloc(sig, inputBufSize + 1);
+    byte *tmp = realloc(sig, inputBufSize + 1);
     sig = tmp;
-    memmove(&sig[inputBufSize], byte, 1);
+    memmove(&sig[inputBufSize], onebyte, 1);
     inputBufSize ++;
   }
 
@@ -380,7 +380,7 @@ pcp_pubkey_t *pcp_ed_detachverify_buffered(Pcpstream *in, Pcpstream *sigfd, pcp_
     goto errdea2;
 
   size_t clen;
-  unsigned char *sighash = pcp_z85_decode(z85block, &clen);
+  byte *sighash = pcp_z85_decode(z85block, &clen);
   if(sighash == NULL)
     goto errdea3;
 
@@ -389,7 +389,7 @@ pcp_pubkey_t *pcp_ed_detachverify_buffered(Pcpstream *in, Pcpstream *sigfd, pcp_
     goto errdea4;
   }
   
-  unsigned char *verifiedhash = NULL;
+  byte *verifiedhash = NULL;
   if(p == NULL) {
     pcphash_iteratepub(p) {
       verifiedhash = pcp_ed_verify(sighash, mlen, p);

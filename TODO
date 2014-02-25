@@ -44,6 +44,7 @@ Z85 headers:
    is marked as to be ignored which could be saved as a state when using
    blockmode.
 
+Check is_utf8 license.
 
 Python binding, e.g.:
 py % cdll.LoadLibrary("libsodium.so.8")

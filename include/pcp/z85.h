@@ -57,7 +57,7 @@ we pad the input with zeroes and remove them after decoding.
 
     \return Returns a pointer to the padded data.
  */
-unsigned char *pcp_padfour(unsigned char *src, size_t srclen, size_t *dstlen);
+byte *pcp_padfour(byte *src, size_t srclen, size_t *dstlen);
 
 
 /** Unpad padded input data.
@@ -70,7 +70,7 @@ unsigned char *pcp_padfour(unsigned char *src, size_t srclen, size_t *dstlen);
 
     \return Returns the unpadded size of the data.
  */
-size_t pcp_unpadfour(unsigned char *src, size_t srclen);
+size_t pcp_unpadfour(byte *src, size_t srclen);
 
 /** Decode data from Z85 encoding.
 
@@ -83,7 +83,7 @@ size_t pcp_unpadfour(unsigned char *src, size_t srclen);
             returns NULL. Check fatals_if_any().
 
 */
-unsigned char *pcp_z85_decode(char *z85block, size_t *dstlen);
+byte *pcp_z85_decode(char *z85block, size_t *dstlen);
 
 
 /** Encode data to Z85 encoding.
@@ -96,7 +96,7 @@ unsigned char *pcp_z85_decode(char *z85block, size_t *dstlen);
 
     \return Returns a string (char array) containing the Z85 encoded data.
 */
-char *pcp_z85_encode(unsigned char *raw, size_t srclen, size_t *dstlen);
+char *pcp_z85_encode(byte *raw, size_t srclen, size_t *dstlen);
 
 /** Read a Z85 encoded file.
 
@@ -120,7 +120,21 @@ char *pcp_readz85file(FILE *infile);
     \return Raw Z85 encoded string with comments, headers and newlines removed.
 
  */
-char *pcp_readz85string(unsigned char *input, size_t bufsize);
+char *pcp_readz85string(byte *input, size_t bufsize);
+
+/** Check if a binary array is utf8.
+
+    Based on http://stackoverflow.com/questions/1031645/how-to-detect-utf-8-in-plain-c
+    by Christoph Gärtner
+
+    Modified to only check for one utf8 char. The given sequence must have
+    at least 4 bytes length. No boundary checks are being made.
+
+    \param[in] bytes A byte sequence with 4 or more bytes length.
+
+    \return Returns 0 if the sequence is not utf8 or a number greater than 1 indicating the size of the utf8 char.
+*/
+uint8_t is_utf8(const byte * string);
 
 /** Determine if a buffer is binary or ascii.
 
@@ -129,7 +143,7 @@ char *pcp_readz85string(unsigned char *input, size_t bufsize);
     \return Returns 0 if the input is ascii or a number > 0 if
             it contains binary data.
 */
-size_t _buffer_is_binary(unsigned char *buf, size_t len);
+size_t _buffer_is_binary(byte *buf, size_t len);
 
 
 /** Determine if a char is a Z85 character

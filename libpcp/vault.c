@@ -255,7 +255,7 @@ int pcpvault_writeall(vault_t *vault) {
 }
 
 void pcpvault_update_checksum(vault_t *vault) {
-  byte *checksum = pcpvault_create_checksum(vault);
+  byte *checksum = pcpvault_create_checksum();
 
   vault_header_t *header = ucmalloc(sizeof(vault_header_t));
   header->fileid = PCP_VAULT_ID;
@@ -270,7 +270,7 @@ void pcpvault_update_checksum(vault_t *vault) {
   fseek(vault->fd, 0, SEEK_END);
 }
 
-byte *pcpvault_create_checksum(vault_t *vault) {
+byte *pcpvault_create_checksum() {
   int numskeys = pcphash_count();
   int numpkeys = pcphash_countpub();
 

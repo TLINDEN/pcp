@@ -165,10 +165,10 @@ size_t pcp_decrypt_stream(Pcpstream *in, Pcpstream* out, pcp_key_t *s, byte *sym
   pcp_pubkey_t *cur = NULL;
   pcp_pubkey_t *sender = NULL;
   byte *reccipher = NULL;
-  int nrec, recmatch, self;
+  int recmatch, self;
   uint32_t lenrec;
   byte head[1];
-  size_t cur_bufsize, rec_size;
+  size_t cur_bufsize, rec_size, nrec;
   
   byte rec_buf[PCP_ASYM_RECIPIENT_SIZE];
 

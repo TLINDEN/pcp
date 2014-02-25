@@ -32,7 +32,10 @@ Key::Key() {
 
 Key::Key(bool generate) {
   stored = false;
-  K = pcpkey_new();
+  if(generate)
+    K = pcpkey_new();
+  else
+    K = NULL;
 }
 
 Key::Key(const string& passphrase) {

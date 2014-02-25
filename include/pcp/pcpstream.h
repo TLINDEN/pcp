@@ -257,7 +257,7 @@ void ps_armor(Pcpstream *stream, size_t blocksize);
 /* read from primary source, decode z85 and out into cache.
    if buf != NULL, consider it as the start of encoded data
    and remove headers and comments, then continue as normal. */
-size_t ps_read_decode(Pcpstream *stream, Buffer *cache, void *buf, size_t bufsize);
+size_t ps_read_decode(Pcpstream *stream, void *buf, size_t bufsize);
 
 /* determine if primary source is z85 encoded, put the data
    read from it into the cache */

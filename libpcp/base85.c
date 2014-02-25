@@ -24,7 +24,7 @@ static char de85[256];
 
 static void prep_base85(void)
 {
-	int i;
+	size_t i;
 	if (de85['Z'])
 		return;
 	for (i = 0; i < ARRAY_SIZE(en85); i++) {

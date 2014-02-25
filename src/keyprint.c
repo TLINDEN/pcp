@@ -162,7 +162,7 @@ void pcppubkey_print(pcp_pubkey_t *key, FILE* out) {
   byte *hash = pcppubkey_getchecksum(key);
   fprintf(out, " Checksum: ");
 
-  int i;
+  size_t i;
   for ( i = 0;i <15 ;++i) fprintf(out, "%02X:",(unsigned int) hash[i]);
   fprintf(out, "%02X", hash[15]);
   fprintf(out, "\n ");
@@ -174,7 +174,8 @@ void pcppubkey_print(pcp_pubkey_t *key, FILE* out) {
   
   char *r = pcppubkey_get_art(key);
   fprintf(out, " Random Art ID: ");
-  for (i=0; i<strlen(r); ++i) {
+  size_t rlen = strlen(r);
+  for (i=0; i<rlen; ++i) {
     if(r[i] == '\n') {
       fprintf(out, "\n ");
     }
@@ -208,12 +209,13 @@ void pcpkey_print(pcp_key_t *key, FILE* out) {
 }
 
 void pcpkey_printshortinfo(pcp_key_t *key) {
-  int i;
+  size_t i;
   printf("        Key-ID: 0x%s\n", key->id);
   printf("         Owner: %s\n", key->owner);
   char *r = pcpkey_get_art(key);
   printf(" Random Art ID: ");
-  for (i=0; i<strlen(r); ++i) {
+  size_t rlen = strlen(r);
+  for (i=0; i<rlen; ++i) {
     if(r[i] == '\n') {
       printf("\n                ");
     }
@@ -226,12 +228,13 @@ void pcpkey_printshortinfo(pcp_key_t *key) {
 }
 
 void pcppubkey_printshortinfo(pcp_pubkey_t *key) {
-  int i;
+  size_t i;
   printf("        Key-ID: 0x%s\n", key->id);
   printf("         Owner: %s\n", key->owner);
   char *r = pcppubkey_get_art(key);
   printf(" Random Art ID: ");
-  for (i=0; i<strlen(r); ++i) {
+  size_t rlen = strlen(r);
+  for (i=0; i<rlen; ++i) {
     if(r[i] == '\n') {
       printf("\n                ");
     }
@@ -312,7 +315,7 @@ void pcpexport_yaml(char *outfile) {
 }
 
 void pcpprint_bin(FILE *out, byte *data, size_t len) {
-  int i;
+  size_t i;
   for ( i = 0;i < len;++i)
     fprintf(out, "%02x", (unsigned int) data[i]);
 }

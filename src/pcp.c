@@ -441,7 +441,7 @@ int main (int argc, char **argv)  {
 	    break;
 	  }
 	}
-	pcp_importsecret(vault, in, xpass);
+	pcp_importsecret(in, xpass);
 	break;
 
       case PCP_MODE_DELETE_KEY:

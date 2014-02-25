@@ -282,6 +282,7 @@ if test -n "$bigendian"; then
     CFLAGS="$CFLAGS -D__CPU_IS_BIG_ENDIAN=1"
 fi
 
+CFLAGS="$CFLAGS -Werror -Wextra"
 CXXFLAGS="$CFLAGS"
 
 AC_SUBST(PACKAGE_VERSION)

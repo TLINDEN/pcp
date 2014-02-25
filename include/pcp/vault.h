@@ -239,8 +239,8 @@ int pcpvault_copy(vault_t *tmp, vault_t *vault);
 /* delete a vault file */
 void pcpvault_unlink(vault_t *tmp);
 
-/* calculate the vault checksum */
-byte *pcpvault_create_checksum(vault_t *vault);
+/* calculate the checksum of the current vault */
+byte *pcpvault_create_checksum();
 
 /* write the new checksum to the header of the current vault */
 void pcpvault_update_checksum(vault_t *vault);

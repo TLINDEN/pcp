@@ -28,7 +28,7 @@ void pcp_pad_prepend(byte **padded, byte *unpadded,
   byte *tmp = ucmalloc(unpadlen + padlen);
 
   /*  pcp_append orig */
-  int i;
+  size_t i;
   for(i=0; i<unpadlen; ++i) {
     tmp[i + padlen] = unpadded[i];
   }
@@ -42,7 +42,7 @@ void pcp_pad_remove(byte **unpadded, byte *padded,
   *unpadded = ucmalloc(unpadlen * sizeof(byte));
   byte *tmp = ucmalloc(unpadlen);
 
-  int i;
+  size_t i;
   for(i=0; i<unpadlen; ++i) {
     tmp[i] = padded[padlen + i];
   }

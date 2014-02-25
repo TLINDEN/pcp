@@ -144,7 +144,7 @@ size_t ps_read_cached(Pcpstream *stream, void *buf, size_t readbytes) {
 size_t ps_read_next(Pcpstream *stream) {
   if(stream->armor == 1) {
     /* fetch next chunk and decode it */
-    return ps_read_decode(stream, stream->next, NULL, 0);
+    return ps_read_decode(stream, NULL, 0);
   }
   else {
     /* unencoded source, fetch as is */
@@ -192,7 +192,7 @@ void ps_determine(Pcpstream *stream) {
   if(_buffer_is_binary(buf, got) == 0) {
     /* no, it's armored */
     stream->armor = 1;
-    ps_read_decode(stream, stream->cache, buf, got);
+    ps_read_decode(stream, buf, got);
   }
   else {
     /* just put the raw stuff into the cache */
@@ -200,8 +200,7 @@ void ps_determine(Pcpstream *stream) {
   }
 }
 
-size_t ps_read_decode(Pcpstream *stream, Buffer *cache, void *buf, size_t bufsize) {
-  size_t zdiff = 1;
+size_t ps_read_decode(Pcpstream *stream, void *buf, size_t bufsize) {
   size_t i = 0;
   uint8_t is_comment = 0;
   uint8_t c;
@@ -242,57 +241,6 @@ size_t ps_read_decode(Pcpstream *stream, Buffer *cache, void *buf, size_t bufsiz
     outlen = binlen;
   }
 
-  buffer_free(z);
-
-  return outlen;
-}
-
-size_t ps_read_decodeOLD(Pcpstream *stream, Buffer *cache, void *buf, size_t bufsize) {
-  size_t zdiff = 1;
-  size_t i = 0;
-  Buffer *z = buffer_new(32, "ztemp");
-
-  if(bufsize > 0) {
-    /* remove newlines, comments and headers, if any */
-    char *z85 = pcp_readz85string(buf, bufsize);
-    buffer_add(z, z85, strlen(z85));
-
-    /* check if we need to read more in order to get a full block */
-    zdiff = stream->blocksize - strlen(z85);
-    i = strlen(z85);
-    free(z85);
-  }
- 
-  if(zdiff > 0) {
-    /* read in bytewise, ignore newlines and add until the block is full */
-    uint8_t c;
-    while (i < stream->blocksize) {
-      if (ps_read_raw(stream, &c, 1) == 1) {
-	if(c != '\r' && c != '\n') {
-	  buffer_add8(z, c);
-	  i++;
-	}
-      }
-      else
-	break;
-    }
-  }
-
-  /* finally, decode it and put into cache */
-  size_t binlen, outlen;
-  byte *bin = pcp_z85_decode(buffer_get_str(z), &binlen);
-  if(bin == NULL) {
-    /* it's not z85 encoded, so threat it as binary */
-    stream->armor = 1;
-    buffer_add_buf(stream->cache, z);
-    outlen = buffer_size(stream->cache);
-  }
-  else {
-    /* yes, successfully decoded it, put into cache */
-    buffer_add(stream->cache, bin, binlen);
-    outlen = binlen;
-  }
-  
   buffer_free(z);
 
   return outlen;

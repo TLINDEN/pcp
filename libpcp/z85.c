@@ -255,7 +255,7 @@ char *pcp_readz85file(FILE *infile) {
 }
 
 char *pcp_readz85string(byte *input, size_t bufsize) {
-  int i;
+  size_t i;
   size_t MAXLINE = 1024;
 
   if(bufsize == 0) {

@@ -467,7 +467,6 @@ Buffer *pcp_export_c_pub(pcp_key_t *sk) {
   struct tm *c;
   time_t t = time(0);
   c = localtime(&t);
-  size_t i;
 
   buffer_add_str(b, "/*\n * C export of public key\n");
   buffer_add_str(b, " * Generated on: %04d-%02d-%02dT%02d:%02d:%02d\n",

@@ -205,7 +205,7 @@ pcp_pubkey_t *pcp_ed_verify_buffered(Pcpstream *in, pcp_pubkey_t *p) {
 
     /* printf("offset: %ld, full: %ld, cur: %ld\n", offset, full_bufsize, cur_bufsize); */
 
-    if(offset >= 0 && offset <= PCP_BLOCK_SIZE/2) {
+    if(offset > 0 && offset <= PCP_BLOCK_SIZE/2) {
       /*  sig begins within the first half, adjust in_buf size */
       /* printf("1st half\n"); */
       next_bufsize = 0;

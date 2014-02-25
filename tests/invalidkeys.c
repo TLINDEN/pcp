@@ -37,7 +37,7 @@ int main() {
 }
 
 void pr(char *t, unsigned char *b, size_t s) {
-  int i;
+  size_t i;
   printf("%s:\n", t);
   for(i=0; i<s; ++i)
     printf("%02x", (unsigned int) b[i]);

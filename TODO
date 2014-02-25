@@ -46,6 +46,10 @@ Check is_utf8 license.
 
 Vault checksum with global vault
 
+Pcpstream armored write: fails if blocksize is smaller than chunk to
+write. It even coredumps in ps_write (overlap calculation gets negative) 
+need to check
+
 Python binding, e.g.:
 py % cdll.LoadLibrary("libsodium.so.8")
 <CDLL 'libsodium.so.8', handle 800776c00 at 80192a3d0>

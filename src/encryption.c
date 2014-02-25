@@ -266,7 +266,6 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
   Pcpstream *pin = ps_new_file(in);
   Pcpstream *pout = ps_new_file(out);
 
-
   if(self == 1)
     clen = pcp_encrypt_stream_sym(pin, pout, symkey, 0, NULL);
   else

@@ -45,6 +45,7 @@ Z85 headers:
    blockmode.
 
 Check is_utf8 license.
+  also found in https://gd.meizo.com/_files/lpc/ext/utf8.c
 
 Python binding, e.g.:
 py % cdll.LoadLibrary("libsodium.so.8")

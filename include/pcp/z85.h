@@ -134,7 +134,7 @@ char *pcp_readz85string(byte *input, size_t bufsize);
 
     \return Returns 0 if the sequence is not utf8 or a number greater than 1 indicating the size of the utf8 char.
 */
-uint8_t is_utf8(const byte * string);
+uint8_t is_utf8(const byte * bytes);
 
 /** Determine if a buffer is binary or ascii.
 

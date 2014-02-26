@@ -136,6 +136,20 @@ size_t buffer_get_chunk(Buffer *b, void *buf, size_t len) {
   return len;
 }
 
+size_t buffer_get_chunk_tobuf(Buffer *b, Buffer *dst, size_t len) {
+  if(len > b->end - b->offset || len == 0) {
+    fatal("[buffer %s] attempt to read %ld bytes data from buffer with %ld bytes left at offset %ld\n",
+	  b->name, len, b->end - b->offset, b->offset);
+    return 0;
+  }
+
+  buffer_resize(dst, len);
+  memcpy(dst->buf+buffer_size(dst), b->buf + b->offset, len);
+  b->offset += len;
+  dst->end += len;
+  return len;
+}
+
 byte *buffer_get_remainder(Buffer *b) {
   void *buf = ucmalloc(b->end - b->offset);
   if(buffer_get_chunk(b, buf, b->end - b->offset) == 0) {

@@ -293,14 +293,24 @@ int buffer_done(Buffer *b);
     be 0 in case of errors. See also: fatals_ifany(), buffer_done() and buffer_left().
 
     \param[in] b The Buffer object to read from.
-
     \param[out] buf The destination pointer where the data will be copied to. This pointer
 must be allocated by the caller properly and it must have at least a size of len.
-
     \param[in] len The number of bytes to read from the Buffer.
-
+    \return Returns the size of bytes read, 0 in case an error occurred.
 */
 size_t buffer_get_chunk(Buffer *b, void *buf, size_t len);
+
+/** Read some chunk of data from the Buffer and add to another Buffer.
+
+    Works identical to buffer_get_chunk() but copies the requested
+    chunk directly into the Buffer \a dst, which will be resized
+    properly if needed.
+
+    \param[in] b The Buffer object to read from.
+    \param[out] dst The Buffer object to write to.
+    \return Returns the size of bytes read, 0 in case an error occurred.
+ */
+size_t buffer_get_chunk_tobuf(Buffer *b, Buffer *dst, size_t len);
 
 /** Read the whole Buffer content.
 

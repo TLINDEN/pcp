@@ -73,6 +73,10 @@ sub runtest {
   my($cfg, $name) = @_;
   my($in, $out, $error, $timeout);
 
+  foreach my $key (keys %{$cfg}) {
+    $cfg->{$key}   =~ s/\`([^\`]*)\`/my $result = `$1`; chomp $result; $result/ge;
+  }
+
   if (exists $cfg->{prepare}) {
     print STDERR "  executing prepare command: $cfg->{prepare}\n" if ($verbose);
     if ($cfg->{prepare} =~ />/) {

@@ -154,11 +154,11 @@ byte *pcp_padfour(byte *src, size_t srclen, size_t *dstlen) {
 
 size_t pcp_unpadfour(byte *src, size_t srclen) {
   size_t outlen;
-  size_t i;
+  long int i;
 
   outlen = srclen;
 
-  for(i=srclen-1; i>0; --i) {
+  for(i=srclen-1; i>=0; i--) {
     if(src[i] != '\0') {
       outlen = i + 1;
       break;

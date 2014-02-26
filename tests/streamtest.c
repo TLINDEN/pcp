@@ -10,7 +10,8 @@ int main() {
   unsigned char clear[8] = "ABCDEFGH";
   unsigned char key[8]   = "IxD8Lq1K";
   unsigned char crypt[8] = {0};
-  int blocks = 48;
+  int blocks = 8;
+  size_t blocksize = 4;
   int i = 0;
 
   if((out = fopen("teststream.out", "wb+")) == NULL) {
@@ -21,17 +22,19 @@ int main() {
   /* out output stream, z85 encoded, use z85 blocksize 8 */
   Pcpstream *pout = ps_new_file(out);
   ps_print(pout, "~~~~~ BEGIN ~~~~~\r\n");
-  ps_armor(pout, 8);
+  ps_armor(pout, blocksize);
 
   /* "encrypt" a couple of times into the output stream */
   for(i=0; i<blocks; i++) {
     memcpy(crypt, clear, 8);
     _xorbuf(key, crypt, 8);
+    //_dump("crypt", crypt, 8);
     ps_write(pout, crypt, 8);
   }
 
   /* done, put cached buffers out and close */
   ps_finish(pout);
+
   pout->armor = 0;
   ps_print(pout, "\r\n~~~~~ END ~~~~~\r\n");
   ps_close(pout);
@@ -45,7 +48,7 @@ int main() {
   Pcpstream *pin = ps_new_file(in);
 
   /* enable autmatically encoding detection. */
-  ps_setdetermine(pin, 8);
+  ps_setdetermine(pin, blocksize);
   
   /* we'll use this stream to put the "decrypted" data in.
      note, that this could be a file as well.  */
@@ -55,6 +58,7 @@ int main() {
   for(i=0; i<blocks; i++) {
     ps_read(pin, crypt, 8);
     _xorbuf(key, crypt, 8);
+    //_dump("got", crypt, 8);
     ps_write(pclear, crypt, 8);
     memset(crypt,0,8);
   }
@@ -67,6 +71,7 @@ int main() {
   /* and verify if it's "decrypted" (re-use crypt) */
   for(i=0; i<blocks; i++) {
     buffer_get_chunk(result, crypt, 8);
+    //_dump("result", crypt, 8);
     if(memcmp(crypt, clear, 8) != 0) {
       fprintf(stderr, "Oops, block %d doesn't match\n", i);
       goto error;

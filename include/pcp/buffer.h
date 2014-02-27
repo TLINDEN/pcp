@@ -308,6 +308,7 @@ size_t buffer_get_chunk(Buffer *b, void *buf, size_t len);
 
     \param[in] b The Buffer object to read from.
     \param[out] dst The Buffer object to write to.
+    \param[in] len The number of bytes to read from the Buffer.
     \return Returns the size of bytes read, 0 in case an error occurred.
  */
 size_t buffer_get_chunk_tobuf(Buffer *b, Buffer *dst, size_t len);

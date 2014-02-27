@@ -10,8 +10,8 @@
 #include "key.h"
 #include "vault.h"
 
-void mkinv(pcp_key_t *k, int type);
-void mkinvp(pcp_pubkey_t *k, int type);
+void mkinvalid_secret(pcp_key_t *k, int type);
+void mkinvalid_public(pcp_key_t *k, int type);
 void mkinvv(const char *name, int type);
 FILE *F(char *filename);
 

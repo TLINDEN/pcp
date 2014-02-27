@@ -75,6 +75,7 @@
                            If none of -i or -r has been given, encrypt
                            the message symetrically. This is the same
                            as -m (self-encryption mode).
+                           Add -z to ascii armor the output using Z85.
  -m --encrypt-me           Sym-Encrypt a message. Specify -I and/or
                            -O for input/output file. You will be asked
                            for a passphrase. No key material will
@@ -112,9 +113,9 @@
                            If used with encryption or singing operation
                            encode its output. Otherwise encode a plain
                            file. Use -I and -O respectively, otherwise it
-                           stdin/stdout.
+                           uses stdin/stdout.
  -Z --z85-decode           Decode (dearmor) something from Z85 encoding.
                            Use -I and -O respectively, otherwise it
-                           stdin/stdout
+                           uses stdin/stdout
  
 

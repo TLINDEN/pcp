@@ -448,6 +448,9 @@ secret key, R is the recipient list, L is the number of recipients,
 T is the filetype header, I is a block of input with a size
 of 32k, N is a nonce (new per block) and S the symmetric key.
 
+The encrypted output maybe Z85 encoded. In this case the Z85
+encoding will be done blockwise with blocks of 16k bytes. The
+decoded content inside will be as described above.
 
 =head2 SIGNATURE FORMAT
 
@@ -552,6 +555,19 @@ secret signing key and S the symmetric key.
 =head2 Z85 ENCODING
 
 B<pcp1> uses Z85 to encode exported keys and armored signatures.
+Comments in encoded files are surrounded by the tilde character.
+We're using the tilde because it's not part of the Z85 base
+charset. Sample:
+
+ ~~~ Header ~~~
+ ~ Version: 1 ~
+ 246ge]+yn={<I&&Z%(pm[09lc5[dx4TZALi/6cjVe)Kx5S}7>}]Xi3*N3Xx34Y^0rz:r.5j
+ v#6Sh/m3XKwy?VlA+h8ks]9:kVj{D[fd7]NA]T-(ne+xo!W5X5-gIUWqM
+ ~~~ Footer ~~~
+
+Multiple tildes can be used as long as their number is uneven.
+
+This is a proprietary PCP extension.
 
 =head3 Z85 BACKGROUND
 

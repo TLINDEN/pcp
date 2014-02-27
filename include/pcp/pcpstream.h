@@ -70,6 +70,8 @@ struct _pcp_stream_t {
   uint8_t firstread; /**< Internal flag, will be set after first read() */
   size_t  linewr;    /**< Used for Z85 writing, number of chars written on last line */
   size_t  blocksize; /**< Blocksize used for z85, if requested */
+  uint8_t is_output; /**< marks the stream as output stream */
+  size_t pos;        /**< remember i/o position */
 };
 
 /** The name used everywhere */
@@ -254,6 +256,15 @@ void ps_setdetermine(Pcpstream *stream, size_t blocksize);
  */
 void ps_armor(Pcpstream *stream, size_t blocksize);
 
+
+/** Disable Z85 encoding for an output stream.
+
+    \param[in] stream The stream object.
+ */
+void ps_unarmor(Pcpstream *stream);
+
+
+
 /* read from primary source, decode z85 and out into cache.
    if buf != NULL, consider it as the start of encoded data
    and remove headers and comments, then continue as normal. */
@@ -279,6 +290,9 @@ void ps_write_encode(Pcpstream *stream, Buffer *dst);
 
 /* really write the buffer z into the output stream */
 size_t ps_write_buf(Pcpstream *stream, Buffer *z);
+
+/* tell if we really reached eof, caching or not. 1=eof, 0=ok */
+int ps_left(Pcpstream *stream);
 
 #endif // HAVE_PCP_PCPSTEAM_H
 

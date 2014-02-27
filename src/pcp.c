@@ -474,11 +474,11 @@ int main (int argc, char **argv)  {
 	if(useid == 1 && userec == 0) {
 	  /*  one dst, FIXME: make id a list as well */
 	  id = pcp_normalize_id(keyid);
-	  pcpencrypt(id, infile, outfile, xpass, NULL, signcrypt);
+	  pcpencrypt(id, infile, outfile, xpass, NULL, signcrypt, armor);
 	}
 	else if(useid == 0 && userec == 1) {
 	  /*  multiple dst */
-	  pcpencrypt(NULL, infile, outfile, xpass, recipient, signcrypt);
+	  pcpencrypt(NULL, infile, outfile, xpass, recipient, signcrypt, armor);
 	}
 	else {
 	  /*  -i and -r specified */
@@ -558,7 +558,7 @@ int main (int argc, char **argv)  {
       break;
 
     case PCP_MODE_ENCRYPT_ME:
-      pcpencrypt(NULL, infile, outfile, xpass, NULL, 0);
+      pcpencrypt(NULL, infile, outfile, xpass, NULL, 0, armor);
       break;
 
     case PCP_MODE_TEXT:

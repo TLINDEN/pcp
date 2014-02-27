@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013 T.Linden.
+    Copyright (C) 2013-2014 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    You can contact me by mail: <tlinden AT cpan DOT org>.
+    You can contact me by mail: <tom AT vondein DOT org>.
 */
 
 
@@ -48,9 +48,15 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
     }
   }
 
+  Pcpstream *pin = ps_new_file(in);
+  Pcpstream *pout = ps_new_file(out);
+
+  ps_setdetermine(pin, PCP_BLOCK_SIZE/2);
+
   /*  determine crypt mode */
-  fread(&head, 1, 1, in);
-  if(!feof(in) && !ferror(in)) {
+  ps_read(pin, &head, 1);
+
+  if(!ps_end(pin) && !ps_err(pin)) {
     if(head == PCP_SYM_CIPHER) {
       /*  symetric mode */
       byte *salt = ucmalloc(90);
@@ -110,9 +116,6 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
     goto errde3;
   }
 
-  Pcpstream *pin = ps_new_file(in);
-  Pcpstream *pout = ps_new_file(out);
-
   if(symkey == NULL)
     dlen = pcp_decrypt_stream(pin, pout, secret, NULL, verify);
   else
@@ -136,7 +139,7 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
 
 
 
-int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *recipient, int signcrypt) {
+int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *recipient, int signcrypt, int armor) {
   FILE *in = NULL;
   FILE *out = NULL;
   pcp_pubkey_t *pubhash = NULL; /*  FIXME: add free() */
@@ -266,13 +269,25 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
   Pcpstream *pin = ps_new_file(in);
   Pcpstream *pout = ps_new_file(out);
 
+  if(armor == 1) {
+    ps_print(pout, PCP_ENFILE_HEADER);
+    ps_armor(pout, PCP_BLOCK_SIZE/2);
+  }
+
   if(self == 1)
     clen = pcp_encrypt_stream_sym(pin, pout, symkey, 0, NULL);
   else
     clen = pcp_encrypt_stream(pin, pout, secret, pubhash, signcrypt);
 
-  ps_close(pin);
+  if(armor == 1) {
+    ps_finish(pout);
+    ps_unarmor(pout);
+    ps_print(pout, PCP_ENFILE_FOOTER);
+  }
+
   ps_close(pout);
+
+  ps_close(pin);
 
   if(clen > 0) {
     if(id == NULL && recipient == NULL)

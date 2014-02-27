@@ -50,6 +50,9 @@
 	on the caller if it works on files or on buffers.
 	Pcpstreams also automatically encode/decode Z85.
 
+	Due to the new pcpstream class pcp now supports
+	armored encrypted files, which it didn't previously.
+
 	Lots of refactoring have been done to clear things
 	out and make the system work with the changes
 	above.
@@ -72,6 +75,11 @@
 	Added API doc for libpcp, generated using doxygen
 	in man/html/. Latest API docs can be found on
 	http://www.daemon.de/libpcp/.
+
+	At this point I'd like to thank Liquid Soul. Only
+	thanks to their music I was able to do those heavy
+	changes. It's like a drug boosting the brain. Love
+	U, man!
 
 0.2.0	ED25519 and Curve25519 keys are now generated
 	separately (previously they were generated from

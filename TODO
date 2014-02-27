@@ -46,6 +46,7 @@ Check is_utf8 license.
 
 Vault checksum with global vault
 
+Symmetric crypt mode tries to open vault
 
 Python binding, e.g.:
 py % cdll.LoadLibrary("libsodium.so.8")

@@ -125,11 +125,16 @@ byte *buffer_get(Buffer *b) {
 }
 
 size_t buffer_get_chunk(Buffer *b, void *buf, size_t len) {
-  if(len > b->end - b->offset || len == 0) {
+  if(len > b->end - b->offset) {
     fatal("[buffer %s] attempt to read %ld bytes data from buffer with %ld bytes left at offset %ld\n",
 	  b->name, len, b->end - b->offset, b->offset);
     return 0;
   }
+  else if(len == 0) {
+    /* FIXME: check how this happens */
+    return 0;
+  }
+
   memcpy(buf, b->buf + b->offset, len);
 
   b->offset += len;
@@ -137,9 +142,13 @@ size_t buffer_get_chunk(Buffer *b, void *buf, size_t len) {
 }
 
 size_t buffer_get_chunk_tobuf(Buffer *b, Buffer *dst, size_t len) {
-  if(len > b->end - b->offset || len == 0) {
+  if(len > b->end - b->offset) {
     fatal("[buffer %s] attempt to read %ld bytes data from buffer with %ld bytes left at offset %ld\n",
 	  b->name, len, b->end - b->offset, b->offset);
+    return 0;
+  }
+  else if(len == 0) {
+    /* FIXME: check how this happens */
     return 0;
   }
 

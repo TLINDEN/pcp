@@ -178,7 +178,7 @@ size_t pcp_decrypt_stream(Pcpstream *in, Pcpstream* out, pcp_key_t *s, byte *sym
 
   nrec = recmatch = self = 0;
 
-  if(ps_tell(in) == 1) {
+  if(ps_tell(in) > 1) {
     /*  header has already been determined outside the lib */
     if(symkey != NULL)
       self = 1;
@@ -233,7 +233,7 @@ size_t pcp_decrypt_stream(Pcpstream *in, Pcpstream* out, pcp_key_t *s, byte *sym
   for(nrec=0; nrec<lenrec; nrec++) {
     cur_bufsize = ps_read(in, &rec_buf, PCP_ASYM_RECIPIENT_SIZE); /* fread(&rec_buf, 1, PCP_ASYM_RECIPIENT_SIZE, in); */
     if(cur_bufsize != PCP_ASYM_RECIPIENT_SIZE && !ps_end(in) && !ps_err(in)) {
-      fatal("Error: input file corrupted, incomplete or no recipients\n");
+      fatal("Error: input file corrupted, incomplete or no recipients (got %ld, exp %ld)\n", cur_bufsize, PCP_ASYM_RECIPIENT_SIZE );
       goto errdef1;
     }
     recmatch = 0;
@@ -262,17 +262,18 @@ size_t pcp_decrypt_stream(Pcpstream *in, Pcpstream* out, pcp_key_t *s, byte *sym
     fatal("Sorry, there's no matching public key in your vault for decryption\n");
     goto errdef1;
   }
-  
-  
+
   /*  step 5, actually decrypt the file, finally */
   if(verify) {
     pcp_rec_t *rec = pcp_rec_new(reccipher, nrec * PCP_ASYM_RECIPIENT_SIZE, NULL, cur);
-    return pcp_decrypt_stream_sym(in, out, symkey, rec);
+    size_t s = pcp_decrypt_stream_sym(in, out, symkey, rec);
     pcp_rec_free(rec);
+    return s;
   }
-  else
-    return pcp_decrypt_stream_sym(in, out, symkey, NULL);
-
+  else {
+    size_t s = pcp_decrypt_stream_sym(in, out, symkey, NULL);
+    return s;
+  }
 
  errdef1:
   return 0;

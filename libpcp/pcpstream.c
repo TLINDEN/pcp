@@ -121,7 +121,7 @@ size_t ps_read_cached(Pcpstream *stream, void *buf, size_t readbytes) {
   */
   if(readbytes <= buffer_left(stream->cache) && readbytes <= stream->blocksize) {
     /* enough left in current cache */
-    return buffer_get_chunk(stream->cache, buf, readbytes);
+    return buffer_get_chunk(stream->cache, buf, buffer_left(stream->cache));
   }
   else if(ps_left(stream) == 1 && readbytes >= buffer_left(stream->cache)) {
     return buffer_get_chunk(stream->cache, buf, buffer_left(stream->cache));

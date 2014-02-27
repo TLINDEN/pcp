@@ -408,7 +408,7 @@ int pcp_sanitycheck_key(pcp_key_t *key) {
   struct tm *c;
   time_t t = (time_t)key->ctime;
   c = localtime(&t);
-  if(c->tm_year <= 0 || c->tm_year > 1100) {
+  if(c->tm_year <= 70 || c->tm_year > 1100) {
     /*  well, I'm perhaps overacting here :) */
     fatal("Secretkey sanity check: invalid creation timestamp (got year %04d)!\n", c->tm_year + 1900);
     return 1;

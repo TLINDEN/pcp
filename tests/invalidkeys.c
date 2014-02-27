@@ -20,12 +20,11 @@ int main() {
   pcp_key_t *key = pcpkey_encrypt(k, pw);
 
   int i;
-  for(i=0; i<5; i++)
-    mkinv(key, i);
+  for(i=0; i<3; i++)
+    mkinvalid_secret(key, i);
 
-  pcp_pubkey_t *pub = pcpkey_pub_from_secret(key);
   for(i=0; i<4; i++)
-    mkinvp(pub, i);
+    mkinvalid_public(key, i);
 
   mkinvv("testvault-invalidheader",  0);
   mkinvv("testvault-invalidversion",  1);
@@ -103,64 +102,72 @@ void mkinvv(const char *name, int type) {
   fclose(v->fd);
 }
 
-void mkinvp(pcp_pubkey_t *k, int type) {
-  pcp_pubkey_t *key = ucmalloc(sizeof(pcp_pubkey_t));
-  memcpy(key, k, sizeof(pcp_pubkey_t));
-
-  switch(type) {
-  case 0:
-    key->type = 0;
-    pcppubkey_print(key, F("testpubkey-wrong-type"));
-    break;
-  case 1:
-    key->version = 0;
-    pcppubkey_print(key, F("testpubkey-wrong-version"));
-    break;
-  case 2:
-    key->serial = 0;
-    pcppubkey_print(key, F("testpubkey-wrong-serial"));
-    break;
-  case 3:
-    key->id[16] = 0x3e;
-    pcppubkey_print(key, F("testpubkey-invalid-id"));
-    break;
-  case 4:
-    key->ctime = 0;
-    pcppubkey_print(key, F("testpubkey-invalid-ctime"));
-    break;
-  }
-}
-
-void mkinv(pcp_key_t *k, int type) {
+void mkinvalid_public(pcp_key_t *k, int type) {
   pcp_key_t *key = ucmalloc(sizeof(pcp_key_t));
   memcpy(key, k, sizeof(pcp_key_t));
+  FILE *fd = NULL;
 
   switch(type) {
   case 0:
-    key->encrypted[0] = 0;
-    pcpkey_print(key, F("testkey-not-encrypted"));
+    key->type = 0;
+    fd = F("testpubkey-wrong-type");
     break;
   case 1:
-    key->type = 0;
-    pcpkey_print(key, F("testkey-wrong-type"));
+    key->version = 0;
+    fd = F("testpubkey-wrong-version");
     break;
   case 2:
-    key->version = 0;
-    pcpkey_print(key, F("testkey-wrong-version"));
+    key->serial = 0;
+    fd = F("testpubkey-wrong-serial");
     break;
   case 3:
-    key->serial = 0;
-    pcpkey_print(key, F("testkey-wrong-serial"));
-    break;
-  case 4:
-    key->id[16] = 0x1;
-    pcpkey_print(key, F("testkey-invalid-id"));
-    break;
-  case 5:
     key->ctime = 0;
-    pcpkey_print(key, F("testkey-invalid-ctime"));
+    fd = F("testpubkey-invalid-ctime");
     break;
   }
+
+  if(fd != NULL) {
+    Buffer *b = pcp_export_rfc_pub(key);
+    fwrite(buffer_get(b), 1, buffer_size(b), fd);
+    fclose(fd);
+  }
+
+  free(key);
+}
+
+void mkinvalid_secret(pcp_key_t *k, int type) {
+  pcp_key_t *key = ucmalloc(sizeof(pcp_key_t));
+  memcpy(key, k, sizeof(pcp_key_t));
+  FILE *fd = NULL;
+
+    fprintf(stderr, "fd test %d\n", type);
+
+  switch(type) {
+  case 0:
+    key->version = 0;
+    fd = F("testkey-wrong-version");
+    break;
+  case 1:
+    key->serial = 0;
+    fd = F("testkey-wrong-serial");
+    break;
+  case 2:
+    key->ctime = 0;
+    fd = F("testkey-invalid-ctime");
+    break;
+  }
+
+  if(fd != NULL) {
+    pcp_dumpkey(key);
+    Buffer *b = pcp_export_secret(key, "xxx");
+    fwrite(buffer_get(b), 1, buffer_size(b), fd);
+    fclose(fd);
+  }
+  else {
+    fprintf(stderr, "fd not opened for test %d\n", type);
+  }
+
+  free(key);
 }
 
 FILE *F(char *filename) {

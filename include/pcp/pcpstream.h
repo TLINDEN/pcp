@@ -62,6 +62,7 @@ struct _pcp_stream_t {
   Buffer *b;         /**< The backend Buffer object */
   Buffer *cache;     /**< The caching Buffer object (for look ahead read) */
   Buffer *next;      /**< The caching Next-Buffer object (for look ahead read) */
+  Buffer *save;      /**< Temporary buffer to backup overflow data */
   uint8_t is_buffer; /**< Set to 1 if the backend is a Buffer */
   uint8_t eof;       /**< Set to 1 if EOF reached */
   uint8_t err;       /**< Set to 1 if an error occured */
@@ -71,8 +72,14 @@ struct _pcp_stream_t {
   size_t  linewr;    /**< Used for Z85 writing, number of chars written on last line */
   size_t  blocksize; /**< Blocksize used for z85, if requested */
   uint8_t is_output; /**< marks the stream as output stream */
+  uint8_t have_begin; /**< flag to indicate we already got the begin header, if any */
   size_t pos;        /**< remember i/o position */
 };
+
+typedef enum _PSVARS {
+  PSMAXLINE = 20000
+} PSVARS;
+
 
 /** The name used everywhere */
 typedef struct _pcp_stream_t Pcpstream;
@@ -268,7 +275,7 @@ void ps_unarmor(Pcpstream *stream);
 /* read from primary source, decode z85 and out into cache.
    if buf != NULL, consider it as the start of encoded data
    and remove headers and comments, then continue as normal. */
-size_t ps_read_decode(Pcpstream *stream, void *buf, size_t bufsize);
+size_t ps_read_decode(Pcpstream *stream);
 
 /* determine if primary source is z85 encoded, put the data
    read from it into the cache */
@@ -293,6 +300,16 @@ size_t ps_write_buf(Pcpstream *stream, Buffer *z);
 
 /* tell if we really reached eof, caching or not. 1=eof, 0=ok */
 int ps_left(Pcpstream *stream);
+
+/** Read a line from the stream.
+
+    \param[in] stream The stream object.
+    \param[out] line Linecontent will be written to this Buffer.
+
+    \return Returns the number of bytes read or -1 if PSMAXLINE have been
+            reached or the input doesn't have any newlines at all.
+ */
+int ps_readline(Pcpstream *stream, Buffer *line);
 
 #endif // HAVE_PCP_PCPSTEAM_H
 

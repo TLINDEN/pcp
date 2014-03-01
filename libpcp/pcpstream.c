@@ -27,6 +27,7 @@ Pcpstream *ps_init(void) {
   stream->cache = NULL;
   stream->next = NULL;
   stream->fd = NULL;
+  stream->save =  buffer_new(32, "Pcpstreamsavebuf");
   stream->is_buffer = 0;
   stream->eof = 0;
   stream->err = 0;
@@ -79,15 +80,46 @@ void ps_unarmor(Pcpstream *stream) {
   stream->armor = 0;
 }
 
+void ps_rewind(Pcpstream *stream, void *buf, size_t bufsize) {
+  if(stream->is_buffer) {
+    stream->b->offset -= bufsize;
+  }
+  else {
+    buffer_clear(stream->save);
+    buffer_add(stream->save, buf, bufsize);
+  }
+  stream->pos -= bufsize;
+  stream->err = 0;
+  stream->eof = 0;
+}
+
 size_t ps_read_raw(Pcpstream *stream, void *buf, size_t readbytes) {
   size_t gotbytes = 0;
+  size_t idx = 0;
+
+  if(buffer_left(stream->save) > 0) {
+    /* something left from last rewind, first use this */
+    if(buffer_left(stream->save) >= readbytes) {
+      gotbytes = buffer_get_chunk(stream->save, buf, readbytes);
+      if(buffer_left(stream->save) == 0)
+	  buffer_clear(stream->save);
+      goto rawdone;
+    }
+    else {
+      /* fetch the remainder of the save buffer, remember how much
+	 to fetch from source next */
+      idx = buffer_get_chunk(stream->save, buf, buffer_left(stream->save));
+      buffer_clear(stream->save);
+      readbytes -= idx;
+    }
+  }
 
   if(stream->is_buffer) {
     /* check if there's enough space in our buffer */
     if(buffer_left(stream->b) < readbytes)
       readbytes = buffer_left(stream->b);
 
-    gotbytes = buffer_get_chunk(stream->b, buf, readbytes);
+    gotbytes += buffer_get_chunk(stream->b, buf+idx, readbytes);
     if(gotbytes == 0) {
       /* this should not happen with buffers */
       stream->eof = 1;
@@ -95,16 +127,15 @@ size_t ps_read_raw(Pcpstream *stream, void *buf, size_t readbytes) {
     }
   }
   else {
-    gotbytes = fread(buf, 1, readbytes, stream->fd);
-    if(gotbytes == 0) {
-      if(feof(stream->fd) != 0)
-	stream->eof = 1;
-      if(ferror(stream->fd) != 0)
-	stream->err = 1;
-    }
+    size_t got = fread(buf+idx, 1, readbytes, stream->fd);
+    gotbytes += got;
+    if(feof(stream->fd) != 0)
+      stream->eof = 1;
+    if(ferror(stream->fd) != 0)
+      stream->err = 1;
   }
 
-  stream->firstread = 1;
+ rawdone:
   return gotbytes;
 }
 
@@ -113,20 +144,23 @@ size_t ps_read_raw(Pcpstream *stream, void *buf, size_t readbytes) {
    that */
 
 size_t ps_read_cached(Pcpstream *stream, void *buf, size_t readbytes) {
-  /*
+  
   fprintf(stderr, "%ld <= %ld && %ld <= %ld\n",
 	  readbytes, buffer_left(stream->cache), readbytes, stream->blocksize) ;
 
   fprintf(stderr, "%d == 1 && %ld >= %ld\n", ps_left(stream), readbytes, buffer_left(stream->cache));
-  */
+  
   if(readbytes <= buffer_left(stream->cache) && readbytes <= stream->blocksize) {
     /* enough left in current cache */
+    fprintf(stderr, "  get all from cache\n");
     return buffer_get_chunk(stream->cache, buf, readbytes);
   }
-  else if(ps_left(stream) == 1 && readbytes >= buffer_left(stream->cache)) {
+  else if(ps_end(stream) == 1 && readbytes >= buffer_left(stream->cache) ) {
+    fprintf(stderr, "  get rest from cache\n");
     return buffer_get_chunk(stream->cache, buf, buffer_left(stream->cache));
   }
   else {
+    fprintf(stderr, "  fetch next\n");
      /* request for chunk larger than what we've got in the cache */
     Buffer *tmp = buffer_new(stream->blocksize, "Pcpreadchunktmp");
 
@@ -134,6 +168,8 @@ size_t ps_read_cached(Pcpstream *stream, void *buf, size_t readbytes) {
       /* put the remaining cache into dest */
       buffer_get_chunk_tobuf(stream->cache, tmp, buffer_left(stream->cache)); 
     }
+
+#error EOF reached, cache empty, save filled, doesnt call ps_read_next()
 
     /* how much left to fetch */
     long int left = readbytes - buffer_size(tmp);
@@ -184,10 +220,10 @@ size_t ps_read_cached(Pcpstream *stream, void *buf, size_t readbytes) {
 
 /* read and decode the next chunk and put it into stream->next */
 size_t ps_read_next(Pcpstream *stream) {
-  if(ps_left(stream) == 0) {
+  if(ps_left(stream) == 0 || buffer_left(stream->save)) {
     if(stream->armor == 1) {
       /* fetch next chunk and decode it */
-      return ps_read_decode(stream, NULL, 0);
+      return ps_read_decode(stream);
     }
     else {
       /* unencoded source, fetch as is */
@@ -209,6 +245,7 @@ size_t ps_read(Pcpstream *stream, void *buf, size_t readbytes) {
   else if(buffer_size(stream->cache) > 0) {
     /* use cache */
     got = ps_read_cached(stream, buf, readbytes);
+    fprintf(stderr, "%ld = use cache directly\n", got);
   }
   else {
     /* no cache yet */
@@ -217,11 +254,13 @@ size_t ps_read(Pcpstream *stream, void *buf, size_t readbytes) {
          recursively call ps_read() again to return the apropriate data */
       ps_determine(stream);
       got = ps_read(stream, buf, readbytes);
+      fprintf(stderr, "%ld = ps_read(stream, buf, readbytes);\n", got);
     }
     else if(stream->armor == 1) {
       /* z85 encoding has already been determined, therefore the cache
 	 is now filled, use it then */
       got = ps_read_cached(stream, buf, readbytes);
+      fprintf(stderr, "%ld = ps_read_cached(stream, buf, readbytes);\n", got);
     }
     else {
       /* read directly from source */
@@ -230,8 +269,42 @@ size_t ps_read(Pcpstream *stream, void *buf, size_t readbytes) {
   }
 
   stream->pos += got;
-
+  fprintf(stderr, "  ps_read(): %ld\n", got);
   return got;
+}
+
+int ps_readline(Pcpstream *stream, Buffer *line) {
+  int c = 0, max = 1;
+  byte b[1];
+
+  while(c<PSMAXLINE) {
+    if(ps_read_raw(stream, b, 1) < 1) {
+      max = 0;
+      break; /* eof or err */
+    }
+    if(*b == '\r') {
+      continue;
+    }
+    else if(*b == '\n' || ps_left(stream) == 1) {
+      max = 0;
+      break;
+    }
+    else {
+      buffer_add8(line, *b);
+    } 
+    c++;
+  }
+
+  if(max) {
+    /* maxline reached without a newline.
+       backup the data we've got so far
+       for further processing */
+    buffer_add_buf(stream->save, line);
+    buffer_clear(line);
+    return -1;
+  }
+
+  return c;
 }
 
 void ps_determine(Pcpstream *stream) {
@@ -244,8 +317,11 @@ void ps_determine(Pcpstream *stream) {
     /* no, it's armored */
     stream->armor = 1;
 
+    /* put back raw data into read queue */
+    ps_rewind(stream, buf, got);
+
     /* decode the first chunk */
-    ps_read_decode(stream, buf, got);
+    ps_read_decode(stream);
     
     /* put it into the cache */
     buffer_add_buf(stream->cache, stream->next);
@@ -255,42 +331,92 @@ void ps_determine(Pcpstream *stream) {
     /* just put the raw stuff into the cache */
     buffer_add(stream->cache, buf, got);
   }
+
+  ucfree(buf, stream->blocksize);
+
+  stream->firstread = 1;
 }
 
-size_t ps_read_decode(Pcpstream *stream, void *buf, size_t bufsize) {
-  size_t i = 0;
-  uint8_t is_comment = 0;
-  uint8_t c;
-  Buffer *z = buffer_new(32, "ztemp");
-  byte *_buf = buf;
 
-  if(bufsize > 0) {
-    for(i=0; i<bufsize; ++i) {
-      c = _buf[i];
-      is_comment = _parse_zchar(z, c, is_comment);
-    }
+size_t ps_read_decode(Pcpstream *stream) {
+  Buffer *z = buffer_new(32, "ztemp");
+  Buffer *line = buffer_new_str("line");
+
+  buffer_info(stream->save);
+
+  if(buffer_left(stream->save) >= stream->blocksize && stream->firstread == 1) {
+    /* use the save buffer instead */
+    buffer_get_chunk_tobuf(stream->save, z, stream->blocksize);
   }
- 
-  if(buffer_size(z) <  stream->blocksize) {
-    /* blocksize not full, continue with stream source */
-    /* read in bytewise, ignore newlines and add until the block is full */
-    while (buffer_size(z) < stream->blocksize) {
-      if (ps_read_raw(stream, &c, 1) == 1) {
-	is_comment = _parse_zchar(z, c, is_comment);
+  else if(ps_left(stream) == 1 && buffer_left(stream->save) > 0) {
+    /* there's something left which doesn't end in a newline */
+    buffer_get_chunk_tobuf(stream->save, z, stream->blocksize);
+  }
+  else {
+    /* continue reading linewise */
+    while(buffer_size(z) <  stream->blocksize) {
+      buffer_clear(line);
+      if(ps_readline(stream, line) >= 0) {
+	fprintf(stderr, "got: <%s>\n", buffer_get_str(line));	
+	if(z85_isbegin(line) && stream->have_begin == 0) {
+	  /* begin header encountered */
+	  stream->have_begin = 1; /* otherwise ignore it */
+	  continue;
+	}
+	else if(z85_isend(line)) {
+	  /* end header encountered */
+	  break;
+	}
+	else if(z85_isempty(line)) {
+	  /* ignore empty lines */
+	  continue;
+	}
+	else {
+	  /* regular z85 encoded content */
+	  fprintf(stderr, "regular\n");
+	  if(buffer_size(z) + buffer_size(line) > stream->blocksize) {
+	    /* we've got more than needed.
+	       put what we need into z and the remainder
+	       into the save buffer for further reading. */
+	    fprintf(stderr, "overflow %ld + %ld > %ld\n",
+		    buffer_size(z), buffer_size(line), stream->blocksize);
+
+	    buffer_get_chunk_tobuf(line, z, stream->blocksize - buffer_size(z));
+	    buffer_get_chunk_tobuf(line, stream->save, buffer_left(line));
+	    buffer_add8(stream->save, '\n');
+	    break;
+	  }
+	  else {
+	    /* not enough yet, store it and go on */
+	    buffer_add_buf(z, line);
+	  }
+	}
       }
-      else
+      else {
+	/* eof or err */
 	break;
+      }
     }
   }
+
+  fprintf(stderr, "Z: <%s>\n", buffer_get_str(z));
 
   /* finally, decode it and put into next */
   size_t binlen, outlen;
   byte *bin = pcp_z85_decode(buffer_get_str(z), &binlen);
   if(bin == NULL) {
     /* it's not z85 encoded, so threat it as binary */
-    stream->armor = 0;
-    buffer_add_buf(stream->next, z);
-    outlen = buffer_size(stream->next);
+    if(stream->firstread) {
+      /* whoops, we're in the middle of z85 decoding and it failed */
+      stream->eof = 1;
+      stream->err = 1;
+      outlen = 0;
+    }
+    else {
+      stream->armor = 0;
+      buffer_add_buf(stream->next, z);
+      outlen = buffer_size(stream->next);
+    }
   }
   else {
     /* yes, successfully decoded it, put into cache */
@@ -299,11 +425,12 @@ size_t ps_read_decode(Pcpstream *stream, void *buf, size_t bufsize) {
   }
 
   buffer_free(z);
-
+  buffer_free(line);
 
 
   return outlen;
 }
+
 
 size_t ps_write(Pcpstream *stream, void *buf, size_t writebytes) {
   Buffer *z = buffer_new(32, "Pcpwritetemp");
@@ -484,6 +611,8 @@ void ps_close(Pcpstream *stream) {
   if(stream->next != NULL)
     buffer_free(stream->next);
 
+  buffer_free(stream->save);
+
   if(stream->is_buffer) {
     buffer_clear(stream->b);
     free(stream);
@@ -498,10 +627,17 @@ void ps_close(Pcpstream *stream) {
 
 int ps_end(Pcpstream *stream) {
   /* simulate open file if there's still something in the cache */
-  if(stream->cache != NULL)
+  if(stream->cache != NULL) {
     if(buffer_left(stream->cache) > 0) {
       return 0;
     }
+  }
+
+  /* if there's a lookahead buffer, do the same */
+  if(buffer_left(stream->save) > 0) {
+    return 0;
+  }
+
   return stream->eof;
 }
 

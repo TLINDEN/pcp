@@ -22,6 +22,19 @@
 
 #include "z85.h"
 
+static char *begins[] = {
+  /* grep -r BEGIN * | egrep "\.h:" | awk -F '-----' '{print $2}' | sed -e 's/.*BEGIN /"/' -e 's/$/",/' */
+  "PCP ENCRYPTED FILE ",
+  "Z85 ENCODED FILE ",
+  "ED25519 SIGNED MESSAGE ",
+  "ED25519 SIGNATURE ",
+  "ED25519-CURVE29915 PUBLIC KEY",
+  "ED25519-CURVE29915 PRIVATE KEY",
+  NULL
+};
+
+
+
 uint8_t is_utf8(const byte *bytes) {
   if( (// non-overlong 2-byte
        (0xC2 <= bytes[0] && bytes[0] <= 0xDF) &&
@@ -292,4 +305,110 @@ char *pcp_readz85string(byte *input, size_t bufsize) {
   buffer_free(z);
 
   return NULL;
+}
+
+int z85_isheader(Buffer *buf) {
+  size_t len = buffer_size(buf);
+  byte *line = buffer_get(buf);
+
+  if(len < 15) {
+    /* minimum requirement: "----- END -----" */
+    return 0;
+  }
+  if(memcmp(line, "-----", 5)) {
+    /* doesn't start with hyphens */
+    return 0;
+  }
+
+  if(memcmp(line+(len-5), "-----", 5)) {
+    /* doesn't end with hyphens */
+    return 0;
+  }
+
+  /* true */
+  return 1;
+}
+
+long int z85_header_startswith(Buffer *buf, char *what) {
+  size_t len = buffer_size(buf);
+  byte *line = buffer_get(buf);
+  long int offset = 0;
+
+  if((offset = _findoffset(line+6, len-6, what, strlen(what))) >= 0) {
+    return offset;
+  }
+
+  /* nope */
+  return -1;
+}
+
+int z85_isend(Buffer *buf) {
+
+  if(! z85_isheader(buf))
+    return 0;
+  
+  if(z85_header_startswith(buf, "END") < 0)
+    return 0;
+
+  /* true */
+  return 1;
+}
+
+int z85_isbegin(Buffer *buf) {
+  size_t len;
+  size_t blen;
+  const char *begin;
+  long int offset;
+  int i;
+
+  if(! z85_isheader(buf))
+    return 0;
+
+  if((offset = z85_header_startswith(buf, "BEGIN")) < 0)
+    return 0;
+
+  /* determine type */
+  len = buffer_left(buf);
+  byte *line = ucmalloc(len); /* FIXME: maybe wrong, check it */
+  buffer_get_chunk(buf, line, offset);
+  for(i=0; (begin=begins[i]); i++ ) {
+    if(begin == NULL) break;
+    blen = strlen(begin);
+    if(blen <= len)
+      if(_findoffset(line+buf->offset, len, (char *)begin, blen) >= 0)
+	return i; /* i = ENUM ZBEGINS */
+  }
+
+  /* unknown but valid */
+  return -1;
+}
+
+int z85_iscomment(Buffer *buf) {
+  char *line = buffer_get_str(buf);
+ 
+  if(strchr(line, ' ') == NULL || strchr(line, '\t') == NULL)
+    return 0; /* non whitespace */
+  else
+    return 1; /* true */
+}
+
+int z85_isempty(Buffer *buf) {
+  byte *line = buffer_get(buf);
+  size_t len = buffer_size(buf);
+  size_t sp = 0;
+
+  if(len == 0)
+    return 1; /* true */
+
+  /* lines with whitespaces only are empty as well */
+  while(*line != '\0') {
+    if(*line == ' ' || *line == '\t')
+      sp++;
+    line++;
+  }
+
+  if(sp<len)
+    return 0; /* non-space chars found */
+  else
+    return 1; /* true */
 }

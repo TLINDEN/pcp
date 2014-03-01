@@ -16,30 +16,7 @@ enable formats for secret key exports as well
 
 Add newlines to headers in define.h, so strlen() later catches the whole length.
 
-Z85 headers:
- - currently I use "----- BEGIN ... -----" and "----- END ... -----" as
-   header and footer for various z85 encoded outputs. The problem is, that
-   the "-" character is part of Z85 chars. An input of 0xc6,0x5a,0x0b,0x13 would
-   result z85 encoded as: "-----". So, I cannot be sure, when I find a header
-   delimiter, if it's really a delimiter or legitimate z85 encoded content.
-   Therefore, another delimiter must be used. "~~~~~ BEGIN .... ~~~~~" seems
-   to fit best and "~" is unused in Z85. 
-   Then the parser can be enhanced as well. Eg: on startup if a ~ occurs,
-   ignore input until the first non-~ appears. Then decode input until a
-   ~ or eof appears, ignore everything after. Comments would still be a
-   problem though. Currently I ignore lines containing whitespaces. But
-   if a file is read blockwise and the blocksize is very small, then a
-   comment line may span multiple blocks and isn't recognizable as a
-   "line" anymore. Maybe, comments shall start and end with a ~ as well, eg:
-   ~ BEGIN KEY ~
-   ~ Hash: 987298347 ~
-   [z85]
-   ~ END KEY ~
-   Here I use the same aproach for the headers, since there would also be
-   the problem how to recognize them properly if a header crosses boundaries
-   or something. By using this scheme, if a ~ is found everything following
-   is marked as to be ignored which could be saved as a state when using
-   blockmode.
+Z85 Stream encode: add newline after last.
 
 Check is_utf8 license.
   also found in https://gd.meizo.com/_files/lpc/ext/utf8.c

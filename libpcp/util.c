@@ -31,9 +31,9 @@ char *_lc(char *in) {
 }
 
 /* find the offset of the beginning of a certain string within binary data */
-size_t _findoffset(byte *bin, size_t binlen, char *sigstart, size_t hlen) {
+long int _findoffset(byte *bin, size_t binlen, char *sigstart, size_t hlen) {
   size_t i;
-  size_t offset = 0;
+  long int offset = 0;
   int m = 0;
 
   for(i=0; i<binlen-hlen; ++i) {

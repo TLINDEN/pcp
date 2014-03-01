@@ -4,8 +4,33 @@
 
 #include <pcp.h>
 
+int linetest() {
+  FILE *in;
+
+  if((in = fopen("x", "rb")) == NULL) {
+    fprintf(stderr, "oops, could not open file!\n");
+    return 1;
+  }
+
+  Pcpstream *pin = ps_new_file(in);
+  ps_setdetermine(pin, 8);
+  size_t got;
+  byte data[9] = {0};
+  while(!ps_end(pin)) {
+    if((got = ps_read(pin, data, 8)) > 0) {
+      fwrite(data, 1, got, stdout);
+    }
+  }
+
+  ps_close(pin);
+  return 0;
+}
+
 int main() {
   /* create a file with "encrypted" data */
+
+  return linetest();
+
   FILE *out, *in;
   unsigned char clear[8] = "ABCDEFGH";
   unsigned char key[8]   = "IxD8Lq1K";

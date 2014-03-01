@@ -50,9 +50,11 @@ int main(int argc, char **argv) {
   void *buf = ucmalloc(rblocksize);
 
   while(!ps_end(in)) {
+    fprintf(stderr, "=== read:\n");
     got = ps_read(in, buf, rblocksize);
     if(got > 0)
       ps_write(out, buf, got);
+    fprintf(stderr, "======= got: %ld\n", got);
   }
 
   ps_finish(out);

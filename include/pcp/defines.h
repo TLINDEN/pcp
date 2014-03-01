@@ -74,6 +74,15 @@ typedef unsigned int    qbyte;          /*   Quad byte = 32 bits */
 #define PCP_KEY_VERSION 6
 #define PCP_KEY_PRIMITIVE "CURVE25519-ED25519-SALSA20-POLY1305"
 
+typedef enum _ZBEGINS {
+  PCP_ENCRYPTED_FILE,
+  Z85_ENCODED_FILE,
+  ED25519_SIGNED_MESSAGE,
+  ED25519_SIGNATURE,
+  ED25519_CURVE29915_PUBLIC_KEY,
+  ED25519_CURVE29915_PRIVATE_KEY,
+} ZBEGINS;
+
 /** 
     \addtogroup KEYS
     @{

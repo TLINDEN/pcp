@@ -156,6 +156,15 @@ size_t _buffer_is_binary(byte *buf, size_t len);
  */
 uint8_t _parse_zchar(Buffer *z, uint8_t c, uint8_t is_comment);
 
+
+long int z85_header_startswith(Buffer *buf, char *what);
+int z85_isheader(Buffer *buf);
+int z85_isend(Buffer *buf);
+int z85_isbegin(Buffer *buf);
+int z85_iscomment(Buffer *buf);
+int z85_isempty(Buffer *line);
+
+
 #endif /*  _HAVE_PCP_Z85_H */
 
 /**@}*/

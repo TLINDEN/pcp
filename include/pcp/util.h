@@ -74,7 +74,7 @@ char *_lc(char *in);
     \return Returns the offset or -1 of the offset were not found.
 
  */
-size_t _findoffset(byte *bin, size_t binlen, char *sigstart, size_t hlen);
+long int _findoffset(byte *bin, size_t binlen, char *sigstart, size_t hlen);
 
 /** XOR an input buffer with another buffer.
 

@@ -58,15 +58,15 @@ typedef unsigned short  dbyte;          /*   Double byte = 16 bits */
 typedef unsigned int    qbyte;          /*   Quad byte = 32 bits */
 
 /*  key stuff, deprecated. */
-#define PCP_ENFILE_HEADER "~~~~~ BEGIN PCP ENCRYPTED FILE ~~~~~\r\n"
-#define PCP_ENFILE_FOOTER "\r\n~~~~~ END PCP ENCRYPTED FILE ~~~~~\r\n"
+#define PCP_ENFILE_HEADER "----- BEGIN PCP ENCRYPTED FILE -----\r\n"
+#define PCP_ENFILE_FOOTER "\r\n----- END PCP ENCRYPTED FILE -----\r\n"
 
-#define PCP_ZFILE_HEADER "~~~~~ BEGIN Z85 ENCODED FILE ~~~~~"
-#define PCP_ZFILE_FOOTER "~~~~~ END Z85 ENCODED FILE ~~~~~"
+#define PCP_ZFILE_HEADER "----- BEGIN Z85 ENCODED FILE -----"
+#define PCP_ZFILE_FOOTER "----- END Z85 ENCODED FILE -----"
 
-#define PCP_SIG_HEADER "~~~~~ BEGIN ED25519 SIGNED MESSAGE ~~~~~"
-#define PCP_SIG_START  "~~~~~ BEGIN ED25519 SIGNATURE ~~~~~"
-#define PCP_SIG_END    "~~~~~ END ED25519 SIGNATURE ~~~~~"
+#define PCP_SIG_HEADER "----- BEGIN ED25519 SIGNED MESSAGE -----"
+#define PCP_SIG_START  "----- BEGIN ED25519 SIGNATURE -----"
+#define PCP_SIG_END    "----- END ED25519 SIGNATURE -----"
 #define PCP_SIGPREFIX  "\nnacl-"
 
 #define PCP_ME "Pretty Curved Privacy"

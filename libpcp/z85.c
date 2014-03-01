@@ -267,7 +267,7 @@ char *pcp_readz85file(FILE *infile) {
   return pcp_readz85string(input, bufsize);
 }
 
-char *pcp_readz85string(byte *input, size_t bufsize) {
+char *pcp_readz85string(unsigned char *input, size_t bufsize) {
   size_t i;
   size_t MAXLINE = 1024;
 
@@ -282,12 +282,50 @@ char *pcp_readz85string(byte *input, size_t bufsize) {
   }
 
   Buffer *z = buffer_new(MAXLINE, "z");
-  uint8_t is_comment = 0;
+  Buffer *line = buffer_new(MAXLINE, "line");
+  int begin, end;
+  begin = end = 0;
   char *out = NULL;
 
-  for(i=0; i<bufsize; ++i)
-    is_comment = _parse_zchar(z, input[i], is_comment);
+  for(i=0; i<bufsize; ++i) {
+    if(input[i] == '\r')
+      continue;
+    else if(input[i] == '\n') {
+      /* a line is complete */
+      if(z85_isbegin(line) && begin == 0) {
+	/* a begin header, reset whatever we've got so far in z buffer */
+	begin = 1;
+	buffer_clear(line);
+	buffer_clear(z);
+	continue;
+      }
+      else if(z85_isend(line)){
+	/* an end header */
+	end = 1;
+	break;
+      }
+      else if(z85_isempty(line) || z85_iscomment(line)) {
+	/* a comment */
+	buffer_clear(line);
+	continue;
+      }
+      else {
+	/* regular z85 encoded content */
+	buffer_add_buf(z, line);
+	buffer_clear(line);
+      }
+    }
+    else {
+      /* regular line content */
+      buffer_add8(line, input[i]);
+    }
+  }
   
+  if(buffer_size(line) > 0 && end != 1) {
+    /* something left in line buffer, probably
+       newline at eof missing or no multiline input */
+    buffer_add_buf(z, line);
+  }
 
   if(buffer_size(z) == 0) {
     fatal("empty z85 encoded string");
@@ -298,14 +336,18 @@ char *pcp_readz85string(byte *input, size_t bufsize) {
   strncpy(out, buffer_get_str(z), buffer_size(z)+1);
 
   buffer_free(z);
+  buffer_free(line);
 
   return out;
 
  rferr:
   buffer_free(z);
+  buffer_free(line);
 
   return NULL;
 }
+
+
 
 int z85_isheader(Buffer *buf) {
   size_t len = buffer_size(buf);

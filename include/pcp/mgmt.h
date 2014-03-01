@@ -109,10 +109,10 @@ typedef struct _pcp_ks_bundle_t pcp_ks_bundle_t;
 #define EXP_SIG_SUB_KEYFLAGS  27
 
 /* in armored mode, we're using the usual head+foot */
-#define EXP_PK_HEADER "~~~~~BEGIN ED25519-CURVE29915 PUBLIC KEY~~~~~"
-#define EXP_PK_FOOTER "~~~~~END ED25519-CURVE29915 PUBLIC KEY~~~~~"
-#define EXP_SK_HEADER "~~~~~BEGIN ED25519-CURVE29915 PRIVATE KEY~~~~~"
-#define EXP_SK_FOOTER "~~~~~END ED25519-CURVE29915 PRIVATE KEY~~~~~"
+#define EXP_PK_HEADER "----- BEGIN ED25519-CURVE29915 PUBLIC KEY -----"
+#define EXP_PK_FOOTER "----- END ED25519-CURVE29915 PUBLIC KEY -----"
+#define EXP_SK_HEADER "----- BEGIN ED25519-CURVE29915 PRIVATE KEY -----"
+#define EXP_SK_FOOTER "----- END ED25519-CURVE29915 PRIVATE KEY -----"
 
 
 /* pubkey export formats */

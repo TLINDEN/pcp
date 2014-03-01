@@ -18,8 +18,11 @@ int linetest() {
   byte data[9] = {0};
   while(!ps_end(pin)) {
     if((got = ps_read(pin, data, 8)) > 0) {
-      fwrite(data, 1, got, stdout);
+      fprintf(stderr, "######## <");
+      fwrite(data, 1, got, stderr);
+      fprintf(stderr, "> ##### %ld\n", got);
     }
+    else break;
   }
 
   ps_close(pin);

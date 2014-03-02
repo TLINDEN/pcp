@@ -123,7 +123,6 @@ size_t _buffer_is_binary(byte *buf, size_t len) {
 	memset(wide, 0, 4);
 	continue;
       }
-
       break; /* if we reach this, then it's binary and not utf8, stop checking */
     }
   }

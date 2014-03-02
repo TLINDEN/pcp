@@ -48,7 +48,7 @@ Buffer *pcp_keysig2blob(pcp_keysig_t *s) {
   Buffer *b = buffer_new(256, "keysig2blob");
   buffer_add8(b, s->type);
   buffer_add32be(b, s->size);
-  buffer_add(b, s->belongs, 17);
+  buffer_add(b, s->id, 17);
   buffer_add(b, s->checksum, 32);
   buffer_add(b, s->blob, s->size);
   return b;
@@ -60,6 +60,8 @@ pcp_keysig_t *pcp_keysig_new(Buffer *blob) {
   uint8_t type = buffer_get8(blob);
   uint32_t size = buffer_get32na(blob);
   
+  buffer_get_chunk(blob, sk->id, 17);
+
   byte *checksum = ucmalloc(32);
   buffer_get_chunk(blob, checksum, 32);
   

@@ -16,14 +16,14 @@ enable formats for secret key exports as well
 
 Add newlines to headers in define.h, so strlen() later catches the whole length.
 
-Z85 Stream encode: add newline after last.
-
 Check is_utf8 license.
   also found in https://gd.meizo.com/_files/lpc/ext/utf8.c
 
 Vault checksum with global vault
 
-Symmetric crypt mode tries to open vault
+Symmetric decrypt mode tries to open vault
+
+pcp_find_primary_secret() makes a copy ???
 
 Python binding, e.g.:
 py % cdll.LoadLibrary("libsodium.so.8")

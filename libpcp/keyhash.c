@@ -105,7 +105,7 @@ void pcphash_add(void *key, int type) {
   }
   else if(type == PCP_KEYSIG_NATIVE || type == PCP_KEYSIG_PBP) {
     pcp_keysig_t *keysig = (pcp_keysig_t *)key;
-    HASH_ADD_STR( pcpkeysig_hash, belongs, keysig);
+    HASH_ADD_STR( pcpkeysig_hash, id, keysig);
   }
   else {
     pcp_key_t *k = (pcp_key_t *)key;    

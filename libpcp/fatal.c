@@ -32,6 +32,7 @@
 char *PCP_ERR;
 byte PCP_ERRSET;
 int PCP_EXIT;
+int PCPVERBOSE;
 
 void fatal(const char * fmt, ...) {
   va_list ap;

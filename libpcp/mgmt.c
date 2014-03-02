@@ -120,7 +120,7 @@ int _check_hash_keysig(Buffer *blob, pcp_pubkey_t *p, pcp_keysig_t *sk) {
   
   /* everything minus version, ctime and cipher, 1st 3 fields */
   sk->size = blobstop - 6;
-  memcpy(sk->belongs, p->id, 17);
+  memcpy(sk->id, p->id, 17);
 
   /* put the whole signature blob into our keysig */
   blob->offset = 6; /* woah, hack :) */
@@ -359,7 +359,7 @@ pcp_ks_bundle_t *pcp_import_pub_pbp(Buffer *blob) {
     pcp_keysig_t *sk = ucmalloc(sizeof(pcp_keysig_t));
     sk->type = PCP_KEYSIG_PBP;
     sk->size = buffer_size(blob);
-    memcpy(sk->belongs, pub->id, 17);
+    memcpy(sk->id, pub->id, 17);
     sk->blob = ucmalloc(sk->size);
     memcpy(sk->blob, buffer_get(blob), sk->size);
     crypto_hash_sha256(sk->checksum, sk->blob, sk->size);

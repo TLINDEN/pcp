@@ -81,6 +81,16 @@
 	changes. It's like a drug boosting the brain. Love
 	U, man!
 
+	Enhanded --edit-key a little, it's now possible to
+	make a secret the primary one.
+
+	Added new option -v (the previous -v has moved to
+	--version only) for verbose. Currently only supported
+	by --list-keys. In this mode more details will be
+	printed. Also added a couple of alias options for
+	existing ones (e.g. -a for armor which is an alias
+	for -z).
+	
 0.2.0	ED25519 and Curve25519 keys are now generated
 	separately (previously they were generated from
 	one random seed, the curve had been derived from

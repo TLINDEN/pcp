@@ -196,6 +196,9 @@ void fatals_reset();
  */
 void fatals_done();
 
+extern int PCPVERBOSE;
+
+
 #endif /*  _DEFINES_H */
 
 /**@}*/

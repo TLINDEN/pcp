@@ -4,36 +4,9 @@
 
 #include <pcp.h>
 
-int linetest() {
-  FILE *in;
-
-  if((in = fopen("x", "rb")) == NULL) {
-    fprintf(stderr, "oops, could not open file!\n");
-    return 1;
-  }
-
-  Pcpstream *pin = ps_new_file(in);
-  ps_setdetermine(pin, 8);
-  size_t got;
-  byte data[9] = {0};
-  while(!ps_end(pin)) {
-    if((got = ps_read(pin, data, 8)) > 0) {
-      fprintf(stderr, "######## <");
-      fwrite(data, 1, got, stderr);
-      fprintf(stderr, "> ##### %ld\n", got);
-    }
-    else break;
-  }
-
-  ps_close(pin);
-  return 0;
-}
 
 int main() {
   /* create a file with "encrypted" data */
-
-  return linetest();
-
   FILE *out, *in;
   unsigned char clear[8] = "ABCDEFGH";
   unsigned char key[8]   = "IxD8Lq1K";
@@ -49,14 +22,13 @@ int main() {
 
   /* out output stream, z85 encoded, use z85 blocksize 8 */
   Pcpstream *pout = ps_new_file(out);
-  ps_print(pout, "~~~~~ BEGIN ~~~~~\r\n");
+  ps_print(pout, "----- BEGIN -----\r\n");
   ps_armor(pout, blocksize);
 
   /* "encrypt" a couple of times into the output stream */
   for(i=0; i<blocks; i++) {
     memcpy(crypt, clear, 8);
     _xorbuf(key, crypt, 8);
-    //_dump("crypt", crypt, 8);
     ps_write(pout, crypt, 8);
   }
 
@@ -64,7 +36,7 @@ int main() {
   ps_finish(pout);
 
   pout->armor = 0;
-  ps_print(pout, "\r\n~~~~~ END ~~~~~\r\n");
+  ps_print(pout, "\r\n----- END -----\r\n");
   ps_close(pout);
   fclose(out);
 
@@ -86,7 +58,6 @@ int main() {
   for(i=0; i<blocks; i++) {
     ps_read(pin, crypt, 8);
     _xorbuf(key, crypt, 8);
-    //_dump("got", crypt, 8);
     ps_write(pclear, crypt, 8);
     memset(crypt,0,8);
   }
@@ -99,7 +70,6 @@ int main() {
   /* and verify if it's "decrypted" (re-use crypt) */
   for(i=0; i<blocks; i++) {
     buffer_get_chunk(result, crypt, 8);
-    //_dump("result", crypt, 8);
     if(memcmp(crypt, clear, 8) != 0) {
       fprintf(stderr, "Oops, block %d doesn't match\n", i);
       goto error;

@@ -38,7 +38,7 @@
 struct _pcp_keysig_t {
   uint8_t type;
   uint32_t size;
-  char belongs[17];
+  char id[17];
   byte checksum[32];
   byte *blob;
   UT_hash_handle hh;

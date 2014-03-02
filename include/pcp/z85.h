@@ -89,6 +89,8 @@ byte *pcp_z85_decode(char *z85block, size_t *dstlen);
 /** Encode data to Z85 encoding.
 
     Beside Z85 encoding it also adds a newline everiy 72 characters.
+    It allocates the memory for the returned char pointer. The caller
+    is responsible the free() it.
 
     \param[in] raw Pointer to raw data.
     \param[in] srclen Size of the data.

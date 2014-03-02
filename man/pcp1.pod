@@ -802,20 +802,22 @@ secret signing key and S the symmetric key.
 
 =head2 Z85 ENCODING
 
-B<pcp1> uses Z85 to encode exported keys and armored signatures.
-Comments in encoded files are surrounded by the tilde character.
-We're using the tilde because it's not part of the Z85 base
-charset. Sample:
+B<pcp1> uses Z85 to encode binary data (if requested with -z) such
+as encrypted data, exported keys or armored signatures.
 
- ~~~ Header ~~~
- ~ Version: 1 ~
+Encoded data are always enclosed by a header and a footer and may have any number
+of comments. Example:
+
+ ----- PCP ENCRYPTED FILE -----
+ Version: PCP 0.2.1
  246ge]+yn={<I&&Z%(pm[09lc5[dx4TZALi/6cjVe)Kx5S}7>}]Xi3*N3Xx34Y^0rz:r.5j
  v#6Sh/m3XKwy?VlA+h8ks]9:kVj{D[fd7]NA]T-(ne+xo!W5X5-gIUWqM
- ~~~ Footer ~~~
+ ----- END PCP ENCRYPTED FILE -----
 
-Multiple tildes can be used as long as their number is uneven.
-
-This is a proprietary PCP extension.
+However, the parser tries to be as tolerant as possible. It also accepts
+Z85 encoded data without headers or without newlines, empty lines or lines
+containing a space are ignored as are comments. Empty comments are not
+allowed.
 
 =head3 Z85 BACKGROUND
 

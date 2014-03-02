@@ -20,7 +20,8 @@
 #
 
 AM_CFLAGS = -I../include/pcp -I../src -I../libpcp/scrypt/crypto -Wall -g
-check_PROGRAMS = col invalidkeys pwhashes gencheader statictest cpptest buffertest sample streamtest pipetest
+check_PROGRAMS = col invalidkeys gencheader statictest cpptest \
+		 buffertest sample streamtest pipetest decodertest
 
 gencheader_LDADD = ../libpcp/.libs/libpcp1.a
 gencheader_SOURCES = gencheader.c
@@ -40,15 +41,15 @@ streamtest_SOURCES = streamtest.c
 pipetest_LDADD = ../libpcp/.libs/libpcp1.a
 pipetest_SOURCES = pipetest.c
 
+decodertest_LDADD = ../libpcp/.libs/libpcp1.a
+decodertest_SOURCES = decodertest.c
+
 col_LDADD = ../libpcp/.libs/libpcp1.a
 col_SOURCES = collisions.c ../src/compat_getopt.c
 
 invalidkeys_LDADD = ../libpcp/.libs/libpcp1.a \
 		    ../src/keyprint.o ../src/keymgmt.o ../src/readpass.o
 invalidkeys_SOURCES = invalidkeys.c
-
-pwhashes_LDADD = ../libpcp/.libs/libpcp1.a
-pwhashes_SOURCES = pwhashes.c
 
 AM_CXXFLAGS = -I../include -I../bindings/cpp -I../libpcp/scrypt/crypto -Wall -g
 cpptest_LDADD = ../bindings/cpp/.libs/libpcp1++.a ../libpcp/.libs/libpcp1.a

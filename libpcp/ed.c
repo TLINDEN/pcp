@@ -105,7 +105,7 @@ size_t pcp_ed_sign_buffered(Pcpstream *in, Pcpstream* out, pcp_key_t *s, int z85
   size_t mlen = + crypto_sign_BYTES + crypto_generichash_BYTES_MAX;
 
   if(z85) {
-    ps_print(out, "\r\n%s\r\n~ Version: PCP v%d.%d.%d ~\r\n\r\n", PCP_SIG_START, PCP_VERSION_MAJOR, PCP_VERSION_MINOR, PCP_VERSION_PATCH);
+    ps_print(out, "\r\n%s\r\nVersion: PCP v%d.%d.%d \r\n\r\n", PCP_SIG_START, PCP_VERSION_MAJOR, PCP_VERSION_MINOR, PCP_VERSION_PATCH);
     size_t zlen;
     char *z85encoded = pcp_z85_encode((byte*)signature, mlen, &zlen);
     ps_print(out, "%s\r\n%s\r\n", z85encoded, PCP_SIG_END);
@@ -258,6 +258,8 @@ pcp_pubkey_t *pcp_ed_verify_buffered(Pcpstream *in, pcp_pubkey_t *p) {
     if(z85block == NULL)
       goto errvb1;
 
+    //fprintf(stderr, "ZBLOCK: <%s>\n", z85block);
+
     size_t dstlen;
     byte *z85decoded = pcp_z85_decode(z85block, &dstlen);
     if(dstlen != mlen) {
@@ -316,12 +318,14 @@ size_t pcp_ed_detachsign_buffered(Pcpstream *in, Pcpstream *out, pcp_key_t *s) {
     crypto_generichash_update(st, in_buf, cur_bufsize);
   }
 
+  /* FIXME: error checking! */
+
   crypto_generichash_final(st, hash, crypto_generichash_BYTES_MAX);
 
   byte *signature = pcp_ed_sign(hash, crypto_generichash_BYTES_MAX, s);
   size_t mlen = + crypto_sign_BYTES + crypto_generichash_BYTES_MAX;
 
-  ps_print(out, "\r\n%s\r\n~ Version: PCP v%d.%d.%d ~\r\n\r\n",
+  ps_print(out, "%s\r\nVersion: PCP v%d.%d.%d\r\n",
 	  PCP_SIG_START, PCP_VERSION_MAJOR, PCP_VERSION_MINOR, PCP_VERSION_PATCH);
   size_t zlen;
   char *z85encoded = pcp_z85_encode((byte*)signature, mlen, &zlen);

@@ -301,6 +301,7 @@ char *pcp_readz85string(unsigned char *input, size_t bufsize) {
       }
       else if(z85_isend(line)){
 	/* an end header */
+	buffer_clear(line);
 	end = 1;
 	break;
       }
@@ -321,7 +322,7 @@ char *pcp_readz85string(unsigned char *input, size_t bufsize) {
     }
   }
   
-  if(buffer_size(line) > 0 && end != 1) {
+  if(buffer_size(line) > 0 && end != 1 && z85_isencoded(line)) {
     /* something left in line buffer, probably
        newline at eof missing or no multiline input */
     buffer_add_buf(z, line);
@@ -347,7 +348,17 @@ char *pcp_readz85string(unsigned char *input, size_t bufsize) {
   return NULL;
 }
 
-
+int z85_isencoded(Buffer *line) {
+  /* we don't look for begin header here, do it separately! */
+  if(!z85_isend(line) &&
+     !z85_isempty(line) &&
+     !z85_iscomment(line)) {
+    return 1; /* z85 encoded */
+  }
+  else {
+    return 0;
+  }
+}
 
 int z85_isheader(Buffer *buf) {
   size_t len = buffer_size(buf);
@@ -385,7 +396,6 @@ long int z85_header_startswith(Buffer *buf, char *what) {
 }
 
 int z85_isend(Buffer *buf) {
-
   if(! z85_isheader(buf))
     return 0;
   
@@ -428,10 +438,12 @@ int z85_isbegin(Buffer *buf) {
 int z85_iscomment(Buffer *buf) {
   char *line = buffer_get_str(buf);
  
-  if(strchr(line, ' ') == NULL || strchr(line, '\t') == NULL)
+  if(buffer_size(buf) > 0 && strchr(line, ' ') == NULL && strchr(line, '\t') == NULL) {
     return 0; /* non whitespace */
-  else
+  }
+  else {
     return 1; /* true */
+  }
 }
 
 int z85_isempty(Buffer *buf) {

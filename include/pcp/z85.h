@@ -163,7 +163,7 @@ int z85_isend(Buffer *buf);
 int z85_isbegin(Buffer *buf);
 int z85_iscomment(Buffer *buf);
 int z85_isempty(Buffer *line);
-
+int z85_isencoded(Buffer *line);
 
 #endif /*  _HAVE_PCP_Z85_H */
 

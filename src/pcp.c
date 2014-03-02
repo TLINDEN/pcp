@@ -71,6 +71,8 @@ int main (int argc, char **argv)  {
   signcrypt = 0;
   exportformat = EXP_FORMAT_NATIVE;
 
+  PCPVERBOSE = 0;
+
   static struct option longopts[] = {
     /*  generics */
     { "vault",           required_argument, NULL,           'V' },
@@ -84,27 +86,33 @@ int main (int argc, char **argv)  {
     /*  key management */
     { "keygen",          no_argument,       NULL,           'k' },
     { "listkeys",        no_argument,       NULL,           'l' },
+    { "listkeys-verbose",no_argument,       NULL,           'L' }, /* alias for -l -v */
     { "export-secret",   no_argument,       NULL,           's' },
     { "export-public",   no_argument,       NULL,           'p' },
+    { "export",          no_argument,       NULL,           'p' }, /* alias -p */
     { "import-secret",   no_argument,       NULL,           'S' },
     { "import-public",   no_argument,       NULL,           'P' },
+    { "import",          no_argument,       NULL,           'P' }, /* alias -P */
     { "remove-key",      no_argument,       NULL,           'R' },
     { "edit-key",        no_argument,       NULL,           'E' },    
     { "export-yaml",     no_argument,       NULL,           'y' },
     { "export-format",   required_argument, NULL,           'F' },
 
     /*  crypto */
-    {  "encrypt",        no_argument,       NULL,           'e' },
-    {  "encrypt-me",     no_argument,       NULL,           'm' },
-    {  "decrypt",        no_argument,       NULL,           'd' },
+    { "encrypt",         no_argument,       NULL,           'e' },
+    { "encrypt-me",      no_argument,       NULL,           'm' },
+    { "decrypt",         no_argument,       NULL,           'd' },
 
     /*  encoding */
-    {  "z85-encode",     no_argument,       NULL,           'z' },
-    {  "z85-decode",     no_argument,       NULL,           'Z' },
+    { "z85-encode",      no_argument,       NULL,           'z' },
+    { "armor",           no_argument,       NULL,           'a' }, /* alias -z */
+    { "textmode",        no_argument,       NULL,           'a' }, /* alias -z */
+    { "z85-decode",      no_argument,       NULL,           'Z' },
 
     /*  globals */
     { "help",            no_argument,       NULL,           'h' },
-    { "version",         no_argument,       NULL,           'v' },
+    { "version",         no_argument,       NULL,           '0' }, /* no short opt, FIXME: how to avoid? */
+    { "verbose",         no_argument,       NULL,           'v' },
     { "debug",           no_argument,       NULL,           'D' },
 
     /*  signing */
@@ -114,7 +122,7 @@ int main (int argc, char **argv)  {
     { NULL,              0,                 NULL,            0 }
   };
 
-  while ((opt = getopt_long(argc, argv, "klV:vdehsO:i:I:pSPRtEx:DzZr:gcymf:b1F:",
+  while ((opt = getopt_long(argc, argv, "klLV:vdehsO:i:I:pSPRtEx:DzaZr:gcymf:b1F:0",
 			    longopts, NULL)) != -1) {
   
     switch (opt)  {
@@ -130,6 +138,8 @@ int main (int argc, char **argv)  {
         mode += PCP_MODE_KEYGEN;
 	usevault = 1;
         break;
+      case  'L':
+        PCPVERBOSE = 1; /* no break by purpose, turn on -l */
       case 'l':
 	mode += PCP_MODE_LISTKEYS;
 	usevault = 1;
@@ -175,6 +185,7 @@ int main (int argc, char **argv)  {
 	usevault = 1;
 	break;
       case 'z':
+      case 'a':
 	armor = 1;
 	break;
       case 'Z':
@@ -229,12 +240,16 @@ int main (int argc, char **argv)  {
 	strncpy(vaultfile, optarg, 1024);
 	break;
       case 'O':
-	outfile = ucmalloc(strlen(optarg)+1);
-	strncpy(outfile, optarg, strlen(optarg)+1);
+	if(strncmp(optarg, "-", 2) > 0) {
+	  outfile = ucmalloc(strlen(optarg)+1);
+	  strncpy(outfile, optarg, strlen(optarg)+1);
+	}
 	break;
       case 'I':
-	infile = ucmalloc(strlen(optarg)+1);
-	strncpy(infile, optarg, strlen(optarg)+1); 
+	if(strncmp(optarg, "-", 2) > 0) {
+	  infile = ucmalloc(strlen(optarg)+1);
+	  strncpy(infile, optarg, strlen(optarg)+1);
+	}
 	break;
       case 'i':
 	keyid = ucmalloc(19);
@@ -255,8 +270,11 @@ int main (int argc, char **argv)  {
       case 'D':
 	debug = 1;
 	break;
-      case 'v':
+      case '0':
 	version();
+      case 'v':
+	PCPVERBOSE = 1;
+	break;
       case 'h':
 	usage(0);
       default:

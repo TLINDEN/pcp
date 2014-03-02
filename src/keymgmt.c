@@ -120,7 +120,7 @@ void pcp_listkeys() {
   int nkeys = HASH_COUNT(pcpkey_hash) + HASH_COUNT(pcppubkey_hash);
 
   if(nkeys > 0) {
-    printf("Key ID               Type      Creation Time        Owner\n");
+    printf("Key ID               Type             Creation Time        Owner\n");
 
     pcphash_iterate(k) {
       pcpkey_printlineinfo(k);
@@ -600,31 +600,76 @@ void pcpdelete_key(char *keyid) {
 
 void pcpedit_key(char *keyid) {
   pcp_key_t *key = pcphash_keyexists(keyid);
-  
+
   if(key != NULL) {
     if(key->secret[0] == 0) {
       char *passphrase;
       pcp_readpass(&passphrase, "Enter passphrase to decrypt the key", NULL, 1);
       key = pcpkey_decrypt(key, passphrase);
+      ucfree(passphrase, strlen(passphrase));
     }
 
     if(key != NULL) {
-      char *owner =  pcp_getstdin("Enter the name of the key owner");
-      memcpy(key->owner, owner, strlen(owner) + 1);
+      fprintf(stderr, "Current owner: %s\n", key->owner);
+      char *owner =  pcp_getstdin("  enter new name or press enter to keep current");
+      if(strlen(owner) > 0)
+	memcpy(key->owner, owner, strlen(owner) + 1);
 
-      char *mail = pcp_getstdin("Enter the email address of the key owner");
-      memcpy(key->mail, mail, strlen(mail) + 1);
+      fprintf(stderr, "Current mail: %s\n", key->mail);
+      char *mail =  pcp_getstdin("  enter new email or press enter to keep current");
+      if(strlen(mail) > 0)
+	memcpy(key->mail, mail, strlen(mail) + 1);
+
+      free(owner);
+      free(mail);
+
+      if(key->type != PCP_KEY_TYPE_MAINSECRET) {
+	pcp_key_t *other = NULL;
+	uint8_t haveprimary = 0;
+	pcphash_iterate(other) {
+	  if(other->type == PCP_KEY_TYPE_MAINSECRET) {
+	    haveprimary = 1;
+	    break;
+	  }
+	}
+
+	char *yes = NULL;
+        if(! haveprimary) {
+	  fprintf(stderr, "There is currently no primary secret in your vault,\n");
+	  yes = pcp_getstdin("want to make this one the primary [yes|NO]?");
+	}
+	else {
+	  fprintf(stderr, "The key %s is currently the primary secret,\n", other->id);
+	  yes = pcp_getstdin("want to make this one the primary instead [yes|NO]?");
+	}
+
+	if(strncmp(yes, "yes", 1024) == 0) {
+	    key->type = PCP_KEY_TYPE_MAINSECRET;
+	    if(haveprimary) {
+	      fprintf(stderr, "other type: %d\n", other->type);
+	      other->type = PCP_KEY_TYPE_SECRET;
+	      fprintf(stderr, "  new type: %d\n", other->type);
+	    }
+	}
+	free(yes);
+      }
 
       char *passphrase;
-      pcp_readpass(&passphrase, "Enter passphrase for key encryption", NULL, 1);
-      key = pcpkey_encrypt(key, passphrase);
+      pcp_readpass(&passphrase,
+		   "Enter new passphrase for key encryption (press enter to keep current)",
+		   "Enter the passphrase again", 1);
+
+      if(strnlen(passphrase, 1024) > 0) {
+	key = pcpkey_encrypt(key, passphrase);
+	ucfree(passphrase, strlen(passphrase));
+      }
 
       if(key != NULL) {
 	if(debug)
 	  pcp_dumpkey(key);
 
 	vault->unsafed = 1; /*  will be safed automatically */
-	fprintf(stderr, "Key key changed.\n");
+	fprintf(stderr, "Key %s changed.\n", key->id);
       }
     }
   }

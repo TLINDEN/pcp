@@ -123,21 +123,72 @@ void pcpkey_printlineinfo(pcp_key_t *key) {
   c = localtime(&t);
   printf("0x%s   %s   %04d-%02d-%02dT%02d:%02d:%02d  %s <%s>\n",
 	 key->id,
-	 (key->type ==  PCP_KEY_TYPE_MAINSECRET) ? "primary" : " secret",  
+	 (key->type ==  PCP_KEY_TYPE_MAINSECRET) ? "primary secret" : "secret        ",  
 	 c->tm_year+1900, c->tm_mon+1, c->tm_mday,
 	 c->tm_hour, c->tm_min, c->tm_sec,
 	 key->owner, key->mail);
+
+  if(PCPVERBOSE) {
+    printf("    ");
+    byte *hash = pcpkey_getchecksum(key);
+    int i, y;
+    for(i=0; i<32; i+=4) {
+      for(y=0; y<4; y++) {
+	printf("%02x", hash[i+y]);
+      }
+      printf(" ");
+    }
+    free(hash);
+    printf("\n    encrypted: %s, serial: %08x, version: %d\n",
+	   (key->secret[0] == '\0') ? "yes" : " no",
+	   key->serial, (int)key->version);
+    printf("\n");
+  }
 }
 
 void pcppubkey_printlineinfo(pcp_pubkey_t *key) {
   struct tm *c;
   time_t t = (time_t)key->ctime;
   c = localtime(&t);
-  printf("0x%s    public   %04d-%02d-%02dT%02d:%02d:%02d  %s <%s>\n",
+  printf("0x%s   %s   %04d-%02d-%02dT%02d:%02d:%02d  %s <%s>\n",
 	 key->id,
+	 (key->valid == 1) ? "valid public  " : "public        ",  
 	 c->tm_year+1900, c->tm_mon+1, c->tm_mday,
 	 c->tm_hour, c->tm_min, c->tm_sec,
 	 key->owner, key->mail);
+
+  if(PCPVERBOSE) {
+    printf("    ");
+    byte *hash = pcppubkey_getchecksum(key);
+    int i, y;
+    for(i=0; i<32; i+=4) {
+      for(y=0; y<4; y++) {
+	printf("%02x", hash[i+y]);
+      }
+      printf(" ");
+    }
+    free(hash);
+    printf("\n    signed: %s, serial: %08x, version: %d, ",
+	   (key->valid == 1) ? "yes" : " no",
+	   key->serial, (int)key->version);
+    pcp_keysig_t *sig = pcphash_keysigexists(key->id);
+    if(sig != NULL) {
+      printf("signature fingerprint:\n    ");
+      byte *checksum = sig->checksum;
+      for(i=0; i<32; i+=4) {
+	for(y=0; y<4; y++) {
+	  printf("%02x", checksum[i+y]);
+	}
+	printf(" ");
+      }
+      printf("\n");
+    }
+    else {
+      printf("fail: no signature stored.\n");
+    }
+
+    printf("\n");
+  }
 }
 
 void pcppubkey_print(pcp_pubkey_t *key, FILE* out) {

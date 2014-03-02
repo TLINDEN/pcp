@@ -10,8 +10,9 @@
 "\n" \
 "General Options:\n" \
 "-h --help                 Print this help message.\n" \
-"-v --version              Print program version.\n" \
+"   --version              Print program version.\n" \
 "-D --debug                Enable debug output.\n" \
+"-v --verbose              Enable verbose output.\n" \
 "-V --vault <vaultfile>    Specify an alternate vault file.\n" \
 "-O --outfile <file>       Output file. STDOUT if unspecified.\n" \
 "-I --infile <file>        Input file. STDIN if unspecified.\n" \

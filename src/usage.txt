@@ -8,8 +8,9 @@ Usage: pcp1 [ --help          | --version ]
 
 General Options:
 -h --help                 Print this help message.
--v --version              Print program version.
+   --version              Print program version.
 -D --debug                Enable debug output.
+-v --verbose              Enable verbose output.
 -V --vault <vaultfile>    Specify an alternate vault file.
 -O --outfile <file>       Output file. STDOUT if unspecified.
 -I --infile <file>        Input file. STDIN if unspecified.

@@ -14,29 +14,33 @@
                            key export and encryption.
  -t --text                 Print textual representation of some
                            item. Specify -V to get info about a
- 			  vault, -i to get info about a key id
- 			  installed in the vault or -I in which
- 			  case it determines itself what kind of
- 			  file it is.
+                           vault, -i to get info about a key id
+                           installed in the vault or -I in which
+                           case it determines itself what kind of
+                           file it is.
  -h --help                 Print this help message.
- -v --version              Print program version.
+    --version              Print program version.
  -D --debug                Enable debug output.
- 
+ -v --verbose              Enable verbose output.
+
  Keymanagement Options:
  -k --keygen               Generate a CURVE25519 secret key. If
                            the generated key is the first one in
                            your vault, it will become the primary
                            secret key. If an output file (-O) has
- 			  been specified, don't store the generated
- 			  key to the vault but export it to the
- 			  file instead. You will be asked for
- 			  an owner, mail and a passphrase. If you
- 			  leave the passphrase empty, the key will
- 			  be stored unencrypted.
+                           been specified, don't store the generated
+                           key to the vault but export it to the
+                           file instead. You will be asked for
+                           an owner, mail and a passphrase. If you
+                           leave the passphrase empty, the key will
+                           be stored unencrypted.
  -l --listkeys             List all keys currently stored in your
                            vault. Only the key id's and some info
                            about the keys will be printed, not the
                            actual keys.
+ -L --listkeys-verbose     Display a more verbose key listing
+ -l -v                     including signature fingerprint, key
+                           fingerprint, checksum and the like.
  -R --remove-key           Remove a key from the vault. Requires
                            option -i <keyid>.
  -s --export-secret        Export a secret key. If your vault only
@@ -48,13 +52,13 @@
                            given, export the primary secret key.
                            Use -O to export to a file.
  -p --export-public        Export a public key. If no key id have
-                           been specified, the public part of your
+    --export               been specified, the public part of your
                            primary secret key will be exported.
                            Use -O to export to a file.
  -S --import-secret        Import a secret key. Use -I to import
                            from a file.
  -P --import-public        Import a public key. Use -I to import
-                           from a file.
+    --import               from a file.
  -y --export-yaml          Export all keys stored in your vault
                            as YAML formatted text. Use -O to put
                            the export into a file.
@@ -110,8 +114,8 @@
  
  Encoding Options:
  -z --z85-encode           Encode (armor) something to Z85 encoding.
-                           If used with encryption or singing operation
-                           encode its output. Otherwise encode a plain
+ -a --armor                If used with encryption or singing operation
+    --textmode             encode its output. Otherwise encode a plain
                            file. Use -I and -O respectively, otherwise it
                            uses stdin/stdout.
  -Z --z85-decode           Decode (dearmor) something from Z85 encoding.

@@ -7,8 +7,8 @@ Pretty Curved Privacy - File encryption using eliptic curve cryptography.
 
   
   Usage: pcp1 [ --help          | --version ]
-              [ --keygen        | --listkeys      | --remove-key    | --edit-key      ]
-              [ --export-public | --export-secret | --import-public | --import-secret ]
+              [ --keygen        | --listkeys      | --remove-key | --edit-key ]
+              [ --export-public | --export-secret | --import ]
               [ --encrypt       | --decrypt ]
               [ --sign          | --check-signature ]
               [ arguments ]
@@ -111,10 +111,9 @@ Pretty Curved Privacy - File encryption using eliptic curve cryptography.
     --export               been specified, the public part of your
                            primary secret key will be exported.
                            Use -O to export to a file.
- -S --import-secret        Import a secret key. Use -I to import
+ -K --import               Import a key. pcp determines automatically
+    --import-key           the key type and encodingg. Use -I to import
                            from a file.
- -P --import-public        Import a public key. Use -I to import
-    --import               from a file.
  -y --export-yaml          Export all keys stored in your vault
                            as YAML formatted text. Use -O to put
                            the export into a file.
@@ -220,9 +219,8 @@ They've to exchange the public key somehow (which is not my
 problem at the moment, use ssh, encrypted mail, whatever). Once exchanged,
 they have to import it:
 
-
  Alicia                             Bobby
- pcp1 -P -I bobby.pub               pcp1 -P -I alicia.pub
+ pcp1 -K -I bobby.pub               pcp1 -K -I alicia.pub
 
 They will see a response as this when done:
 
@@ -434,9 +432,7 @@ Here is a list of commandlines and their possible alternatives:
 
  pcp -s -O key.pcp -r Bob    pcp -s -O key.pcp Bob     use 'Bob' as recipient.
 
- pcp -P -I alice.pcp         pcp -P alice.pcp          use 'alice.pcp' as inputfile.
-
- pcp -S -I alice.pcp         pcp -S alice.pcp          use 'alice.pcp' as inputfile.
+ pcp -K -I alice.pcp         pcp -K alice.pcp          use 'alice.pcp' as keyfile.
 
 
 =head1 ENVIRONMENT VARIABLES

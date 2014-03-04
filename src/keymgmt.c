@@ -428,151 +428,6 @@ void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int 
 
 
 
-int pcp_importsecret (FILE *in, char *passwd) {
-  byte *buf = ucmalloc(2048);
-  size_t buflen = fread(buf, 1, 2048, in);
-  pcp_key_t *sk = NULL;
-
-  if(buflen > 0) {
-    /* decrypt the input */
-    if(passwd != NULL) {
-      sk = pcp_import_secret(buf, buflen, passwd);
-    }
-    else {
-      char *passphrase;
-      pcp_readpass(&passphrase,
-		   "Enter passphrase to decrypt the secret key file", NULL, 1);
-      sk = pcp_import_secret(buf, buflen, passphrase);
-      memset(passphrase, 0, strlen(passphrase));
-      free(passphrase);
-    }
-    if(sk == NULL) {
-      goto errpcsexpu1;
-    }
-
-    if(debug)
-      pcp_dumpkey(sk);
-
-    pcp_key_t *maybe = pcphash_keyexists(sk->id);
-    if(maybe != NULL) {
-      fatal("Secretkey sanity check: there already exists a key with the id 0x%s\n", sk->id);
-      goto errpcsexpu1;
-    }
-
-
-    /* store it */
-    if(passwd != NULL) {
-      sk = pcpkey_encrypt(sk, passwd);
-    }
-    else {
-      char *passphrase;
-      pcp_readpass(&passphrase,
-		   "Enter passphrase for key encryption",
-		   "Enter the passphrase again", 1);
-    
-      if(strnlen(passphrase, 1024) > 0) {
-	/* encrypt the key */
-	sk = pcpkey_encrypt(sk, passphrase);
-      }
-      else {
-	/* ask for confirmation if we shall store it in the clear */
-	char *yes = pcp_getstdin(
-		 "WARNING: secret key will be stored unencrypted. Are you sure [yes|NO]?");
-	if(strncmp(yes, "yes", 1024) != 0) {
-	  memset(sk, 0, sizeof(pcp_key_t));
-	  free(sk);
-	  memset(passphrase, 0, strlen(passphrase));
-	  goto errpcsexpu1;
-	}
-      }
-    }
-
-    if(sk != NULL) {
-      /* store it to the vault if we got it til here */
-      if(pcp_sanitycheck_key(sk) == 0) {
-	if(pcp_storekey(sk) == 0) {
-	  pcpkey_printshortinfo(sk);
-	  memset(sk, 0, sizeof(pcp_key_t));
-	  free(sk);
-	  return 0;
-	}
-      }
-    }
-  }
-  else {
-    fatal("Input file is empty!\n");
-    goto errpcsexpu1;
-  }
-
- errpcsexpu1:
-  ucfree(buf, 2048);
-
-  return 1;
-}
-
-int pcp_importpublic (vault_t *vault, FILE *in) {
-  byte *buf = ucmalloc(2048);
-  size_t buflen = fread(buf, 1, 2048, in);
-  pcp_keysig_t *sk = NULL;
-  pcp_pubkey_t *pub = NULL;
-
-  if(buflen > 0) {
-    pcp_ks_bundle_t *bundle = pcp_import_pub(buf, buflen);
-
-    if(bundle == NULL)
-      goto errip1;
-
-    pcp_keysig_t *sk = bundle->s;
-
-    if(bundle != NULL) {
-      pcp_pubkey_t *pub = bundle->p;
-
-      if(debug)
-	pcp_dumppubkey(pub);
-
-      if(sk == NULL) {
-	fatals_ifany();
-	char *yes = pcp_getstdin("WARNING: signature doesn't verify, import anyway [yes|NO]?");
-	if(strncmp(yes, "yes", 1024) != 0) {
-	  free(yes);
-	  goto errip1;
-	}
-	free(yes);
-      }
-
-      if(pcp_sanitycheck_pub(pub) == 0) {
-	if(pcpvault_addkey(vault, (void *)pub,  PCP_KEY_TYPE_PUBLIC) == 0) {
-	  fprintf(stderr, "key 0x%s added to %s.\n", pub->id, vault->filename);
-	}
-	else
-	  goto errip2;
-
-	if(sk != NULL) {
-	  if(pcpvault_addkey(vault, sk, sk->type) != 0)
-	    goto errip2;
-	}
-      }
-      else
-	goto errip2;
-    }
-  }
-  else {
-    fatal("Input file is empty!\n");
-    goto errip1;
-  }
-
- errip2:
-  ucfree(pub, sizeof(pcp_pubkey_t));
-
- errip1:
-  if(sk != NULL) {
-    ucfree(sk->blob, sk->size);
-    ucfree(sk, sizeof(pcp_keysig_t));
-  }
-  ucfree(buf, 2048);
-  return 1;
-}
-
 void pcpdelete_key(char *keyid) {
   pcp_pubkey_t *p = pcphash_pubkeyexists(keyid);
   
@@ -699,4 +554,153 @@ char *pcp_find_id_byrec(char *recipient) {
 }
 
 
+int pcp_import (vault_t *vault, FILE *in, char *passwd) {
+  byte *buf = ucmalloc(2048);
+  size_t bufsize;
+  pcp_pubkey_t *pub = NULL;
+  pcp_key_t *sk = NULL;
+  pcp_ks_bundle_t *bundle = NULL;
+  pcp_keysig_t *keysig = NULL;
+  int success = 1; /* default fail */
 
+  Pcpstream *pin = ps_new_file(in);
+  ps_setdetermine(pin, 1024);
+
+  bufsize = ps_read(pin, buf, PCP_BLOCK_SIZE);
+
+  if(bufsize == 0) {
+    fatal("Input file is empty!\n");
+    goto errimp1;
+  }
+
+  /* first try as rfc pub key */
+  bundle = pcp_import_binpub(buf, bufsize);
+  if(bundle != NULL) {
+    keysig = bundle->s;
+    pub = bundle->p;
+
+    if(debug)
+      pcp_dumppubkey(pub);
+
+    if(keysig == NULL) {
+      fatals_ifany();
+      char *yes = pcp_getstdin("WARNING: signature doesn't verify, import anyway [yes|NO]?");
+      if(strncmp(yes, "yes", 1024) != 0) {
+	free(yes);
+	goto errimp2;
+      }
+      free(yes);
+    }
+
+    if(pcp_sanitycheck_pub(pub) == 0) {
+      if(pcpvault_addkey(vault, (void *)pub,  PCP_KEY_TYPE_PUBLIC) == 0) {
+	fprintf(stderr, "key 0x%s added to %s.\n", pub->id, vault->filename);
+	/* avoid double free */
+	pub = NULL;
+	success = 0;
+      }
+      else
+	goto errimp2;
+      
+      if(keysig != NULL) {
+	if(pcpvault_addkey(vault, keysig, keysig->type) != 0) {
+	  /* FIXME: remove pubkey if storing the keysig failed */
+	  goto errimp2;
+	}
+	keysig = NULL;
+      }
+    }
+    else
+      goto errimp2;
+  }
+  else {
+    /* it's not public key, so let's try to interpret it as secret key */
+    if(passwd != NULL) {
+      sk = pcp_import_secret(buf, bufsize, passwd);
+    }
+    else {
+      char *passphrase;
+      pcp_readpass(&passphrase,
+		   "Enter passphrase to decrypt the secret key file", NULL, 1);
+      sk = pcp_import_secret(buf, bufsize, passphrase);
+      ucfree(passphrase, strlen(passphrase));
+    }
+
+    if(sk == NULL) {
+      goto errimp2;
+    }
+
+    if(debug)
+      pcp_dumpkey(sk);
+
+    pcp_key_t *maybe = pcphash_keyexists(sk->id);
+    if(maybe != NULL) {
+      fatal("Secretkey sanity check: there already exists a key with the id 0x%s\n", sk->id);
+      goto errimp2;
+    }
+
+    /* store it */
+    if(passwd != NULL) {
+      sk = pcpkey_encrypt(sk, passwd);
+    }
+    else {
+      char *passphrase;
+      pcp_readpass(&passphrase,
+		   "Enter passphrase for key encryption",
+		   "Enter the passphrase again", 1);
+    
+      if(strnlen(passphrase, 1024) > 0) {
+	/* encrypt the key */
+	sk = pcpkey_encrypt(sk, passphrase);
+	ucfree(passphrase, strlen(passphrase));
+      }
+      else {
+	/* ask for confirmation if we shall store it in the clear */
+	char *yes = pcp_getstdin(
+		 "WARNING: secret key will be stored unencrypted. Are you sure [yes|NO]?");
+	if(strncmp(yes, "yes", 1024) != 0) {
+	  free(yes);
+	  goto errimp1;
+	}
+	free(yes);
+      }
+    }
+
+    if(sk != NULL) {
+      /* store it to the vault if we got it til here */
+      if(pcp_sanitycheck_key(sk) == 0) {
+	if(pcp_storekey(sk) == 0) {
+	  pcpkey_printshortinfo(sk); 
+	  success = 0;
+	  sk = NULL;
+	}
+      }
+    }
+  }
+
+
+errimp2:
+  if(keysig != NULL) {
+    ucfree(keysig->blob, keysig->size);
+    ucfree(keysig, sizeof(pcp_keysig_t));
+  }
+  
+  if(bundle != NULL) {
+    free(bundle);
+  }
+  
+  if(pub != NULL) {
+    ucfree(pub, sizeof(pcp_pubkey_t));
+  }
+  
+  if(sk != NULL) {
+    ucfree(sk, sizeof(pcp_key_t));
+  }
+
+  ucfree(buf, bufsize);
+
+ errimp1:
+  ps_close(pin);
+
+  return success;
+}

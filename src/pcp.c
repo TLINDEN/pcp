@@ -90,9 +90,8 @@ int main (int argc, char **argv)  {
     { "export-secret",   no_argument,       NULL,           's' },
     { "export-public",   no_argument,       NULL,           'p' },
     { "export",          no_argument,       NULL,           'p' }, /* alias -p */
-    { "import-secret",   no_argument,       NULL,           'S' },
-    { "import-public",   no_argument,       NULL,           'P' },
-    { "import",          no_argument,       NULL,           'P' }, /* alias -P */
+    { "import",          no_argument,       NULL,           'K' }, /* alias -P */
+    { "import-key",      no_argument,       NULL,           'K' }, /* alias -K */
     { "remove-key",      no_argument,       NULL,           'R' },
     { "edit-key",        no_argument,       NULL,           'E' },    
     { "export-yaml",     no_argument,       NULL,           'y' },
@@ -122,7 +121,7 @@ int main (int argc, char **argv)  {
     { NULL,              0,                 NULL,            0 }
   };
 
-  while ((opt = getopt_long(argc, argv, "klLV:vdehsO:i:I:pSPRtEx:DzaZr:gcymf:b1F:0",
+  while ((opt = getopt_long(argc, argv, "klLV:vdehsO:i:I:pSPRtEx:DzaZr:gcymf:b1F:0K",
 			    longopts, NULL)) != -1) {
   
     switch (opt)  {
@@ -153,12 +152,8 @@ int main (int argc, char **argv)  {
 	mode += PCP_MODE_EXPORT_PUBLIC;
 	usevault = 1;
 	break;
-      case 'P':
-	mode += PCP_MODE_IMPORT_PUBLIC;
-	usevault = 1;
-	break;
-      case 'S':
-	mode += PCP_MODE_IMPORT_SECRET;
+      case 'K':
+	mode += PCP_MODE_IMPORT;
 	usevault = 1;
 	break;
       case 'R':
@@ -344,8 +339,7 @@ int main (int argc, char **argv)  {
       }
       break;
 
-    case PCP_MODE_IMPORT_PUBLIC:
-    case PCP_MODE_IMPORT_SECRET:
+    case PCP_MODE_IMPORT: 
       if(infile == NULL)
 	infile = extra;
       break;
@@ -436,7 +430,7 @@ int main (int argc, char **argv)  {
 	  free(recipient);
 	break;
 
-      case PCP_MODE_IMPORT_PUBLIC:
+      case PCP_MODE_IMPORT:
 	if(infile == NULL)
 	  in = stdin;
 	else {
@@ -446,20 +440,7 @@ int main (int argc, char **argv)  {
 	    break;
 	  }
 	}
-	pcp_importpublic(vault, in);
-	break;
-
-      case PCP_MODE_IMPORT_SECRET:
-	if(infile == NULL)
-	  in = stdin;
-	else {
-	  if((in = fopen(infile, "rb")) == NULL) {
-	    fatal("Could not open input file %s\n", infile);
-	    free(infile);
-	    break;
-	  }
-	}
-	pcp_importsecret(in, xpass);
+	pcp_import(vault, in, xpass);
 	break;
 
       case PCP_MODE_DELETE_KEY:

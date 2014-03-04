@@ -181,9 +181,7 @@ Here is a list of commandlines and their possible alternatives:
 
  pcp -s -O key.pcp -r Bob    pcp -s -O key.pcp Bob     use 'Bob' as recipient.
 
- pcp -P -I alice.pcp         pcp -P alice.pcp          use 'alice.pcp' as inputfile.
-
- pcp -S -I alice.pcp         pcp -S alice.pcp          use 'alice.pcp' as inputfile.
+ pcp -K -I alice.pcp         pcp -K alice.pcp          use 'alice.pcp' as keyfile.
 
 
 =head1 ENVIRONMENT VARIABLES

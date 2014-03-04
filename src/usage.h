@@ -2,8 +2,8 @@
 #define _HAVE_USAGE_H
 #define PCP_HELP "\n" \
 "Usage: pcp1 [ --help          | --version ]\n" \
-"            [ --keygen        | --listkeys      | --remove-key    | --edit-key      ]\n" \
-"            [ --export-public | --export-secret | --import-public | --import-secret ]\n" \
+"            [ --keygen        | --listkeys      | --remove-key | --edit-key ]\n" \
+"            [ --export-public | --export-secret | --import ]\n" \
 "            [ --encrypt       | --decrypt ]\n" \
 "            [ --sign          | --check-signature ]\n" \
 "            [ arguments ]\n" \

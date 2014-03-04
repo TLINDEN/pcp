@@ -57,8 +57,7 @@ pcp_key_t *pcp_getrsk(pcp_key_t *s, char *recipient, char *passwd);
 char *pcp_normalize_id(char *keyid);
 pcp_key_t *pcp_find_primary_secret();
 
-int pcp_importpublic (vault_t *vault, FILE *in);
-int pcp_importsecret (FILE *in, char *passwd);
+int pcp_import (vault_t *vault, FILE *in, char *passwd);
 
 void pcpdelete_key(char *keyid);
 char *pcp_find_id_byrec(char *recipient);

@@ -90,7 +90,12 @@
 	printed. Also added a couple of alias options for
 	existing ones (e.g. -a for armor which is an alias
 	for -z).
-	
+
+	Removed options -P and -S, replaced by -K (long:
+	--import-key) used to import a key. The key type
+	is now determined automatically as well as the
+	encoding.
+
 0.2.0	ED25519 and Curve25519 keys are now generated
 	separately (previously they were generated from
 	one random seed, the curve had been derived from

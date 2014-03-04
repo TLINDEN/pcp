@@ -55,10 +55,9 @@
     --export               been specified, the public part of your
                            primary secret key will be exported.
                            Use -O to export to a file.
- -S --import-secret        Import a secret key. Use -I to import
+ -K --import               Import a key. pcp determines automatically
+    --import-key           the key type and encodingg. Use -I to import
                            from a file.
- -P --import-public        Import a public key. Use -I to import
-    --import               from a file.
  -y --export-yaml          Export all keys stored in your vault
                            as YAML formatted text. Use -O to put
                            the export into a file.

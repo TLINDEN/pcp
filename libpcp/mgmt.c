@@ -170,6 +170,24 @@ int _check_hash_keysig(Buffer *blob, pcp_pubkey_t *p, pcp_keysig_t *sk) {
   
 }
 
+pcp_ks_bundle_t *pcp_import_binpub(byte *raw, size_t rawsize) {
+  Buffer *blob = buffer_new(512, "importblob");
+
+  buffer_add(blob, raw, rawsize);
+
+  /* now, try to disassemble, if it fails, assume pbp format */
+  uint8_t version = buffer_get8(blob);
+
+  if(version == PCP_KEY_VERSION) {
+    /* ah, homerun */
+    return pcp_import_pub_rfc(blob);
+  }
+  else {
+    /* nope, it's probably pbp */
+    return pcp_import_pub_pbp(blob);
+  }
+}
+
 pcp_ks_bundle_t *pcp_import_pub(byte *raw, size_t rawsize) {
   size_t clen;
   byte *bin = NULL;
@@ -703,6 +721,13 @@ Buffer *pcp_export_secret(pcp_key_t *sk, char *passphrase) {
   return out;
 }
 
+pcp_key_t *pcp_import_binsecret(byte *raw, size_t rawsize, char *passphrase) {
+  Buffer *blob = buffer_new(512, "importskblob");
+  buffer_add(blob, raw, rawsize);
+  return pcp_import_secret_native(blob, passphrase);
+}
+
+
 pcp_key_t *pcp_import_secret(byte *raw, size_t rawsize, char *passphrase) {
   size_t clen;
   byte *bin = NULL;
@@ -753,7 +778,8 @@ pcp_key_t *pcp_import_secret_native(Buffer *cipher, char *passphrase) {
 
   cipherlen = buffer_left(cipher);
   if(cipherlen < minlen) {
-    fatal("expected decrypted secret key size %ld is less than minimum len %ld\n", cipherlen, minlen);
+    fatal("failed to decrypt the secret key file:\n"
+	  "expected encrypted secret key size %ld is less than minimum len %ld\n", cipherlen, minlen);
     goto impserr1;
   }
 

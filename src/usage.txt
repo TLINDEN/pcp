@@ -1,7 +1,7 @@
 
 Usage: pcp1 [ --help          | --version ]
-            [ --keygen        | --listkeys      | --remove-key    | --edit-key      ]
-            [ --export-public | --export-secret | --import-public | --import-secret ]
+            [ --keygen        | --listkeys      | --remove-key | --edit-key ]
+            [ --export-public | --export-secret | --import ]
             [ --encrypt       | --decrypt ]
             [ --sign          | --check-signature ]
             [ arguments ]

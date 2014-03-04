@@ -37,7 +37,7 @@ QUICKSTART
     have to import it:
 
      Alicia                             Bobby
-     pcp1 -P -I bobby.pub               pcp1 -P -I alicia.pub
+     pcp1 -K -I bobby.pub               pcp1 -K -I alicia.pub
 
     They will see a response as this when done:
 

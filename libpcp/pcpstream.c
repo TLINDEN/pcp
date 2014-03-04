@@ -137,7 +137,9 @@ size_t ps_read_raw(Pcpstream *stream, void *buf, size_t readbytes) {
       stream->err = 1;
   }
 
+
  rawdone:
+  //_dump("ps_read_raw", buf, gotbytes);
   return gotbytes;
 }
 
@@ -284,24 +286,24 @@ int ps_readline(Pcpstream *stream, Buffer *line) {
   byte b[1];
 
   while(c<PSMAXLINE) {
-    // fprintf(stderr, "    ps_readline: call raw\n");
+    //fprintf(stderr, "    ps_readline: call raw\n");
     if(ps_read_raw(stream, b, 1) < 1) {
-      // fprintf(stderr, "      ps_readline: raw returned < 1\n");
+      //fprintf(stderr, "      ps_readline: raw returned < 1\n");
       max = 0;
       break; /* eof or err */
     }
     if(*b == '\r') {
-      // fprintf(stderr, "      ps_readline: raw found CR\n");
+      //fprintf(stderr, "      ps_readline: raw found CR\n");
       continue;
     }
-    else if(*b == '\n' || ps_left(stream) == 1) {
-      // fprintf(stderr, "      ps_readline: raw found NL\n");
+    else if(*b == '\n' || ps_end(stream) == 1) {
+      //fprintf(stderr, "      ps_readline: raw found NL\n");
       c++;
       max = 0;
       break;
     }
     else {
-      // fprintf(stderr, "      ps_readline: raw found regular\n");
+      //fprintf(stderr, "      ps_readline: raw found regular\n");
       buffer_add8(line, *b);
     } 
     c++;
@@ -328,7 +330,7 @@ void ps_determine(Pcpstream *stream) {
 
   /* check if it's binary or not */
   if(_buffer_is_binary(buf, got) == 0) {
-    /* no, it's armored */
+    /* not binary, it's armored */
     stream->armor = 1;
 
     /* put back raw data into read queue */
@@ -356,7 +358,7 @@ size_t ps_read_decode(Pcpstream *stream) {
   Buffer *z = buffer_new(32, "ztemp");
   Buffer *line = buffer_new_str("line");
 
-  // buffer_info(stream->save);
+  //buffer_info(stream->save);
  
 
   if(buffer_left(stream->save) > stream->blocksize){// && stream->firstread == 1) {
@@ -365,11 +367,13 @@ size_t ps_read_decode(Pcpstream *stream) {
        buffer_left(stream->save), stream->blocksize);    */
     buffer_get_chunk_tobuf(stream->save, z, stream->blocksize);
   }
-  else if(ps_left(stream) == 1 && buffer_left(stream->save) > 0) {
-    /* there's something left which doesn't end in a newline */
+  else if(ps_left(stream) == 1 && buffer_left(stream->save) > 0 && stream->firstread == 1) {
+    /* there's something left which doesn't end in a newline,
+       but only if this is not our first read, in which case
+       we need to run into the readline loop at least once. */
     // fprintf(stderr, "      ps_read_next which doesn't end in a newline\n");
     buffer_get_chunk_tobuf(stream->save, z, buffer_left(stream->save));
-    buffer_dump(z);
+    //buffer_dump(z);
     fatals_ifany();
   }
   else {
@@ -378,7 +382,7 @@ size_t ps_read_decode(Pcpstream *stream) {
     while(buffer_size(z) <  stream->blocksize) {
       buffer_clear(line);
       if(ps_readline(stream, line) >= 0) {
-	// fprintf(stderr, "got: <%s>\n", buffer_get_str(line));	
+	//fprintf(stderr, "got: <%s>\n", buffer_get_str(line));	
 	if(z85_isbegin(line) && stream->have_begin == 0) {
 	  /* begin header encountered */
 	  stream->have_begin = 1; /* otherwise ignore it */
@@ -425,11 +429,13 @@ size_t ps_read_decode(Pcpstream *stream) {
     }
   }
 
-  // fprintf(stderr, "Z: <%s>\n", buffer_get_str(z));
+  //fprintf(stderr, "%s\n", buffer_get_str(z));
 
   /* finally, decode it and put into next */
   size_t binlen, outlen;
   byte *bin = pcp_z85_decode(buffer_get_str(z), &binlen);
+  //fprintf(stderr, "ps_read_decode decoding z: %ld, got: %ld\n", buffer_size(z), binlen);
+  //  _dump("bin", bin, binlen);
   fatals_ifany();
   if(bin == NULL) {
     /* it's not z85 encoded, so threat it as binary */
@@ -448,7 +454,6 @@ size_t ps_read_decode(Pcpstream *stream) {
   else {
     /* yes, successfully decoded it, put into cache */
     buffer_add(stream->next, bin, binlen);
-    // fprintf(stderr, "ps_read_decode decoded: <%s>\n", buffer_get_str(stream->next));
     outlen = binlen;
   }
 

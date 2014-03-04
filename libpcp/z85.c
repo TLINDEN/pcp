@@ -183,8 +183,17 @@ size_t pcp_unpadfour(byte *src, size_t srclen) {
 byte *pcp_z85_decode(char *z85block, size_t *dstlen) {
   byte *bin = NULL;
   size_t binlen, outlen; 
+  size_t srclen;
+ 
+  srclen = strlen(z85block);
 
-  binlen = strlen(z85block) * 4 / 5; 
+  if(srclen == 0) {
+    /* FIXME: check how this happens, pcpstream decoder call */
+    *dstlen = 0;
+    return NULL;
+  }
+
+  binlen = srclen * 4 / 5; 
   bin = ucmalloc(binlen);
 
   if(zmq_z85_decode(bin, z85block) == NULL) {

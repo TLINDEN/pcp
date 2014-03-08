@@ -1,5 +1,8 @@
 /* include/pcp/config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* Define to 1 if you have the `arc4random' function. */
+#undef HAVE_ARC4RANDOM
+
 /* Define to 1 if you have the `arc4random_buf' function. */
 #undef HAVE_ARC4RANDOM_BUF
 

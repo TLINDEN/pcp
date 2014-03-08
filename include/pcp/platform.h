@@ -33,11 +33,14 @@
 #   include <sys/endian.h>
 #   ifndef HAVE_BE32TOH
 #     /*  openbsd, use aliases */
+#     define be16toh betoh16
 #     define be32toh betoh32
 #     define be64toh betoh64
 #   endif
 # else /*  no sys/endian.h */
 #   ifdef __CPU_IS_BIG_ENDIAN
+#     define be16toh(x)	(x)
+#     define htobe16(x)	(x)
 #     define be32toh(x)	(x)
 #     define htobe32(x)	(x)
 #     define be64toh(x)	(x)
@@ -52,6 +55,8 @@
 #         error Need either netinet/in.h or arpa/inet.h for ntohl() and htonl()
 #       endif
 #     endif
+#     define be16toh(x)	((u_int16_t)ntohl((u_int16_t)(x)))
+#     define htobe16(x)	((u_int16_t)htonl((u_int16_t)(x)))
 #     define be32toh(x)	((u_int32_t)ntohl((u_int32_t)(x)))
 #     define htobe32(x)	((u_int32_t)htonl((u_int32_t)(x)))
 #     define be64toh(x)	((u_int64_t)ntohl((u_int64_t)(x)))
@@ -61,20 +66,18 @@
 #endif /*  HAVE_ENDIAN_H */
 
 
-#ifndef HAVE_ARC4RANDOM_BUF
-/*  shitty OS. we're using libsodium's implementation */
-
+#ifndef HAVE_ARC4RANDOM
 #include <sodium.h>
-
 static inline u_int32_t arc4random() {
   return randombytes_random();
 }
+#endif
 
+#ifndef HAVE_ARC4RANDOM_BUF
+#include <sodium.h>
 static inline void arc4random_buf(void *buf, size_t nbytes) {
   randombytes((unsigned char*)buf, nbytes);
 }
-
-
 #endif
 
 
@@ -140,6 +143,19 @@ int vasprintf(char **ret, const char *format, va_list args) {
 #endif
 
 
+#ifndef HAVE_STRNLEN
+static inline size_t
+strnlen(const char *msg, size_t maxlen)
+{
+ size_t i;
+
+ for (i=0; i<maxlen; i++)
+ if (msg[i] == '\0')
+ break;
+
+ return i;
+}
+#endif
 
 #endif /* !_HAVE_PCP_PLATFORM_H */
 

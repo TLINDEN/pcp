@@ -157,5 +157,33 @@ strnlen(const char *msg, size_t maxlen)
 }
 #endif
 
+
+#ifndef HAVE_STRNSTR
+/* via FreeBSD libc */
+#include <string.h>
+static inline char *
+strnstr(const char *s, const char *find, size_t slen)
+{
+  char c, sc;
+  size_t len;
+  
+  if ((c = *find++) != '\0') {
+    len = strlen(find);
+    do {
+      do {
+	if (slen-- < 1 || (sc = *s++) == '\0')
+	  return (NULL);
+      } while (sc != c);
+      if (len > slen)
+	return (NULL);
+    } while (strncmp(s, find, len) != 0);
+    s--;
+  }
+  return ((char *)s);
+}
+#endif
+
+
 #endif /* !_HAVE_PCP_PLATFORM_H */
+
 

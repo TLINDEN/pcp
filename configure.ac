@@ -76,6 +76,7 @@ AC_CHECK_FUNCS( \
     memcpy \
     perror \
     strnlen \
+    strnstr \
     strlen \
     strtol \
     sizeof \

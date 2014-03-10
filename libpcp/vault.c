@@ -318,7 +318,7 @@ int pcpvault_copy(vault_t *tmp, vault_t *vault) {
   int tmpsize = ftell(tmp->fd);
   fseek(tmp->fd, 0, SEEK_SET);
   byte *in = ucmalloc(tmpsize);
-  fread(in, tmpsize, 1, tmp->fd);
+  tmpsize = fread(in, 1, tmpsize, tmp->fd);
 
   /*  and put it into the new file */
   vault->fd = freopen(vault->filename, "wb+", vault->fd);
@@ -407,16 +407,21 @@ vault_item_header_t * ih2native(vault_item_header_t *h) {
 
 
 int pcpvault_fetchall(vault_t *vault) {
+  size_t got = 0;
   fseek(vault->fd, 0, SEEK_SET);
 
   vault_header_t *header = ucmalloc(sizeof(vault_header_t));
   vault_item_header_t *item = ucmalloc(sizeof(vault_item_header_t));
-  fread(header, sizeof(vault_header_t), 1, vault->fd);
+  got = fread(header, 1, sizeof(vault_header_t), vault->fd);
+  if(got < sizeof(vault_header_t)) {
+    fatal("empty or invalid vault header size (got %ld, expected %ld)\n", got,  sizeof(vault_header_t)); 
+    goto err;
+  }
   vh2native(header);
 
   if(header->fileid == PCP_VAULT_ID && header->version == PCP_VAULT_VERSION) {
     /*  loop over the file and slurp everything in */
-    int readpos = 0;
+    size_t readpos = 0;
     pcp_key_t *key;
     pcp_pubkey_t *pubkey;
     int bytesleft = 0;
@@ -431,7 +436,7 @@ int pcpvault_fetchall(vault_t *vault) {
       readpos = ftell(vault->fd);
       if(vault->size - readpos >= sizeof(vault_item_header_t)) {
 	/*  an item header follows */
-	fread(item, sizeof(vault_item_header_t), 1, vault->fd);
+	got = fread(item, sizeof(vault_item_header_t), 1, vault->fd);
 	ih2native(item);
 
 	if(item->size > 0) {
@@ -444,14 +449,14 @@ int pcpvault_fetchall(vault_t *vault) {
 	       item->type == PCP_KEY_TYPE_SECRET) {
 	      /*  read a secret key */
 	      key = ucmalloc(sizeof(pcp_key_t));
-	      fread(key, PCP_RAW_KEYSIZE, 1, vault->fd);
+	      got = fread(key, PCP_RAW_KEYSIZE, 1, vault->fd);
 	      key2native(key);
 	      pcphash_add((void *)key, item->type);
 	    }
 	    else if(item->type == PCP_KEY_TYPE_PUBLIC) {
 	      /*  read a public key */
 	      pubkey = ucmalloc(sizeof(pcp_pubkey_t));
-	      fread(pubkey, PCP_RAW_PUBKEYSIZE, 1, vault->fd);
+	      got = fread(pubkey, PCP_RAW_PUBKEYSIZE, 1, vault->fd);
 	      pubkey2native(pubkey);
 	      pcphash_add((void *)pubkey, item->type);
 	    }

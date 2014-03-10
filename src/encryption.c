@@ -70,10 +70,10 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
       }
       else {
 	passphrase = ucmalloc(strlen(passwd)+1);
-	strncpy(passphrase, passwd, strlen(passwd)+1);
+	strncpy(passphrase, passwd, strlen(passwd));
       }
 
-      symkey = pcp_scrypt(passphrase, crypto_secretbox_KEYBYTES, salt, 90);
+      symkey = pcp_scrypt(passphrase, strlen(passphrase), salt, 90);
       free(salt);
     }
     else {
@@ -159,12 +159,12 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
     }
     else {
       passphrase = ucmalloc(strlen(passwd)+1);
-      strncpy(passphrase, passwd, strlen(passwd)+1);
+      strncpy(passphrase, passwd, strlen(passwd));
     }
     byte *salt = ucmalloc(90); /*  FIXME: use random salt, concat it with result afterwards */
     char stsalt[] = PBP_COMPAT_SALT;
     memcpy(salt, stsalt, 90);
-    symkey = pcp_scrypt(passphrase, crypto_secretbox_KEYBYTES, salt, 90);
+    symkey = pcp_scrypt(passphrase, strlen(passphrase), salt, 90);
     free(salt);
   }
   else if(id != NULL && recipient == NULL) {

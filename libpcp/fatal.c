@@ -19,9 +19,11 @@
     You can contact me by mail: <tlinden AT cpan DOT org>.
 */
 
+#define _GNU_SOURCE /* vasprintf() linux */
 
 #include "defines.h"
 #include "platform.h"
+
 
 #include <errno.h>
 #include <stdarg.h>
@@ -38,11 +40,14 @@ void fatal(const char * fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
   
-  vasprintf(&PCP_ERR, fmt, ap);
-
-  va_end(ap);
-
-  PCP_ERRSET = 1;
+  if(vasprintf(&PCP_ERR, fmt, ap) >= 0) {
+    va_end(ap);
+    PCP_ERRSET = 1;
+  }
+  else {
+    fprintf(stderr, "Could not store fatal error message %s!\n", fmt);
+    PCP_ERRSET = 1;
+  }
 }
 
 void fatals_reset() {
@@ -51,7 +56,7 @@ void fatals_reset() {
 
 void fatals_ifany() {
   if(PCP_ERRSET == 1) {
-    fprintf(stderr, PCP_ERR);
+    fprintf(stderr, "%s", PCP_ERR);
     if(errno) {
       fprintf(stderr, "Error: %s\n", strerror(errno));
     }

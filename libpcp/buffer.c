@@ -19,6 +19,8 @@
     You can contact me by mail: <tom AT vondein DOT org>.
 */
 
+#define _GNU_SOURCE /* vasprintf() linux */
+
 #include "buffer.h"
 
 void buffer_init(Buffer *b, size_t blocksize, char *name) {
@@ -88,11 +90,12 @@ void buffer_add_str(Buffer *b, const char * fmt, ...) {
   va_list ap;
   char *dst;
   va_start(ap, fmt);
-  vasprintf(&dst, fmt, ap);
+  if(vasprintf(&dst, fmt, ap) >= 0) {
+    if(b->end > 0)
+      b->end--;
+    buffer_add(b, dst, strlen(dst)+1);
+  }
   va_end(ap);
-  if(b->end > 0)
-    b->end--;
-  buffer_add(b, dst, strlen(dst)+1);
   free(dst);
 }
 

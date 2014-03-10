@@ -19,6 +19,7 @@
     You can contact me by mail: <tom AT vondein DOT org>.
 */
 
+#define _GNU_SOURCE /* vasprintf() linux */
 #include "pcpstream.h"
 
 Pcpstream *ps_init(void) {
@@ -618,17 +619,22 @@ size_t ps_print(Pcpstream *stream, const char * fmt, ...) {
   va_list ap;
   char *dst;
   va_start(ap, fmt);
-  vasprintf(&dst, fmt, ap);
-  va_end(ap);
-  size_t len = strlen(dst);
+  if(vasprintf(&dst, fmt, ap) >= 0) {
+    va_end(ap);
+    size_t len = strlen(dst);
 
-  if(stream->is_buffer) {
-    buffer_add(stream->b, dst, len);
+    if(stream->is_buffer) {
+      buffer_add(stream->b, dst, len);
+    }
+    else {
+      len = ps_write(stream, dst, len);
+    }
+
+    free(dst);
     return len;
   }
-  else {
-    return ps_write(stream, dst, len);
-  }
+  va_end(ap);
+  return 0;
 }
 
 void ps_close(Pcpstream *stream) {

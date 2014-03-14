@@ -600,7 +600,6 @@ size_t pcp_decrypt_stream_sym(Pcpstream *in, Pcpstream* out, byte *symkey, pcp_r
 #endif
   }
 
-  free(buf_nonce);
   free(buf_cipher);
 
   if(recverify != NULL) {
@@ -637,6 +636,8 @@ size_t pcp_decrypt_stream_sym(Pcpstream *in, Pcpstream* out, byte *symkey, pcp_r
     free(signature_cr);
   }
 
+  free(buf_nonce);
+
   return out_size;
 
 }
@@ -655,8 +656,8 @@ pcp_rec_t *pcp_rec_new(byte *cipher, size_t clen, pcp_key_t *secret, pcp_pubkey_
     r->secret = NULL;
 
   if(pub != NULL) {
-    r->pub = ucmalloc(sizeof(pcp_key_t));
-    memcpy(r->pub, pub, sizeof(pcp_key_t));
+    r->pub = ucmalloc(sizeof(pcp_pubkey_t));
+    memcpy(r->pub, pub, sizeof(pcp_pubkey_t));
   }
   else
     r->pub = NULL;

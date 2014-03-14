@@ -19,6 +19,8 @@
     You can contact me by mail: <tom AT vondein DOT org>.
 */
 
+#define _XOPEN_SOURCE /* strptime, linux glibc*/
+#define _BSD_SOURCE
 
 #include "mgmt.h"
 
@@ -76,7 +78,7 @@ int _check_sigsubs(Buffer *blob, pcp_pubkey_t *p, rfc_pub_sig_s *subheader) {
     uint16_t nsize = buffer_get16na(blob);
     uint16_t vsize = buffer_get16na(blob);
 
-    char *notation = ucmalloc(nsize);
+    char *notation = ucmalloc(nsize+1);
 
     if(buffer_get_chunk(blob, notation, nsize) == 0)
       return 1;

@@ -25,6 +25,10 @@ Symmetric decrypt mode tries to open vault
 
 pcp_find_primary_secret() makes a copy ???
 
+sym encrypt mac => mac, mac => freebsd and freebsd => mac doesnt work
+
+c++ destructor double free mess
+
 Python binding, e.g.:
 py % cdll.LoadLibrary("libsodium.so.8")
 <CDLL 'libsodium.so.8', handle 800776c00 at 80192a3d0>

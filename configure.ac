@@ -62,6 +62,7 @@ AC_TYPE_SIZE_T
 # Checks for library functions.
 AC_CHECK_FUNCS( \
     arc4random_buf \
+    arc4random \
     fread \
     fopen \
     free \
@@ -75,6 +76,7 @@ AC_CHECK_FUNCS( \
     memcpy \
     perror \
     strnlen \
+    strnstr \
     strlen \
     strtol \
     sizeof \

@@ -1,0 +1,7 @@
+#!/bin/sh
+file=$1
+if type md5 > /dev/null 2>&1; then
+    md5 -q $*
+else
+    md5sum $* | awk '{print $1}'
+fi

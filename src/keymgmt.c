@@ -555,7 +555,7 @@ char *pcp_find_id_byrec(char *recipient) {
 
 
 int pcp_import (vault_t *vault, FILE *in, char *passwd) {
-  byte *buf = ucmalloc(2048);
+  byte *buf = ucmalloc(PCP_BLOCK_SIZE);
   size_t bufsize;
   pcp_pubkey_t *pub = NULL;
   pcp_key_t *sk = NULL;

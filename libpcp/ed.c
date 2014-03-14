@@ -22,7 +22,7 @@
 #include "ed.h"
 
 byte * pcp_ed_verify_key(byte *signature, size_t siglen, pcp_pubkey_t *p) {
-  byte *message = ucmalloc(siglen - crypto_sign_BYTES);
+  byte *message = ucmalloc(siglen);
   unsigned long long mlen;
 
   if(crypto_sign_open(message, &mlen, signature, siglen, p->masterpub) != 0) {
@@ -142,7 +142,7 @@ pcp_pubkey_t *pcp_ed_verify_buffered(Pcpstream *in, pcp_pubkey_t *p) {
   byte sighash[mlen];
   char z85sigstart[] = "\n" PCP_SIG_START; /* FIXME: verifies, but it misses the \r! */
   char binsigstart[] = PCP_SIGPREFIX;
-  char sigstart[] = PCP_SIG_START;
+  char sigstart[] =  "\n" PCP_SIG_START;
   size_t siglen, startlen;
   size_t offset = -1;
 
@@ -172,8 +172,8 @@ pcp_pubkey_t *pcp_ed_verify_buffered(Pcpstream *in, pcp_pubkey_t *p) {
   }
 
   if(z85 == 1) {
+    /* keep sigstart as is, it's per default set to z85 sigstart */
     siglen = zlen;
-    strcpy(sigstart, z85sigstart);
     startlen = strlen(z85sigstart);
   }
   else {

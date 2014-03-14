@@ -163,7 +163,6 @@ byte *pcp_box_decrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
 
 size_t pcp_decrypt_stream(Pcpstream *in, Pcpstream* out, pcp_key_t *s, byte *symkey, int verify) {
   pcp_pubkey_t *cur = NULL;
-  pcp_pubkey_t *sender = NULL;
   byte *reccipher = NULL;
   int recmatch, self;
   uint32_t lenrec;
@@ -244,7 +243,6 @@ size_t pcp_decrypt_stream(Pcpstream *in, Pcpstream* out, pcp_key_t *s, byte *sym
       if(recipient != NULL && rec_size == crypto_secretbox_KEYBYTES) {
 	/*  found a match */
 	recmatch = 1;
-	sender = cur;
 	symkey = ucmalloc(crypto_secretbox_KEYBYTES);
 	memcpy(symkey, recipient, crypto_secretbox_KEYBYTES);
 	free(recipient);
@@ -289,7 +287,6 @@ size_t pcp_encrypt_stream(Pcpstream *in, Pcpstream *out, pcp_key_t *s, pcp_pubke
   uint32_t lenrec;
   size_t rec_size, out_size;
   byte head[1];
-  byte rs[1];
 
   /*
       6[1]|temp_keypair.pubkey|len(recipients)[4]|(recipients...)|(secretboxes...)
@@ -304,7 +301,6 @@ size_t pcp_encrypt_stream(Pcpstream *in, Pcpstream *out, pcp_key_t *s, pcp_pubke
   /*  B, encrypt it asymetrically for each recipient */
   recipient_count = HASH_COUNT(p);
   rec_size = PCP_ASYM_RECIPIENT_SIZE;
-  rs[0] = PCP_ASYM_RECIPIENT_SIZE - crypto_secretbox_NONCEBYTES;
   recipients_cipher = ucmalloc(rec_size * recipient_count);
   nrec = 0;
 

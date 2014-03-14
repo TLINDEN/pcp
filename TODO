@@ -25,9 +25,19 @@ Symmetric decrypt mode tries to open vault
 
 pcp_find_primary_secret() makes a copy ???
 
-sym encrypt mac => mac, mac => freebsd and freebsd => mac doesnt work
-
 c++ destructor double free mess
+
+size_t 32bit/64bit:
+buffer.c: In function 'buffer_info':
+buffer.c:268:3: error: format '%ld' expects argument of type 'long int', but argument 3 has type 'size_t' [-Werror=format]
+buffer.c:268:3: error: format '%ld' expects argument of type 'long int', but argument 3 has type 'size_t' [-Werror=format]
+buffer.c:269:3: error: format '%ld' expects argument of type 'long int', but argument 3 has type 'size_t' [-Werror=format]
+buffer.c:269:3: error: format '%ld' expects argument of type 'long int', but argument 3 has type 'size_t' [-Werror=format]
+buffer.c:270:3: error: format '%ld' expects argument of type 'long int', but argument 3 has type 'size_t' [-Werror=format]
+buffer.c:270:3: error: format '%ld' expects argument of type 'long int', but argument 3 has type 'size_t' [-Werror=format]
+buffer.c:271:3: error: format '%ld' expects argument of type 'long int', but argument 3 has type 'size_t' [-Werror=format]
+buffer.c:271:3: error: format '%ld' expects argument of type 'long int', but argument 3 has type 'size_t' [-Werror=format]
+http://stackoverflow.com/questions/2426113/i-have-having-following-warning-in-gcc-compilation-in-32-bit-architecture-but-no
 
 Python binding, e.g.:
 py % cdll.LoadLibrary("libsodium.so.8")

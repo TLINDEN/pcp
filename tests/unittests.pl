@@ -63,6 +63,7 @@ else {
       $continue = &runtest($cfg{test}->{$test}, $test);
       if (!$continue) {
 	print "Last failed check: $test\n";
+	break;
       }
     }
   }
@@ -72,6 +73,16 @@ else {
 sub runtest {
   my($cfg, $name) = @_;
   my($in, $out, $error, $timeout);
+
+  if (exists $cfg->{loop}) {
+    my $loop = delete $cfg->{loop};
+    foreach my $n (0 .. $loop) {
+      if (&runtest($cfg, "${name}-loop-${n}") == 0) {
+	return 0;
+      }
+    }
+    return 1;
+  }
 
   foreach my $key (keys %{$cfg}) {
     $cfg->{$key}   =~ s/\`([^\`]*)\`/my $result = `$1`; chomp $result; $result/ge;
@@ -117,8 +128,13 @@ sub runtest {
   $output =~ s/^\s*//;
   $output =~ s/\s*$//;
 
+  printf "$output\n" if $verbose > 1;
+
   if (exists $cfg->{expect}) {
-    if ($cfg->{expect} =~ /^\//) {
+    if ($cfg->{expect} =~ /^!(\/.*)/) {
+      unlike($output, $1, "$name") or return final 0;
+    }
+    elsif ($cfg->{expect} =~ /^\//) {
       like($output, $cfg->{expect}, "$name") or return final 0;
     }
     else {
@@ -172,6 +188,7 @@ done_testing;
 
 sub final {
   my $ret = shift;
+  system("stty echo"); # turn echo on, just in case a prompt timed out
   if ($output =~ /(segmentation fault|bus error)/i || -s "pcp1.core") {
     # override $ret
     $ret = 0;

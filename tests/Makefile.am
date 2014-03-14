@@ -21,7 +21,7 @@
 
 AM_CFLAGS = -I../include/pcp -I../src -I../libpcp/scrypt/crypto -Wall -g
 check_PROGRAMS = col invalidkeys gencheader statictest cpptest \
-		 buffertest sample streamtest pipetest decodertest
+		 buffertest sample streamtest pipetest decodertest mangle
 
 gencheader_LDADD = ../libpcp/.libs/libpcp1.a
 gencheader_SOURCES = gencheader.c
@@ -46,6 +46,9 @@ decodertest_SOURCES = decodertest.c
 
 col_LDADD = ../libpcp/.libs/libpcp1.a
 col_SOURCES = collisions.c ../src/compat_getopt.c
+
+mangle_LDADD = 
+mangle_SOURCES = mangle.c
 
 invalidkeys_LDADD = ../libpcp/.libs/libpcp1.a \
 		    ../src/keyprint.o ../src/keymgmt.o ../src/readpass.o

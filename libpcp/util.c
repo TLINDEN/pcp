@@ -61,7 +61,7 @@ void _xorbuf(byte *iv, byte *buf, size_t xlen) {
 /* print some binary data to stderr */
 void _dump(char *n, byte *d, size_t s) {
   int l = strlen(n) + 9;
-  fprintf(stderr, "%s (%04ld): ", n, s);
+  fprintf(stderr, "%s (%04"FMT_SIZE_T"): ", n, (SIZE_T_CAST)s);
   size_t i;
   int c;
   for (i=0; i<s; ++i) {

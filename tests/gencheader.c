@@ -1,8 +1,8 @@
 #include <pcp.h>
 
 void pr(char *var, unsigned char *d, size_t len) {
-  printf("size_t %s_len = %ld;\n", var, len);
-  printf("unsigned char %s[%ld] = {\n", var, len);
+  printf("size_t %s_len = %"FMT_SIZE_T";\n", var, (SIZE_T_CAST)len);
+  printf("unsigned char %s[%"FMT_SIZE_T"] = {\n", var, (SIZE_T_CAST)len);
   size_t i;
   for(i=0; i<len-1; ++i) {
     printf("0x%02x, ", (unsigned int)d[i]);

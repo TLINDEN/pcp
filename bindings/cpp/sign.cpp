@@ -60,7 +60,7 @@ bool Signature::sign(std::vector<unsigned char> message) {
   Buffer *m = buffer_new(32, n);
 
   for(size_t i=0; i<message.size(); ++i)
-    buffer_add(m, (void *)message[i], 1);
+    buffer_add8(m, message[i]);
 
   Pcpstream *p = ps_new_inbuffer(m);
   bool ok = Signature::sign(p);
@@ -121,7 +121,7 @@ bool Signature::verify(vector<unsigned char> message) {
   Buf _sig = Buf();
 
   for(size_t i=0; i<message.size(); ++i)
-    _sig.add((void *)message[i], 1);
+    _sig.add8(message[i]);
 
   return Signature::verify(_sig);
 }

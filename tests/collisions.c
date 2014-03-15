@@ -26,7 +26,7 @@
 
 unsigned djb_hash ( void *key, int len ) {
   unsigned char *p = key;
-  unsigned h = 0;
+  unsigned h = 0U;
   int i;
   
   for ( i = 0; i < len; i++ )
@@ -37,7 +37,7 @@ unsigned djb_hash ( void *key, int len ) {
 
 unsigned fnv_hash ( void *key, int len ) {
   unsigned char *p = key;
-  unsigned h = 2166136261;
+  unsigned h = 2166136261U;
   int i;
   
   for ( i = 0; i < len; i++ )

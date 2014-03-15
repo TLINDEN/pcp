@@ -21,6 +21,12 @@
 #
 use lib qw(lib);
 
+BEGIN {
+  eval {
+    use IPC::Run qw( run timeout);
+  };
+};
+
 use Test::More;
 use IPC::Open3;
 use IO::Select;
@@ -29,7 +35,7 @@ use Config::General qw(ParseConfig);
 use Tie::IxHash;
 use Data::Dumper;
 
-sub run;
+sub run3;
 sub execute;
 sub final;
 
@@ -119,7 +125,7 @@ sub runtest {
 
   print STDERR "\n$cfg->{cmd}\n      ";
 
-  my $ret = run($cfg->{cmd},
+  my $ret = run3($cfg->{cmd},
 		$cfg->{input},
 		\$out, \$error, 10, 0, undef);
 
@@ -203,11 +209,26 @@ sub final {
   return $ret;
 }
 
-sub run {
+sub run3 {
   # open3 wrapper. catch stderr, stdout, errno; add timeout and kill
   my($cmd, $input, $output, $error, $timeout, $debug, $monitorfile) = @_;
 
+  if ($^O =~ /win/i) {
+    my ($o, $e, @c);
+    if ($cmd =~ /\|/) {
+      @c = ("sh", "-c", $cmd);
+    }
+    else {
+      @c = split /\s\s*/, $cmd;
+    }
+    my $ret = run \@c, \$input, \$o, \$e, timeout( $timeout );
+    $$output = $o;
+    $$error = $e;
+    return ret;
+  }
+
   my ($stdin, $stderr, $stdout) = ('', '', '');
+
   my $child = 0;
   my $cmdline = join " ", @{$cmd};
   $timeout = $timeout ? $timeout : 10;
@@ -318,6 +339,20 @@ sub run {
   else {
     return $exitcode;
   }
+}
+
+sub runipc  {
+  my($cmd, $input, $output, $error, $timeout, $debug, $monitorfile) = @_;
+
+  print STDERR Dumper(\@_);
+
+  if (run $cmd, $input, $output, $error, timeout( $timeout )) {
+    return 0;
+  }
+  else {
+    return 1;
+  }
+
 }
 
 sub reaper {

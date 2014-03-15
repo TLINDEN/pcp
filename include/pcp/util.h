@@ -36,7 +36,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-
+#include "platform.h"
 #include "defines.h"
 
 

@@ -27,17 +27,11 @@ pcp_find_primary_secret() makes a copy ???
 
 c++ destructor double free mess
 
-size_t 32bit/64bit:
-buffer.c: In function 'buffer_info':
-buffer.c:268:3: error: format '%ld' expects argument of type 'long int', but argument 3 has type 'size_t' [-Werror=format]
-buffer.c:268:3: error: format '%ld' expects argument of type 'long int', but argument 3 has type 'size_t' [-Werror=format]
-buffer.c:269:3: error: format '%ld' expects argument of type 'long int', but argument 3 has type 'size_t' [-Werror=format]
-buffer.c:269:3: error: format '%ld' expects argument of type 'long int', but argument 3 has type 'size_t' [-Werror=format]
-buffer.c:270:3: error: format '%ld' expects argument of type 'long int', but argument 3 has type 'size_t' [-Werror=format]
-buffer.c:270:3: error: format '%ld' expects argument of type 'long int', but argument 3 has type 'size_t' [-Werror=format]
-buffer.c:271:3: error: format '%ld' expects argument of type 'long int', but argument 3 has type 'size_t' [-Werror=format]
-buffer.c:271:3: error: format '%ld' expects argument of type 'long int', but argument 3 has type 'size_t' [-Werror=format]
-http://stackoverflow.com/questions/2426113/i-have-having-following-warning-in-gcc-compilation-in-32-bit-architecture-but-no
+win32 32bit ported so far, missing:
+[15.Mrz 17:23:58] --- [~/pcp/tests] ---
+scip@io: $ ../src/pcp1 -V v1 -K -I testkey-wrong-serial -x xxx
+zmq_z85_decode() failed, input size ! mod 5 (got 98)failed to decrypt the secret key file
+
 
 Python binding, e.g.:
 py % cdll.LoadLibrary("libsodium.so.8")

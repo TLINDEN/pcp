@@ -301,11 +301,55 @@ pcp_pubkey_t *pubkey2native(pcp_pubkey_t *k) {
 }
 
 void pcp_seckeyblob(void *blob, pcp_key_t *k) {
-  memcpy(blob, k, PCP_RAW_KEYSIZE);
+  //memcpy(blob, k, PCP_RAW_KEYSIZE);
+  Buffer *b = buffer_new(PCP_RAW_KEYSIZE, "bs");
+
+  buffer_add(b, k->masterpub, 32);
+  buffer_add(b, k->mastersecret, 64);
+
+  buffer_add(b, k->pub, 32);
+  buffer_add(b, k->secret, 32);
+
+  buffer_add(b, k->edpub, 32);
+  buffer_add(b, k->edsecret, 64);
+
+  buffer_add(b, k->nonce, 24);
+
+  buffer_add(b, k->encrypted, 176);
+
+  buffer_add(b, k->owner, 255);
+  buffer_add(b, k->mail, 255);
+  buffer_add(b, k->id, 17);
+
+  buffer_add8(b, k->type);
+  buffer_add64(b, k->ctime);
+  buffer_add32(b, k->version);
+  buffer_add32(b, k->serial);
+  //  buffer_dump(b);
+  buffer_get_chunk(b, blob, b->end - b->offset);
+  buffer_free(b);
 }
 
 void pcp_pubkeyblob(void *blob, pcp_pubkey_t *k) {
-  memcpy(blob, k, PCP_RAW_PUBKEYSIZE);
+  Buffer *b = buffer_new(PCP_RAW_PUBKEYSIZE, "bp");
+
+  buffer_add(b, k->masterpub, 32);
+  buffer_add(b, k->sigpub, 32);
+  buffer_add(b, k->pub, 32);
+  buffer_add(b, k->edpub, 32);
+
+  buffer_add(b, k->owner, 255);
+  buffer_add(b, k->mail, 255);
+  buffer_add(b, k->id, 17);
+
+  buffer_add8(b, k->type);
+  buffer_add64(b, k->ctime);
+  buffer_add32(b, k->version);
+  buffer_add32(b, k->serial);
+  buffer_add8(b, k->valid);
+
+  buffer_get_chunk(b, blob, b->end - b->offset);
+  buffer_free(b);
 }
 
 void *pcp_keyblob(void *k, int type) {

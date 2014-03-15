@@ -281,9 +281,12 @@ byte *pcpvault_create_checksum() {
   size_t datapos = 0;
 
   pcp_key_t *k = NULL;
+  void *blob = NULL;
   pcphash_iterate(k) {
     key2be(k);
-    memcpy(&data[datapos], k, PCP_RAW_KEYSIZE);
+    blob = pcp_keyblob(k, PCP_KEY_TYPE_SECRET);
+    memcpy(&data[datapos], blob, PCP_RAW_KEYSIZE);
+    ucfree(blob, PCP_RAW_KEYSIZE);
     key2native(k);
     datapos += PCP_RAW_KEYSIZE;
   }
@@ -292,15 +295,17 @@ byte *pcpvault_create_checksum() {
   pcphash_iteratepub(p) {
     /* pcp_dumppubkey(p); */
     pubkey2be(p);
-    memcpy(&data[datapos], p, PCP_RAW_PUBKEYSIZE);
+    blob = pcp_keyblob(p, PCP_KEY_TYPE_PUBLIC);
+    memcpy(&data[datapos], blob, PCP_RAW_PUBKEYSIZE);
+    ucfree(blob, PCP_RAW_PUBKEYSIZE);
     pubkey2native(p);
     datapos += PCP_RAW_PUBKEYSIZE;
   }
 
-  /*  scip 
+  /*
   printf("PUB: %d, SEC: %d\n", PCP_RAW_PUBKEYSIZE, PCP_RAW_KEYSIZE);
   printf("DATA (%d) (s: %d, p: %d):\n", (int)datasize, numskeys, numpkeys);
-  pcpprint_bin(stdout, data, datasize); printf("\n");
+  _dump("data", data, datasize);
   */
 
   crypto_hash_sha256(checksum, data, datasize);
@@ -496,9 +501,10 @@ int pcpvault_fetchall(vault_t *vault) {
 
   byte *checksum = NULL;
   checksum = pcpvault_create_checksum(vault);
+  
   /*
-  printf(" calc checksum: "); pcpprint_bin(stdout, checksum, 32); printf("\n"); 
-  printf("vault checksum: "); pcpprint_bin(stdout, vault->checksum, 32); printf("\n"); 
+  _dump(" calc checksum", checksum, 32);
+  _dump("vault checksum", vault->checksum, 32);
   */
 
   if(pcphash_count() + pcphash_countpub() > 0) {

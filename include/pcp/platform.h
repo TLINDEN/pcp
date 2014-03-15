@@ -183,6 +183,14 @@ strnstr(const char *s, const char *find, size_t slen)
 }
 #endif
 
+/* size_t format string */
+#ifdef __LP64__
+  #define FMT_SIZE_T "llu"
+  #define SIZE_T_CAST long long unsigned int
+#else
+  #define FMT_SIZE_T "lu"
+  #define SIZE_T_CAST long unsigned int
+#endif
 
 #endif /* !_HAVE_PCP_PLATFORM_H */
 

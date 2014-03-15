@@ -265,10 +265,10 @@ void buffer_dump(const Buffer *b) {
 
 void buffer_info(const Buffer *b) {
   fprintf(stderr, "   buffer: %s\n", b->name);
-  fprintf(stderr, "blocksize: %ld\n", b->blocksize);
-  fprintf(stderr, "     size: %ld\n", b->size);
-  fprintf(stderr, "   offset: %ld\n", b->offset);
-  fprintf(stderr, "      end: %ld\n", b->end);
+  fprintf(stderr, "blocksize: %"FMT_SIZE_T"\n", (SIZE_T_CAST)b->blocksize);
+  fprintf(stderr, "     size: %"FMT_SIZE_T"\n", (SIZE_T_CAST)b->size);
+  fprintf(stderr, "   offset: %"FMT_SIZE_T"\n", (SIZE_T_CAST)b->offset);
+  fprintf(stderr, "      end: %"FMT_SIZE_T"\n", (SIZE_T_CAST)b->end);
   fprintf(stderr, "allocated: %d\n\n", b->allocated);
 }
 
@@ -329,7 +329,7 @@ size_t buffer_fd_read(Buffer *b, FILE *in, size_t len) {
   size_t s = fread(data, 1, len, in);
 
   if(s < len) {
-    fatal("[buffer %s] attempt to read %ld bytes from FILE, but got %ld bytes only\n", b->name, len, s);
+    fatal("[buffer %s] attempt to read %"FMT_SIZE_T" bytes from FILE, but got %"FMT_SIZE_T" bytes only\n", b->name, (SIZE_T_CAST)len, (SIZE_T_CAST)s);
     return 0;
   }
 

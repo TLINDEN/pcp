@@ -86,7 +86,7 @@ int pcpsign(char *infile, char *outfile, char *passwd, int z85, int detach) {
   if(sigsize == 0)
     goto errs1;
 
-  fprintf(stderr, "Signed %ld bytes successfully\n", sigsize);
+  fprintf(stderr, "Signed %"FMT_SIZE_T" bytes successfully\n", (SIZE_T_CAST)sigsize);
 
   return 0;
 

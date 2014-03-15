@@ -33,7 +33,7 @@ int main() {
   pcp_encrypt_stream(clear_in, crypt_out, alice, pubhash, 0);
 
   /* now, print the encrypted result */
-  fprintf(stderr, "Alice encrypted %ld bytes for Bob:\n", strlen(message));
+  fprintf(stderr, "Alice encrypted %"FMT_SIZE_T" bytes for Bob:\n", (SIZE_T_CAST)strlen(message));
   buffer_dump(ps_buffer(crypt_out));
 
   /* ---- encryption don, now decrypt ---- */
@@ -52,7 +52,7 @@ int main() {
     fatals_ifany();
   else {
     /* and finally print out the decrypted message */
-    fprintf(stderr, "Bob decrypted %ld bytes from Alice:\n", buffer_size(ps_buffer(crypt_out)));
+    fprintf(stderr, "Bob decrypted %"FMT_SIZE_T" bytes from Alice:\n", (SIZE_T_CAST)buffer_size(ps_buffer(crypt_out)));
     printf("Decrypted message: %s\n", buffer_get_str(ps_buffer(clear_out)));
   }
 

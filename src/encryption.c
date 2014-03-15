@@ -126,9 +126,9 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
 
   if(dlen > 0) {
     if(verify)
-      fprintf(stderr, "Decrypted and Verified %ld bytes successfully\n", dlen);
+      fprintf(stderr, "Decrypted and Verified %"FMT_SIZE_T" bytes successfully\n", (SIZE_T_CAST)dlen);
     else
-      fprintf(stderr, "Decrypted %ld bytes successfully\n", dlen);
+      fprintf(stderr, "Decrypted %"FMT_SIZE_T" bytes successfully\n", (SIZE_T_CAST)dlen);
     return 0;
   }
 
@@ -291,11 +291,11 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
 
   if(clen > 0) {
     if(id == NULL && recipient == NULL)
-      fprintf(stderr, "Encrypted %ld bytes symetrically\n", clen);
+      fprintf(stderr, "Encrypted %"FMT_SIZE_T" bytes symetrically\n", (SIZE_T_CAST)clen);
     else if(id != NULL)
-      fprintf(stderr, "Encrypted %ld bytes for 0x%s successfully\n", clen, id);
+      fprintf(stderr, "Encrypted %"FMT_SIZE_T" bytes for 0x%s successfully\n", (SIZE_T_CAST)clen, id);
     else {
-      fprintf(stderr, "Encrypted %ld bytes for:\n", clen);
+      fprintf(stderr, "Encrypted %"FMT_SIZE_T" bytes for:\n", (SIZE_T_CAST)clen);
       pcp_pubkey_t *cur, *t;
       HASH_ITER(hh, pubhash, cur, t) {
 	fprintf(stderr, "%s <%s>\n", cur->owner, cur->mail);

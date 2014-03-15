@@ -60,8 +60,9 @@ void test0() {
 
       DECRYPTED = _openrd("testcppdecrypted");
       char *got = (char *)ucmalloc(10);
-      size_t h;
-      h = fread(got, 1, 6, DECRYPTED);
+      if(fread(got, 1, 6, DECRYPTED) < 6) {
+	throw pcp::exception("read error, could not read decrypted content");
+      }
       if(strncmp(got, "HALLO", 5) != 0) {
 	throw pcp::exception();
       }

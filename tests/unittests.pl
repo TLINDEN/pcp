@@ -23,7 +23,7 @@ use lib qw(lib);
 
 BEGIN {
   eval {
-    use IPC::Run qw( run timeout);
+    require IPC::Run;
   };
 };
 
@@ -221,7 +221,7 @@ sub run3 {
     else {
       @c = split /\s\s*/, $cmd;
     }
-    my $ret = run \@c, \$input, \$o, \$e, timeout( $timeout );
+    my $ret = IPC::Run::run( \@c, \$input, \$o, \$e, IPC::Run::timeout( $timeout ));
     $$output = $o;
     $$error = $e;
     return ret;

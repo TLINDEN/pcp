@@ -331,6 +331,7 @@ void ps_determine(Pcpstream *stream) {
 
   /* check if it's binary or not */
   if(_buffer_is_binary(buf, got) == 0) {
+    
     /* not binary, it's armored */
     stream->armor = 1;
 

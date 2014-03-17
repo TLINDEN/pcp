@@ -101,7 +101,6 @@ size_t _buffer_is_binary(byte *buf, size_t len) {
   for (pos=1; pos<len; ++pos) {
     if(buf[pos] == '\0' || (buf[pos] != '\r' && buf[pos] != '\n' && isprint(buf[pos]) == 0)) {
       /* it's probably a binary char */
-
       /* check for utf8 */
       wide[0] = buf[pos];
       for(i=1; i<3; i++) {
@@ -112,20 +111,23 @@ size_t _buffer_is_binary(byte *buf, size_t len) {
 	  if(is_utf8(wide) > 1) {
 	    pos += i; /* jump over the utf we already found */
 	    utf = 1;
+	    break;
 	  }
 	}
 	else 
 	  break;
       }
+      memset(wide, 0, 4);
 
       if(utf == 1) {
 	/* it's a utf8 char, continue checking, reset wide */
-	memset(wide, 0, 4);
+	utf = 0;
 	continue;
       }
       break; /* if we reach this, then it's binary and not utf8, stop checking */
     }
   }
+
   if(pos < len)
     return pos; /* binary */
   else

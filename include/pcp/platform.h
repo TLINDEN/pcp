@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013 T.Linden.
+    Copyright (C) 2013-2014 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    You can contact me by mail: <tlinden AT cpan DOT org>.
+    You can contact me by mail: <tom AT vondein DOT org>.
 */
 
 
@@ -68,16 +68,12 @@
 
 #ifndef HAVE_ARC4RANDOM
 #include <sodium.h>
-static inline u_int32_t arc4random() {
-  return randombytes_random();
-}
+u_int32_t arc4random();
 #endif
 
 #ifndef HAVE_ARC4RANDOM_BUF
 #include <sodium.h>
-static inline void arc4random_buf(void *buf, size_t nbytes) {
-  randombytes((unsigned char*)buf, nbytes);
-}
+void arc4random_buf(void *buf, size_t nbytes);
 #endif
 
 
@@ -88,17 +84,7 @@ static inline void arc4random_buf(void *buf, size_t nbytes) {
 #include <stdarg.h>
 #include <stdio.h>
 
-static inline void err(int eval, const char *fmt, ...) {
-  va_list ap;
-  va_start(ap, fmt);
-  fprintf(stderr, "pcp1");
-  if (fmt != NULL) {
-    fprintf(stderr, ": ");
-    vfprintf(stderr, fmt, ap);
-  }
-  fprintf(stderr, ": %s\n", strerror(errno));
-  va_end(ap);
-}
+void err(int eval, const char *fmt, ...);
 
 #else
 
@@ -112,28 +98,7 @@ static inline void err(int eval, const char *fmt, ...) {
 #ifndef HAVE_VASPRINTF
 
 #include <stdarg.h>
-static inline
-int vasprintf(char **ret, const char *format, va_list args) {
-  va_list copy;
-  va_copy(copy, args);
-
-  *ret = 0;
-
-  int count = vsnprintf(NULL, 0, format, args);
-  if (count >= 0) {
-    char* buffer = (char *)malloc(count + 1);
-    if (buffer != NULL) {
-      count = vsnprintf(buffer, count + 1, format, copy);
-      if (count < 0)
-	free(buffer);
-      else
-	*ret = buffer;
-    }
-  }
-  va_end(copy);  /*  Each va_start() or va_copy() needs a va_end() */
-
-  return count;
-}
+int vasprintf(char **ret, const char *format, va_list args);
 
 #endif
 
@@ -144,43 +109,16 @@ int vasprintf(char **ret, const char *format, va_list args) {
 
 
 #ifndef HAVE_STRNLEN
-static inline size_t
-strnlen(const char *msg, size_t maxlen)
-{
- size_t i;
-
- for (i=0; i<maxlen; i++)
- if (msg[i] == '\0')
- break;
-
- return i;
-}
+size_t
+strnlen(const char *msg, size_t maxlen);
 #endif
 
 
 #ifndef HAVE_STRNSTR
 /* via FreeBSD libc */
 #include <string.h>
-static inline char *
-strnstr(const char *s, const char *find, size_t slen)
-{
-  char c, sc;
-  size_t len;
-  
-  if ((c = *find++) != '\0') {
-    len = strlen(find);
-    do {
-      do {
-	if (slen-- < 1 || (sc = *s++) == '\0')
-	  return (NULL);
-      } while (sc != c);
-      if (len > slen)
-	return (NULL);
-    } while (strncmp(s, find, len) != 0);
-    s--;
-  }
-  return ((char *)s);
-}
+char *
+strnstr(const char *s, const char *find, size_t slen);
 #endif
 
 /* size_t format string */

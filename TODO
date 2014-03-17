@@ -8,8 +8,6 @@ check pub key count in pcp.c before calling verify signature, croak if count==0
 
 Update pod key format spec.
 
--l show keysig, if any
-
 vault checksum: add keysigs as well
 
 enable formats for secret key exports as well
@@ -26,11 +24,6 @@ Symmetric decrypt mode tries to open vault
 pcp_find_primary_secret() makes a copy ???
 
 c++ destructor double free mess
-
-win32 32bit ported so far, missing:
-[15.Mrz 17:23:58] --- [~/pcp/tests] ---
-scip@io: $ ../src/pcp1 -V v1 -K -I testkey-wrong-serial -x xxx
-zmq_z85_decode() failed, input size ! mod 5 (got 98)failed to decrypt the secret key file
 
 
 Python binding, e.g.:

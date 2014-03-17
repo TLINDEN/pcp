@@ -67,58 +67,51 @@
 
 
 #ifndef HAVE_ARC4RANDOM
-#include <sodium.h>
-u_int32_t arc4random();
+  #include <sodium.h>
+  #define arc4random() randombytes_random()
 #endif
 
 #ifndef HAVE_ARC4RANDOM_BUF
-#include <sodium.h>
-void arc4random_buf(void *buf, size_t nbytes);
+  #include <sodium.h>
+  #define arc4random_buf(buf, nbytes) randombytes((byte *)buf, nbytes)
 #endif
 
 
 #ifndef HAVE_ERR_H
-
-#include <errno.h>
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
-
-void err(int eval, const char *fmt, ...);
-
+  #include <errno.h>
+  #include <string.h>
+  #include <stdarg.h>
+  #include <stdio.h>
+  void err(int eval, const char *fmt, ...);
 #else
-
-#include <errno.h>
-#include <err.h>
-
+  #include <errno.h>
+  #include <err.h>
 #endif
 
 
 
 #ifndef HAVE_VASPRINTF
-
-#include <stdarg.h>
-int vasprintf(char **ret, const char *format, va_list args);
-
+  #include <stdarg.h>
+  int vasprintf(char **ret, const char *format, va_list args);
 #endif
 
 
 #ifdef _AIX_SOURCE
-#define _LINUX_SOURCE_COMPAT
+  #define _LINUX_SOURCE_COMPAT
 #endif
 
 
 #ifndef HAVE_STRNLEN
-size_t
-strnlen(const char *msg, size_t maxlen);
+  size_t
+  strnlen(const char *msg, size_t maxlen);
 #endif
 
 
 #ifndef HAVE_STRNSTR
-/* via FreeBSD libc */
-#include <string.h>
-char *
-strnstr(const char *s, const char *find, size_t slen);
+  /* via FreeBSD libc */
+  #include <string.h>
+  char *
+  strnstr(const char *s, const char *find, size_t slen);
 #endif
 
 /* size_t format string */

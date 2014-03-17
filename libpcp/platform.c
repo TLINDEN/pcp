@@ -21,19 +21,6 @@
 
 #include "platform.h"
 
-#ifndef HAVE_ARC4RANDOM
-u_int32_t arc4random() {
-  return randombytes_random();
-}
-#endif
-
-#ifndef HAVE_ARC4RANDOM_BUF
-#include <sodium.h>
-void arc4random_buf(void *buf, size_t nbytes) {
-  randombytes((unsigned char*)buf, nbytes);
-}
-#endif
-
 #ifndef HAVE_ERR_H
 void err(int eval, const char *fmt, ...) {
   va_list ap;

@@ -156,7 +156,7 @@ int pcpvault_addkey(vault_t *vault, void *item, uint8_t type) {
   size_t itemsize;
 
   void *saveitem = NULL;
-  void *blob = NULL;
+  Buffer *blob = NULL;
 
   if(type == PCP_KEY_TYPE_PUBLIC) {
     itemsize = PCP_RAW_PUBKEYSIZE;
@@ -168,12 +168,8 @@ int pcpvault_addkey(vault_t *vault, void *item, uint8_t type) {
   else if(type == PCP_KEYSIG_NATIVE || type == PCP_KEYSIG_NATIVE) {
     pcp_keysig_t *sk = (pcp_keysig_t *)item;
    
-    Buffer *b = pcp_keysig2blob(sk);
-    itemsize = buffer_size(b);
-    blob = ucmalloc(itemsize);
-    
-    memcpy(blob, buffer_get(b), buffer_size(b));
-    buffer_free(b);
+    blob = pcp_keysig2blob(sk);
+    itemsize = buffer_size(blob);
 
     saveitem = (void *)sk;
   }
@@ -189,7 +185,7 @@ int pcpvault_addkey(vault_t *vault, void *item, uint8_t type) {
   if(tmp != NULL) {
     if(pcpvault_copy(vault, tmp) != 0)
       goto errak1;
-    if(pcpvault_additem(tmp, blob, itemsize, type) != 0)
+    if(pcpvault_additem(tmp, buffer_get(blob), itemsize, type) != 0)
       goto errak1;
 
     pcphash_add(saveitem, type);
@@ -202,13 +198,13 @@ int pcpvault_addkey(vault_t *vault, void *item, uint8_t type) {
       fprintf(stderr, "Keeping tmp vault %s\n", tmp->filename);
       goto errak1;
     }
-    free(blob);
+    buffer_free(blob);
     free(tmp);
     return 0;
   }
 
  errak1:
-  free(blob);
+  buffer_free(blob);
 
   if(tmp != NULL) {
     free(tmp);
@@ -218,28 +214,34 @@ int pcpvault_addkey(vault_t *vault, void *item, uint8_t type) {
 
 int pcpvault_writeall(vault_t *vault) {
   vault_t *tmp = pcpvault_new(vault->filename, 1);
-  void *blob_s = ucmalloc(PCP_RAW_KEYSIZE);
-  void *blob_p = ucmalloc(PCP_RAW_PUBKEYSIZE);
 
   if(tmp != NULL) {
     if(pcpvault_create(tmp) == 0) {
       pcp_key_t *k = NULL;
+      Buffer *blob = buffer_new(PCP_RAW_PUBKEYSIZE, "bs");
       pcphash_iterate(k) {
-	pcp_seckeyblob(blob_s, k);
-	if(pcpvault_additem(tmp, blob_s, PCP_RAW_KEYSIZE, PCP_KEY_TYPE_SECRET) != 0)
+	pcp_seckeyblob(blob, k);
+	if(pcpvault_additem(tmp, buffer_get(blob), PCP_RAW_KEYSIZE, PCP_KEY_TYPE_SECRET) != 0) {
+	  buffer_free(blob);
 	  goto errwa;
+	}
+	buffer_clear(blob);
       }
       pcp_pubkey_t *p = NULL;
       pcphash_iteratepub(p) {
-	pcp_pubkeyblob(blob_p, p);
-	if(pcpvault_additem(tmp, blob_p, PCP_RAW_PUBKEYSIZE, PCP_KEY_TYPE_PUBLIC) != 0)
+	pcp_pubkeyblob(blob, p);
+	if(pcpvault_additem(tmp, buffer_get(blob), PCP_RAW_PUBKEYSIZE, PCP_KEY_TYPE_PUBLIC) != 0) {
+	  buffer_free(blob);
 	  goto errwa;
+	}
+	buffer_clear(blob);
       }
       pcpvault_update_checksum(tmp);
       if(pcpvault_copy(tmp, vault) == 0) {
 	pcpvault_unlink(tmp);
       }
       free(tmp);
+      buffer_clear(blob);
       return 0;
     }
   }
@@ -271,6 +273,10 @@ void pcpvault_update_checksum(vault_t *vault) {
 }
 
 byte *pcpvault_create_checksum() {
+  pcp_key_t *k = NULL;
+  Buffer *blob = NULL;
+  size_t datapos = 0;
+
   int numskeys = pcphash_count();
   int numpkeys = pcphash_countpub();
 
@@ -278,15 +284,12 @@ byte *pcpvault_create_checksum() {
                     ((PCP_RAW_PUBKEYSIZE) * numpkeys);
   byte *data = ucmalloc(datasize);
   byte *checksum = ucmalloc(32);
-  size_t datapos = 0;
 
-  pcp_key_t *k = NULL;
-  void *blob = NULL;
   pcphash_iterate(k) {
     key2be(k);
     blob = pcp_keyblob(k, PCP_KEY_TYPE_SECRET);
-    memcpy(&data[datapos], blob, PCP_RAW_KEYSIZE);
-    ucfree(blob, PCP_RAW_KEYSIZE);
+    memcpy(&data[datapos], buffer_get(blob), PCP_RAW_KEYSIZE);
+    buffer_clear(blob);
     key2native(k);
     datapos += PCP_RAW_KEYSIZE;
   }
@@ -296,11 +299,13 @@ byte *pcpvault_create_checksum() {
     /* pcp_dumppubkey(p); */
     pubkey2be(p);
     blob = pcp_keyblob(p, PCP_KEY_TYPE_PUBLIC);
-    memcpy(&data[datapos], blob, PCP_RAW_PUBKEYSIZE);
-    ucfree(blob, PCP_RAW_PUBKEYSIZE);
+    memcpy(&data[datapos], buffer_get(blob), PCP_RAW_PUBKEYSIZE);
+    buffer_clear(blob);
     pubkey2native(p);
     datapos += PCP_RAW_PUBKEYSIZE;
   }
+
+  buffer_free(blob);
 
   /*
   printf("PUB: %d, SEC: %d\n", PCP_RAW_PUBKEYSIZE, PCP_RAW_KEYSIZE);

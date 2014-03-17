@@ -31,6 +31,7 @@
 #include "defines.h"
 #include "platform.h"
 #include "mem.h"
+#include "buffer.h"
 #include "mac.h"
 #include "randomart.h"
 #include "version.h"
@@ -401,14 +402,14 @@ pcp_pubkey_t *pubkey2native(pcp_pubkey_t *k);
 byte * pcp_gennonce();
 
 /*  use scrypt() to create a key from a passphrase and a nonce
-    FIXME: use pure scrypt() instead.
+    this is a wrapper around pcp_scrypt()
 */
 byte *pcp_derivekey(char *passphrase, byte *nonce);
 
-/* FIXME: abandon and use Buffer instead */
-void pcp_seckeyblob(void *blob, pcp_key_t *k);
-void pcp_pubkeyblob(void *blob, pcp_pubkey_t *k);
-void *pcp_keyblob(void *k, int type); /*  allocates blob */
+/* convert the key struct into a binary blob */
+void pcp_seckeyblob(Buffer *b, pcp_key_t *k);
+void pcp_pubkeyblob(Buffer *b, pcp_pubkey_t *k);
+Buffer *pcp_keyblob(void *k, int type); /*  allocates blob */
 
 /** Make a sanity check of the given public key structure.
 

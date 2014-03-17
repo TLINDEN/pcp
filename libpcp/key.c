@@ -300,10 +300,7 @@ pcp_pubkey_t *pubkey2native(pcp_pubkey_t *k) {
 #endif
 }
 
-void pcp_seckeyblob(void *blob, pcp_key_t *k) {
-  //memcpy(blob, k, PCP_RAW_KEYSIZE);
-  Buffer *b = buffer_new(PCP_RAW_KEYSIZE, "bs");
-
+void pcp_seckeyblob(Buffer *b, pcp_key_t *k) {
   buffer_add(b, k->masterpub, 32);
   buffer_add(b, k->mastersecret, 64);
 
@@ -325,14 +322,9 @@ void pcp_seckeyblob(void *blob, pcp_key_t *k) {
   buffer_add64(b, k->ctime);
   buffer_add32(b, k->version);
   buffer_add32(b, k->serial);
-  //  buffer_dump(b);
-  buffer_get_chunk(b, blob, b->end - b->offset);
-  buffer_free(b);
 }
 
-void pcp_pubkeyblob(void *blob, pcp_pubkey_t *k) {
-  Buffer *b = buffer_new(PCP_RAW_PUBKEYSIZE, "bp");
-
+void pcp_pubkeyblob(Buffer *b, pcp_pubkey_t *k) {
   buffer_add(b, k->masterpub, 32);
   buffer_add(b, k->sigpub, 32);
   buffer_add(b, k->pub, 32);
@@ -347,22 +339,19 @@ void pcp_pubkeyblob(void *blob, pcp_pubkey_t *k) {
   buffer_add32(b, k->version);
   buffer_add32(b, k->serial);
   buffer_add8(b, k->valid);
-
-  buffer_get_chunk(b, blob, b->end - b->offset);
-  buffer_free(b);
 }
 
-void *pcp_keyblob(void *k, int type) {
-  void *blob;
+Buffer *pcp_keyblob(void *k, int type) {
   if(type == PCP_KEY_TYPE_PUBLIC) {
-    blob = ucmalloc(PCP_RAW_PUBKEYSIZE);
-    pcp_pubkeyblob(blob, (pcp_pubkey_t *)k);
+    Buffer *b = buffer_new(PCP_RAW_PUBKEYSIZE, "bp");
+    pcp_pubkeyblob(b, (pcp_pubkey_t *)k);
+    return b;
   }
   else {
-    blob = ucmalloc(PCP_RAW_KEYSIZE);
-    pcp_seckeyblob(blob, (pcp_key_t *)k);
+    Buffer *b = buffer_new(PCP_RAW_KEYSIZE, "bs");
+    pcp_seckeyblob(b, (pcp_key_t *)k);
+    return b;
   }
-  return blob;
 }
 
 

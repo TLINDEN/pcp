@@ -169,7 +169,7 @@ size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t 
   byte head[1];
   size_t cur_bufsize, rec_size, nrec;
   
-  byte rec_buf[PCP_ASYM_RECIPIENT_SIZE];
+  byte *rec_buf = NULL;
 
 #ifdef PCP_ASYM_ADD_SENDER_PUB
   byte *senderpub;
@@ -207,7 +207,7 @@ size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t 
 
 #ifdef PCP_ASYM_ADD_SENDER_PUB
   /*  step 2, sender's pubkey */
-  cur_bufsize = ps_read(in, &in_buf, crypto_box_PUBLICKEYBYTES); /* fread(&in_buf, 1, crypto_box_PUBLICKEYBYTES, in); */
+  cur_bufsize = ps_read(in, &in_buf, crypto_box_PUBLICKEYBYTES);
   if(cur_bufsize !=  crypto_box_PUBLICKEYBYTES && !ps_end(in) && !ps_err(in)) {
     fatal(ptx, "Error: input file doesn't contain senders public key\n");
     goto errdef1;
@@ -229,10 +229,12 @@ size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t 
 
 
   /*  step 4, fetch recipient list and try to decrypt it for us */
+  rec_buf = ucmalloc(PCP_ASYM_RECIPIENT_SIZE);
   for(nrec=0; nrec<lenrec; nrec++) {
-    cur_bufsize = ps_read(in, &rec_buf, PCP_ASYM_RECIPIENT_SIZE); /* fread(&rec_buf, 1, PCP_ASYM_RECIPIENT_SIZE, in); */
+    cur_bufsize = ps_read(in, rec_buf, PCP_ASYM_RECIPIENT_SIZE);
     if(cur_bufsize != PCP_ASYM_RECIPIENT_SIZE && !ps_end(in) && !ps_err(in)) {
       fatal(ptx, "Error: input file corrupted, incomplete or no recipients (got %ld, exp %ld)\n", cur_bufsize, PCP_ASYM_RECIPIENT_SIZE );
+      ucfree(rec_buf, PCP_ASYM_RECIPIENT_SIZE);
       goto errdef1;
     }
     recmatch = 0;
@@ -254,7 +256,7 @@ size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t 
       memcpy(&reccipher[R], rec_buf, PCP_ASYM_RECIPIENT_SIZE);
     }
   }
-  
+  ucfree(rec_buf, PCP_ASYM_RECIPIENT_SIZE);
 
   if(recmatch == 0) {
     fatal(ptx, "Sorry, there's no matching public key in your vault for decryption\n");
@@ -394,7 +396,7 @@ size_t pcp_encrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, byte *
 
   byte *buf_nonce;
   byte *buf_cipher;
-  byte in_buf[PCP_BLOCK_SIZE];
+  byte *in_buf = NULL;
   size_t cur_bufsize = 0;
   size_t out_size = 0;
   size_t es;
@@ -427,14 +429,12 @@ size_t pcp_encrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, byte *
 
   ps_write(out, ivpad, PCP_BLOCK_SIZE_IN - PCP_BLOCK_SIZE);
   ps_write(out, iv, PCP_BLOCK_SIZE);
-  /*
-  fwrite(ivpad, PCP_BLOCK_SIZE_IN - PCP_BLOCK_SIZE, 1, out);
-  fwrite(iv, PCP_BLOCK_SIZE, 1, out);*/
 #endif
 
-  /*  32k-ECB-mode. FIXME: maybe support CBC as well or only use CBC? */
+  /*  32k-Block-mode. */
+  in_buf = ucmalloc(PCP_BLOCK_SIZE);
   while(!ps_end(in)) {
-    cur_bufsize = ps_read(in, &in_buf, PCP_BLOCK_SIZE); /* fread(&in_buf, 1, PCP_BLOCK_SIZE, in); */
+    cur_bufsize = ps_read(in, in_buf, PCP_BLOCK_SIZE);
     if(cur_bufsize <= 0)
       break;
     buf_nonce = pcp_gennonce();
@@ -449,9 +449,6 @@ size_t pcp_encrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, byte *
     ps_write(out, buf_nonce, crypto_secretbox_NONCEBYTES);
     ps_write(out, buf_cipher, es);
 
-    /*
-    fwrite(buf_nonce, crypto_secretbox_NONCEBYTES, 1, out);
-    fwrite(buf_cipher, es, 1, out); */
     free(buf_nonce);
     free(buf_cipher);
     out_size += crypto_secretbox_NONCEBYTES + es;
@@ -485,14 +482,13 @@ size_t pcp_encrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, byte *
 
     ps_write(out, buf_nonce, crypto_secretbox_NONCEBYTES);
     ps_write(out, buf_cipher, es);
-    /*
-    fwrite(buf_nonce, crypto_secretbox_NONCEBYTES, 1, out);
-    fwrite(buf_cipher, es, 1, out); */
 
     free(st);
-    free(signature);
+    ucfree(signature, siglen);
     free(hash);
   }
+
+  ucfree(in_buf, PCP_BLOCK_SIZE);
 
   return out_size;
 
@@ -501,6 +497,7 @@ size_t pcp_encrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, byte *
     free(st);
     free(hash);
   }
+  ucfree(in_buf, PCP_BLOCK_SIZE);
   return 0;
 }
 
@@ -510,7 +507,7 @@ size_t pcp_decrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *
   byte *buf_clear;
   size_t out_size, cur_bufsize, es;
   size_t ciphersize = (PCP_BLOCK_SIZE_IN) - crypto_secretbox_NONCEBYTES;
-  byte in_buf[PCP_BLOCK_SIZE_IN];
+  byte *in_buf = NULL;
 
   buf_nonce  = ucmalloc(crypto_secretbox_NONCEBYTES);
   buf_cipher = ucmalloc(ciphersize);
@@ -534,8 +531,10 @@ size_t pcp_decrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *
   byte *iv = NULL; /*  will be filled during 1st loop */
 #endif
 
+
+  in_buf = ucmalloc(PCP_BLOCK_SIZE_IN);
   while(!ps_end(in)) {
-    cur_bufsize = ps_read(in, &in_buf, PCP_BLOCK_SIZE_IN); /* fread(&in_buf, 1, PCP_BLOCK_SIZE_IN, in); */
+    cur_bufsize = ps_read(in, in_buf, PCP_BLOCK_SIZE_IN);
     if(cur_bufsize <= PCP_CRYPTO_ADD)
       break; /*  no valid cipher block */
 
@@ -596,7 +595,8 @@ size_t pcp_decrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *
 #endif
   }
 
-  free(buf_cipher);
+  ucfree(in_buf, PCP_BLOCK_SIZE_IN);
+  ucfree(buf_cipher, ciphersize);
 
   if(recverify != NULL) {
     /* decrypt the signature */
@@ -628,8 +628,8 @@ size_t pcp_decrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *
     }
     free(st);
     free(hash);
-    free(signature);
-    free(signature_cr);
+    ucfree(signature, siglen);
+    ucfree(signature_cr, siglen_cr);
   }
 
   free(buf_nonce);

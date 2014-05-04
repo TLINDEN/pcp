@@ -106,8 +106,7 @@ sub runtest {
 
   if (exists $cfg->{test}) {
     foreach my $test (keys %{$cfg->{test}}) {
-      my $name = "$test ($cfg->{test}->{$test}->{cmd})";
-      if (&runtest($cfg->{test}->{$test}, $name) == 0) {
+      if (&runtest($cfg->{test}->{$test}, $test) == 0) {
 	return 0;
       }
     }

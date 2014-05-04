@@ -21,19 +21,19 @@
 
 
 #include "key.h"
-#include "keyhash.h"
+#include "context.h"
 
 /*
  * AS of 16/01/2014 I'm using scrypt() instead of my crafted key
  * derivation function. However, I create a hash from the pcp_scrypt()
  * result anyway because I need a cure25519 secret.
  */
-byte *pcp_derivekey(char *passphrase, byte *nonce) {
+byte *pcp_derivekey(PCPCTX *ptx, char *passphrase, byte *nonce) {
   byte *key = ucmalloc(crypto_secretbox_KEYBYTES);
   size_t plen = strnlen(passphrase, 255);
 
   /*  create the scrypt hash */
-  byte *scrypted = pcp_scrypt(passphrase, plen, nonce, crypto_secretbox_NONCEBYTES);
+  byte *scrypted = pcp_scrypt(ptx, passphrase, plen, nonce, crypto_secretbox_NONCEBYTES);
 
   /*  make a hash from the scrypt() result */
   crypto_hash_sha256(key, (byte*)scrypted, 64);
@@ -142,13 +142,13 @@ byte * pcp_gennonce() {
   return nonce;
 }
 
-pcp_key_t *pcpkey_encrypt(pcp_key_t *key, char *passphrase) {
+pcp_key_t *pcpkey_encrypt(PCPCTX *ptx, pcp_key_t *key, char *passphrase) {
   if(key->nonce[0] == 0) {
     byte *nonce = pcp_gennonce();
     memcpy (key->nonce, nonce, crypto_secretbox_NONCEBYTES);
   }
 
-  byte *encryptkey = pcp_derivekey(passphrase, key->nonce);  
+  byte *encryptkey = pcp_derivekey(ptx, passphrase, key->nonce);  
 
   byte *encrypted;
   size_t es;
@@ -175,7 +175,7 @@ pcp_key_t *pcpkey_encrypt(pcp_key_t *key, char *passphrase) {
     key->mastersecret[0] = 0;
   }
   else {
-    fatal("failed to encrypt the secret key!\n");
+    fatal(ptx, "failed to encrypt the secret key!\n");
     free(key);
     return NULL;
   }
@@ -183,8 +183,8 @@ pcp_key_t *pcpkey_encrypt(pcp_key_t *key, char *passphrase) {
   return key;
 }
 
-pcp_key_t *pcpkey_decrypt(pcp_key_t *key, char *passphrase) {
-  byte *encryptkey = pcp_derivekey(passphrase, key->nonce);  
+pcp_key_t *pcpkey_decrypt(PCPCTX *ptx, pcp_key_t *key, char *passphrase) {
+  byte *encryptkey = pcp_derivekey(ptx, passphrase, key->nonce);  
 
   byte *decrypted;
   size_t es;
@@ -201,7 +201,7 @@ pcp_key_t *pcpkey_decrypt(pcp_key_t *key, char *passphrase) {
     memcpy(key->secret, decrypted +128, 32);
   }
   else {
-    fatal("failed to decrypt the secret key (got %d, expected 32)!\n", es);
+    fatal(ptx, "failed to decrypt the secret key (got %d, expected 32)!\n", es);
     free(key);
     return NULL;
   }
@@ -355,26 +355,26 @@ Buffer *pcp_keyblob(void *k, int type) {
 }
 
 
-int pcp_sanitycheck_pub(pcp_pubkey_t *key) {
+int pcp_sanitycheck_pub(PCPCTX *ptx, pcp_pubkey_t *key) {
   if(key->pub[0] == 0) {
-    fatal("Pubkey sanity check: public key contained in key seems to be empty!\n");
+    fatal(ptx, "Pubkey sanity check: public key contained in key seems to be empty!\n");
     return 1;
   }
 
   if(key->type != PCP_KEY_TYPE_PUBLIC) {
-    fatal("Pubkey sanity check: key type is not PUBLIC (expected: %02x, got: %02x)!\n",
+    fatal(ptx, "Pubkey sanity check: key type is not PUBLIC (expected: %02x, got: %02x)!\n",
 	  PCP_KEY_TYPE_PUBLIC, key->type);
     return 1;
   }
 
   if(key->version != PCP_KEY_VERSION) {
-    fatal("Pubkey sanity check: unknown key version (expected: %08X, got: %08X)!\n",
+    fatal(ptx, "Pubkey sanity check: unknown key version (expected: %08X, got: %08X)!\n",
 	  PCP_KEY_VERSION, key->version);
     return 1;
   }
   
   if(key->serial <= 0) {
-    fatal("Pubkey sanity check: invalid serial number: %08X!\n", key->serial);
+    fatal(ptx, "Pubkey sanity check: invalid serial number: %08X!\n", key->serial);
     return 1;
   }
 
@@ -382,7 +382,7 @@ int pcp_sanitycheck_pub(pcp_pubkey_t *key) {
     char *got = ucmalloc(17);
     memcpy(got, key->id, 17);
     got[16] = '\0';
-    fatal("Pubkey sanity check: invalid key id (expected 16 bytes, got: %s)!\n", got);
+    fatal(ptx, "Pubkey sanity check: invalid key id (expected 16 bytes, got: %s)!\n", got);
     free(got);
     return 1;
   }
@@ -392,13 +392,13 @@ int pcp_sanitycheck_pub(pcp_pubkey_t *key) {
   c = localtime(&t);
   if(c->tm_year <= 0 || c->tm_year > 1100) {
     /*  well, I'm perhaps overacting here :) */
-    fatal("Pubkey sanity check: invalid creation timestamp (got year %04d)!\n", c->tm_year + 1900);
+    fatal(ptx, "Pubkey sanity check: invalid creation timestamp (got year %04d)!\n", c->tm_year + 1900);
     return 1;
   }
 
-  pcp_pubkey_t *maybe = pcphash_pubkeyexists(key->id);
+  pcp_pubkey_t *maybe = pcphash_pubkeyexists(ptx, key->id);
   if(maybe != NULL) {
-    fatal("Pubkey sanity check: there already exists a key with the id 0x%s\n", key->id);
+    fatal(ptx, "Pubkey sanity check: there already exists a key with the id 0x%s\n", key->id);
     return 1;
   }
 
@@ -406,26 +406,26 @@ int pcp_sanitycheck_pub(pcp_pubkey_t *key) {
 }
 
 
-int pcp_sanitycheck_key(pcp_key_t *key) {
+int pcp_sanitycheck_key(PCPCTX *ptx, pcp_key_t *key) {
   if(key->encrypted[0] == 0) {
-    fatal("Secretkey sanity check: secret key contained in key seems to be empty!\n");
+    fatal(ptx, "Secretkey sanity check: secret key contained in key seems to be empty!\n");
     return 1;
   }
 
   if(key->type != PCP_KEY_TYPE_SECRET && key->type != PCP_KEY_TYPE_MAINSECRET) {
-    fatal("Secretkey sanity check: key type is not SECRET (expected: %02x, got: %02x)!\n",
+    fatal(ptx, "Secretkey sanity check: key type is not SECRET (expected: %02x, got: %02x)!\n",
 	  PCP_KEY_TYPE_SECRET, key->type);
     return 1;
   }
 
   if(key->version != PCP_KEY_VERSION) {
-    fatal("Secretkey sanity check: unknown key version (expected: %08X, got: %08X)!\n",
+    fatal(ptx, "Secretkey sanity check: unknown key version (expected: %08X, got: %08X)!\n",
 	  PCP_KEY_VERSION, key->version);
     return 1;
   }
   
   if(key->serial <= 0) {
-    fatal("Secretkey sanity check: invalid serial number: %08X!\n", key->serial);
+    fatal(ptx, "Secretkey sanity check: invalid serial number: %08X!\n", key->serial);
     return 1;
   }
 
@@ -433,7 +433,7 @@ int pcp_sanitycheck_key(pcp_key_t *key) {
     char *got = ucmalloc(17);
     memcpy(got, key->id, 17);
     got[16] = '\0';
-    fatal("Secretkey sanity check: invalid key id (expected 16 bytes, got: %s)!\n", got);
+    fatal(ptx, "Secretkey sanity check: invalid key id (expected 16 bytes, got: %s)!\n", got);
     free(got);
     return 1;
   }
@@ -443,13 +443,13 @@ int pcp_sanitycheck_key(pcp_key_t *key) {
   c = localtime(&t);
   if(c->tm_year <= 70 || c->tm_year > 1100) {
     /*  well, I'm perhaps overacting here :) */
-    fatal("Secretkey sanity check: invalid creation timestamp (got year %04d)!\n", c->tm_year + 1900);
+    fatal(ptx, "Secretkey sanity check: invalid creation timestamp (got year %04d)!\n", c->tm_year + 1900);
     return 1;
   }
 
-  pcp_key_t *maybe = pcphash_keyexists(key->id);
+  pcp_key_t *maybe = pcphash_keyexists(ptx, key->id);
   if(maybe != NULL) {
-    fatal("Secretkey sanity check: there already exists a key with the id 0x%s\n", key->id);
+    fatal(ptx, "Secretkey sanity check: there already exists a key with the id 0x%s\n", key->id);
     return 1;
   }
 

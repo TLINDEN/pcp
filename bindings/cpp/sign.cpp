@@ -24,25 +24,29 @@
 using namespace std;
 using namespace pcp;
 
-Signature::Signature(Key &skey) {
+Signature::Signature(PcpContext P, Key &skey) {
   S = skey;
+  PTX = P;
   havevault = false;
 }
 
-Signature::Signature(PubKey &pkey) {
+Signature::Signature(PcpContext C,PubKey &pkey) {
   P = pkey;
+  PTX = C;
   havevault = false;
 }
 
-Signature::Signature(Key &skey, PubKey &pkey) {
+Signature::Signature(PcpContext C,Key &skey, PubKey &pkey) {
   P = pkey;
   S = skey;
+  PTX = C;
   havevault = false;
 }
 
-Signature::Signature(Vault &v) {
+Signature::Signature(PcpContext P,Vault &v) {
   vault = v;
   havevault = true;
+  PTX = P;
   S = vault.get_primary();
 }
 
@@ -51,10 +55,10 @@ Signature::~Signature() {
 
 bool Signature::sign(std::vector<unsigned char> message) {
   if(! S)
-    throw exception("Error: cannot sign without a secret key, use another constructor.");
+    throw exception(PTX, "Error: cannot sign without a secret key, use another constructor.");
 
   if(S.is_encrypted())
-    throw exception("Error: cannot sign with an encrypted secret key, decrypt it before using.");
+    throw exception(PTX, "Error: cannot sign with an encrypted secret key, decrypt it before using.");
 
   char n[] = "signvec";
   Buffer *m = buffer_new(32, n);
@@ -68,17 +72,17 @@ bool Signature::sign(std::vector<unsigned char> message) {
   buffer_free(m);
 
   if(!ok)
-    throw exception();
+    throw exception(PTX);
 
   return true;
 }
 
 bool Signature::sign(unsigned char *message, size_t mlen) {
   if(! S)
-    throw exception("Error: cannot sign without a secret key, use another constructor.");
+    throw exception(PTX, "Error: cannot sign without a secret key, use another constructor.");
 
   if(S.is_encrypted())
-    throw exception("Error: cannot sign with an encrypted secret key, decrypt it before using.");
+    throw exception(PTX, "Error: cannot sign with an encrypted secret key, decrypt it before using.");
 
   char n[] = "signchar";
   Buffer *m = buffer_new(32, n);
@@ -90,7 +94,7 @@ bool Signature::sign(unsigned char *message, size_t mlen) {
   buffer_free(m);
 
   if(! ok)
-    throw exception();
+    throw exception(PTX);
 
   return true;
 }
@@ -98,7 +102,7 @@ bool Signature::sign(unsigned char *message, size_t mlen) {
 bool Signature::sign(Pcpstream *message) {
   Pcpstream *out = ps_new_outbuffer();
 
-  size_t sigsize = pcp_ed_sign_buffered(message, out, S.K, 0);
+  size_t sigsize = pcp_ed_sign_buffered(PTX.ptx, message, out, S.K, 0);
 
   if(sigsize > 0) {
     Buffer *o = ps_buffer(out);
@@ -115,7 +119,7 @@ bool Signature::sign(Pcpstream *message) {
 
 bool Signature::verify(vector<unsigned char> message) {
   if(!P) {
-    throw exception("No public key specified, unable to verify.");
+    throw exception(PTX, "No public key specified, unable to verify.");
   }
 
   Buf _sig = Buf();
@@ -128,7 +132,7 @@ bool Signature::verify(vector<unsigned char> message) {
 
 bool Signature::verify(unsigned char *signature, size_t mlen) {
   if(!P) {
-    throw exception("No public key specified, unable to verify.");
+    throw exception(PTX, "No public key specified, unable to verify.");
   }
 
   Buf _sig = Buf();
@@ -141,15 +145,15 @@ bool Signature::verify(unsigned char *signature, size_t mlen) {
 bool Signature::verify(Buf _sig) {
   Pcpstream *p = ps_new_inbuffer(_sig.get_buffer());
 
-  pcp_pubkey_t *pub = pcp_ed_verify_buffered(p, P.K);
+  pcp_pubkey_t *pub = pcp_ed_verify_buffered(PTX.ptx, p, P.K);
 
   ps_close(p);
 
   if(pub != NULL) {
-    Signedby = PubKey(pub);
+    Signedby = PubKey(PTX, pub);
     return true;
   }
   else {
-    throw exception();
+    throw exception(PTX);
   }
 }

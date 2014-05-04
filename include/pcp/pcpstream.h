@@ -26,8 +26,10 @@
 #include <stdio.h>
 #include <assert.h>
 #include "mem.h"
+#include "structs.h"
 #include "util.h"
 #include "defines.h"
+#include "context.h"
 #include "buffer.h"
 #include "z85.h"
 
@@ -54,35 +56,7 @@
  */
 
 
-/** \struct _pcp_stream_t
-    An I/O wrapper object backed by a file or a buffer.
-*/
-struct _pcp_stream_t {
-  FILE *fd;          /**< The backend FILE stream */
-  Buffer *b;         /**< The backend Buffer object */
-  Buffer *cache;     /**< The caching Buffer object (for look ahead read) */
-  Buffer *next;      /**< The caching Next-Buffer object (for look ahead read) */
-  Buffer *save;      /**< Temporary buffer to backup overflow data */
-  uint8_t is_buffer; /**< Set to 1 if the backend is a Buffer */
-  uint8_t eof;       /**< Set to 1 if EOF reached */
-  uint8_t err;       /**< Set to 1 if an error occured */
-  uint8_t armor;     /**< Set to 1 if Z85 en/de-coding is requested */
-  uint8_t determine; /**< Set to 1 to automatically determine armor mode */
-  uint8_t firstread; /**< Internal flag, will be set after first read() */
-  size_t  linewr;    /**< Used for Z85 writing, number of chars written on last line */
-  size_t  blocksize; /**< Blocksize used for z85, if requested */
-  uint8_t is_output; /**< marks the stream as output stream */
-  uint8_t have_begin; /**< flag to indicate we already got the begin header, if any */
-  size_t pos;        /**< remember i/o position */
-};
 
-typedef enum _PSVARS {
-  PSMAXLINE = 20000
-} PSVARS;
-
-
-/** The name used everywhere */
-typedef struct _pcp_stream_t Pcpstream;
 
 /* initialize a new empty stream */
 Pcpstream *ps_init(void);

@@ -182,7 +182,7 @@ size_t pcp_unpadfour(byte *src, size_t srclen) {
   return outlen;
 }
 
-byte *pcp_z85_decode(char *z85block, size_t *dstlen) {
+byte *pcp_z85_decode(PCPCTX *ptx, char *z85block, size_t *dstlen) {
   byte *bin = NULL;
   size_t binlen, outlen; 
   size_t srclen;
@@ -199,7 +199,7 @@ byte *pcp_z85_decode(char *z85block, size_t *dstlen) {
   bin = ucmalloc(binlen);
 
   if(zmq_z85_decode(bin, z85block) == NULL) {
-    fatal("zmq_z85_decode() failed, input size ! mod 5 (got %ld)", strlen(z85block));
+    fatal(ptx, "zmq_z85_decode() failed, input size ! mod 5 (got %ld)", strlen(z85block));
     return NULL;
   }
 
@@ -251,7 +251,7 @@ char *pcp_z85_encode(byte *raw, size_t srclen, size_t *dstlen) {
 }
 
 
-char *pcp_readz85file(FILE *infile) {
+char *pcp_readz85file(PCPCTX *ptx, FILE *infile) {
   byte *input = NULL;
   byte *tmp = NULL;
   size_t bufsize = 0;
@@ -269,25 +269,25 @@ char *pcp_readz85file(FILE *infile) {
   }
 
   if(bufsize == 0) {
-    fatal("Input file is empty!\n");
+    fatal(ptx, "Input file is empty!\n");
     free(tmp);
     return NULL;
   }
 
-  return pcp_readz85string(input, bufsize);
+  return pcp_readz85string(ptx, input, bufsize);
 }
 
-char *pcp_readz85string(unsigned char *input, size_t bufsize) {
+char *pcp_readz85string(PCPCTX *ptx, unsigned char *input, size_t bufsize) {
   size_t i;
   size_t MAXLINE = 1024;
 
   if(bufsize == 0) {
-    fatal("Input file is empty!\n");
+    fatal(ptx, "Input file is empty!\n");
     return NULL;
   }
 
   if(_buffer_is_binary(input, bufsize) > 0) {
-    fatal("input is not z85 encoded and contains pure binary data");
+    fatal(ptx, "input is not z85 encoded and contains pure binary data");
     return NULL;
   }
 
@@ -339,7 +339,7 @@ char *pcp_readz85string(unsigned char *input, size_t bufsize) {
   }
 
   if(buffer_size(z) == 0) {
-    fatal("empty z85 encoded string");
+    fatal(ptx, "empty z85 encoded string");
     goto rferr;
   }
 

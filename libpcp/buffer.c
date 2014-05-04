@@ -129,9 +129,8 @@ byte *buffer_get(Buffer *b) {
 
 size_t buffer_get_chunk(Buffer *b, void *buf, size_t len) {
   if(len > b->end - b->offset) {
-    fatal("[buffer %s] attempt to read %ld bytes data from buffer with %ld bytes left at offset %ld\n",
+    final("[buffer %s] attempt to read %ld bytes data from buffer with %ld bytes left at offset %ld\n",
 	  b->name, len, b->end - b->offset, b->offset);
-    return 0;
   }
   else if(len == 0) {
     /* FIXME: check how this happens */
@@ -146,9 +145,8 @@ size_t buffer_get_chunk(Buffer *b, void *buf, size_t len) {
 
 size_t buffer_get_chunk_tobuf(Buffer *b, Buffer *dst, size_t len) {
   if(len > b->end - b->offset) {
-    fatal("[buffer %s] attempt to read %ld bytes data from buffer with %ld bytes left at offset %ld\n",
+    final("[buffer %s] attempt to read %ld bytes data from buffer with %ld bytes left at offset %ld\n",
 	  b->name, len, b->end - b->offset, b->offset);
-    return 0;
   }
   else if(len == 0) {
     /* FIXME: check how this happens */
@@ -246,13 +244,11 @@ char *buffer_get_str(Buffer *b) {
 
 size_t buffer_extract(Buffer *b, void *buf, size_t offset, size_t len) {
   if(len > b->end) {
-    fatal("[buffer %s] attempt to read %ld bytes past end of buffer at %ld\n", b->name, b->end - (b->offset + len), b->end);
-    return 0;
+    final("[buffer %s] attempt to read %ld bytes past end of buffer at %ld\n", b->name, b->end - (b->offset + len), b->end);
   }
 
   if(offset > b->end) {
-    fatal("[buffer %s] attempt to read at offset %ld past len to read %ld\n", b->name, offset, b->end);
-    return 0;
+    final("[buffer %s] attempt to read at offset %ld past len to read %ld\n", b->name, offset, b->end);
   }
 
   memcpy(buf, b->buf + offset, len);
@@ -328,13 +324,10 @@ size_t buffer_fd_read(Buffer *b, FILE *in, size_t len) {
 
   size_t s = fread(data, 1, len, in);
 
-  if(s < len) {
-    fatal("[buffer %s] attempt to read %"FMT_SIZE_T" bytes from FILE, but got %"FMT_SIZE_T" bytes only\n", b->name, (SIZE_T_CAST)len, (SIZE_T_CAST)s);
-    return 0;
-  }
+  if(s > 0)
+    buffer_add(b, data, len);
 
-  buffer_add(b, data, len);
-  return len;
+  return s;
 }
 
 void buffer_add8(Buffer *b, uint8_t v) {

@@ -33,12 +33,14 @@
 
 #include "defines.h"
 #include "platform.h"
+#include "structs.h"
 #include "mem.h"
 #include "ed.h"
 #include "key.h"
 #include "keysig.h"
 #include "buffer.h"
 #include "scrypt.h"
+#include "context.h"
 
 /* key management api, export, import, yaml and stuff */
 
@@ -52,76 +54,7 @@
 
 
 
-/* various helper structs, used internally only */
-struct _pcp_rfc_pubkey_header_t {
-  uint8_t version;
-  uint32_t ctime;
-  uint8_t cipher;
-};
 
-struct _pcp_rfc_pubkey_0x21_t {
-  byte sig_ed25519_pub[crypto_sign_PUBLICKEYBYTES];
-  byte ed25519_pub[crypto_sign_PUBLICKEYBYTES];
-  byte curve25519_pub[crypto_box_PUBLICKEYBYTES];
-};
-
-struct _pcp_rfc_pubkey_sigheader_0x21_t {
-  uint8_t version;
-  uint8_t type;
-  uint8_t pkcipher;
-  uint8_t hashcipher;
-  uint16_t numsubs;
-};
-
-struct _pcp_rfc_pubkey_sigsub_0x21_t {
-  uint32_t size;
-  uint8_t type;
-};
-
-typedef struct _pcp_rfc_pubkey_header_t rfc_pub_h;
-typedef struct _pcp_rfc_pubkey_0x21_t  rfc_pub_k;
-typedef struct _pcp_rfc_pubkey_sigheader_0x21_t rfc_pub_sig_h;
-typedef struct _pcp_rfc_pubkey_sigsub_0x21_t rfc_pub_sig_s;
-
-struct _pcp_ks_bundle_t {
-  pcp_pubkey_t *p;
-  pcp_keysig_t *s;
-};
-typedef struct _pcp_ks_bundle_t pcp_ks_bundle_t;
-
-#define EXP_PK_CIPHER        0x21
-#define EXP_PK_CIPHER_NAME  "CURVE25519-ED25519-POLY1305-SALSA20"
-
-#define EXP_HASH_CIPHER      0x22
-#define EXP_HASH_NAME       "BLAKE2"
-
-#define EXP_SIG_CIPHER       0x23
-#define EXP_SIG_CIPHER_NAME "ED25519"
-
-#define EXP_SIG_VERSION      0x01
-#define EXP_SIG_TYPE         0x1F /* self signed */
-
-/* sig sub notiation we support */
-#define EXP_SIG_SUB_CTIME     2
-#define EXP_SIG_SUB_SIGEXPIRE 3
-#define EXP_SIG_SUB_KEYEXPIRE 9
-#define EXP_SIG_SUB_NOTATION  20
-#define EXP_SIG_SUB_KEYFLAGS  27
-
-/* in armored mode, we're using the usual head+foot */
-#define EXP_PK_HEADER "----- BEGIN ED25519-CURVE29915 PUBLIC KEY -----"
-#define EXP_PK_FOOTER "----- END ED25519-CURVE29915 PUBLIC KEY -----"
-#define EXP_SK_HEADER "----- BEGIN ED25519-CURVE29915 PRIVATE KEY -----"
-#define EXP_SK_FOOTER "----- END ED25519-CURVE29915 PRIVATE KEY -----"
-
-
-/* pubkey export formats */
-#define EXP_FORMAT_NATIVE   1
-#define EXP_FORMAT_PBP      2
-#define EXP_FORMAT_YAML     3
-#define EXP_FORMAT_C        4
-#define EXP_FORMAT_PY       5
-#define EXP_FORMAT_PERL     6
 
 /** RFC4880 alike public key export with some modifications.
 
@@ -287,6 +220,8 @@ Buffer *pcp_export_c_pub(pcp_key_t *sk);
 
      Nonce | Cipher
 
+     \param[in] ptx context.
+
    \param sk a secret key structure of type pcp_key_t. The secret keys
           in there have to be already decrypted.
 
@@ -296,17 +231,21 @@ Buffer *pcp_export_c_pub(pcp_key_t *sk);
     \return the function returns a Buffer object containing the binary
             blob in the format described above.
 */
-Buffer *pcp_export_secret(pcp_key_t *sk, char *passphrase);
+Buffer *pcp_export_secret(PCPCTX *ptx, pcp_key_t *sk, char *passphrase);
 
-pcp_ks_bundle_t *pcp_import_binpub(byte *raw, size_t rawsize);
-pcp_ks_bundle_t *pcp_import_pub(byte *raw, size_t rawsize); /* FIXME: deprecate */
-pcp_ks_bundle_t *pcp_import_pub_rfc(Buffer *blob);
-pcp_ks_bundle_t *pcp_import_pub_pbp(Buffer *blob);
+pcp_ks_bundle_t *pcp_import_binpub(PCPCTX *ptx, byte *raw, size_t rawsize);
+pcp_ks_bundle_t *pcp_import_pub(PCPCTX *ptx, byte *raw, size_t rawsize); /* FIXME: deprecate */
+pcp_ks_bundle_t *pcp_import_pub_rfc(PCPCTX *ptx, Buffer *blob);
+pcp_ks_bundle_t *pcp_import_pub_pbp(PCPCTX *ptx, Buffer *blob);
 
 /* import secret key */
-pcp_key_t *pcp_import_binsecret(byte *raw, size_t rawsize, char *passphrase);
-pcp_key_t *pcp_import_secret(byte *raw, size_t rawsize, char *passphrase);
-pcp_key_t *pcp_import_secret_native(Buffer *cipher, char *passphrase);
+pcp_key_t *pcp_import_binsecret(PCPCTX *ptx, byte *raw, size_t rawsize, char *passphrase);
+pcp_key_t *pcp_import_secret(PCPCTX *ptx, byte *raw, size_t rawsize, char *passphrase);
+pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphrase);
+
+/* helpers */
+int _check_keysig_h(PCPCTX *ptx, Buffer *blob, rfc_pub_sig_h *h);
+int _check_hash_keysig(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, pcp_keysig_t *sk);
 
 #endif // _HAVE_PCP_MGMT_H
 

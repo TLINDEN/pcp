@@ -27,6 +27,8 @@
 #include "mem.h"
 #include "util.h"
 #include "defines.h"
+#include "structs.h"
+#include "context.h"
 
 /**
  * \defgroup Buffer BUFFER
@@ -44,22 +46,7 @@
  */
 
 
-/** \struct _pcp_buffer
-    A flexible buffer object wich automatically resizes, if neccessary.
-*/
-struct _pcp_buffer {
-  char *name;        /**< just for convenience in error messages and the like, so we know which buffer cause trouble */
-  uint8_t allocated; /**< marks the buffer as allocated */
-  size_t blocksize;  /**< the blocksize to use when resizing, also used for initial malloc() */
-  size_t size;       /**< stores the current allocated size of the object */
-  size_t offset;     /**< current read position */
-  size_t end;        /**< current write position, data end. maybe less than size. */
-  uint8_t isstring;  /**< treat as char array/string */
-  void *buf;         /**< the actual storage buffer */
-};
 
-/** The name used everywhere */
-typedef struct _pcp_buffer Buffer;
 
 /** Create a new buffer.
 
@@ -591,8 +578,7 @@ uint64_t buffer_last64(Buffer *b);
     \param[in] len The number of bytes to read.
 
     \return Returns the number of bytes read or 0 in case of an error or EOF.
-            Use feof() and ferror() to check this afterwards, call fatals_ifany()
-            in case of errors.
+            Use feof() and ferror() to check this afterwards.
  */
 size_t buffer_fd_read(Buffer *b, FILE *in, size_t len);
 

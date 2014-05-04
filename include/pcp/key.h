@@ -31,16 +31,16 @@
 #include "defines.h"
 #include "platform.h"
 #include "mem.h"
-#include "buffer.h"
 #include "mac.h"
 #include "randomart.h"
 #include "version.h"
-#include "z85.h"
+//#include "z85.h"
 #include "uthash.h"
 #include "jenhash.h"
-#include "scrypt.h"
+#include "structs.h"
+#include "buffer.h"
 #include "keysig.h"
-
+#include "scrypt.h"
 
 /**
  * \defgroup KEYS KEYS
@@ -53,126 +53,7 @@
  */
 
 
-/** \struct _pcp_key_t
 
-    PCP private key structure. Most fields are self explanatory.
-
-  Some notes:
-
-  'encrypted' contains the encrypted secret keys (contatenated mastersecret,
-  secret and edsecret). If it's set,
-  the field 'secret' which contains the clear secret key will
-  be zeroed with random values, the first byte will be 0. Same
-  for the field 'edsecret'.
-
-  'nonce' contains the nonce required to decrypt the encrypted
-  secret, if set.
-
-  'serial' is a random number.
-
-  'id' is a string containing the hex values of the CRC32 checksum
-  of the public and secret key.
-
-  Upon creation everything will be filled with random bytes.
-  String fields will contain a string followed by 0 followed
-  by the rest of the pre-filled random bytes. To denote a string
-  field as empty, the first byte will be set to 0.
-
-  There are dynamically calculated attributes as well:
-
-  'checksum' is a 256 bit SHA hash of the public key returned
-  by pcpkey_getchecksum() or pcppubkey_getchecksum().
-
-  'random id' is a random art ascii image returned by
-  pcppubkey_get_art() or pcpkey_get_art(), calculated from
-  the public key.
-
-  If exported to a single file or printed, the structure will
-  be encoded using Z85 encoding.
-
- */
-struct _pcp_key_t {
-  byte masterpub[32];    /**< ED25519 master public key signing key */
-  byte mastersecret[64]; /**< ED25519 master secret key signing key */
-  byte pub[32];          /**< Curve25519 encryption public key */
-  byte secret[32];       /**< Curve25519 encryption secret key */
-  byte edpub[32];        /**< ED25519 public signing key */
-  byte edsecret[64];     /**< ED25519 secret signing key */
-  byte nonce[24];        /**< random nonce used to encrypt secret keys */
-  byte encrypted[176];   /**< concatenated and encrypted secret keys */
-  char owner[255];       /**< the key owner, string */
-  char mail[255];        /**< mail address of the owner, string */
-  char id[17];           /**< key-id, used internally only, jenhash of public keys */
-  uint8_t type;          /**< key type: MASTER_SECRET or SECRET */
-  uint64_t ctime;        /**< creation time, epoch */
-  uint32_t version;      /**< key version */
-  uint32_t serial;       /**< serial number of the key, randomly generated */
-  UT_hash_handle hh;
-};
-
-/** Typedef for secret keys */
-typedef struct _pcp_key_t pcp_key_t;
-
-/** \struct _pcp_pubkey_t
-
-    PCP public key structure.
-
-    This structure contains a subset of the pcp_key_t structure
-    without the secret and nonce fields.
-*/
-struct _pcp_pubkey_t {
-  byte masterpub[32];    /**< ED25519 master public key signing key */
-  byte sigpub[32];       /**< ED25519 public signing key */
-  byte pub[32];          /**< Curve25519 encryption public key */
-  byte edpub[32];        /**< ED25519 public signing key (FIXME: huh? 2 of them???) */
-  char owner[255];       /**< the key owner, string */
-  char mail[255];        /**< mail address of the owner, string */
-  char id[17];           /**< key-id, used internally only, jenhash of public keys */
-  uint8_t type;          /**< key type: MASTER_SECRET or SECRET */
-  uint64_t ctime;        /**< creation time, epoch */
-  uint32_t version;      /**< key version */
-  uint32_t serial;       /**< serial number of the key, randomly generated */
-  uint8_t valid;         /**< 1 if import signature verified, 0 if not */
-  byte signature[crypto_generichash_BYTES_MAX + crypto_sign_BYTES]; /**< raw binary blob of pubkey export signature */
-  UT_hash_handle hh;
-};
-
-/** Typedef for public keys */
-typedef struct _pcp_pubkey_t pcp_pubkey_t;
-
-
-/*  the PBP public key format */
-/*  keys.mp+keys.cp+keys.sp+keys.name */
-struct _pbp_pubkey_t {
-  byte sigpub[crypto_sign_PUBLICKEYBYTES];
-  byte edpub[crypto_sign_PUBLICKEYBYTES];
-  byte pub[crypto_box_PUBLICKEYBYTES];
-  char iso_ctime[32];
-  char iso_expire[32];
-  char name[1024];
-};
-
-typedef struct _pbp_pubkey_t pbp_pubkey_t;
-
-/** \struct _pcp_rec_t
-
-    Encrypted recipient list.
-
-    Encrypted recipient list, required for crypt+sign
-    contains the encrypted recipients and the secret
-    key required for signing the message+recipients.
-
-    Used internally only.
-*/
-struct _pcp_rec_t {
-  size_t ciphersize; /**< the size of the encrypted recipient list */
-  byte *cipher;      /**< contains the whole encrypted recipient list */
-  pcp_key_t *secret; /**< the secret key of the recipient for signing */
-  pcp_pubkey_t *pub; /**< if verification were ok, contains the public key of the signer */
-};
-
-/** Typedef for public keys */
-typedef struct _pcp_rec_t pcp_rec_t;
 
 #define PCP_RAW_KEYSIZE    sizeof(pcp_key_t)    - sizeof(UT_hash_handle)
 #define PCP_RAW_PUBKEYSIZE sizeof(pcp_pubkey_t) - sizeof(UT_hash_handle)
@@ -253,6 +134,8 @@ char *pcpkey_get_art(pcp_key_t *k);
     The caller is responsible to clear the passphrase right after
     use and free() it as soon as possible.
 
+    \param[in] pcp context.
+
     \param[in,out] key The secret key structure.
 
     \param[in] passphrase The passphrase used to encrypt the key.
@@ -260,7 +143,7 @@ char *pcpkey_get_art(pcp_key_t *k);
     \return Returns a pointer to the encrypted key structure or NULL
             in case of an error. Use fatals_ifany() to catch them.
  */
-pcp_key_t *pcpkey_encrypt(pcp_key_t *key, char *passphrase);
+pcp_key_t *pcpkey_encrypt(PCPCTX *ptx, pcp_key_t *key, char *passphrase);
 
 /** Decrypt a secret key structure.
 
@@ -277,6 +160,8 @@ pcp_key_t *pcpkey_encrypt(pcp_key_t *key, char *passphrase);
     The caller is responsible to clear the passphrase right after
     use and free() it as soon as possible.
 
+    \param[in] pcp context.
+
     \param[in,out] key The secret key structure.
 
     \param[in] passphrase The passphrase used to decrypt the key.
@@ -285,7 +170,7 @@ pcp_key_t *pcpkey_encrypt(pcp_key_t *key, char *passphrase);
             in case of an error. Use fatals_ifany() to catch them.
 
  */
-pcp_key_t *pcpkey_decrypt(pcp_key_t *key, char *passphrase);
+pcp_key_t *pcpkey_decrypt(PCPCTX *ptx, pcp_key_t *key, char *passphrase);
 
 /** Generate a public key structure from a given secret key structure.
 
@@ -293,6 +178,8 @@ pcp_key_t *pcpkey_decrypt(pcp_key_t *key, char *passphrase);
     allocated pcp_pubkey_t structure.
 
     The caller is responsible to clear and free() it after use.
+
+    \param[in] pcp context.
 
     \param[in] key The secret key structure.
 
@@ -404,7 +291,7 @@ byte * pcp_gennonce();
 /*  use scrypt() to create a key from a passphrase and a nonce
     this is a wrapper around pcp_scrypt()
 */
-byte *pcp_derivekey(char *passphrase, byte *nonce);
+byte *pcp_derivekey(PCPCTX *ptx, char *passphrase, byte *nonce);
 
 /* convert the key struct into a binary blob */
 void pcp_seckeyblob(Buffer *b, pcp_key_t *k);
@@ -418,18 +305,22 @@ Buffer *pcp_keyblob(void *k, int type); /*  allocates blob */
     \return Returns 1 if the sanity check succeeds, 0 otherwise.
             Use fatals_ifany() to check why.
 */
-int pcp_sanitycheck_pub(pcp_pubkey_t *key);
+int pcp_sanitycheck_pub(PCPCTX *ptx, pcp_pubkey_t *key);
 
 /** Make a sanity check of the given secret key structure.
+
+    \param[in] pcp context.
 
     \param[in] key The secret key structure.
 
     \return Returns 1 if the sanity check succeeds, 0 otherwise.
             Use fatals_ifany() to check why.
 */
-int pcp_sanitycheck_key(pcp_key_t *key);
+int pcp_sanitycheck_key(PCPCTX *ptx, pcp_key_t *key);
 
 /** Dump a secret key structure to stderr.
+
+    \param[in] pcp context.
 
     \param[in] k Secret key to dump.
 */

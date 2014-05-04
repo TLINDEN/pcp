@@ -21,7 +21,7 @@
 
 #include "scrypt.h"
 
-byte* pcp_scrypt(char *passwd, size_t passwdlen, byte *nonce, size_t noncelen) {
+byte* pcp_scrypt(PCPCTX *ptx, char *passwd, size_t passwdlen, byte *nonce, size_t noncelen) {
   uint8_t *dk = ucmalloc(64); /*  resulting hash */
 
   /*  constants */
@@ -34,7 +34,7 @@ byte* pcp_scrypt(char *passwd, size_t passwdlen, byte *nonce, size_t noncelen) {
     return dk;
   }
   else {
-    fatal("crypto_scrypt() failed");
+    fatal(ptx, "crypto_scrypt() failed");
     return NULL;
   }
 

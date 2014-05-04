@@ -359,9 +359,7 @@ void ps_determine(Pcpstream *stream) {
 size_t ps_read_decode(Pcpstream *stream) {
   Buffer *z = buffer_new(32, "ztemp");
   Buffer *line = buffer_new_str("line");
-
-  //buffer_info(stream->save);
- 
+  PCPCTX *ptx = ptx_new();
 
   if(buffer_left(stream->save) > stream->blocksize){// && stream->firstread == 1) {
     /* use the save buffer instead */
@@ -376,7 +374,7 @@ size_t ps_read_decode(Pcpstream *stream) {
     // fprintf(stderr, "      ps_read_next which doesn't end in a newline\n");
     buffer_get_chunk_tobuf(stream->save, z, buffer_left(stream->save));
     //buffer_dump(z);
-    fatals_ifany();
+    //fatals_ifany();
   }
   else {
     /* continue reading linewise */
@@ -435,10 +433,10 @@ size_t ps_read_decode(Pcpstream *stream) {
 
   /* finally, decode it and put into next */
   size_t binlen, outlen;
-  byte *bin = pcp_z85_decode(buffer_get_str(z), &binlen);
+  byte *bin = pcp_z85_decode(ptx, buffer_get_str(z), &binlen);
   //fprintf(stderr, "ps_read_decode decoding z: %ld, got: %ld\n", buffer_size(z), binlen);
   //  _dump("bin", bin, binlen);
-  fatals_ifany();
+  //fatals_ifany();
   if(bin == NULL) {
     /* it's not z85 encoded, so threat it as binary */
     if(stream->firstread) {
@@ -461,7 +459,7 @@ size_t ps_read_decode(Pcpstream *stream) {
 
   buffer_free(z);
   buffer_free(line);
-
+  ptx_clean(ptx);
 
   return outlen;
 }

@@ -33,7 +33,7 @@ static void prep_base85(void)
 	}
 }
 
-int decode_85(char *dst, const char *buffer, int len)
+int decode_85(PCPCTX *ptx, char *dst, const char *buffer, int len)
 {
 	prep_base85();
 	say1("len: %d\n", len);

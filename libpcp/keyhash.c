@@ -22,102 +22,87 @@
 
 #include "keyhash.h"
 
-pcp_key_t *pcpkey_hash;
-pcp_pubkey_t *pcppubkey_hash;
-pcp_keysig_t *pcpkeysig_hash;
 
-pcp_key_t *__k;
-pcp_pubkey_t *__p;
-pcp_keysig_t *__s;
-
-void pcphash_init() {
-  pcpkey_hash = NULL;
-  pcppubkey_hash = NULL;
-  pcpkeysig_hash = NULL;
-}
-
-void pcphash_del(void *key, int type) {
+void pcphash_del(PCPCTX *ptx, void *key, int type) {
   if(type == PCP_KEY_TYPE_SECRET) {
-    HASH_DEL(pcpkey_hash, (pcp_key_t *)key);
+    HASH_DEL(ptx->pcpkey_hash, (pcp_key_t *)key);
     memset(key, 0, sizeof(pcp_key_t));
   }
   else if(type == PCP_KEYSIG_NATIVE || type == PCP_KEYSIG_PBP) {
     pcp_keysig_t *keysig = (pcp_keysig_t *)key;
     memset(keysig->blob, 0, keysig->size);
     free(keysig->blob);
-    HASH_DEL(pcpkeysig_hash, (pcp_keysig_t *)key);
+    HASH_DEL(ptx->pcpkeysig_hash, (pcp_keysig_t *)key);
   }
   else {
-    HASH_DEL(pcppubkey_hash, (pcp_pubkey_t *)key);
+    HASH_DEL(ptx->pcppubkey_hash, (pcp_pubkey_t *)key);
     memset(key, 0, sizeof(pcp_pubkey_t));
   }
   free(key);
 }
 
-void pcphash_clean() {
-  if(pcpkey_hash != NULL) {
+void pcphash_clean(PCPCTX *ptx) {
+  if(ptx->pcpkey_hash != NULL) {
     pcp_key_t *current_key, *tmp;
-    HASH_ITER(hh, pcpkey_hash, current_key, tmp) {
-      pcphash_del(current_key, PCP_KEY_TYPE_SECRET);
+    HASH_ITER(hh, ptx->pcpkey_hash, current_key, tmp) {
+      pcphash_del(ptx, current_key, PCP_KEY_TYPE_SECRET);
     }
   }
 
-  if(pcppubkey_hash != NULL) {
+  if(ptx->pcppubkey_hash != NULL) {
     pcp_pubkey_t *current_pub, *ptmp;
-    HASH_ITER(hh, pcppubkey_hash, current_pub, ptmp) {
-      pcphash_del(current_pub, PCP_KEY_TYPE_PUBLIC);
+    HASH_ITER(hh, ptx->pcppubkey_hash, current_pub, ptmp) {
+      pcphash_del(ptx, current_pub, PCP_KEY_TYPE_PUBLIC);
     }
   }
 
-  if(pcpkeysig_hash != NULL) {
+  if(ptx->pcpkeysig_hash != NULL) {
     pcp_keysig_t *current_keysig, *tmp;
-    HASH_ITER(hh, pcpkeysig_hash, current_keysig, tmp) {
-      pcphash_del(current_keysig, current_keysig->type);
+    HASH_ITER(hh, ptx->pcpkeysig_hash, current_keysig, tmp) {
+      pcphash_del(ptx, current_keysig, current_keysig->type);
     }
   }
-
-  pcphash_init();
 }
 
 
-pcp_keysig_t *pcphash_keysigexists(char *id) {
+pcp_keysig_t *pcphash_keysigexists(PCPCTX *ptx, char *id) {
   pcp_keysig_t *keysig = NULL;
-  HASH_FIND_STR(pcpkeysig_hash, id, keysig);
+  HASH_FIND_STR(ptx->pcpkeysig_hash, id, keysig);
   return keysig; /*  maybe NULL! */
 }
 
-pcp_key_t *pcphash_keyexists(char *id) {
+pcp_key_t *pcphash_keyexists(PCPCTX *ptx, char *id) {
   pcp_key_t *key = NULL;
-  HASH_FIND_STR(pcpkey_hash, id, key);
+  HASH_FIND_STR(ptx->pcpkey_hash, id, key);
   return key; /*  maybe NULL! */
 }
 
-pcp_pubkey_t *pcphash_pubkeyexists(char *id) {
+pcp_pubkey_t *pcphash_pubkeyexists(PCPCTX *ptx, char *id) {
   pcp_pubkey_t *key = NULL;
-  HASH_FIND_STR(pcppubkey_hash, id, key);
+  HASH_FIND_STR(ptx->pcppubkey_hash, id, key);
   return key; /*  maybe NULL! */
 }
 
-void pcphash_add(void *key, int type) {
+void pcphash_add(PCPCTX *ptx, void *key, int type) {
   if(type == PCP_KEY_TYPE_PUBLIC) {
     pcp_pubkey_t *k = (pcp_pubkey_t *)key;
-    HASH_ADD_STR( pcppubkey_hash, id, k );
+    HASH_ADD_STR( ptx->pcppubkey_hash, id, k );
   }
   else if(type == PCP_KEYSIG_NATIVE || type == PCP_KEYSIG_PBP) {
     pcp_keysig_t *keysig = (pcp_keysig_t *)key;
-    HASH_ADD_STR( pcpkeysig_hash, id, keysig);
+    HASH_ADD_STR( ptx->pcpkeysig_hash, id, keysig);
   }
   else {
     pcp_key_t *k = (pcp_key_t *)key;    
-    HASH_ADD_STR( pcpkey_hash, id, k);
+    HASH_ADD_STR( ptx->pcpkey_hash, id, k);
   }
 }
 
-int pcphash_count() {
-  return HASH_COUNT(pcpkey_hash);
+int pcphash_count(PCPCTX *ptx) {
+  return HASH_COUNT(ptx->pcpkey_hash);
 }
 
-int pcphash_countpub() {
-  return HASH_COUNT(pcppubkey_hash);
+int pcphash_countpub(PCPCTX *ptx) {
+  return HASH_COUNT(ptx->pcppubkey_hash);
 }
 

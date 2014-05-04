@@ -41,6 +41,7 @@
 #include "keyhash.h"
 #include "util.h"
 #include "pcpstream.h"
+#include "context.h"
 
 /** Sign a raw message.
 
@@ -80,6 +81,8 @@ byte *pcp_ed_sign(byte *message, size_t messagesize, pcp_key_t *s);
 
     The signature must contain the message+nacl signature (with size crypto_sign_BYTES).
 
+    \param[in] pcp context.
+
     \param[in] signature Message+signature.
 
     \param[in] siglen Size of message+signature.
@@ -89,7 +92,7 @@ byte *pcp_ed_sign(byte *message, size_t messagesize, pcp_key_t *s);
     \return If the signature verifies return the raw message with the signature removed (size: siglen - crypto_sign_BYTES),
     returns NULL in case of errors. Check fatals_if_any().
 */
-byte *pcp_ed_verify(byte *signature, size_t siglen, pcp_pubkey_t *p);
+byte *pcp_ed_verify(PCPCTX *ptx, byte *signature, size_t siglen, pcp_pubkey_t *p);
 
 /**  Verify a signature using the mastersecret.
 
@@ -97,6 +100,8 @@ byte *pcp_ed_verify(byte *signature, size_t siglen, pcp_pubkey_t *p);
 
     The signature must contain the message+nacl signature (with size crypto_sign_BYTES).
 
+    \param[in] pcp context.
+
     \param[in] signature Message+signature.
 
     \param[in] siglen Size of message+signature.
@@ -106,13 +111,15 @@ byte *pcp_ed_verify(byte *signature, size_t siglen, pcp_pubkey_t *p);
     \return If the signature verifies return the raw message with the signature removed (size: siglen - crypto_sign_BYTES),
     returns NULL in case of errors. Check fatals_if_any().
 */
-byte *pcp_ed_verify_key(byte *signature, size_t siglen, pcp_pubkey_t *p);
+byte *pcp_ed_verify_key(PCPCTX *ptx, byte *signature, size_t siglen, pcp_pubkey_t *p);
 
 /** Sign a stream in 32k block mode.
 
     This function reads blockwise from the stream \a in and generates a hash
     of the contents of the stream. It outputs the stream to \a out, also blockwise
     and appends the signature afterwards, which consists of the hash+nacl-signature.
+
+    \param[in] pcp context.
 
     \param[in] in Stream to read from.
 
@@ -125,7 +132,7 @@ byte *pcp_ed_verify_key(byte *signature, size_t siglen, pcp_pubkey_t *p);
     \return Returns the number of bytes written to the output stream.
 
 */
-size_t pcp_ed_sign_buffered(Pcpstream *in, Pcpstream *out, pcp_key_t *s, int z85);
+size_t pcp_ed_sign_buffered(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, pcp_key_t *s, int z85);
 
 
 /** Verify a signature from a stream in 32k block mode.
@@ -140,6 +147,8 @@ size_t pcp_ed_sign_buffered(Pcpstream *in, Pcpstream *out, pcp_key_t *s, int z85
     the global public key hash pcppubkey_hash to find a public key which is able to verify
     the signature.
 
+    \param[in] pcp context.
+
     \param[in] in Stream to read from.
 
     \param[in] p Pointer to public key structure.
@@ -147,7 +156,7 @@ size_t pcp_ed_sign_buffered(Pcpstream *in, Pcpstream *out, pcp_key_t *s, int z85
     \return Returns a pointer to a public key which were used to verify the signature or NULL if
             an error occurred. Check fatals_if_any().
 */
-pcp_pubkey_t *pcp_ed_verify_buffered(Pcpstream *in, pcp_pubkey_t *p);
+pcp_pubkey_t *pcp_ed_verify_buffered(PCPCTX *ptx, Pcpstream *in, pcp_pubkey_t *p);
 
 /** Generate a detached signature from a stream in 32k block mode.
 
@@ -174,6 +183,8 @@ size_t pcp_ed_detachsign_buffered(Pcpstream *in, Pcpstream *out, pcp_key_t *s);
     the signature hash with the hash it calculated
     from the signed content.
 
+    \param[in] pcp context.
+
     \param[in] in Stream to read from.
 
     \param[in] sigfd Stream containing the detached signature.
@@ -184,7 +195,7 @@ size_t pcp_ed_detachsign_buffered(Pcpstream *in, Pcpstream *out, pcp_key_t *s);
             an error occurred. Check fatals_if_any().
 
  */
-pcp_pubkey_t *pcp_ed_detachverify_buffered(Pcpstream *in, Pcpstream *sigfd, pcp_pubkey_t *p);
+pcp_pubkey_t *pcp_ed_detachverify_buffered(PCPCTX *ptx, Pcpstream *in, Pcpstream *sigfd, pcp_pubkey_t *p);
 
 #endif /*  _HAVE_PCP_ED_H */
 

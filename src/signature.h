@@ -32,6 +32,7 @@
 #include "uthash.h"
 #include "z85.h"
 #include "pcpstream.h"
+#include "context.h"
 
 int pcpsign(char *infile, char *outfile, char *passwd, int z85, int detach);
 int pcpverify(char *infile, char *sigfile, char *id, int detach);

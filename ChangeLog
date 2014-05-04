@@ -96,6 +96,10 @@
 	is now determined automatically as well as the
 	encoding.
 
+	Made libpcp threadsafe by removing all global vars
+	and putting that stuff into the new PCP Context
+	class (ptx.h), which now holds errors and key hashes.
+	
 0.2.0	ED25519 and Curve25519 keys are now generated
 	separately (previously they were generated from
 	one random seed, the curve had been derived from

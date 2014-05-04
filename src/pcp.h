@@ -39,6 +39,7 @@
 #include "z85util.h"
 #include "version.h"
 #include "vault.h"
+#include "context.h"
 
 /*  subs */
 #include "keymgmt.h"
@@ -80,7 +81,9 @@
 #define PCP_HELP_INTRO "This is Pretty Curved Privacy. Licensed under the GPLv3. This is\n" \
 "BETA software. Use with care. NOT intended for production use.\n"
 
+/* some globals */
 vault_t *vault;
+PCPCTX *ptx;
 int debug;
 
 void version();

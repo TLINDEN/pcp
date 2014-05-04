@@ -36,6 +36,8 @@
 #include <unistd.h>
 
 #include "defines.h"
+#include "context.h"
+#include "pcp.h"
 
 #define MAXPASSLEN 2048
 

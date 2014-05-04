@@ -25,29 +25,31 @@
 using namespace std;
 using namespace pcp;
 
-Crypto::Crypto(Key &skey, PubKey &pkey) {
+Crypto::Crypto(PcpContext C, Key &skey, PubKey &pkey) {
   P = pkey;
   S = skey;
+  PTX = C;
   havevault = false;
-  pcphash_init();
-  pcphash_add(P.K, PCP_KEY_TYPE_PUBLIC);
+  pcphash_add(PTX.ptx, P.K, PCP_KEY_TYPE_PUBLIC);
 }
 
-Crypto::Crypto(Vault &v, Key &skey, PubKey &pkey) {
+Crypto::Crypto(PcpContext C, Vault &v, Key &skey, PubKey &pkey) {
   P = pkey;
   S = skey;
+  PTX = C;
   vault = v;
   havevault = true;
 }
 
 bool Crypto::encrypt(FILE *in, FILE *out, bool sign) {
   pcp_pubkey_t *pubhash = NULL;
-  HASH_ADD_STR( pubhash, id, P.K);
+  pcphash_add(PTX.ptx, P.K, P.K->type);
+  //HASH_ADD_STR( pubhash, id, P.K);
   Pcpstream *pin = ps_new_file(in);
   Pcpstream *pout = ps_new_file(out);
-  size_t clen = pcp_encrypt_stream(pin, pout, S.K, pubhash, sign);
+  size_t clen = pcp_encrypt_stream(PTX.ptx, pin, pout, S.K, pubhash, sign);
   if(clen <= 0)
-     throw exception();
+     throw exception(PTX);
   ps_close(pin);
   ps_close(pout);
   return true;
@@ -56,8 +58,8 @@ bool Crypto::encrypt(FILE *in, FILE *out, bool sign) {
 bool Crypto::decrypt(FILE *in, FILE *out, bool verify) {
   Pcpstream *pin = ps_new_file(in);
   Pcpstream *pout = ps_new_file(out);
-  if(pcp_decrypt_stream(pin, pout, S.K, NULL, verify) <= 0)
-    throw exception();
+  if(pcp_decrypt_stream(PTX.ptx, pin, pout, S.K, NULL, verify) <= 0)
+    throw exception(PTX);
   ps_close(pin);
   ps_close(pout);
   return true;

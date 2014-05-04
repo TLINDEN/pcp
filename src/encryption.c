@@ -34,7 +34,7 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
     in = stdin;
   else {
     if((in = fopen(infile, "rb")) == NULL) {
-      fatal("Could not open input file %s\n", infile);
+      fatal(ptx, "Could not open input file %s\n", infile);
       goto errde3;
     }
   }
@@ -43,7 +43,7 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
     out = stdout;
   else {
     if((out = fopen(outfile, "wb+")) == NULL) {
-      fatal("Could not open output file %s\n", outfile);
+      fatal(ptx, "Could not open output file %s\n", outfile);
       goto errde3;
     }
   }
@@ -73,15 +73,15 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
 	strncpy(passphrase, passwd, strlen(passwd));
       }
 
-      symkey = pcp_scrypt(passphrase, strlen(passphrase), salt, 90);
+      symkey = pcp_scrypt(ptx, passphrase, strlen(passphrase), salt, 90);
       free(salt);
     }
     else {
       /*  asymetric mode */
       if(useid) {
-	HASH_FIND_STR(pcpkey_hash, id, secret);
+	secret = pcphash_keyexists(ptx, id);
 	if(secret == NULL) {
-	  fatal("Could not find a secret key with id 0x%s in vault %s!\n",
+	  fatal(ptx, "Could not find a secret key with id 0x%s in vault %s!\n",
 		id, vault->filename);
 	  goto errde3;
 	}
@@ -89,7 +89,7 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
       else {
 	secret = pcp_find_primary_secret();
 	if(secret == NULL) {
-	  fatal("Could not find a secret key in vault %s!\n", id, vault->filename);
+	  fatal(ptx, "Could not find a secret key in vault %s!\n", id, vault->filename);
 	  goto errde3;
 	}
       }
@@ -105,21 +105,21 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
 	  strncpy(passphrase, passwd, strlen(passwd)+1);
 	}
 
-	secret = pcpkey_decrypt(secret, passphrase);
+	secret = pcpkey_decrypt(ptx, secret, passphrase);
 	if(secret == NULL)
 	  goto errde3;
       }
     }
   }
   else {
-    fatal("Could not determine input file type\n");
+    fatal(ptx, "Could not determine input file type\n");
     goto errde3;
   }
 
   if(symkey == NULL)
-    dlen = pcp_decrypt_stream(pin, pout, secret, NULL, verify);
+    dlen = pcp_decrypt_stream(ptx, pin, pout, secret, NULL, verify);
   else
-    dlen = pcp_decrypt_stream(pin, pout, NULL, symkey, verify);
+    dlen = pcp_decrypt_stream(ptx, pin, pout, NULL, symkey, verify);
 
   ps_close(pin);
   ps_close(pout);
@@ -164,23 +164,22 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
     byte *salt = ucmalloc(90); /*  FIXME: use random salt, concat it with result afterwards */
     char stsalt[] = PBP_COMPAT_SALT;
     memcpy(salt, stsalt, 90);
-    symkey = pcp_scrypt(passphrase, strlen(passphrase), salt, 90);
+    symkey = pcp_scrypt(ptx, passphrase, strlen(passphrase), salt, 90);
     free(salt);
   }
   else if(id != NULL && recipient == NULL) {
     /*  lookup by id */
-    HASH_FIND_STR(pcppubkey_hash, id, tmp);
+    tmp = pcphash_pubkeyexists(ptx, id);
     if(tmp == NULL) {
       /*  self-encryption: look if its a secret one */
-      pcp_key_t *s = NULL;
-      HASH_FIND_STR(pcpkey_hash, id, s);
+      pcp_key_t *s = pcphash_keyexists(ptx, id);
       if(s != NULL) {
 	tmp = pcpkey_pub_from_secret(s);
 	HASH_ADD_STR( pubhash, id, tmp);
 	self = 1;
       }
       else {
-	fatal("Could not find a public key with id 0x%s in vault %s!\n",
+	fatal(ptx, "Could not find a public key with id 0x%s in vault %s!\n",
 	      id, vault->filename);
 	goto erren3;
       }
@@ -197,7 +196,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
     /*  iterate through global hashlist */
     /*  copy matches into temporary pubhash */
     plist_t *rec;
-    pcphash_iteratepub(tmp) {
+    pcphash_iteratepub(ptx, tmp) {
       rec = recipient->first;
       while (rec != NULL) {
 	_lc(rec->value);
@@ -211,7 +210,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
       }
     }
     if(HASH_COUNT(pubhash) == 0) {
-      fatal("no matching key found for specified recipient(s)!\n");
+      fatal(ptx, "no matching key found for specified recipient(s)!\n");
       goto erren3;
     }
   }
@@ -224,7 +223,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
 #else
     secret = pcp_find_primary_secret();
     if(secret == NULL) {
-      fatal("Could not find a secret key in vault %s!\n", id, vault->filename);
+      fatal(ptx, "Could not find a secret key in vault %s!\n", id, vault->filename);
       goto erren2;
     }
 
@@ -239,7 +238,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
 	passphrase = ucmalloc(strlen(passwd)+1);
 	strncpy(passphrase, passwd, strlen(passwd)+1);
       }
-      secret = pcpkey_decrypt(secret, passphrase);
+      secret = pcpkey_decrypt(ptx, secret, passphrase);
       if(secret == NULL)
 	goto erren2;
     }
@@ -250,7 +249,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
     in = stdin;
   else {
     if((in = fopen(infile, "rb")) == NULL) {
-      fatal("Could not open input file %s\n", infile);
+      fatal(ptx, "Could not open input file %s\n", infile);
       goto erren2;
     }
   }
@@ -259,7 +258,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
     out = stdout;
   else {
     if((out = fopen(outfile, "wb+")) == NULL) {
-      fatal("Could not open output file %s\n", outfile);
+      fatal(ptx, "Could not open output file %s\n", outfile);
       goto erren2;
     }
   }
@@ -275,9 +274,9 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
   }
 
   if(self == 1)
-    clen = pcp_encrypt_stream_sym(pin, pout, symkey, 0, NULL);
+    clen = pcp_encrypt_stream_sym(ptx, pin, pout, symkey, 0, NULL);
   else
-    clen = pcp_encrypt_stream(pin, pout, secret, pubhash, signcrypt);
+    clen = pcp_encrypt_stream(ptx, pin, pout, secret, pubhash, signcrypt);
 
   if(armor == 1) {
     ps_finish(pout);
@@ -296,11 +295,10 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
       fprintf(stderr, "Encrypted %"FMT_SIZE_T" bytes for 0x%s successfully\n", (SIZE_T_CAST)clen, id);
     else {
       fprintf(stderr, "Encrypted %"FMT_SIZE_T" bytes for:\n", (SIZE_T_CAST)clen);
-      pcp_pubkey_t *cur, *t;
-      HASH_ITER(hh, pubhash, cur, t) {
+      pcp_pubkey_t *cur;
+      pcphash_iteratepub(ptx, cur) {
 	fprintf(stderr, "%s <%s>\n", cur->owner, cur->mail);
       }
-      free(t);
       free(cur);
     }
     if(signcrypt)

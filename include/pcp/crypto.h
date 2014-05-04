@@ -35,6 +35,7 @@
 #include "keyhash.h"
 #include "ed.h"
 #include "pcpstream.h"
+#include "context.h"
 
 /**
    \defgroup CRYPTO CRYPTO
@@ -146,7 +147,7 @@ int pcp_sodium_verify_box(byte **cleartext, byte* message,
     \return Returns an allocated byte array of the size csize which contains the encrypted result.
             In case of an error, it returns NULL sets csize to 0. Use fatals_ifany() to check for errors.
 */
-byte *pcp_box_encrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
+byte *pcp_box_encrypt(PCPCTX *ptx, pcp_key_t *secret, pcp_pubkey_t *pub,
                                byte *message, size_t messagesize,
 			       size_t *csize);
 
@@ -156,6 +157,8 @@ byte *pcp_box_encrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
     need to use it. However, from time to time there maybe the
     requirement to work with raw NaCL crypto_box() output. This
     function adds the neccessary padding and it uses PCP key structures.
+
+    \param[in] pcp context.
 
     \param[in] secret The secret key structure from the sender.
 
@@ -170,7 +173,7 @@ byte *pcp_box_encrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
     \return Returns an allocated byte array of the size csize which contains the encrypted result.
             In case of an error, it returns NULL sets csize to 0. Use fatals_ifany() to check for errors.
 */
-byte *pcp_box_decrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
+byte *pcp_box_decrypt(PCPCTX *ptx, pcp_key_t *secret, pcp_pubkey_t *pub,
                                byte *cipher, size_t ciphersize,
 			       size_t *dsize);
 
@@ -181,6 +184,8 @@ byte *pcp_box_decrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
     a number of recipients.
 
     Calls pcp_encrypt_stream_sym() after assembling the encrypted recipient list.
+
+    \param[in] pcp context.
 
     \param[in] in Stream to read the data to encrypt from.
 
@@ -194,7 +199,7 @@ byte *pcp_box_decrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
 
     \return Returns the size of the output written to the output stream or 0 in case of errors.
 */
-size_t pcp_encrypt_stream(Pcpstream *in, Pcpstream* out, pcp_key_t *s, pcp_pubkey_t *p, int signcrypt);
+size_t pcp_encrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t *s, pcp_pubkey_t *p, int signcrypt);
 
 /** Symmetrically encrypt a file or a buffer stream.
 
@@ -203,6 +208,8 @@ size_t pcp_encrypt_stream(Pcpstream *in, Pcpstream* out, pcp_key_t *s, pcp_pubke
     function.
 
     Uses crypto_secret_box() for each 32k-block with a random nonce for each.
+
+    \param[in] pcp context.
 
     \param[in] in Stream to read the data to encrypt from.
 
@@ -217,7 +224,7 @@ size_t pcp_encrypt_stream(Pcpstream *in, Pcpstream* out, pcp_key_t *s, pcp_pubke
 
     \return Returns the size of the output written to the output stream or 0 in case of errors.
 */
-size_t pcp_encrypt_stream_sym(Pcpstream *in, Pcpstream* out, byte *symkey, int havehead, pcp_rec_t *recsign);
+size_t pcp_encrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *symkey, int havehead, pcp_rec_t *recsign);
 
 
 /** Asymmetrically decrypt a file or a buffer stream.
@@ -228,6 +235,8 @@ size_t pcp_encrypt_stream_sym(Pcpstream *in, Pcpstream* out, byte *symkey, int h
     Calls pcp_decrypt_stream_sym() after assembling the encrypted recipient list.
 
     FIXME: should return the pcp_rec_t structure upon successfull verification somehow.
+
+    \param[in] pcp context.
 
     \param[in] in Stream to read the data to decrypt from.
 
@@ -241,7 +250,7 @@ size_t pcp_encrypt_stream_sym(Pcpstream *in, Pcpstream* out, byte *symkey, int h
 
     \return Returns the size of the output written to the output stream or 0 in case of errors.
 */
-size_t pcp_decrypt_stream(Pcpstream *in, Pcpstream* out, pcp_key_t *s, byte *symkey, int verify);
+size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t *s, byte *symkey, int verify);
 
 
 /** Symmetrically decrypt a file or a buffer stream.
@@ -253,6 +262,8 @@ size_t pcp_decrypt_stream(Pcpstream *in, Pcpstream* out, pcp_key_t *s, byte *sym
 
     Uses crypto_secret_box_open() for each 32k+16-block with a random nonce for each.
 
+    \param[in] pcp context.
+
     \param[in] in Stream to read the data to decrypt from.
 
     \param[out] out Stream to write decrypted result to.
@@ -263,7 +274,7 @@ size_t pcp_decrypt_stream(Pcpstream *in, Pcpstream* out, pcp_key_t *s, byte *sym
 
     \return Returns the size of the output written to the output stream or 0 in case of errors.
 */
-size_t pcp_decrypt_stream_sym(Pcpstream *in, Pcpstream* out, byte *symkey, pcp_rec_t *recverify);
+size_t pcp_decrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *symkey, pcp_rec_t *recverify);
 
 pcp_rec_t *pcp_rec_new(byte *cipher, size_t clen, pcp_key_t *secret, pcp_pubkey_t *pub);
 void pcp_rec_free(pcp_rec_t *r);

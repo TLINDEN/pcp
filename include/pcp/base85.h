@@ -12,6 +12,7 @@ Licensed under the terms of the LGPL 2.1.
 #include <string.h>
 #include <stdio.h>
 #include "defines.h"
+#include "context.h"
 
 #undef DEBUG_85
 
@@ -26,10 +27,10 @@ Licensed under the terms of the LGPL 2.1.
 #endif
 
 
-int decode_85(char *dst, const char *buffer, int len);
+int decode_85(PCPCTX *ptx, char *dst, const char *buffer, int len);
 void encode_85(char *buf, const unsigned char *data, int bytes);
 
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
-#define error(...) (fatal(__VA_ARGS__), -1)
+#define error(...) (fatal(ptx, __VA_ARGS__), -1)
 
 #endif /*  HAVE_BASE85_H */

@@ -46,11 +46,13 @@ namespace pcp {
   class Vault {
   private:
     vault_t *V;
+    PcpContext PTX;
 
   public:
     // constructors
     Vault();
-    Vault(std::string filename);
+    Vault(PcpContext P);
+    Vault(PcpContext P, std::string filename);
 
     // destructor
     ~Vault();

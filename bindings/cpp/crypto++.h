@@ -35,6 +35,7 @@ namespace pcp {
 
   class Crypto {
   private:
+    PcpContext PTX;
     bool havevault;
 
   public:
@@ -43,8 +44,8 @@ namespace pcp {
     Vault vault;
 
     // constructors
-    Crypto(Key &skey, PubKey &pkey);
-    Crypto(Vault &v, Key &skey, PubKey &pkey);
+    Crypto(PcpContext C, Key &skey, PubKey &pkey);
+    Crypto(PcpContext C, Vault &v, Key &skey, PubKey &pkey);
 
     // PK encryption methods
     // sender pubkey is P

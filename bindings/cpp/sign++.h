@@ -45,12 +45,13 @@ namespace pcp {
     Vault vault;
     PubKey Signedby;
     Buf sig;
+    PcpContext PTX;
 
     // constructors
-    Signature(Key &skey); // sign only
-    Signature(PubKey &pkey); // verify only
-    Signature(Key &skey, PubKey &pkey); // both/bulk
-    Signature(Vault &v);
+    Signature(PcpContext P, Key &skey); // sign only
+    Signature(PcpContext P,PubKey &pkey); // verify only
+    Signature(PcpContext P,Key &skey, PubKey &pkey); // both/bulk
+    Signature(PcpContext P,Vault &v);
 
     // destructor
     ~Signature();

@@ -43,6 +43,8 @@ we pad the input with zeroes and remove them after decoding.
 #include "defines.h"
 #include "zmq_z85.h"
 #include "mem.h"
+#include "structs.h"
+#include "context.h"
 #include "buffer.h"
 
 /** Zero-pad some input data.
@@ -76,6 +78,7 @@ size_t pcp_unpadfour(byte *src, size_t srclen);
 
     The input \a z85block may contain newlines which will be removed.
 
+    \param[in] the pcp context object.
     \param[in] z85block The Z85 encoded string.
     \param[in] dstlen Returned size of decoded data (pointer to int).
 
@@ -83,7 +86,7 @@ size_t pcp_unpadfour(byte *src, size_t srclen);
             returns NULL. Check fatals_if_any().
 
 */
-byte *pcp_z85_decode(char *z85block, size_t *dstlen);
+byte *pcp_z85_decode(PCPCTX *ptx, char *z85block, size_t *dstlen);
 
 
 /** Encode data to Z85 encoding.
@@ -105,24 +108,26 @@ char *pcp_z85_encode(byte *raw, size_t srclen, size_t *dstlen);
     Reads a file and returns the raw Z85 encoded string.
     It ignores newlines, comments and Headerstrings.
 
+    \param[in] the pcp context object.
     \param[in] infile FILE stream to read from.
 
     \return Raw Z85 encoded string with comments, headers and newlines removed.
  */
-char *pcp_readz85file(FILE *infile);
+char *pcp_readz85file(PCPCTX *ptx, FILE *infile);
 
 /** Read a Z85 encoded string.
 
     Parses the given input string and returns the raw Z85 encoded string.
     It ignores newlines, comments and Headerstrings.
 
+    \param[in] the pcp context object.
     \param[in] input Z85 encoded string.
     \param[in] bufsize Size of the string.
 
     \return Raw Z85 encoded string with comments, headers and newlines removed.
 
  */
-char *pcp_readz85string(byte *input, size_t bufsize);
+char *pcp_readz85string(PCPCTX *ptx, byte *input, size_t bufsize);
 
 /** Check if a binary array is utf8.
 

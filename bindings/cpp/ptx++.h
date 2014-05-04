@@ -19,51 +19,30 @@
     You can contact me by mail: <tlinden AT cpan DOT org>.
 */
 
-#define _GNU_SOURCE /* vasprintf() linux */
 
-#include "defines.h"
-#include "platform.h"
+#ifndef _HAVE_PCPPP_PTX_H
+#define _HAVE_PCPPP_PTX_H
+
+#include <pcp.h>
+#include <vector>
+#include <string>
+#include <iostream>
+
+#include "helpers++.h"
+
+namespace pcp {
+
+  class PcpContext {
+  public:
+    PCPCTX *ptx;
+
+    // constructors
+    PcpContext();
+
+    // destructors
+    ~PcpContext();
+  };
+};
 
 
-#include <errno.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-
-char *PCP_ERR;
-byte PCP_ERRSET;
-int PCP_EXIT;
-int PCPVERBOSE;
-
-void fatal(const char * fmt, ...) {
-  va_list ap;
-  va_start(ap, fmt);
-  
-  if(vasprintf(&PCP_ERR, fmt, ap) >= 0) {
-    va_end(ap);
-    PCP_ERRSET = 1;
-  }
-  else {
-    fprintf(stderr, "Could not store fatal error message %s!\n", fmt);
-    PCP_ERRSET = 1;
-  }
-}
-
-void fatals_reset() {
-  PCP_ERRSET = 0;
-}
-
-void fatals_ifany() {
-  if(PCP_ERRSET == 1) {
-    fprintf(stderr, "%s", PCP_ERR);
-    if(errno) {
-      fprintf(stderr, "Error: %s\n", strerror(errno));
-    }
-    PCP_EXIT = 1;
-  }
-}
-
-void fatals_done() {
-  free(PCP_ERR);
-}
+#endif // _HAVE_PCPPP_PTX_H

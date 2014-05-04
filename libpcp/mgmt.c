@@ -35,37 +35,37 @@ int _get_pk(Buffer *blob, pcp_pubkey_t *p) {
     return 1;
 }
 
-int _check_keysig_h(Buffer *blob, rfc_pub_sig_h *h) {
+int _check_keysig_h(PCPCTX *ptx, Buffer *blob, rfc_pub_sig_h *h) {
   if(buffer_left(blob) >= sizeof(rfc_pub_sig_h)) {
     buffer_get_chunk(blob, h, sizeof(rfc_pub_sig_h));
 
     h->numsubs = be16toh(h->numsubs);
 
     if(h->version != EXP_SIG_VERSION) {
-      fatal("Unsupported pubkey signature version %d, expected %d", h->version, EXP_SIG_VERSION);
+      fatal(ptx, "Unsupported pubkey signature version %d, expected %d", h->version, EXP_SIG_VERSION);
       return 1;
     }
     if(h->type != EXP_SIG_TYPE) {
-      fatal("Unsupported pubkey signature type %d, expected %d", h->type, EXP_SIG_TYPE);
+      fatal(ptx, "Unsupported pubkey signature type %d, expected %d", h->type, EXP_SIG_TYPE);
       return 1;
     }
     if(h->pkcipher != EXP_SIG_CIPHER) {
-      fatal("Unsupported pubkey signature cipher %d, expected %d", h->pkcipher, EXP_SIG_CIPHER);
+      fatal(ptx, "Unsupported pubkey signature cipher %d, expected %d", h->pkcipher, EXP_SIG_CIPHER);
       return 1;
     }
     if(h->hashcipher != EXP_HASH_CIPHER) {
-      fatal("Unsupported pubkey signature hash cipher %d, expected %d", h->hashcipher, EXP_HASH_CIPHER);
+      fatal(ptx, "Unsupported pubkey signature hash cipher %d, expected %d", h->hashcipher, EXP_HASH_CIPHER);
       return 1;
     }
     if(h->numsubs > 0 && buffer_left(blob) < sizeof(rfc_pub_sig_s) * h->numsubs) {
-      fatal("Signature size specification invalid (sig: %ld, bytes left: %ld, numsubs: %ld",
+      fatal(ptx, "Signature size specification invalid (sig: %ld, bytes left: %ld, numsubs: %ld",
 	    sizeof(rfc_pub_sig_s) * h->numsubs, buffer_left(blob), h->numsubs);
       return 1;
     }
     return 0;
   }
   else {
-    fatal("Error: input data too small, import failed");
+    fatal(ptx, "Error: input data too small, import failed");
     return 1;
   }
 }
@@ -108,7 +108,7 @@ int _check_sigsubs(Buffer *blob, pcp_pubkey_t *p, rfc_pub_sig_s *subheader) {
   return 0;
 }
 
-int _check_hash_keysig(Buffer *blob, pcp_pubkey_t *p, pcp_keysig_t *sk) {
+int _check_hash_keysig(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, pcp_keysig_t *sk) {
   // read hash + sig
   size_t blobstop = blob->offset;
   size_t sigsize = crypto_sign_BYTES + crypto_generichash_BYTES_MAX;
@@ -130,7 +130,7 @@ int _check_hash_keysig(Buffer *blob, pcp_pubkey_t *p, pcp_keysig_t *sk) {
   buffer_get_chunk(blob, sk->blob, sk->size);
 
   /* verify the signature */
-  byte *verifyhash = pcp_ed_verify_key(signature, sigsize, p);
+  byte *verifyhash = pcp_ed_verify_key(ptx, signature, sigsize, p);
   if(verifyhash == NULL)
     goto chker1;
 
@@ -143,7 +143,7 @@ int _check_hash_keysig(Buffer *blob, pcp_pubkey_t *p, pcp_keysig_t *sk) {
 
   /* compare them */
   if(memcmp(hash, verifyhash, crypto_generichash_BYTES_MAX) != 0) {
-    fatal("Signature verifies but signed hash doesn't match signature contents\n");
+    fatal(ptx, "Signature verifies but signed hash doesn't match signature contents\n");
     goto chker2;
   }
 
@@ -172,7 +172,7 @@ int _check_hash_keysig(Buffer *blob, pcp_pubkey_t *p, pcp_keysig_t *sk) {
   
 }
 
-pcp_ks_bundle_t *pcp_import_binpub(byte *raw, size_t rawsize) {
+pcp_ks_bundle_t *pcp_import_binpub(PCPCTX *ptx, byte *raw, size_t rawsize) {
   Buffer *blob = buffer_new(512, "importblob");
 
   buffer_add(blob, raw, rawsize);
@@ -182,35 +182,35 @@ pcp_ks_bundle_t *pcp_import_binpub(byte *raw, size_t rawsize) {
 
   if(version == PCP_KEY_VERSION) {
     /* ah, homerun */
-    return pcp_import_pub_rfc(blob);
+    return pcp_import_pub_rfc(ptx, blob);
   }
   else {
     /* nope, it's probably pbp */
-    return pcp_import_pub_pbp(blob);
+    return pcp_import_pub_pbp(ptx, blob);
   }
 }
 
-pcp_ks_bundle_t *pcp_import_pub(byte *raw, size_t rawsize) {
+pcp_ks_bundle_t *pcp_import_pub(PCPCTX *ptx, byte *raw, size_t rawsize) {
   size_t clen;
   byte *bin = NULL;
   char *z85 = NULL;
 
   if(rawsize == 0) {
-    fatal("Input file is empty!\n");
+    fatal(ptx, "Input file is empty!\n");
     return NULL;
   }
 
   Buffer *blob = buffer_new(512, "importblob");
 
   /* first, try to decode the input */
-  z85 = pcp_readz85string(raw, rawsize);
+  z85 = pcp_readz85string(ptx, raw, rawsize);
 
   if(z85 != NULL)
-    bin = pcp_z85_decode(z85, &clen);
+    bin = pcp_z85_decode(ptx, z85, &clen);
 
   if(bin == NULL) {
     /* treat as binary blob */
-    fatals_reset();
+    fatals_reset(ptx);
     buffer_add(blob, raw, rawsize);
   }
   else {
@@ -224,15 +224,15 @@ pcp_ks_bundle_t *pcp_import_pub(byte *raw, size_t rawsize) {
 
   if(version == PCP_KEY_VERSION) {
     /* ah, homerun */
-    return pcp_import_pub_rfc(blob);
+    return pcp_import_pub_rfc(ptx, blob);
   }
   else {
     /* nope, it's probably pbp */
-    return pcp_import_pub_pbp(blob);
+    return pcp_import_pub_pbp(ptx, blob);
   }
 }
 
-pcp_ks_bundle_t *pcp_import_pub_rfc(Buffer *blob) {
+pcp_ks_bundle_t *pcp_import_pub_rfc(PCPCTX *ptx, Buffer *blob) {
   pcp_pubkey_t *p = ucmalloc(sizeof(pcp_pubkey_t));
   pcp_keysig_t *sk = ucmalloc(sizeof(pcp_keysig_t));
   rfc_pub_sig_h *sigheader = ucmalloc(sizeof(rfc_pub_sig_h));
@@ -245,7 +245,7 @@ pcp_ks_bundle_t *pcp_import_pub_rfc(Buffer *blob) {
   if(buffer_done(blob)) goto be;
 
   if(pkcipher != EXP_PK_CIPHER) {
-    fatal("Unsupported pk cipher %d, expected %d", pkcipher, EXP_PK_CIPHER);
+    fatal(ptx, "Unsupported pk cipher %d, expected %d", pkcipher, EXP_PK_CIPHER);
     goto bef;
   }
 
@@ -254,7 +254,7 @@ pcp_ks_bundle_t *pcp_import_pub_rfc(Buffer *blob) {
     goto be;
 
   /* check sig header */
-  if(_check_keysig_h(blob, sigheader) != 0)
+  if(_check_keysig_h(ptx, blob, sigheader) != 0)
     goto bef;
 
   /* iterate over subs, if any */
@@ -277,7 +277,7 @@ pcp_ks_bundle_t *pcp_import_pub_rfc(Buffer *blob) {
   pcp_ks_bundle_t *b = ucmalloc(sizeof(pcp_ks_bundle_t));
 
   /* retrieve signature, store and verify it */
-  if(_check_hash_keysig(blob, p, sk) != 0) {
+  if(_check_hash_keysig(ptx, blob, p, sk) != 0) {
     b->p = p;
     b->s = NULL;
   }
@@ -290,7 +290,7 @@ pcp_ks_bundle_t *pcp_import_pub_rfc(Buffer *blob) {
 
 
  be:
-  fatal("Error: input data too small, import failed");
+  fatal(ptx, "Error: input data too small, import failed");
 
  bef:
   buffer_free(blob);
@@ -300,7 +300,7 @@ pcp_ks_bundle_t *pcp_import_pub_rfc(Buffer *blob) {
   return NULL;
 }
 
-pcp_ks_bundle_t *pcp_import_pub_pbp(Buffer *blob) {
+pcp_ks_bundle_t *pcp_import_pub_pbp(PCPCTX *ptx, Buffer *blob) {
   char *date  = ucmalloc(19);
   char *ignore = ucmalloc(46);
   char *parts = NULL;
@@ -314,7 +314,7 @@ pcp_ks_bundle_t *pcp_import_pub_pbp(Buffer *blob) {
 
   /* make sure it's a pbp */
   if(_buffer_is_binary(sig, crypto_sign_BYTES) == 0) {
-    fatal("failed to recognize input, that's probably no key\n");
+    fatal(ptx, "failed to recognize input, that's probably no key\n");
     goto errimp2;
   }
 
@@ -326,7 +326,7 @@ pcp_ks_bundle_t *pcp_import_pub_pbp(Buffer *blob) {
   date[19] = '\0';
   struct tm c;
   if(strptime(date, "%Y-%m-%dT%H:%M:%S", &c) == NULL) {
-    fatal("Failed to parse creation time in PBP public key file (<%s>)\n", date);
+    fatal(ptx, "Failed to parse creation time in PBP public key file (<%s>)\n", date);
     free(date);
     goto errimp2;
   }
@@ -365,7 +365,7 @@ pcp_ks_bundle_t *pcp_import_pub_pbp(Buffer *blob) {
   /* edpub used for signing, might differ */
   memcpy(tmp->edpub, b->sigpub, crypto_sign_PUBLICKEYBYTES);
 
-  byte *verify = pcp_ed_verify(buffer_get(blob), buffer_size(blob), tmp);
+  byte *verify = pcp_ed_verify(ptx, buffer_get(blob), buffer_size(blob), tmp);
   free(tmp);
 
   pcp_ks_bundle_t *bundle = ucmalloc(sizeof(pcp_ks_bundle_t));
@@ -671,7 +671,7 @@ Buffer *pcp_export_rfc_pub (pcp_key_t *sk) {
   return out;
 }
 
-Buffer *pcp_export_secret(pcp_key_t *sk, char *passphrase) {
+Buffer *pcp_export_secret(PCPCTX *ptx, pcp_key_t *sk, char *passphrase) {
   byte *nonce = NULL;
   byte *symkey = NULL;
   byte *cipher = NULL;
@@ -708,7 +708,7 @@ Buffer *pcp_export_secret(pcp_key_t *sk, char *passphrase) {
 
   nonce = ucmalloc(crypto_secretbox_NONCEBYTES);
   arc4random_buf(nonce, crypto_secretbox_NONCEBYTES);
-  symkey = pcp_scrypt(passphrase, strlen(passphrase), nonce, crypto_secretbox_NONCEBYTES);
+  symkey = pcp_scrypt(ptx, passphrase, strlen(passphrase), nonce, crypto_secretbox_NONCEBYTES);
 
   es = pcp_sodium_mac(&cipher, buffer_get(raw), buffer_size(raw), nonce, symkey);
 
@@ -723,33 +723,33 @@ Buffer *pcp_export_secret(pcp_key_t *sk, char *passphrase) {
   return out;
 }
 
-pcp_key_t *pcp_import_binsecret(byte *raw, size_t rawsize, char *passphrase) {
+pcp_key_t *pcp_import_binsecret(PCPCTX *ptx, byte *raw, size_t rawsize, char *passphrase) {
   Buffer *blob = buffer_new(512, "importskblob");
   buffer_add(blob, raw, rawsize);
-  return pcp_import_secret_native(blob, passphrase);
+  return pcp_import_secret_native(ptx, blob, passphrase);
 }
 
 
-pcp_key_t *pcp_import_secret(byte *raw, size_t rawsize, char *passphrase) {
+pcp_key_t *pcp_import_secret(PCPCTX *ptx, byte *raw, size_t rawsize, char *passphrase) {
   size_t clen;
   byte *bin = NULL;
   char *z85 = NULL;
 
   if(rawsize == 0) {
-    fatal("Input file is empty!\n");
+    fatal(ptx, "Input file is empty!\n");
     return NULL;
   }
 
   Buffer *blob = buffer_new(512, "importskblob");
 
   /* first, try to decode the input */
-  z85 = pcp_readz85string(raw, rawsize);
+  z85 = pcp_readz85string(ptx, raw, rawsize);
   if(z85 != NULL)
-    bin = pcp_z85_decode(z85, &clen);
+    bin = pcp_z85_decode(ptx, z85, &clen);
 
   if(bin == NULL) {
     /* treat as binary blob */
-    fatals_reset();
+    fatals_reset(ptx);
     buffer_add(blob, raw, rawsize);
   }
   else {
@@ -759,10 +759,10 @@ pcp_key_t *pcp_import_secret(byte *raw, size_t rawsize, char *passphrase) {
   }
 
   /* now we've got the blob, parse it */
-  return pcp_import_secret_native(blob, passphrase);
+  return pcp_import_secret_native(ptx, blob, passphrase);
 }
 
-pcp_key_t *pcp_import_secret_native(Buffer *cipher, char *passphrase) {
+pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphrase) {
   pcp_key_t *sk = ucmalloc(sizeof(pcp_key_t));
   byte *nonce = ucmalloc(crypto_secretbox_NONCEBYTES);
   byte *symkey = NULL;
@@ -776,11 +776,11 @@ pcp_key_t *pcp_import_secret_native(Buffer *cipher, char *passphrase) {
   if(buffer_get_chunk(cipher, nonce, crypto_secretbox_NONCEBYTES) == 0)
     goto impserr1;
 
-  symkey = pcp_scrypt(passphrase, strlen(passphrase), nonce, crypto_secretbox_NONCEBYTES);
+  symkey = pcp_scrypt(ptx, passphrase, strlen(passphrase), nonce, crypto_secretbox_NONCEBYTES);
 
   cipherlen = buffer_left(cipher);
   if(cipherlen < minlen) {
-    fatal("failed to decrypt the secret key file:\n"
+    fatal(ptx, "failed to decrypt the secret key file:\n"
 	  "expected encrypted secret key size %ld is less than minimum len %ld\n", cipherlen, minlen);
     goto impserr1;
   }
@@ -788,7 +788,7 @@ pcp_key_t *pcp_import_secret_native(Buffer *cipher, char *passphrase) {
   /* decrypt the blob */
   if(pcp_sodium_verify_mac(&clear, buffer_get_remainder(cipher),
 			   cipherlen, nonce, symkey) != 0) {
-    fatal("failed to decrypt the secret key file\n");
+    fatal(ptx, "failed to decrypt the secret key file\n");
     goto impserr1;
   }
 

@@ -35,6 +35,9 @@
 #include "z85.h"
 #include "zmq_z85.h"
 #include "defines.h"
+#include "context.h"
+
+extern PCPCTX *ptx;
 
 int pcpz85_encode(char *infile, char *outfile);
 int pcpz85_decode(char *infile, char *outfile);

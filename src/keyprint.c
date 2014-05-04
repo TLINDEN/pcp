@@ -28,7 +28,7 @@ int pcptext_infile(char *infile) {
   int insize;
 
   if((in = fopen(infile, "rb")) == NULL) {
-    fatal("Could not open input file %s\n", infile);
+    fatal(ptx, "Could not open input file %s\n", infile);
     goto errtinf1;
   }
   
@@ -42,7 +42,7 @@ int pcptext_infile(char *infile) {
   }
 
   /*  maybe a vault? */
-  vault_t *v = pcpvault_init(infile);
+  vault_t *v = pcpvault_init(ptx, infile);
   if(v != NULL) {
     fprintf(stdout, "%s is a vault file\n", infile);
     pcptext_vault(v);
@@ -50,14 +50,14 @@ int pcptext_infile(char *infile) {
   }
 
   /*  try z85ing it */
-  char *z85 = pcp_readz85file(in);
+  char *z85 = pcp_readz85file(ptx, in);
   if(z85 == NULL) {
       fprintf(stdout, "Can't handle %s - unknown file type.\n", infile); 
       goto errtinf1;
   }
 
   size_t clen;
-  byte *bin = pcp_z85_decode((char *)z85, &clen);
+  byte *bin = pcp_z85_decode(ptx, (char *)z85, &clen);
   free(z85);
 
   if(bin == NULL) {
@@ -71,31 +71,31 @@ int pcptext_infile(char *infile) {
   fprintf(stdout, "%s looks Z85 encoded but otherwise unknown and is possibly encrypted.\n", infile);
 
  tdone:
-  fatals_reset();
+  fatals_reset(ptx);
   return 0;
 
  errtinf1:
-  fatals_reset();
+  fatals_reset(ptx);
   return 1;
 }
 
 
 void pcptext_key(char *keyid) {
-  pcp_key_t *s = pcphash_keyexists(keyid);
+  pcp_key_t *s = pcphash_keyexists(ptx, keyid);
   if(s != NULL) {
     if(debug)
       pcp_dumpkey(s);
     pcpkey_print(s, stdout);
   }
   else {
-    pcp_pubkey_t *p = pcphash_pubkeyexists(keyid);
+    pcp_pubkey_t *p = pcphash_pubkeyexists(ptx, keyid);
     if(p != NULL) {
       if(debug)
 	pcp_dumppubkey(p);
       pcppubkey_print(p, stdout);
     }
     else {
-      fatal("No key with id 0x%s found!\n", keyid);
+      fatal(ptx, "No key with id 0x%s found!\n", keyid);
     }
   }
 }
@@ -113,8 +113,8 @@ void pcptext_vault(vault_t *vault) {
   printf("%02X", vault->checksum[31]);
   printf("\n");
 
-  printf("  Secret keys: %d\n", HASH_COUNT(pcpkey_hash));
-  printf("  Public keys: %d\n",  HASH_COUNT(pcppubkey_hash));
+  printf("  Secret keys: %d\n", pcphash_count(ptx));
+  printf("  Public keys: %d\n", pcphash_countpub(ptx) );
 }
 
 void pcpkey_printlineinfo(pcp_key_t *key) {
@@ -128,7 +128,7 @@ void pcpkey_printlineinfo(pcp_key_t *key) {
 	 c->tm_hour, c->tm_min, c->tm_sec,
 	 key->owner, key->mail);
 
-  if(PCPVERBOSE) {
+  if(ptx->verbose) {
     printf("    ");
     byte *hash = pcpkey_getchecksum(key);
     int i, y;
@@ -157,7 +157,7 @@ void pcppubkey_printlineinfo(pcp_pubkey_t *key) {
 	 c->tm_hour, c->tm_min, c->tm_sec,
 	 key->owner, key->mail);
 
-  if(PCPVERBOSE) {
+  if(ptx->verbose) {
     printf("    ");
     byte *hash = pcppubkey_getchecksum(key);
     int i, y;
@@ -171,7 +171,7 @@ void pcppubkey_printlineinfo(pcp_pubkey_t *key) {
     printf("\n    signed: %s, serial: %08x, version: %d, ",
 	   (key->valid == 1) ? "yes" : " no",
 	   key->serial, (int)key->version);
-    pcp_keysig_t *sig = pcphash_keysigexists(key->id);
+    pcp_keysig_t *sig = pcphash_keysigexists(ptx, key->id);
     if(sig != NULL) {
       printf("signature fingerprint:\n    ");
       byte *checksum = sig->checksum;
@@ -305,7 +305,7 @@ void pcpexport_yaml(char *outfile) {
   }
   else {
     if((out = fopen(outfile, "wb+")) == NULL) {
-      fatal("Could not create output file %s", outfile);
+      fatal(ptx, "Could not create output file %s", outfile);
       out = NULL;
     }
   }
@@ -325,7 +325,7 @@ void pcpexport_yaml(char *outfile) {
     fprintf(out, "---\n");
     fprintf(out, "secret-keys:\n");
 
-    pcphash_iterate(s) {
+    pcphash_iterate(ptx, s) {
       fprintf(out, " -\n");
       fprintf(out, "  id:         %s\n", s->id);
       fprintf(out, "  owner:      %s\n", s->owner);
@@ -350,7 +350,7 @@ void pcpexport_yaml(char *outfile) {
     }
     
     fprintf(out, "public-keys:\n");
-    pcphash_iteratepub(p) {
+    pcphash_iteratepub(ptx, p) {
       fprintf(out, " -\n");
       fprintf(out, "  id:      %s\n", p->id);
       fprintf(out, "  owner:   %s\n", p->owner);

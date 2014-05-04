@@ -58,7 +58,6 @@ int main (int argc, char **argv)  {
   plist_t *recipient = NULL;
   FILE *in;
 
-  PCP_EXIT = 0;
   errno = 0;
   debug = 0;
   mode = 0;
@@ -71,7 +70,7 @@ int main (int argc, char **argv)  {
   signcrypt = 0;
   exportformat = EXP_FORMAT_NATIVE;
 
-  PCPVERBOSE = 0;
+  ptx = ptx_new();
 
   static struct option longopts[] = {
     /*  generics */
@@ -138,7 +137,7 @@ int main (int argc, char **argv)  {
 	usevault = 1;
         break;
       case  'L':
-        PCPVERBOSE = 1; /* no break by purpose, turn on -l */
+        ptx->verbose = 1; /* no break by purpose, turn on -l */
       case 'l':
 	mode += PCP_MODE_LISTKEYS;
 	usevault = 1;
@@ -268,7 +267,7 @@ int main (int argc, char **argv)  {
       case '0':
 	version();
       case 'v':
-	PCPVERBOSE = 1;
+	ptx->verbose = 1;
 	break;
       case 'h':
 	usage(0);
@@ -279,7 +278,6 @@ int main (int argc, char **argv)  {
 
   argc -= optind;
   argv += optind;
-
 
   if(mode == 0) {
     /* turn -z|-Z into a mode if there's nothing else specified */
@@ -390,8 +388,7 @@ int main (int argc, char **argv)  {
   }
 
   if(usevault == 1) {
-    pcphash_init();
-    vault = pcpvault_init(vaultfile);
+    vault = pcpvault_init(ptx, vaultfile);
     if(vault != NULL) {
       switch (mode) {
       case  PCP_MODE_KEYGEN:
@@ -435,7 +432,7 @@ int main (int argc, char **argv)  {
 	  in = stdin;
 	else {
 	  if((in = fopen(infile, "rb")) == NULL) {
-	    fatal("Could not open input file %s\n", infile);
+	    fatal(ptx, "Could not open input file %s\n", infile);
 	    free(infile);
 	    break;
 	  }
@@ -452,7 +449,7 @@ int main (int argc, char **argv)  {
 	  }
 	}
 	else {
-	  fatal("You need to specify a key id (--keyid)!\n");
+	  fatal(ptx, "You need to specify a key id (--keyid)!\n");
 	}
 	break;
 
@@ -465,7 +462,7 @@ int main (int argc, char **argv)  {
 	  }
 	}
 	else {
-	  fatal("You need to specify a key id (--keyid)!\n");
+	  fatal(ptx, "You need to specify a key id (--keyid)!\n");
 	}
 	break;
 
@@ -481,7 +478,7 @@ int main (int argc, char **argv)  {
 	}
 	else {
 	  /*  -i and -r specified */
-	  fatal("You can't specify both -i and -r, use either -i or -r!\n");
+	  fatal(ptx, "You can't specify both -i and -r, use either -i or -r!\n");
 	}
 	if(id != NULL)
 	  free(id);
@@ -510,7 +507,7 @@ int main (int argc, char **argv)  {
       case PCP_MODE_SIGN:
 	if(detach) {
 	  if(outfile != NULL && sigfile != NULL)
-	    fatal("You can't both specify -O and -f, use -O for std signatures and -f for detached ones\n");
+	    fatal(ptx, "You can't both specify -O and -f, use -O for std signatures and -f for detached ones\n");
 	  else
 	    pcpsign(infile, sigfile, xpass, armor, detach);
 	}
@@ -540,8 +537,7 @@ int main (int argc, char **argv)  {
 	goto ELSEMODE;
 	break;
       }
-      pcpvault_close(vault);
-      pcphash_clean();
+      pcpvault_close(ptx, vault);
       free(vaultfile);
     }
   }
@@ -565,8 +561,7 @@ int main (int argc, char **argv)  {
 	pcptext_infile(infile);
       }
       else {
-	pcphash_init();
-	vault = pcpvault_init(vaultfile);
+	vault = pcpvault_init(ptx, vaultfile);
 	if(! useid && infile == NULL) {
 	  pcptext_vault(vault);
 	}
@@ -577,21 +572,20 @@ int main (int argc, char **argv)  {
 	    free(id);
 	  }
 	}
-	pcpvault_close(vault);
-	pcphash_clean();
+	pcpvault_close(ptx, vault);
 	free(vaultfile);
       }
       break;
 
     default:
       /*  mode params mixed */
-      fatal("Sorry, invalid combination of commandline parameters (0x%04X)!\n", mode);
+      fatal(ptx, "Sorry, invalid combination of commandline parameters (0x%04X)!\n", mode);
       break;  
     }
   }
   
-  fatals_ifany();
-  fatals_done();
-  return PCP_EXIT;
-
+  fatals_ifany(ptx);
+  int e = ptx->pcp_exit;
+  ptx_clean(ptx);
+  return e;
 }

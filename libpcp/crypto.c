@@ -81,7 +81,7 @@ int pcp_sodium_verify_box(byte **cleartext, byte* message,
 
 
 
-byte *pcp_box_encrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
+byte *pcp_box_encrypt(PCPCTX *ptx, pcp_key_t *secret, pcp_pubkey_t *pub,
 			       byte *message, size_t messagesize,
 			       size_t *csize) {
 
@@ -93,7 +93,7 @@ byte *pcp_box_encrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
 		 secret->secret, pub->pub);
 
   if(es <= messagesize) {
-    fatal("failed to encrypt message!\n");
+    fatal(ptx, "failed to encrypt message!\n");
     goto errbec;
   }
 
@@ -124,7 +124,7 @@ byte *pcp_box_encrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
 }
 
 
-byte *pcp_box_decrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
+byte *pcp_box_decrypt(PCPCTX *ptx, pcp_key_t *secret, pcp_pubkey_t *pub,
 			       byte *cipher, size_t ciphersize,
 			       size_t *dsize) {
 
@@ -140,7 +140,7 @@ byte *pcp_box_decrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
   if(pcp_sodium_verify_box(&message, cipheronly,
 			   ciphersize - crypto_secretbox_NONCEBYTES,
 			   nonce, secret->secret, pub->pub) != 0){
-    fatal("failed to decrypt message!\n");
+    fatal(ptx, "failed to decrypt message!\n");
     goto errbed;
   }
 
@@ -161,7 +161,7 @@ byte *pcp_box_decrypt(pcp_key_t *secret, pcp_pubkey_t *pub,
   return NULL;
 }
 
-size_t pcp_decrypt_stream(Pcpstream *in, Pcpstream* out, pcp_key_t *s, byte *symkey, int verify) {
+size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t *s, byte *symkey, int verify) {
   pcp_pubkey_t *cur = NULL;
   byte *reccipher = NULL;
   int recmatch, self;
@@ -190,7 +190,7 @@ size_t pcp_decrypt_stream(Pcpstream *in, Pcpstream* out, pcp_key_t *s, byte *sym
 	if(symkey != NULL)
 	  self = 1;
 	else {
-	  fatal("Input is symetrically encrypted but no key have been specified (lib usage failure)\n");
+	  fatal(ptx, "Input is symetrically encrypted but no key have been specified (lib usage failure)\n");
 	  goto errdef1;
 	}
       }
@@ -202,14 +202,14 @@ size_t pcp_decrypt_stream(Pcpstream *in, Pcpstream* out, pcp_key_t *s, byte *sym
 
   if(self) {
     /*  just decrypt symetrically and go outa here */
-    return pcp_decrypt_stream_sym(in, out, symkey, NULL);
+    return pcp_decrypt_stream_sym(ptx, in, out, symkey, NULL);
   }
 
 #ifdef PCP_ASYM_ADD_SENDER_PUB
   /*  step 2, sender's pubkey */
   cur_bufsize = ps_read(in, &in_buf, crypto_box_PUBLICKEYBYTES); /* fread(&in_buf, 1, crypto_box_PUBLICKEYBYTES, in); */
   if(cur_bufsize !=  crypto_box_PUBLICKEYBYTES && !ps_end(in) && !ps_err(in)) {
-    fatal("Error: input file doesn't contain senders public key\n");
+    fatal(ptx, "Error: input file doesn't contain senders public key\n");
     goto errdef1;
   }
 #endif
@@ -217,7 +217,7 @@ size_t pcp_decrypt_stream(Pcpstream *in, Pcpstream* out, pcp_key_t *s, byte *sym
   /*  step 3, check len recipients */
   cur_bufsize = ps_read(in, &lenrec, 4); /* fread(&lenrec, 1, 4, in); */
   if(cur_bufsize != 4 && !ps_end(in) && !ps_err(in)) {
-    fatal("Error: input file doesn't contain recipient count\n");
+    fatal(ptx, "Error: input file doesn't contain recipient count\n");
     goto errdef1;
   }
   lenrec = be32toh(lenrec);
@@ -232,14 +232,14 @@ size_t pcp_decrypt_stream(Pcpstream *in, Pcpstream* out, pcp_key_t *s, byte *sym
   for(nrec=0; nrec<lenrec; nrec++) {
     cur_bufsize = ps_read(in, &rec_buf, PCP_ASYM_RECIPIENT_SIZE); /* fread(&rec_buf, 1, PCP_ASYM_RECIPIENT_SIZE, in); */
     if(cur_bufsize != PCP_ASYM_RECIPIENT_SIZE && !ps_end(in) && !ps_err(in)) {
-      fatal("Error: input file corrupted, incomplete or no recipients (got %ld, exp %ld)\n", cur_bufsize, PCP_ASYM_RECIPIENT_SIZE );
+      fatal(ptx, "Error: input file corrupted, incomplete or no recipients (got %ld, exp %ld)\n", cur_bufsize, PCP_ASYM_RECIPIENT_SIZE );
       goto errdef1;
     }
     recmatch = 0;
 
-    pcphash_iteratepub(cur) {
+    pcphash_iteratepub(ptx, cur) {
       byte *recipient;
-      recipient = pcp_box_decrypt(s, cur, rec_buf, PCP_ASYM_RECIPIENT_SIZE, &rec_size);
+      recipient = pcp_box_decrypt(ptx, s, cur, rec_buf, PCP_ASYM_RECIPIENT_SIZE, &rec_size);
       if(recipient != NULL && rec_size == crypto_secretbox_KEYBYTES) {
 	/*  found a match */
 	recmatch = 1;
@@ -257,19 +257,19 @@ size_t pcp_decrypt_stream(Pcpstream *in, Pcpstream* out, pcp_key_t *s, byte *sym
   
 
   if(recmatch == 0) {
-    fatal("Sorry, there's no matching public key in your vault for decryption\n");
+    fatal(ptx, "Sorry, there's no matching public key in your vault for decryption\n");
     goto errdef1;
   }
 
   /*  step 5, actually decrypt the file, finally */
   if(verify) {
     pcp_rec_t *rec = pcp_rec_new(reccipher, nrec * PCP_ASYM_RECIPIENT_SIZE, NULL, cur);
-    size_t s = pcp_decrypt_stream_sym(in, out, symkey, rec);
+    size_t s = pcp_decrypt_stream_sym(ptx, in, out, symkey, rec);
     pcp_rec_free(rec);
     return s;
   }
   else {
-    size_t s = pcp_decrypt_stream_sym(in, out, symkey, NULL);
+    size_t s = pcp_decrypt_stream_sym(ptx, in, out, symkey, NULL);
     return s;
   }
 
@@ -277,7 +277,7 @@ size_t pcp_decrypt_stream(Pcpstream *in, Pcpstream* out, pcp_key_t *s, byte *sym
   return 0;
 }
 
-size_t pcp_encrypt_stream(Pcpstream *in, Pcpstream *out, pcp_key_t *s, pcp_pubkey_t *p, int sign) {
+size_t pcp_encrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, pcp_key_t *s, pcp_pubkey_t *p, int sign) {
   byte *symkey;
   int recipient_count;
   byte *recipients_cipher;
@@ -306,9 +306,9 @@ size_t pcp_encrypt_stream(Pcpstream *in, Pcpstream *out, pcp_key_t *s, pcp_pubke
 
   HASH_ITER(hh, p, cur, t) {
     byte *rec_cipher;
-    rec_cipher = pcp_box_encrypt(s, cur, symkey, crypto_secretbox_KEYBYTES, &es);
+    rec_cipher = pcp_box_encrypt(ptx, s, cur, symkey, crypto_secretbox_KEYBYTES, &es);
     if(es != rec_size) {
-      fatal("invalid rec_size, expected %dl, got %dl\n", rec_size, es);
+      fatal(ptx, "invalid rec_size, expected %dl, got %dl\n", rec_size, es);
       if(rec_cipher != NULL)
 	free(rec_cipher);
       goto errec1;
@@ -326,7 +326,7 @@ size_t pcp_encrypt_stream(Pcpstream *in, Pcpstream *out, pcp_key_t *s, pcp_pubke
   /* fwrite(head, 1, 1, out); */
   /* fprintf(stderr, "D: header - 1\n"); */
   if(ps_err(out) != 0) {
-    fatal("Failed to write encrypted output!\n");
+    fatal(ptx, "Failed to write encrypted output!\n");
     goto errec1;
   }
 
@@ -361,11 +361,11 @@ size_t pcp_encrypt_stream(Pcpstream *in, Pcpstream *out, pcp_key_t *s, pcp_pubke
   size_t sym_size = 0;
   if(sign) {
     pcp_rec_t *rec = pcp_rec_new(recipients_cipher, rec_size * recipient_count, s, NULL);
-    sym_size = pcp_encrypt_stream_sym(in, out, symkey, 1, rec);
+    sym_size = pcp_encrypt_stream_sym(ptx, in, out, symkey, 1, rec);
     pcp_rec_free(rec);
   }
   else
-    sym_size = pcp_encrypt_stream_sym(in, out, symkey, 1, NULL);
+    sym_size = pcp_encrypt_stream_sym(ptx, in, out, symkey, 1, NULL);
 
   if(sym_size == 0)
     goto errec1;
@@ -386,7 +386,7 @@ size_t pcp_encrypt_stream(Pcpstream *in, Pcpstream *out, pcp_key_t *s, pcp_pubke
 
 
 
-size_t pcp_encrypt_stream_sym(Pcpstream *in, Pcpstream *out, byte *symkey, int havehead, pcp_rec_t *recsign) {
+size_t pcp_encrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, byte *symkey, int havehead, pcp_rec_t *recsign) {
   /*
     havehead = 0: write the whole thing from here
     havehead = 1: no header, being called from asym...
@@ -413,7 +413,7 @@ size_t pcp_encrypt_stream_sym(Pcpstream *in, Pcpstream *out, byte *symkey, int h
     es = ps_write(out, head, 1);
     /* es = fwrite(head, 1, 1, out); */
     if(ps_err(out) != 0) {
-      fatal("Failed to write encrypted output!\n");
+      fatal(ptx, "Failed to write encrypted output!\n");
       return 0;
     }
   }
@@ -466,7 +466,7 @@ size_t pcp_encrypt_stream_sym(Pcpstream *in, Pcpstream *out, byte *symkey, int h
   }
 
   if(ps_err(out) != 0) {
-    fatal("Failed to write encrypted output!\n");
+    fatal(ptx, "Failed to write encrypted output!\n");
     goto errsym1;
   }
 
@@ -504,7 +504,7 @@ size_t pcp_encrypt_stream_sym(Pcpstream *in, Pcpstream *out, byte *symkey, int h
   return 0;
 }
 
-size_t pcp_decrypt_stream_sym(Pcpstream *in, Pcpstream* out, byte *symkey, pcp_rec_t *recverify) {
+size_t pcp_decrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *symkey, pcp_rec_t *recverify) {
   byte *buf_nonce;
   byte *buf_cipher;
   byte *buf_clear;
@@ -579,13 +579,13 @@ size_t pcp_decrypt_stream_sym(Pcpstream *in, Pcpstream* out, byte *symkey, pcp_r
       free(buf_clear);
 
       if(ps_err(out) != 0) {
-	fatal("Failed to write decrypted output!\n");
+	fatal(ptx, "Failed to write decrypted output!\n");
 	out_size = 0;
 	break;
       }
     }
     else {
-      fatal("Failed to decrypt file content!\n");
+      fatal(ptx, "Failed to decrypt file content!\n");
       free(buf_clear);
       out_size = 0;
       break;
@@ -610,20 +610,20 @@ size_t pcp_decrypt_stream_sym(Pcpstream *in, Pcpstream* out, byte *symkey, pcp_r
       crypto_generichash_final(st, hash, crypto_generichash_BYTES_MAX);
 
       byte *verifiedhash = NULL;
-      verifiedhash = pcp_ed_verify(signature, siglen, recverify->pub);
+      verifiedhash = pcp_ed_verify(ptx, signature, siglen, recverify->pub);
       if(verifiedhash == NULL)
 	out_size = 0;
       else {
 	if(memcmp(verifiedhash, hash, crypto_generichash_BYTES_MAX) != 0) {
 	  /*  sig verified, but the hash doesn't match */
-	  fatal("signed hash doesn't match actual hash of signed decrypted file content\n");
+	  fatal(ptx, "signed hash doesn't match actual hash of signed decrypted file content\n");
 	  out_size = 0;
 	}
 	free(verifiedhash);
       }
     }
     else {
-      fatal("Failed to decrypt signature!\n");
+      fatal(ptx, "Failed to decrypt signature!\n");
       out_size = 0;
     }
     free(st);

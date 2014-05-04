@@ -26,8 +26,8 @@ pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libpcp1.pc
 
 libpcp1_la_SOURCES = platform.c mac.c mem.c pad.c version.c \
-		    z85.c zmq_z85.c key.c randomart.c \
-		    vault.c fatal.c jenhash.c digital_crc32.c \
+		    context.c z85.c zmq_z85.c key.c randomart.c \
+		    vault.c jenhash.c digital_crc32.c \
                     crypto.c ed.c keyhash.c scrypt.c \
 		    scrypt/crypto/sha256.c scrypt/crypto/crypto_scrypt-nosse.c \
 		    base85.c util.c buffer.c mgmt.c keysig.c pcpstream.c

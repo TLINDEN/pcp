@@ -22,5 +22,5 @@ AM_CXXFLAGS = -I../../include -I../../libpcp/scrypt/crypto -I../../libpcp/scrypt
 
 lib_LTLIBRARIES      = libpcp1++.la
 
-libpcp1___la_SOURCES = pcp++.h key.cpp vault.cpp crypto.cpp sign.cpp buffer.cpp
+libpcp1___la_SOURCES = pcp++.h ptx.cpp key.cpp vault.cpp crypto.cpp sign.cpp buffer.cpp
 include_HEADERS      = pcp++.h

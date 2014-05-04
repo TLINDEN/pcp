@@ -24,19 +24,19 @@
 #include "keyhash.h"
 #include "defines.h"
 
-vault_t *pcpvault_init(char *filename) {
-  vault_t *vault = pcpvault_new(filename, 0);
+vault_t *pcpvault_init(PCPCTX *ptx, char *filename) {
+  vault_t *vault = pcpvault_new(ptx, filename, 0);
   if(vault != NULL) {
     if(vault->isnew == 1) {
-      if(pcpvault_create(vault) != 0) {
-	pcpvault_close(vault);
+      if(pcpvault_create(ptx, vault) != 0) {
+	pcpvault_close(ptx, vault);
 	return NULL;
       }
     }
     else {
-      if(pcpvault_fetchall(vault) != 0) {
+      if(pcpvault_fetchall(ptx, vault) != 0) {
 	errno = 0; /*  weird, something sets it to ENOENT and it's not me */
-	pcpvault_close(vault);
+	pcpvault_close(ptx, vault);
 	return NULL;
       }
     }
@@ -44,7 +44,7 @@ vault_t *pcpvault_init(char *filename) {
   return vault;
 }
 
-vault_t *pcpvault_new(char *filename, int is_tmp) {
+vault_t *pcpvault_new(PCPCTX *ptx, char *filename, int is_tmp) {
   vault_t *vault = ucmalloc(sizeof(vault_t));
   FILE *fd;
   struct stat stat_buf;
@@ -82,7 +82,7 @@ vault_t *pcpvault_new(char *filename, int is_tmp) {
     vault->isnew = 1;
     mode_t old_mask = umask (S_IWGRP | S_IWOTH | S_IRGRP | S_IROTH);
     if((fd = fopen(vault->filename, "wb+")) == NULL) {
-      fatal("Could not create vault file %s", vault->filename);
+      fatal(ptx, "Could not create vault file %s", vault->filename);
       umask (old_mask);
       goto errn;
     }
@@ -90,7 +90,7 @@ vault_t *pcpvault_new(char *filename, int is_tmp) {
   }
   else {
     if((fd = fopen(vault->filename, "rb+")) == NULL) {
-      fatal("Could not open vault file %s", vault->filename);
+      fatal(ptx, "Could not open vault file %s", vault->filename);
       goto errn;
     }
   }
@@ -105,7 +105,7 @@ vault_t *pcpvault_new(char *filename, int is_tmp) {
   return NULL;
 }
 
-int pcpvault_create(vault_t *vault) {
+int pcpvault_create(PCPCTX *ptx, vault_t *vault) {
   vault_header_t *header = ucmalloc(sizeof(vault_header_t));
   header->fileid = PCP_VAULT_ID;
   header->version = PCP_VAULT_VERSION;
@@ -120,7 +120,7 @@ int pcpvault_create(vault_t *vault) {
   fwrite(header, sizeof(vault_header_t), 1, vault->fd);
 
   if(ferror(vault->fd) != 0) {
-    fatal("Failed to write fileheader to vault %s!\n", vault->filename);
+    fatal(ptx, "Failed to write fileheader to vault %s!\n", vault->filename);
     return 1;
   }
 
@@ -129,7 +129,7 @@ int pcpvault_create(vault_t *vault) {
   return 0;
 }
 
-int pcpvault_additem(vault_t *vault, void *item, size_t itemsize, uint8_t type) {
+int pcpvault_additem(PCPCTX *ptx, vault_t *vault, void *item, size_t itemsize, uint8_t type) {
   vault_item_header_t *header = ucmalloc(sizeof(vault_item_header_t));
   header->type = type;
   header->size = itemsize;
@@ -141,7 +141,7 @@ int pcpvault_additem(vault_t *vault, void *item, size_t itemsize, uint8_t type) 
   fwrite(item, itemsize, 1, vault->fd);
 
   if(ferror(vault->fd) != 0) {
-    fatal("Failed to add an item to vault %s!\n", vault->filename);
+    fatal(ptx, "Failed to add an item to vault %s!\n", vault->filename);
     return 1;
   }
 
@@ -151,8 +151,8 @@ int pcpvault_additem(vault_t *vault, void *item, size_t itemsize, uint8_t type) 
 
 }
 
-int pcpvault_addkey(vault_t *vault, void *item, uint8_t type) {
-  vault_t *tmp = pcpvault_new(vault->filename, 1);
+int pcpvault_addkey(PCPCTX *ptx, vault_t *vault, void *item, uint8_t type) {
+  vault_t *tmp = pcpvault_new(ptx, vault->filename, 1);
   size_t itemsize;
 
   void *saveitem = NULL;
@@ -183,15 +183,15 @@ int pcpvault_addkey(vault_t *vault, void *item, uint8_t type) {
 
 
   if(tmp != NULL) {
-    if(pcpvault_copy(vault, tmp) != 0)
+    if(pcpvault_copy(ptx, vault, tmp) != 0)
       goto errak1;
-    if(pcpvault_additem(tmp, buffer_get(blob), itemsize, type) != 0)
+    if(pcpvault_additem(ptx, tmp, buffer_get(blob), itemsize, type) != 0)
       goto errak1;
 
-    pcphash_add(saveitem, type);
-    pcpvault_update_checksum(tmp);
+    pcphash_add(ptx, saveitem, type);
+    pcpvault_update_checksum(ptx, tmp);
     
-    if(pcpvault_copy(tmp, vault) == 0) {
+    if(pcpvault_copy(ptx, tmp, vault) == 0) {
       pcpvault_unlink(tmp);
     }
     else {
@@ -212,32 +212,32 @@ int pcpvault_addkey(vault_t *vault, void *item, uint8_t type) {
   return 1;
 }
 
-int pcpvault_writeall(vault_t *vault) {
-  vault_t *tmp = pcpvault_new(vault->filename, 1);
+int pcpvault_writeall(PCPCTX *ptx, vault_t *vault) {
+  vault_t *tmp = pcpvault_new(ptx, vault->filename, 1);
 
   if(tmp != NULL) {
-    if(pcpvault_create(tmp) == 0) {
+    if(pcpvault_create(ptx, tmp) == 0) {
       pcp_key_t *k = NULL;
       Buffer *blob = buffer_new(PCP_RAW_PUBKEYSIZE, "bs");
-      pcphash_iterate(k) {
+      pcphash_iterate(ptx, k) {
 	pcp_seckeyblob(blob, k);
-	if(pcpvault_additem(tmp, buffer_get(blob), PCP_RAW_KEYSIZE, PCP_KEY_TYPE_SECRET) != 0) {
+	if(pcpvault_additem(ptx, tmp, buffer_get(blob), PCP_RAW_KEYSIZE, PCP_KEY_TYPE_SECRET) != 0) {
 	  buffer_free(blob);
 	  goto errwa;
 	}
 	buffer_clear(blob);
       }
       pcp_pubkey_t *p = NULL;
-      pcphash_iteratepub(p) {
+      pcphash_iteratepub(ptx, p) {
 	pcp_pubkeyblob(blob, p);
-	if(pcpvault_additem(tmp, buffer_get(blob), PCP_RAW_PUBKEYSIZE, PCP_KEY_TYPE_PUBLIC) != 0) {
+	if(pcpvault_additem(ptx, tmp, buffer_get(blob), PCP_RAW_PUBKEYSIZE, PCP_KEY_TYPE_PUBLIC) != 0) {
 	  buffer_free(blob);
 	  goto errwa;
 	}
 	buffer_clear(blob);
       }
-      pcpvault_update_checksum(tmp);
-      if(pcpvault_copy(tmp, vault) == 0) {
+      pcpvault_update_checksum(ptx, tmp);
+      if(pcpvault_copy(ptx, tmp, vault) == 0) {
 	pcpvault_unlink(tmp);
       }
       free(tmp);
@@ -256,8 +256,8 @@ int pcpvault_writeall(vault_t *vault) {
   return 1;
 }
 
-void pcpvault_update_checksum(vault_t *vault) {
-  byte *checksum = pcpvault_create_checksum();
+void pcpvault_update_checksum(PCPCTX *ptx, vault_t *vault) {
+  byte *checksum = pcpvault_create_checksum(ptx);
 
   vault_header_t *header = ucmalloc(sizeof(vault_header_t));
   header->fileid = PCP_VAULT_ID;
@@ -272,20 +272,20 @@ void pcpvault_update_checksum(vault_t *vault) {
   fseek(vault->fd, 0, SEEK_END);
 }
 
-byte *pcpvault_create_checksum() {
+byte *pcpvault_create_checksum(PCPCTX *ptx) {
   pcp_key_t *k = NULL;
   Buffer *blob = NULL;
   size_t datapos = 0;
 
-  int numskeys = pcphash_count();
-  int numpkeys = pcphash_countpub();
+  int numskeys = pcphash_count(ptx);
+  int numpkeys = pcphash_countpub(ptx);
 
   size_t datasize = ((PCP_RAW_KEYSIZE) * numskeys) +
                     ((PCP_RAW_PUBKEYSIZE) * numpkeys);
   byte *data = ucmalloc(datasize);
   byte *checksum = ucmalloc(32);
 
-  pcphash_iterate(k) {
+  pcphash_iterate(ptx, k) {
     key2be(k);
     blob = pcp_keyblob(k, PCP_KEY_TYPE_SECRET);
     memcpy(&data[datapos], buffer_get(blob), PCP_RAW_KEYSIZE);
@@ -295,7 +295,7 @@ byte *pcpvault_create_checksum() {
   }
 
   pcp_pubkey_t *p = NULL;
-  pcphash_iteratepub(p) {
+  pcphash_iteratepub(ptx, p) {
     /* pcp_dumppubkey(p); */
     pubkey2be(p);
     blob = pcp_keyblob(p, PCP_KEY_TYPE_PUBLIC);
@@ -322,7 +322,7 @@ byte *pcpvault_create_checksum() {
 }
 
 
-int pcpvault_copy(vault_t *tmp, vault_t *vault) {
+int pcpvault_copy(PCPCTX *ptx, vault_t *tmp, vault_t *vault) {
   /*  fetch tmp content */
   fseek(tmp->fd, 0, SEEK_END);
   int tmpsize = ftell(tmp->fd);
@@ -333,13 +333,13 @@ int pcpvault_copy(vault_t *tmp, vault_t *vault) {
   /*  and put it into the new file */
   vault->fd = freopen(vault->filename, "wb+", vault->fd);
   if(fwrite(in, tmpsize, 1, vault->fd) != 1) {
-    fatal("Failed to copy %s to %s (write) [keeping %s]\n",
+    fatal(ptx, "Failed to copy %s to %s (write) [keeping %s]\n",
 	  tmp->filename, vault->filename, tmp->filename);
     return 1;
   }
 
   if(fflush(vault->fd) != 0) {
-    fatal("Failed to copy %s to %s (flush) [keeping %s]\n",
+    fatal(ptx, "Failed to copy %s to %s (flush) [keeping %s]\n",
 	  tmp->filename, vault->filename, tmp->filename);
     return 1;
   }
@@ -363,11 +363,11 @@ void pcpvault_unlink(vault_t *tmp) {
   free(r);
 }
 
-int pcpvault_close(vault_t *vault) {
+int pcpvault_close(PCPCTX *ptx, vault_t *vault) {
   if(vault != NULL) {
     if(vault->fd) {
       if(vault->unsafed == 1) {
-	pcpvault_writeall(vault);
+	pcpvault_writeall(ptx, vault);
       }
       fclose(vault->fd);
     }
@@ -416,7 +416,7 @@ vault_item_header_t * ih2native(vault_item_header_t *h) {
 }
 
 
-int pcpvault_fetchall(vault_t *vault) {
+int pcpvault_fetchall(PCPCTX *ptx, vault_t *vault) {
   size_t got = 0;
   fseek(vault->fd, 0, SEEK_SET);
 
@@ -424,7 +424,7 @@ int pcpvault_fetchall(vault_t *vault) {
   vault_item_header_t *item = ucmalloc(sizeof(vault_item_header_t));
   got = fread(header, 1, sizeof(vault_header_t), vault->fd);
   if(got < sizeof(vault_header_t)) {
-    fatal("empty or invalid vault header size (got %ld, expected %ld)\n", got,  sizeof(vault_header_t)); 
+    fatal(ptx, "empty or invalid vault header size (got %ld, expected %ld)\n", got,  sizeof(vault_header_t)); 
     goto err;
   }
   vh2native(header);
@@ -436,8 +436,6 @@ int pcpvault_fetchall(vault_t *vault) {
     pcp_pubkey_t *pubkey;
     int bytesleft = 0;
     int ksize =  PCP_RAW_KEYSIGSIZE; /*  smallest possbile item */
-
-    pcphash_init();
 
     vault->version = header->version;
     memcpy(vault->checksum, header->checksum, 32);
@@ -461,34 +459,34 @@ int pcpvault_fetchall(vault_t *vault) {
 	      key = ucmalloc(sizeof(pcp_key_t));
 	      got = fread(key, PCP_RAW_KEYSIZE, 1, vault->fd);
 	      key2native(key);
-	      pcphash_add((void *)key, item->type);
+	      pcphash_add(ptx, (void *)key, item->type);
 	    }
 	    else if(item->type == PCP_KEY_TYPE_PUBLIC) {
 	      /*  read a public key */
 	      pubkey = ucmalloc(sizeof(pcp_pubkey_t));
 	      got = fread(pubkey, PCP_RAW_PUBKEYSIZE, 1, vault->fd);
 	      pubkey2native(pubkey);
-	      pcphash_add((void *)pubkey, item->type);
+	      pcphash_add(ptx, (void *)pubkey, item->type);
 	    }
 	    else if(item->type == PCP_KEYSIG_NATIVE || item->type == PCP_KEYSIG_PBP) {
 	      Buffer *rawks = buffer_new(256, "keysig");
 	      buffer_fd_read(rawks, vault->fd, item->size);
 	      pcp_keysig_t *s = pcp_keysig_new(rawks);
-	      pcphash_add((void *)s, item->type);
+	      pcphash_add(ptx, (void *)s, item->type);
 	      buffer_free(rawks);
 	    }
 	    else {
-	      fatal("Failed to read vault - invalid key type: %02X! at %d\n", item->type, readpos);
+	      fatal(ptx, "Failed to read vault - invalid key type: %02X! at %d\n", item->type, readpos);
 	      goto err;
 	    }
 	  }
 	  else {
-	    fatal("Failed to read vault - that's no pcp key at %d (size %ld)!\n", readpos, bytesleft);
+	    fatal(ptx, "Failed to read vault - that's no pcp key at %d (size %ld)!\n", readpos, bytesleft);
 	    goto err;
 	  }
 	}
 	else {
-	  fatal("Failed to read vault - invalid key item header size at %d!\n",
+	  fatal(ptx, "Failed to read vault - invalid key item header size at %d!\n",
 		readpos);
 	  goto err;
 	}
@@ -500,22 +498,22 @@ int pcpvault_fetchall(vault_t *vault) {
     }
   }
   else {
-    fatal("Unexpected vault file format!\n");
+    fatal(ptx, "Unexpected vault file format!\n");
     goto err;
   }
 
   byte *checksum = NULL;
-  checksum = pcpvault_create_checksum(vault);
+  checksum = pcpvault_create_checksum(ptx);
   
   /*
   _dump(" calc checksum", checksum, 32);
   _dump("vault checksum", vault->checksum, 32);
   */
 
-  if(pcphash_count() + pcphash_countpub() > 0) {
+  if(pcphash_count(ptx) + pcphash_countpub(ptx) > 0) {
     /*  only validate the checksum if there are keys */
     if(memcmp(checksum, vault->checksum, 32) != 0) {
-      fatal("Error: the checksum of the key vault doesn't match its contents!\n");
+      fatal(ptx, "Error: the checksum of the key vault doesn't match its contents!\n");
       goto err;
     }
   }

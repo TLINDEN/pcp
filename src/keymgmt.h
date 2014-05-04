@@ -42,6 +42,7 @@
 #include "base85.h"
 #include "buffer.h"
 #include "mgmt.h"
+#include "context.h"
 
 #define _WITH_GETLINE
 

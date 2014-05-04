@@ -30,6 +30,7 @@
 #include "keymgmt.h"
 #include "keyhash.h"
 #include "base85.h"
+#include "context.h"
 
 void pcpkey_print(pcp_key_t *key, FILE *out);
 void pcppubkey_print(pcp_pubkey_t *key, FILE *out);

@@ -30,14 +30,17 @@
 #include <stdexcept>
 #include <iostream>
 
+#include "ptx++.h"
+
 namespace pcp {
   
   class exception : public std::runtime_error {
   private:
+    PCPCTX *ptx;
     std::string getfatals() {
       std::string msg;
-      if(PCP_ERRSET == 1) {
-	msg = PCP_ERR;
+      if(ptx->pcp_errset == 1) {
+	msg = ptx->pcp_err;
       }
       if(errno) {
 	msg += std::string("\nError: ")
@@ -47,8 +50,8 @@ namespace pcp {
       return msg;
     }
   public:
-    exception(const std::string & msg) : runtime_error(msg) { }
-  exception() : runtime_error(getfatals()) { }
+  exception(PcpContext P, const std::string & msg) : runtime_error(msg) { ptx = P.ptx; }
+  exception(PcpContext P) : runtime_error(getfatals()) { ptx = P.ptx; }
   };
 
 

@@ -22,6 +22,10 @@
 #ifndef _HAVE_KEYHASH_H
 #define _HAVE_KEYHASH_H
 
+#include "structs.h"
+
+
+
 /** \defgroup KEYHASH KEYHASH
     @{
 
@@ -29,22 +33,11 @@
 
     Libpcp uses the <a href="http://troydhanson.github.io/uthash/">uthash</a>
     system to maintain lists of keys. There's one hash per key type. The
-    hash has the same type as the key structure itself, but is global.
+    hash has the same type as the key structure itself, and is stored in
+    the PCP Context object.
 */
 
-#include "uthash.h"
-#include "key.h"
 
-/* storage of keys in a global hash */
-
-/** Global hash for secret keys. */
-extern pcp_key_t *pcpkey_hash;
-
-/** Global hash for public keys. */
-extern pcp_pubkey_t *pcppubkey_hash;
-
-extern pcp_key_t *__k;
-extern pcp_pubkey_t *__p;
 
 /*  wrapper for HASH_ITER */
 /** Iterate over the list of secret keys.
@@ -53,7 +46,7 @@ extern pcp_pubkey_t *__p;
 
     @code
     pcp_key_t k = NULL;
-    pcphash_iterate(k) {
+    pcphash_iterate(ptx, k) {
       pcp_dumpkey(k);
     }
     @endcode
@@ -61,9 +54,9 @@ extern pcp_pubkey_t *__p;
     Also, don't free() the keyhash or the temporary key pointer
     yourself. Use pcphash_clean() instead when done.
 */
-#define pcphash_iterate(key) \
-  __k = NULL; \
-  HASH_ITER(hh, pcpkey_hash, key, __k)
+#define pcphash_iterate(ptx, key)		\
+  pcp_key_t *__k = NULL; \
+  HASH_ITER(hh, ptx->pcpkey_hash, key, __k)
 
 
 /** Iterate over the list of public keys.
@@ -72,7 +65,7 @@ extern pcp_pubkey_t *__p;
 
     @code
     pcp_pubkey_t k = NULL;
-    pcphash_iteratepub(k) {
+    pcphash_iteratepub(ptx, k) {
       pcp_dumppubkey(k);
     }
     @endcode
@@ -80,75 +73,77 @@ extern pcp_pubkey_t *__p;
     Also, don't free() the keyhash or the temporary key pointer
     yourself. Use pcphash_clean() instead when done.
 */
-#define pcphash_iteratepub(key) \
-  __p = NULL; \
-  HASH_ITER(hh, pcppubkey_hash, key, __p)
-
-/** Initialize the global hashes. */
-void pcphash_init();
+#define pcphash_iteratepub(ptx, key)		\
+  pcp_pubkey_t *__p = NULL; \
+  HASH_ITER(hh, ptx->pcppubkey_hash, key, __p)
 
 /** Delete an entry from a hash.
+
+    \param[in] PCP Context object.
 
     \param[in] key A pointer to the key structure to delete.
 
     \param[in] type An integer specifying the key type to delete. \see _PCP_KEY_TYPES.
 
  */
-void pcphash_del(void *key, int type);
+void pcphash_del(PCPCTX *ptx, void *key, int type);
 
-/** Frees the memory allocated by the hashes.
-
-    Clears and frees memory of all keys in the hash lists
-    and the hashes themselfes.
-
- */
-void pcphash_clean();
+/** Free memory used by key hashes. */
+void pcphash_clean(PCPCTX *ptx);
 
 /** Check if a secret key with a given key-id exists in the hash.
 
+    \param[in] PCP Context object.
+
     \param[in] id A string with the key-id (max 17 chars incl 0).
 
     \return Returns a pointer to the matching key or NULL if the id doesn't match.
 */
-pcp_key_t *pcphash_keyexists(char *id);
+pcp_key_t *pcphash_keyexists(PCPCTX *ptx, char *id);
 
 /** Check if a publickey with a given key-id exists in the hash.
 
+    \param[in] PCP Context object.
+
     \param[in] id A string with the key-id (max 17 chars incl 0).
 
     \return Returns a pointer to the matching key or NULL if the id doesn't match.
 */
-pcp_pubkey_t *pcphash_pubkeyexists(char *id);
+pcp_pubkey_t *pcphash_pubkeyexists(PCPCTX *ptx, char *id);
 
 /** Add a key structure to the hash list.
+
+    \param[in] PCP Context object.
     
     \param[in] key A pointer to the key structure to delete.
 
     \param[in] type An integer specifying the key type to delete. \see _PCP_KEY_TYPES.
  */
-void pcphash_add(void *key, int type);
+void pcphash_add(PCPCTX *ptx, void *key, int type);
 
 /** Returns the number of secret keys in the hash.
 
+    \param[in] PCP Context object.
+
     \return Number of keys.
 */
-int pcphash_count();
+int pcphash_count(PCPCTX *ptx);
 
 /** Returns the number of public keys in the hash.
 
+    \param[in] PCP Context object.
+
     \return Number of keys.
 */
-int pcphash_countpub();
+int pcphash_countpub(PCPCTX *ptx);
 
-/** Global hash for key signatures. */
-extern pcp_keysig_t *pcpkeysig_hash;
-extern pcp_keysig_t *__s;
 
-#define pcphash_iteratekeysig(key) \
-  __s = NULL; \
-  HASH_ITER(hh, pcpkeysig_hash, key, __s)
 
-pcp_keysig_t *pcphash_keysigexists(char *id);
+#define pcphash_iteratekeysig(ptx, key)		\
+  pcp_keysig_t *__s = NULL; \
+  HASH_ITER(hh, ptx->pcpkeysig_hash, key, __s)
+
+pcp_keysig_t *pcphash_keysigexists(PCPCTX *ptx, char *id);
 
 #endif /*  _HAVE_KEYHASH_H */
 

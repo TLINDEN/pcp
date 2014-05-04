@@ -137,66 +137,45 @@ typedef enum _PCP_KEY_TYPES {
 
 #define PCP_RFC_CIPHER 0x21 /* curve25519+ed25519+poly1305+salsa20+blake2 */
 
-/**
- * \defgroup FATALS FATALS
- * @{
 
- A couple of functions to catch errors and display them.
 
- */
+/* defines for key management (mgmt.c) */
+#define EXP_PK_CIPHER        0x21
+#define EXP_PK_CIPHER_NAME  "CURVE25519-ED25519-POLY1305-SALSA20"
 
-/*  error handling */
+#define EXP_HASH_CIPHER      0x22
+#define EXP_HASH_NAME       "BLAKE2"
 
-/** \var PCP_ERR
+#define EXP_SIG_CIPHER       0x23
+#define EXP_SIG_CIPHER_NAME "ED25519"
 
-    Global variable holding the last error message.
-    Can be retrieved with fatals_ifany().
-*/
-extern char *PCP_ERR;
+#define EXP_SIG_VERSION      0x01
+#define EXP_SIG_TYPE         0x1F /* self signed */
 
-/** \var PCP_ERRSET
+/* sig sub notiation we support */
+#define EXP_SIG_SUB_CTIME     2
+#define EXP_SIG_SUB_SIGEXPIRE 3
+#define EXP_SIG_SUB_KEYEXPIRE 9
+#define EXP_SIG_SUB_NOTATION  20
+#define EXP_SIG_SUB_KEYFLAGS  27
 
-    Global variable indicating if an error occurred.
-*/
-extern byte PCP_ERRSET;
+/* in armored mode, we're using the usual head+foot */
+#define EXP_PK_HEADER "----- BEGIN ED25519-CURVE29915 PUBLIC KEY -----"
+#define EXP_PK_FOOTER "----- END ED25519-CURVE29915 PUBLIC KEY -----"
+#define EXP_SK_HEADER "----- BEGIN ED25519-CURVE29915 PRIVATE KEY -----"
+#define EXP_SK_FOOTER "----- END ED25519-CURVE29915 PRIVATE KEY -----"
 
-/** \var PCP_EXIT
 
-    Exitcode for the pcp commandline utility.
-*/
-extern int PCP_EXIT;
+/* pubkey export formats */
+#define EXP_FORMAT_NATIVE   1
+#define EXP_FORMAT_PBP      2
+#define EXP_FORMAT_YAML     3
+#define EXP_FORMAT_C        4
+#define EXP_FORMAT_PY       5
+#define EXP_FORMAT_PERL     6
 
-/** Set an error message.
 
-    This function gets a printf() like error message,
-    which it stores in the global PCP_ERR variable
-    and sets PCP_ERRSET to 1.
 
-    \param[in] fmt printf() like format description.
-
-    \param[in] ... format parameters, if any.
-*/
-void fatal(const char * fmt, ...);
-
-/** Prints error messages to STDERR, if there are some.
-
-    FIXME: add something like this which returns the
-    message.
-*/
-void fatals_ifany();
-
-/** Reset the error variables.
-
-    This can be used to ignore previous errors.
-    Use with care.
-*/
-void fatals_reset();
-
-/** Cleans up memory allocation of global error variables.
- */
-void fatals_done();
-
-extern int PCPVERBOSE;
 
 
 #endif /*  _DEFINES_H */

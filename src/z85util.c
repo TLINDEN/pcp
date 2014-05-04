@@ -30,7 +30,7 @@ int pcpz85_encode(char *infile, char *outfile) {
     in = stdin;
   else {
     if((in = fopen(infile, "rb")) == NULL) {
-      fatal("Could not open input file %s\n", infile);
+      fatal(ptx, "Could not open input file %s\n", infile);
       goto errz1;
     }
   }
@@ -39,7 +39,7 @@ int pcpz85_encode(char *infile, char *outfile) {
     out = stdout;
   else {
     if((out = fopen(outfile, "wb+")) == NULL) {
-      fatal("Could not open output file %s\n", outfile);
+      fatal(ptx, "Could not open output file %s\n", outfile);
       goto errz1;
     }
   }
@@ -59,7 +59,7 @@ int pcpz85_encode(char *infile, char *outfile) {
   fclose(in);
 
   if(inputBufSize == 0) {
-    fatal("Input file is empty!\n");
+    fatal(ptx, "Input file is empty!\n");
     goto errz2;
   }
 
@@ -69,7 +69,7 @@ int pcpz85_encode(char *infile, char *outfile) {
   if(encoded != NULL) {
     fprintf(out, "%s\n%s\n%s\n", PCP_ZFILE_HEADER, encoded, PCP_ZFILE_FOOTER);
     if(ferror(out) != 0) {
-      fatal("Failed to write z85 output!\n");
+      fatal(ptx, "Failed to write z85 output!\n");
     }
     free(encoded);
     goto errz2;
@@ -95,7 +95,7 @@ int pcpz85_decode(char *infile, char *outfile) {
     in = stdin;
   else {
     if((in = fopen(infile, "rb")) == NULL) {
-      fatal("Could not open input file %s\n", infile);
+      fatal(ptx, "Could not open input file %s\n", infile);
       goto errdz1;
     }
   }
@@ -104,18 +104,18 @@ int pcpz85_decode(char *infile, char *outfile) {
     out = stdout;
   else {
     if((out = fopen(outfile, "wb+")) == NULL) {
-      fatal("Could not open output file %s\n", outfile);
+      fatal(ptx, "Could not open output file %s\n", outfile);
       goto errdz1;
     }
   }
 
-  char *encoded = pcp_readz85file(in);
+  char *encoded = pcp_readz85file(ptx, in);
 
   if(encoded == NULL)
     goto errdz1;
 
   size_t clen;
-  byte *decoded = pcp_z85_decode(encoded, &clen);
+  byte *decoded = pcp_z85_decode(ptx, encoded, &clen);
 
   
 
@@ -125,7 +125,7 @@ int pcpz85_decode(char *infile, char *outfile) {
   fwrite(decoded, clen, 1, out);
   fclose(out);
   if(ferror(out) != 0) {
-    fatal("Failed to write decoded output!\n");
+    fatal(ptx, "Failed to write decoded output!\n");
     goto errdz3;
   }
 

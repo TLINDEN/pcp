@@ -21,12 +21,12 @@
 
 #include "ed.h"
 
-byte * pcp_ed_verify_key(byte *signature, size_t siglen, pcp_pubkey_t *p) {
+byte * pcp_ed_verify_key(PCPCTX *ptx, byte *signature, size_t siglen, pcp_pubkey_t *p) {
   byte *message = ucmalloc(siglen);
   unsigned long long mlen;
 
   if(crypto_sign_open(message, &mlen, signature, siglen, p->masterpub) != 0) {
-    fatal("Failed to open the signature using the public key 0x%s!\n", p->id);
+    fatal(ptx, "Failed to open the signature using the public key 0x%s!\n", p->id);
     goto errve1;
   }
 
@@ -37,12 +37,12 @@ byte * pcp_ed_verify_key(byte *signature, size_t siglen, pcp_pubkey_t *p) {
   return NULL;
 }
 
-byte * pcp_ed_verify(byte *signature, size_t siglen, pcp_pubkey_t *p) {
+byte * pcp_ed_verify(PCPCTX *ptx, byte *signature, size_t siglen, pcp_pubkey_t *p) {
   byte *message = ucmalloc(siglen); /* we alloc the full size, the resulting len will be returned by nacl anyway - crypto_sign_BYTES); */
   unsigned long long mlen;
 
   if(crypto_sign_open(message, &mlen, signature, siglen, p->edpub) != 0) {
-    fatal("Failed to open the signature using the public key 0x%s!\n", p->id);
+    fatal(ptx, "Failed to open the signature using the public key 0x%s!\n", p->id);
     goto errve1;
   }
 
@@ -71,7 +71,7 @@ byte *pcp_ed_sign(byte *message, size_t messagesize, pcp_key_t *s) {
   return signature;
 }
 
-size_t pcp_ed_sign_buffered(Pcpstream *in, Pcpstream* out, pcp_key_t *s, int z85) {
+size_t pcp_ed_sign_buffered(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t *s, int z85) {
   byte in_buf[PCP_BLOCK_SIZE];
   size_t cur_bufsize = 0;
   size_t outsize = 0;
@@ -94,7 +94,7 @@ size_t pcp_ed_sign_buffered(Pcpstream *in, Pcpstream* out, pcp_key_t *s, int z85
   }
 
   if(ps_err(out) != 0) {
-    fatal("Failed to write encrypted output!\n");
+    fatal(ptx, "Failed to write encrypted output!\n");
     free(st);
     return 0;
   }
@@ -120,7 +120,7 @@ size_t pcp_ed_sign_buffered(Pcpstream *in, Pcpstream* out, pcp_key_t *s, int z85
   return outsize;
 }
 
-pcp_pubkey_t *pcp_ed_verify_buffered(Pcpstream *in, pcp_pubkey_t *p) {
+pcp_pubkey_t *pcp_ed_verify_buffered(PCPCTX *ptx, Pcpstream *in, pcp_pubkey_t *p) {
   byte in_buf[PCP_BLOCK_SIZE/2];
   byte in_next[PCP_BLOCK_SIZE/2];
   byte in_full[PCP_BLOCK_SIZE];
@@ -247,23 +247,23 @@ pcp_pubkey_t *pcp_ed_verify_buffered(Pcpstream *in, pcp_pubkey_t *p) {
   } /*  while */
 
   if(gotsig == 0) {
-    fatal("Error, the signature doesn't contain the ed25519 signed hash\n");
+    fatal(ptx, "Error, the signature doesn't contain the ed25519 signed hash\n");
     goto errvb1;
   }
 
   crypto_generichash_final(st, hash, crypto_generichash_BYTES_MAX);
 
   if(z85) {
-    char *z85block = pcp_readz85string(z85encoded, zlen);
+    char *z85block = pcp_readz85string(ptx, z85encoded, zlen);
     if(z85block == NULL)
       goto errvb1;
 
     //fprintf(stderr, "ZBLOCK: <%s>\n", z85block);
 
     size_t dstlen;
-    byte *z85decoded = pcp_z85_decode(z85block, &dstlen);
+    byte *z85decoded = pcp_z85_decode(ptx, z85block, &dstlen);
     if(dstlen != mlen) {
-      fatal("z85 decoded signature didn't result in a proper signed hash(got: %ld, expected: %ld)\n", dstlen, mlen);
+      fatal(ptx, "z85 decoded signature didn't result in a proper signed hash(got: %ld, expected: %ld)\n", dstlen, mlen);
       goto errvb1;
     }
     memcpy(sighash, z85decoded, mlen);
@@ -273,14 +273,14 @@ pcp_pubkey_t *pcp_ed_verify_buffered(Pcpstream *in, pcp_pubkey_t *p) {
   /*  huh, how did we made it til here? */
   byte *verifiedhash = NULL;
   if(p == NULL) {
-    pcphash_iteratepub(p) {
-      verifiedhash = pcp_ed_verify(sighash, mlen, p);
+    pcphash_iteratepub(ptx, p) {
+      verifiedhash = pcp_ed_verify(ptx, sighash, mlen, p);
       if(verifiedhash != NULL)
 	break;
     }
   }
   else {
-    verifiedhash = pcp_ed_verify(sighash, mlen, p);
+    verifiedhash = pcp_ed_verify(ptx, sighash, mlen, p);
   }
 
   if(verifiedhash == NULL)
@@ -288,7 +288,7 @@ pcp_pubkey_t *pcp_ed_verify_buffered(Pcpstream *in, pcp_pubkey_t *p) {
 
   if(memcmp(verifiedhash, hash, crypto_generichash_BYTES_MAX) != 0) {
     /*  sig verified, but the hash doesn't */
-    fatal("signed hash doesn't match actual hash of signed file content\n");
+    fatal(ptx, "signed hash doesn't match actual hash of signed file content\n");
     free(verifiedhash);
     return NULL;
   }
@@ -336,7 +336,7 @@ size_t pcp_ed_detachsign_buffered(Pcpstream *in, Pcpstream *out, pcp_key_t *s) {
   return outsize;
 }
 
-pcp_pubkey_t *pcp_ed_detachverify_buffered(Pcpstream *in, Pcpstream *sigfd, pcp_pubkey_t *p) {
+pcp_pubkey_t *pcp_ed_detachverify_buffered(PCPCTX *ptx, Pcpstream *in, Pcpstream *sigfd, pcp_pubkey_t *p) {
   byte in_buf[PCP_BLOCK_SIZE];
   size_t cur_bufsize = 0;
   size_t outsize = 0;
@@ -374,35 +374,35 @@ pcp_pubkey_t *pcp_ed_detachverify_buffered(Pcpstream *in, Pcpstream *sigfd, pcp_
   }
 
   if(sig == NULL) {
-    fatal("Invalid detached signature\n");
+    fatal(ptx, "Invalid detached signature\n");
     goto errdea1;
   }
 
 
-  char *z85block = pcp_readz85string(sig, inputBufSize);
+  char *z85block = pcp_readz85string(ptx, sig, inputBufSize);
   if(z85block == NULL)
     goto errdea2;
 
   size_t clen;
-  byte *sighash = pcp_z85_decode(z85block, &clen);
+  byte *sighash = pcp_z85_decode(ptx, z85block, &clen);
   if(sighash == NULL)
     goto errdea3;
 
   if(clen != mlen) {
-    fatal("z85 decoded signature didn't result in a proper signed hash(got: %ld, expected: %ld)\n", clen, mlen);
+    fatal(ptx, "z85 decoded signature didn't result in a proper signed hash(got: %ld, expected: %ld)\n", clen, mlen);
     goto errdea4;
   }
   
   byte *verifiedhash = NULL;
   if(p == NULL) {
-    pcphash_iteratepub(p) {
-      verifiedhash = pcp_ed_verify(sighash, mlen, p);
+    pcphash_iteratepub(ptx, p) {
+      verifiedhash = pcp_ed_verify(ptx, sighash, mlen, p);
       if(verifiedhash != NULL)
 	break;
     }
   }
   else {
-    verifiedhash = pcp_ed_verify(sighash, mlen, p);
+    verifiedhash = pcp_ed_verify(ptx, sighash, mlen, p);
   }
 
   if(verifiedhash == NULL)
@@ -410,7 +410,7 @@ pcp_pubkey_t *pcp_ed_detachverify_buffered(Pcpstream *in, Pcpstream *sigfd, pcp_
 
   if(memcmp(verifiedhash, hash, crypto_generichash_BYTES_MAX) != 0) {
     /*  sig verified, but the hash doesn't */
-    fatal("signed hash doesn't match actual hash of signed file content\n");
+    fatal(ptx, "signed hash doesn't match actual hash of signed file content\n");
     goto errdea5;
   }
 

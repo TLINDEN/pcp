@@ -30,14 +30,14 @@ char *pcp_getstdin(const char *prompt) {
   fprintf(stderr, "%s: ", prompt);
 
   if (fgets(line, 255, stdin) == NULL) {
-    fatal("Cannot read from stdin");
+    fatal(ptx, "Cannot read from stdin");
     goto errgst;
   }
 
   line[strcspn(line, "\r\n")] = '\0';
 
   if ((out = strdup(line)) == NULL) {
-    fatal("Cannot allocate memory");
+    fatal(ptx, "Cannot allocate memory");
     goto errgst;
   }
 
@@ -48,11 +48,11 @@ char *pcp_getstdin(const char *prompt) {
 }
 
 int pcp_storekey (pcp_key_t *key) {
-  if(vault->isnew == 1 || HASH_COUNT(pcpkey_hash) == 0) {
+  if(vault->isnew == 1 || pcphash_count(ptx) == 0) {
     key->type = PCP_KEY_TYPE_MAINSECRET;
   }
 
-  if(pcpvault_addkey(vault, key, key->type) == 0) {
+  if(pcpvault_addkey(ptx, vault, key, key->type) == 0) {
     if(vault->isnew)
       fprintf(stderr, "new vault created, ");
     fprintf(stderr, "key 0x%s added to %s.\n", key->id, vault->filename);
@@ -87,7 +87,7 @@ void pcp_keygen(char *passwd) {
   }
 
   if(strnlen(passphrase, 1024) > 0)
-    key = pcpkey_encrypt(k, passphrase);
+    key = pcpkey_encrypt(ptx, k, passphrase);
   else {
     char *yes = pcp_getstdin("WARNING: secret key will be stored unencrypted. Are you sure [yes|NO]?");
     if(strncmp(yes, "yes", 1024) == 0)
@@ -117,22 +117,22 @@ void pcp_keygen(char *passwd) {
 void pcp_listkeys() {
   pcp_key_t *k;
 
-  int nkeys = HASH_COUNT(pcpkey_hash) + HASH_COUNT(pcppubkey_hash);
+  int nkeys = pcphash_count(ptx) + pcphash_countpub(ptx);
 
   if(nkeys > 0) {
     printf("Key ID               Type             Creation Time        Owner\n");
 
-    pcphash_iterate(k) {
+    pcphash_iterate(ptx, k) {
       pcpkey_printlineinfo(k);
     }
 
     pcp_pubkey_t *p;
-    pcphash_iteratepub(p) {
+    pcphash_iteratepub(ptx, p) {
       pcppubkey_printlineinfo(p);
     }
   }
   else {
-    fatal("The key vault file %s doesn't contain any keys so far.\n", vault->filename);
+    fatal(ptx, "The key vault file %s doesn't contain any keys so far.\n", vault->filename);
   }
 }
 
@@ -145,12 +145,12 @@ char *pcp_normalize_id(char *keyid) {
     memcpy(id, keyid, 17);
   }
   else if(len < 16) {
-    fatal("Specified key id %s is too short!\n", keyid);
+    fatal(ptx, "Specified key id %s is too short!\n", keyid);
     free(id);
     return NULL;
   }
   else if(len > 18) {
-    fatal("Specified key id %s is too long!\n", keyid);
+    fatal(ptx, "Specified key id %s is too long!\n", keyid);
     free(id);
     return NULL;
   }
@@ -163,7 +163,7 @@ char *pcp_normalize_id(char *keyid) {
       id[16] = 0;
     }
     else {
-      fatal("Specified key id %s is too long!\n", keyid);
+      fatal(ptx, "Specified key id %s is too long!\n", keyid);
       free(id);
       return NULL;
     }
@@ -175,7 +175,7 @@ char *pcp_normalize_id(char *keyid) {
 pcp_key_t *pcp_find_primary_secret() {
   pcp_key_t *key = NULL;
   pcp_key_t *k;
-  pcphash_iterate(k) {
+  pcphash_iterate(ptx, k) {
     if(k->type == PCP_KEY_TYPE_MAINSECRET) {
       key = ucmalloc(sizeof(pcp_key_t));
       memcpy(key, k, sizeof(pcp_key_t));
@@ -184,9 +184,9 @@ pcp_key_t *pcp_find_primary_secret() {
   }
 
   /*  no primary? whoops */
-  int nkeys = HASH_COUNT(pcpkey_hash);
+  int nkeys = pcphash_count(ptx);
   if(nkeys == 1) {
-    pcphash_iterate(k) {
+    pcphash_iterate(ptx, k) {
       key = ucmalloc(sizeof(pcp_key_t));
       memcpy(key, k, sizeof(pcp_key_t));
       return key;
@@ -201,9 +201,9 @@ void pcp_exportsecret(char *keyid, int useid, char *outfile, int armor, char *pa
 
   if(useid == 1) {
     /*  look if we've got that one */
-    HASH_FIND_STR(pcpkey_hash, keyid, key);
+    key = pcphash_keyexists(ptx, keyid);
     if(key == NULL) {
-      fatal("Could not find a secret key with id 0x%s in vault %s!\n", keyid, vault->filename);
+      fatal(ptx, "Could not find a secret key with id 0x%s in vault %s!\n", keyid, vault->filename);
       goto errexpse1;
     }
   }
@@ -211,7 +211,7 @@ void pcp_exportsecret(char *keyid, int useid, char *outfile, int armor, char *pa
     /*  look for our primary key */
     key = pcp_find_primary_secret();
     if(key == NULL) {
-      fatal("There's no primary secret key in the vault %s!\n", vault->filename);
+      fatal(ptx, "There's no primary secret key in the vault %s!\n", vault->filename);
       goto errexpse1;
     }
   }
@@ -222,7 +222,7 @@ void pcp_exportsecret(char *keyid, int useid, char *outfile, int armor, char *pa
   }
   else {
     if((out = fopen(outfile, "wb+")) == NULL) {
-      fatal("Could not create output file %s", outfile);
+      fatal(ptx, "Could not create output file %s", outfile);
        goto errexpse1;
     }
   }
@@ -237,7 +237,7 @@ void pcp_exportsecret(char *keyid, int useid, char *outfile, int armor, char *pa
 	char *passphrase;
 	pcp_readpass(&passphrase,
 		     "Enter passphrase to decrypt your secret key", NULL, 1);
-	key = pcpkey_decrypt(key, passphrase);
+	key = pcpkey_decrypt(ptx, key, passphrase);
 	if(key == NULL) {
 	  memset(passphrase, 0, strlen(passphrase));
 	  free(passphrase);
@@ -247,7 +247,7 @@ void pcp_exportsecret(char *keyid, int useid, char *outfile, int armor, char *pa
 	free(passphrase);
       }
       else {
-	key = pcpkey_decrypt(key, passwd);
+	key = pcpkey_decrypt(ptx, key, passwd);
 	if(key == NULL) {
 	  goto errexpse1;
 	}
@@ -257,13 +257,13 @@ void pcp_exportsecret(char *keyid, int useid, char *outfile, int armor, char *pa
     Buffer *exported_sk;
 
     if(passwd != NULL) {
-      exported_sk = pcp_export_secret(key, passwd);
+      exported_sk = pcp_export_secret(ptx, key, passwd);
     }
     else {
       char *passphrase;
       pcp_readpass(&passphrase,
                   "Enter passphrase to encrypt the exported secret key", "Repeat passphrase", 1);
-      exported_sk = pcp_export_secret(key, passphrase);
+      exported_sk = pcp_export_secret(ptx, key, passphrase);
       memset(passphrase, 0, strlen(passphrase));
       free(passphrase);
     }
@@ -307,19 +307,19 @@ void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int 
   }
   else {
     if((out = fopen(outfile, "wb+")) == NULL) {
-      fatal("Could not create output file %s", outfile);
+      fatal(ptx, "Could not create output file %s", outfile);
       goto errpcpexpu1;
     }
   }
 
   if(keyid != NULL) {
     /* keyid specified, check if it exists and if yes, what type it is */
-    HASH_FIND_STR(pcppubkey_hash, keyid, pk);
+    pk = pcphash_pubkeyexists(ptx, keyid);
     if(pk == NULL) {
       /* ok, so, then look for a secret key with that id */
-      HASH_FIND_STR(pcpkey_hash, keyid, sk);
+      sk = pcphash_keyexists(ptx, keyid);
       if(sk == NULL) {
-	fatal("Could not find a key with id 0x%s in vault %s!\n",
+	fatal(ptx, "Could not find a key with id 0x%s in vault %s!\n",
 		keyid, vault->filename);
 	goto errpcpexpu1;
       }
@@ -337,7 +337,7 @@ void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int 
     /* we use our primary key anyway */
     sk = pcp_find_primary_secret();
     if(sk == NULL) {
-      fatal("There's no primary secret key in the vault %s!\n", vault->filename);
+      fatal(ptx, "There's no primary secret key in the vault %s!\n", vault->filename);
       goto errpcpexpu1;
     }
     is_foreign = 0;
@@ -347,13 +347,13 @@ void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int 
   if(is_foreign == 0 && sk->secret[0] == 0 && format <=  EXP_FORMAT_PBP) {
     /* decrypt the secret key */
     if(passwd != NULL) {
-      sk = pcpkey_decrypt(sk, passwd);
+      sk = pcpkey_decrypt(ptx, sk, passwd);
     }
     else {
       char *passphrase;
       pcp_readpass(&passphrase,
 		   "Enter passphrase to decrypt your secret key", NULL, 1);
-      sk = pcpkey_decrypt(sk, passphrase);
+      sk = pcpkey_decrypt(ptx, sk, passphrase);
       memset(passphrase, 0, strlen(passphrase));
       free(passphrase);
     }
@@ -381,7 +381,7 @@ void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int 
     }
     else {
       /* FIXME: export foreign keys unsupported yet */
-      fatal("Exporting foreign public keys in native format unsupported yet");
+      fatal(ptx, "Exporting foreign public keys in native format unsupported yet");
       goto errpcpexpu1;
     }
   }
@@ -399,7 +399,7 @@ void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int 
       }
     }
     else {
-      fatal("Exporting foreign public keys in PBP format not possible");
+      fatal(ptx, "Exporting foreign public keys in PBP format not possible");
       goto errpcpexpu1;
     }
   }
@@ -429,38 +429,38 @@ void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int 
 
 
 void pcpdelete_key(char *keyid) {
-  pcp_pubkey_t *p = pcphash_pubkeyexists(keyid);
+  pcp_pubkey_t *p = pcphash_pubkeyexists(ptx, keyid);
   
   if(p != NULL) {
     /*  delete public */
-    HASH_DEL(pcppubkey_hash, p);
+    pcphash_del(ptx, p, p->type);
     free(p);
     vault->unsafed = 1;
     fprintf(stderr, "Public key deleted.\n");
   }
   else {
-    pcp_key_t *s = pcphash_keyexists(keyid);
+    pcp_key_t *s = pcphash_keyexists(ptx, keyid);
     if(s != NULL) {
       /*  delete secret */
-      HASH_DEL(pcpkey_hash, s);
+      pcphash_del(ptx, s, s->type);
       free(s);
       vault->unsafed = 1;
       fprintf(stderr, "Secret key deleted.\n");
     }
     else {
-      fatal("No key with id 0x%s found!\n", keyid);
+      fatal(ptx, "No key with id 0x%s found!\n", keyid);
     }
   }
 }
 
 void pcpedit_key(char *keyid) {
-  pcp_key_t *key = pcphash_keyexists(keyid);
+  pcp_key_t *key = pcphash_keyexists(ptx, keyid);
 
   if(key != NULL) {
     if(key->secret[0] == 0) {
       char *passphrase;
       pcp_readpass(&passphrase, "Enter passphrase to decrypt the key", NULL, 1);
-      key = pcpkey_decrypt(key, passphrase);
+      key = pcpkey_decrypt(ptx, key, passphrase);
       ucfree(passphrase, strlen(passphrase));
     }
 
@@ -481,7 +481,7 @@ void pcpedit_key(char *keyid) {
       if(key->type != PCP_KEY_TYPE_MAINSECRET) {
 	pcp_key_t *other = NULL;
 	uint8_t haveprimary = 0;
-	pcphash_iterate(other) {
+	pcphash_iterate(ptx, other) {
 	  if(other->type == PCP_KEY_TYPE_MAINSECRET) {
 	    haveprimary = 1;
 	    break;
@@ -515,7 +515,7 @@ void pcpedit_key(char *keyid) {
 		   "Enter the passphrase again", 1);
 
       if(strnlen(passphrase, 1024) > 0) {
-	key = pcpkey_encrypt(key, passphrase);
+	key = pcpkey_encrypt(ptx, key, passphrase);
 	ucfree(passphrase, strlen(passphrase));
       }
 
@@ -529,7 +529,7 @@ void pcpedit_key(char *keyid) {
     }
   }
   else {
-    fatal("No key with id 0x%s found!\n", keyid);
+    fatal(ptx, "No key with id 0x%s found!\n", keyid);
   }
 }
 
@@ -538,7 +538,7 @@ char *pcp_find_id_byrec(char *recipient) {
   pcp_pubkey_t *p;
   char *id = NULL;
   _lc(recipient);
-  pcphash_iteratepub(p) {
+  pcphash_iteratepub(ptx, p) {
     if(strncmp(p->owner, recipient, 255) == 0) {
       id = ucmalloc(17);
       strncpy(id, p->id, 17);
@@ -569,12 +569,12 @@ int pcp_import (vault_t *vault, FILE *in, char *passwd) {
   bufsize = ps_read(pin, buf, PCP_BLOCK_SIZE);
 
   if(bufsize == 0) {
-    fatal("Input file is empty!\n");
+    fatal(ptx, "Input file is empty!\n");
     goto errimp1;
   }
 
   /* first try as rfc pub key */
-  bundle = pcp_import_binpub(buf, bufsize);
+  bundle = pcp_import_binpub(ptx, buf, bufsize);
   if(bundle != NULL) {
     keysig = bundle->s;
     pub = bundle->p;
@@ -583,7 +583,7 @@ int pcp_import (vault_t *vault, FILE *in, char *passwd) {
       pcp_dumppubkey(pub);
 
     if(keysig == NULL) {
-      fatals_ifany();
+      fatals_ifany(ptx);
       char *yes = pcp_getstdin("WARNING: signature doesn't verify, import anyway [yes|NO]?");
       if(strncmp(yes, "yes", 1024) != 0) {
 	free(yes);
@@ -592,8 +592,8 @@ int pcp_import (vault_t *vault, FILE *in, char *passwd) {
       free(yes);
     }
 
-    if(pcp_sanitycheck_pub(pub) == 0) {
-      if(pcpvault_addkey(vault, (void *)pub,  PCP_KEY_TYPE_PUBLIC) == 0) {
+    if(pcp_sanitycheck_pub(ptx, pub) == 0) {
+      if(pcpvault_addkey(ptx, vault, (void *)pub,  PCP_KEY_TYPE_PUBLIC) == 0) {
 	fprintf(stderr, "key 0x%s added to %s.\n", pub->id, vault->filename);
 	/* avoid double free */
 	pub = NULL;
@@ -603,7 +603,7 @@ int pcp_import (vault_t *vault, FILE *in, char *passwd) {
 	goto errimp2;
       
       if(keysig != NULL) {
-	if(pcpvault_addkey(vault, keysig, keysig->type) != 0) {
+	if(pcpvault_addkey(ptx, vault, keysig, keysig->type) != 0) {
 	  /* FIXME: remove pubkey if storing the keysig failed */
 	  goto errimp2;
 	}
@@ -616,13 +616,13 @@ int pcp_import (vault_t *vault, FILE *in, char *passwd) {
   else {
     /* it's not public key, so let's try to interpret it as secret key */
     if(passwd != NULL) {
-      sk = pcp_import_secret(buf, bufsize, passwd);
+      sk = pcp_import_secret(ptx, buf, bufsize, passwd);
     }
     else {
       char *passphrase;
       pcp_readpass(&passphrase,
 		   "Enter passphrase to decrypt the secret key file", NULL, 1);
-      sk = pcp_import_secret(buf, bufsize, passphrase);
+      sk = pcp_import_secret(ptx, buf, bufsize, passphrase);
       ucfree(passphrase, strlen(passphrase));
     }
 
@@ -633,15 +633,15 @@ int pcp_import (vault_t *vault, FILE *in, char *passwd) {
     if(debug)
       pcp_dumpkey(sk);
 
-    pcp_key_t *maybe = pcphash_keyexists(sk->id);
+    pcp_key_t *maybe = pcphash_keyexists(ptx, sk->id);
     if(maybe != NULL) {
-      fatal("Secretkey sanity check: there already exists a key with the id 0x%s\n", sk->id);
+      fatal(ptx, "Secretkey sanity check: there already exists a key with the id 0x%s\n", sk->id);
       goto errimp2;
     }
 
     /* store it */
     if(passwd != NULL) {
-      sk = pcpkey_encrypt(sk, passwd);
+      sk = pcpkey_encrypt(ptx, sk, passwd);
     }
     else {
       char *passphrase;
@@ -651,7 +651,7 @@ int pcp_import (vault_t *vault, FILE *in, char *passwd) {
     
       if(strnlen(passphrase, 1024) > 0) {
 	/* encrypt the key */
-	sk = pcpkey_encrypt(sk, passphrase);
+	sk = pcpkey_encrypt(ptx, sk, passphrase);
 	ucfree(passphrase, strlen(passphrase));
       }
       else {
@@ -668,7 +668,7 @@ int pcp_import (vault_t *vault, FILE *in, char *passwd) {
 
     if(sk != NULL) {
       /* store it to the vault if we got it til here */
-      if(pcp_sanitycheck_key(sk) == 0) {
+      if(pcp_sanitycheck_key(ptx, sk) == 0) {
 	if(pcp_storekey(sk) == 0) {
 	  pcpkey_printshortinfo(sk); 
 	  success = 0;

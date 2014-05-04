@@ -32,7 +32,7 @@ int pcpsign(char *infile, char *outfile, char *passwd, int z85, int detach) {
   secret = pcp_find_primary_secret();
 
   if(secret == NULL) {
-    fatal("Could not find a secret key in vault %s!\n", vault->filename);
+    fatal(ptx, "Could not find a secret key in vault %s!\n", vault->filename);
     goto errs1;
   }
 
@@ -40,7 +40,7 @@ int pcpsign(char *infile, char *outfile, char *passwd, int z85, int detach) {
     in = stdin;
   else {
     if((in = fopen(infile, "rb")) == NULL) {
-      fatal("Could not open input file %s\n", infile);
+      fatal(ptx, "Could not open input file %s\n", infile);
       goto errs1;
     }
   }
@@ -49,7 +49,7 @@ int pcpsign(char *infile, char *outfile, char *passwd, int z85, int detach) {
     out = stdout;
   else {
     if((out = fopen(outfile, "wb+")) == NULL) {
-      fatal("Could not open output file %s\n", outfile);
+      fatal(ptx, "Could not open output file %s\n", outfile);
       goto errs1;
     }
   }
@@ -66,7 +66,7 @@ int pcpsign(char *infile, char *outfile, char *passwd, int z85, int detach) {
       strncpy(passphrase, passwd, strlen(passwd)+1);
     }
 
-    secret = pcpkey_decrypt(secret, passphrase);
+    secret = pcpkey_decrypt(ptx, secret, passphrase);
     if(secret == NULL)
       goto errs1;
   }
@@ -78,7 +78,7 @@ int pcpsign(char *infile, char *outfile, char *passwd, int z85, int detach) {
   if(detach == 1)
     sigsize = pcp_ed_detachsign_buffered(pin, pout, secret);
   else
-    sigsize = pcp_ed_sign_buffered(pin, pout, secret, z85);
+    sigsize = pcp_ed_sign_buffered(ptx, pin, pout, secret, z85);
 
   ps_close(pin);
   ps_close(pout);
@@ -103,30 +103,30 @@ int pcpverify(char *infile, char *sigfile, char *id, int detach) {
     in = stdin;
   else {
     if((in = fopen(infile, "rb")) == NULL) {
-      fatal("Could not open input file %s\n", infile);
+      fatal(ptx, "Could not open input file %s\n", infile);
       goto errv1;
     }
   }
 
   if(sigfile != NULL) {
     if((sigfd = fopen(sigfile, "rb")) == NULL) {
-      fatal("Could not open signature file %s\n", sigfile);
+      fatal(ptx, "Could not open signature file %s\n", sigfile);
       goto errv1;
     }
   }
   
   if(id != NULL)
-    HASH_FIND_STR(pcppubkey_hash, id, pub);
+    pub = pcphash_pubkeyexists(ptx, id);
 
   Pcpstream *pin = ps_new_file(in);
 
   if(detach) {
     Pcpstream *psigfd = ps_new_file(sigfd);
-    pub = pcp_ed_detachverify_buffered(pin, psigfd, pub);
+    pub = pcp_ed_detachverify_buffered(ptx, pin, psigfd, pub);
      ps_close(psigfd);
   }
   else
-    pub = pcp_ed_verify_buffered(pin, pub);
+    pub = pcp_ed_verify_buffered(ptx, pin, pub);
 
   ps_close(pin);
  

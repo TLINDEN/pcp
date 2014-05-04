@@ -29,22 +29,13 @@
 #include "defines.h"
 #include "platform.h"
 #include "mem.h"
+#include "structs.h"
 #include "buffer.h"
 #include "key.h"
 
 #define PCP_RAW_KEYSIGSIZE sizeof(pcp_keysig_t) - sizeof(UT_hash_handle)
 
-/* holds a public key signature */
-struct _pcp_keysig_t {
-  uint8_t type;
-  uint32_t size;
-  char id[17];
-  byte checksum[32];
-  byte *blob;
-  UT_hash_handle hh;
-};
 
-typedef struct _pcp_keysig_t pcp_keysig_t;
 
 pcp_keysig_t *keysig2be(pcp_keysig_t *s);
 pcp_keysig_t *keysig2native(pcp_keysig_t *s);

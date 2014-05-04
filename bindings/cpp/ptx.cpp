@@ -19,25 +19,16 @@
     You can contact me by mail: <tlinden AT cpan DOT org>.
 */
 
+#include "pcp++.h"
 
-#ifndef _HAVE_PCP_SCRYPT_H
-#define _HAVE_PCP_SCRYPT_H
+using namespace std;
+using namespace pcp;
 
-#include <sys/types.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
+PcpContext::PcpContext() {
+  ptx = ptx_new();
+}
 
-#include <sodium.h>
-
-#include "crypto_scrypt.h"
-#include "mem.h"
-#include "defines.h"
-#include "context.h"
-
-byte * pcp_scrypt(PCPCTX *ptx, char *passwd, size_t passwdlen, byte *nonce, size_t noncelen);
-
-#endif /*  _HAVE_PCP_SCRYPT_H */
+PcpContext::~PcpContext() {
+  ptx_clean(ptx);
+}
 

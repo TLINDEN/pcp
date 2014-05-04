@@ -32,6 +32,7 @@
 #include <iostream>
 
 #include "key++.h"
+#include "ptx++.h"
 #include "vault++.h"
 #include "crypto++.h"
 #include "sign++.h"

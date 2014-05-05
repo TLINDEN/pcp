@@ -21,6 +21,8 @@ int main(int argc, char **argv) {
   size_t clearlen = 256;
   size_t zlen = (clearlen * 5 / 4);
 
+  PCPCTX *ptx = ptx_new();
+
   if(argc < 2) {
     fprintf(stderr, "Usage: decodertest <N>\n");
     return 1;
@@ -40,8 +42,8 @@ int main(int argc, char **argv) {
 
   if(z85 == NULL) {
     ret = FALSE;
-    if(PCP_ERRSET == 0) {
-      fatal("failed to encoded data to Z85\n");
+    if(ptx->pcp_errset == 0) {
+      fatal(ptx, "failed to encoded data to Z85\n");
     }
     goto OUT;
   }
@@ -103,14 +105,14 @@ int main(int argc, char **argv) {
 
   /* line decoder */
 
-  char *raw = pcp_readz85string(buffer_get(zdone), buffer_size(zdone));
+  char *raw = pcp_readz85string(ptx, buffer_get(zdone), buffer_size(zdone));
 
   if(raw == NULL) {
     /* unexpected */
     ret = FALSE;
   }
   else {
-    back = pcp_z85_decode(raw, &zlen);
+    back = pcp_z85_decode(ptx, raw, &zlen);
     if(back == NULL) {
       if(mode > 3) {
 	/* expected fail */
@@ -137,8 +139,8 @@ int main(int argc, char **argv) {
   if(back != NULL) {
     if(mode <= 3 && memcmp(back, clear, 256) != 0) {
       ret = FALSE;
-      if(PCP_ERRSET == 0) {
-	fatal("decoded content doesn't match\n");
+      if(ptx->pcp_errset == 0) {
+	fatal(ptx, "decoded content doesn't match\n");
       }
     }
   }
@@ -157,8 +159,10 @@ int main(int argc, char **argv) {
   }
   else {
     fprintf(stdout, "%d - failed\n", mode);
-    fatals_ifany();
+    fatals_ifany(ptx);
   }
+
+  ptx_clean(ptx);
 
   return ret;
 }

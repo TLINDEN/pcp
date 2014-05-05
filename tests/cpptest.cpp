@@ -14,76 +14,76 @@ void pr(string name, unsigned char *data, size_t len) {
   cout << endl;
 }
 
-FILE *_openwr(string file) {
+FILE *_openwr(string file, PcpContext &ptx) {
   FILE *fd;
   if((fd = fopen(file.c_str(), "wb+")) == NULL) {
-    throw pcp::exception("Could not open output file " + file + "\n");
+    throw pcp::exception(ptx, "Could not open output file " + file + "\n");
   }
   return fd;
 }
 
-FILE *_openrd(string file) {
+FILE *_openrd(string file, PcpContext &ptx) {
   FILE *fd;
   if((fd = fopen(file.c_str(), "rb")) == NULL) {
-    throw pcp::exception("Could not open input file " + file + "\n");
+    throw pcp::exception(ptx, "Could not open input file " + file + "\n");
   }
   return fd;
 }
 
-void test0() {
+void test0(PcpContext &ptx) {
   // test keygen and crypto
   FILE *CLEAR, *CIPHER, *DECRYPTED;
-  Key A = Key("a", "alicia", "alicia@local");
-  Key B = Key("b", "bobby",  "bobby@local");
+  Key A = Key(ptx, "a", "alicia", "alicia@local");
+  Key B = Key(ptx, "b", "bobby",  "bobby@local");
   PubKey PA = A.get_public();
   PubKey PB = B.get_public();
 
   A.decrypt("a");
   B.decrypt("b");
   
-  Crypto A2B(A, PB);
-  Crypto B2A(B, PA);
+  Crypto A2B(ptx, A, PB);
+  Crypto B2A(ptx, B, PA);
 
-  CLEAR = _openwr("testcppclear");
+  CLEAR = _openwr("testcppclear", ptx);
   fprintf(CLEAR, "HALLO\n");
   fclose(CLEAR);
   
-  CIPHER = _openwr("testcpcipher");
-  CLEAR = _openrd("testcppclear");
+  CIPHER = _openwr("testcpcipher", ptx);
+  CLEAR = _openrd("testcppclear", ptx);
 
   if(A2B.encrypt(CLEAR, CIPHER, false)) {
 
-    CIPHER = _openrd("testcpcipher");
-    DECRYPTED = _openwr("testcppdecrypted");
+    CIPHER = _openrd("testcpcipher", ptx);
+    DECRYPTED = _openwr("testcppdecrypted", ptx);
 
     if(B2A.decrypt(CIPHER, DECRYPTED, false)) {
 
-      DECRYPTED = _openrd("testcppdecrypted");
+      DECRYPTED = _openrd("testcppdecrypted", ptx);
       char *got = (char *)ucmalloc(10);
       if(fread(got, 1, 6, DECRYPTED) < 6) {
-	throw pcp::exception("read error, could not read decrypted content");
+	throw pcp::exception(ptx, "read error, could not read decrypted content");
       }
       if(strncmp(got, "HALLO", 5) != 0) {
-	throw pcp::exception();
+	throw pcp::exception(ptx);
       }
     }
     else
-      throw pcp::exception("failed to decrypt");
+      throw pcp::exception(ptx, "failed to decrypt");
   }
   else
-    throw pcp::exception("failed to encrypt");
+    throw pcp::exception(ptx, "failed to encrypt");
 
   cout << "0 ok" << endl;
 }
 
-void test1() {
+void test1(PcpContext &ptx) {
   // test the vault
-  Key A = Key("a", "alicia", "alicia@local");
-  Key B = Key("b", "bobby",  "bobby@local");
+  Key A = Key(ptx, "a", "alicia", "alicia@local");
+  Key B = Key(ptx, "b", "bobby",  "bobby@local");
   PubKey PA = A.get_public();
   PubKey PB = B.get_public();
 
-  Vault vault = Vault("vcpp1");
+  Vault vault = Vault(ptx, "vcpp1");
   vault.key_add(A);
   vault.pubkey_add(PB);
 
@@ -102,12 +102,12 @@ void test1() {
   }
 
   if(gotp == false || gots == false)
-    throw pcp::exception("wtf - didnt find installed keys");
+    throw pcp::exception(ptx, "wtf - didnt find installed keys");
   else
     cout << "1 ok" << endl;
 }
 
-void test2() {
+void test2(PcpContext &ptx) {
   // try importing a key from disk
   ifstream pf("key-bobby-pub");
   string z;
@@ -118,22 +118,22 @@ void test2() {
     if(strlen(buf) > 0)
       z += buf + string("\n");
   }
-  PubKey B(z);
+  PubKey B(ptx, z);
   //cout << B.to_text();
   cout << "2 ok" << endl;
 }
 
 
-void test3() {
+void test3(PcpContext &ptx) {
   // signature test
-  Key A = Key("a", "alicia", "alicia@local");
+  Key A = Key(ptx, "a", "alicia", "alicia@local");
   A.decrypt("a");
   PubKey PA = A.get_public();
 
   string message = "hallo baby";
 
-  Signature SigA(A);
-  Signature SigB(PA);
+  Signature SigA(ptx, A);
+  Signature SigB(ptx, PA);
 
   if(SigA.sign((unsigned char*)message.c_str(), message.length()))
     if(SigB.verify(SigA.sig) )
@@ -158,29 +158,30 @@ void test4() {
 
 int main(int argc, char **argv) {
   sodium_init();
+  PcpContext ptx;
 
   try {
     if(argc < 2)
-      throw pcp::exception("usage: cpptest N");
+      throw pcp::exception(ptx, "usage: cpptest N");
     switch(argv[1][0]) {
     case '0':
-      test0();
+      test0(ptx);
       break;
 
     case '1':
-      test1();
+      test1(ptx);
       break;
 
     case '2':
-      test2();
+      test2(ptx);
       break;
 
     case '3':
-      test3();
+      test3(ptx);
       break;
 
     case '4':
-      test3();
+      test4();
       break;
 
     default:

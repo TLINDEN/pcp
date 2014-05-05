@@ -16,12 +16,13 @@ int main() {
 
   pcp_key_t *a = pcpkey_new();
   pcp_key_t *b = pcpkey_new();
+  PCPCTX *ptx = ptx_new();
   pcp_pubkey_t *p = pcpkey_pub_from_secret(b);
 
   unsigned char m[12] = "hallo world";
 
   size_t clen;
-  unsigned char *c = pcp_box_encrypt(a, p, m, 12, &clen);
+  unsigned char *c = pcp_box_encrypt(ptx, a, p, m, 12, &clen);
   unsigned char *n = ucmalloc(24);
 
   memcpy(n, c, 24);

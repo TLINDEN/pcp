@@ -4,6 +4,7 @@
 int main() {
   /* testing basic Buffer api */
   Buffer *test = buffer_new(16, "test");
+  PCPCTX *ptx = ptx_new();
 
   byte *a = ucmalloc(32);
   byte *b = ucmalloc(32);
@@ -92,7 +93,7 @@ int main() {
   munmap(r, rs);
   fclose(RFD);
 
-  fatals_ifany();
+  fatals_ifany(ptx);
 
   return 0;
 }

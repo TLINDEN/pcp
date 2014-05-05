@@ -5,7 +5,11 @@ int main() {
   pcp_key_t *alice, *bob;
   pcp_pubkey_t *alicepub, *bobpub, *pubhash;
   Pcpstream *clear_in, *crypt_out, *clear_out;
+  PCPCTX *ptx;
   char message[] = "hello world"; 
+
+  /* we always need a context */
+  ptx = ptx_new();
 
   /* generate the keypairs for both */
   alice = pcpkey_new();
@@ -30,7 +34,7 @@ int main() {
 
   /* actually encrypt the message, don't sign it
      Alice is the sender, Bob is the recipient */
-  pcp_encrypt_stream(clear_in, crypt_out, alice, pubhash, 0);
+  pcp_encrypt_stream(ptx, clear_in, crypt_out, alice, pubhash, 0);
 
   /* now, print the encrypted result */
   fprintf(stderr, "Alice encrypted %"FMT_SIZE_T" bytes for Bob:\n", (SIZE_T_CAST)strlen(message));
@@ -42,14 +46,13 @@ int main() {
   clear_out =  ps_new_outbuffer();
 
   /* in order for the decryptor find the senders public key,
-     we need to put it into the global hash. this step can be
-  omitted when using a Vault. */
-  pcppubkey_hash = NULL;
-  HASH_ADD_STR( pcppubkey_hash , id, alicepub);
+     we need to put it into the context hash. this step can be
+     omitted when using a Vault. */
+  pcphash_add(ptx, alicepub, alicepub->type);
 
   /* try to decrypt the message */
-  if(pcp_decrypt_stream(crypt_out, clear_out, bob, NULL, 0) == 0)
-    fatals_ifany();
+  if(pcp_decrypt_stream(ptx, crypt_out, clear_out, bob, NULL, 0) == 0)
+    fatals_ifany(ptx);
   else {
     /* and finally print out the decrypted message */
     fprintf(stderr, "Bob decrypted %"FMT_SIZE_T" bytes from Alice:\n", (SIZE_T_CAST)buffer_size(ps_buffer(crypt_out)));
@@ -59,6 +62,8 @@ int main() {
   ps_close(clear_in);
   ps_close(crypt_out);
   ps_close(clear_out);
+
+  ptx_clean(ptx);
 
   free(alice);
   free(alicepub);

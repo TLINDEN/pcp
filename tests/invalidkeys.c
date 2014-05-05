@@ -11,26 +11,26 @@ int main() {
   strcpy(m, "xxxx");
 
   sodium_init();
-
+  PCPCTX *ptx = ptx_new();
   pcp_key_t *k = pcpkey_new ();
 
   memcpy(k->owner, o, 8);
   memcpy(k->mail, m, 8);
 
-  pcp_key_t *key = pcpkey_encrypt(k, pw);
+  pcp_key_t *key = pcpkey_encrypt(ptx, k, pw);
 
   int i;
   for(i=0; i<3; i++)
-    mkinvalid_secret(key, i);
+    mkinvalid_secret(ptx, key, i);
 
   for(i=0; i<4; i++)
     mkinvalid_public(key, i);
 
-  mkinvv("testvault-invalidheader",  0);
-  mkinvv("testvault-invalidversion",  1);
-  mkinvv("testvault-invaliditemsize", 2);
-  mkinvv("testvault-invaliditemtype",  3);
-  mkinvv("testvault-invalidkeytype", 4);
+  mkinvv(ptx, "testvault-invalidheader",  0);
+  mkinvv(ptx, "testvault-invalidversion",  1);
+  mkinvv(ptx, "testvault-invaliditemsize", 2);
+  mkinvv(ptx, "testvault-invaliditemtype",  3);
+  mkinvv(ptx, "testvault-invalidkeytype", 4);
 
   return 0;
 }
@@ -43,9 +43,9 @@ void pr(char *t, unsigned char *b, size_t s) {
   printf("\n");
 }
 
-void mkinvv(const char *name, int type) {
+void mkinvv(PCPCTX *ptx, const char *name, int type) {
   unlink(name);
-  vault_t *v = pcpvault_new((char *)name, 0);
+  vault_t *v = pcpvault_new(ptx, (char *)name, 0);
   vault_item_header_t *item = ucmalloc(sizeof(vault_item_header_t));
   vault_header_t *header = ucmalloc(sizeof(vault_header_t));
 
@@ -135,7 +135,7 @@ void mkinvalid_public(pcp_key_t *k, int type) {
   free(key);
 }
 
-void mkinvalid_secret(pcp_key_t *k, int type) {
+void mkinvalid_secret(PCPCTX *ptx, pcp_key_t *k, int type) {
   pcp_key_t *key = ucmalloc(sizeof(pcp_key_t));
   memcpy(key, k, sizeof(pcp_key_t));
   FILE *fd = NULL;
@@ -159,7 +159,7 @@ void mkinvalid_secret(pcp_key_t *k, int type) {
 
   if(fd != NULL) {
     pcp_dumpkey(key);
-    Buffer *b = pcp_export_secret(key, "xxx");
+    Buffer *b = pcp_export_secret(ptx, key, "xxx");
     fwrite(buffer_get(b), 1, buffer_size(b), fd);
     fclose(fd);
   }

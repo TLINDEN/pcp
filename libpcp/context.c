@@ -57,11 +57,15 @@ void fatal(PCPCTX *ptx, const char * fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
 
-  char *err = ptx->pcp_err;
+  char *err = NULL;//ptx->pcp_err;
   
   if(vasprintf(&err, fmt, ap) >= 0) {
     va_end(ap);
     ptx->pcp_errset = 1;
+    if(ptx->pcp_err != NULL) {
+      free(ptx->pcp_err);
+    }
+    ptx->pcp_err = err;
   }
   else {
     fprintf(stderr, "Could not store fatal error message %s!\n", fmt);

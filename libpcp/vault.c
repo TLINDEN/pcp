@@ -82,7 +82,7 @@ vault_t *pcpvault_new(PCPCTX *ptx, char *filename, int is_tmp) {
     vault->isnew = 1;
     mode_t old_mask = umask (S_IWGRP | S_IWOTH | S_IRGRP | S_IROTH);
     if((fd = fopen(vault->filename, "wb+")) == NULL) {
-      fatal(ptx, "Could not create vault file %s", vault->filename);
+      fatal(ptx, "Could not create vault file %s\n", vault->filename);
       umask (old_mask);
       goto errn;
     }
@@ -90,7 +90,7 @@ vault_t *pcpvault_new(PCPCTX *ptx, char *filename, int is_tmp) {
   }
   else {
     if((fd = fopen(vault->filename, "rb+")) == NULL) {
-      fatal(ptx, "Could not open vault file %s", vault->filename);
+      fatal(ptx, "Could not open vault file %s\n", vault->filename);
       goto errn;
     }
   }

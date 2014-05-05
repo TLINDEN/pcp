@@ -34,7 +34,7 @@ byte* pcp_scrypt(PCPCTX *ptx, char *passwd, size_t passwdlen, byte *nonce, size_
     return dk;
   }
   else {
-    fatal(ptx, "crypto_scrypt() failed");
+    fatal(ptx, "crypto_scrypt() failed\n");
     return NULL;
   }
 

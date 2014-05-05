@@ -30,14 +30,14 @@ char *pcp_getstdin(const char *prompt) {
   fprintf(stderr, "%s: ", prompt);
 
   if (fgets(line, 255, stdin) == NULL) {
-    fatal(ptx, "Cannot read from stdin");
+    fatal(ptx, "Cannot read from stdin\n");
     goto errgst;
   }
 
   line[strcspn(line, "\r\n")] = '\0';
 
   if ((out = strdup(line)) == NULL) {
-    fatal(ptx, "Cannot allocate memory");
+    fatal(ptx, "Cannot allocate memory\n");
     goto errgst;
   }
 
@@ -222,7 +222,7 @@ void pcp_exportsecret(char *keyid, int useid, char *outfile, int armor, char *pa
   }
   else {
     if((out = fopen(outfile, "wb+")) == NULL) {
-      fatal(ptx, "Could not create output file %s", outfile);
+      fatal(ptx, "Could not create output file %s\n", outfile);
        goto errexpse1;
     }
   }
@@ -307,7 +307,7 @@ void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int 
   }
   else {
     if((out = fopen(outfile, "wb+")) == NULL) {
-      fatal(ptx, "Could not create output file %s", outfile);
+      fatal(ptx, "Could not create output file %s\n", outfile);
       goto errpcpexpu1;
     }
   }
@@ -381,7 +381,7 @@ void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int 
     }
     else {
       /* FIXME: export foreign keys unsupported yet */
-      fatal(ptx, "Exporting foreign public keys in native format unsupported yet");
+      fatal(ptx, "Exporting foreign public keys in native format unsupported yet\n");
       goto errpcpexpu1;
     }
   }
@@ -399,7 +399,7 @@ void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int 
       }
     }
     else {
-      fatal(ptx, "Exporting foreign public keys in PBP format not possible");
+      fatal(ptx, "Exporting foreign public keys in PBP format not possible\n");
       goto errpcpexpu1;
     }
   }
@@ -615,6 +615,8 @@ int pcp_import (vault_t *vault, FILE *in, char *passwd) {
   }
   else {
     /* it's not public key, so let's try to interpret it as secret key */
+    if(ptx->verbose)
+      fatals_ifany(ptx);
     if(passwd != NULL) {
       sk = pcp_import_secret(ptx, buf, bufsize, passwd);
     }

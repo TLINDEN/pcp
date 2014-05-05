@@ -305,7 +305,7 @@ void pcpexport_yaml(char *outfile) {
   }
   else {
     if((out = fopen(outfile, "wb+")) == NULL) {
-      fatal(ptx, "Could not create output file %s", outfile);
+      fatal(ptx, "Could not create output file %s\n", outfile);
       out = NULL;
     }
   }

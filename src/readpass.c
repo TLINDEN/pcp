@@ -58,13 +58,13 @@ pcp_readpass(char ** passwd, const char * prompt,
 	/* If we're reading from a terminal, try to disable echo. */
 	if ((usingtty = isatty(fileno(readfrom))) != 0) {
 		if (tcgetattr(fileno(readfrom), &term_old)) {
-			fatal(ptx, "Cannot read terminal settings");
+			fatal(ptx, "Cannot read terminal settings\n");
 			goto err1;
 		}
 		memcpy(&term, &term_old, sizeof(struct termios));
 		term.c_lflag = (term.c_lflag & ~ECHO) | ECHONL;
 		if (tcsetattr(fileno(readfrom), TCSANOW, &term)) {
-			fatal(ptx, "Cannot set terminal settings");
+			fatal(ptx, "Cannot set terminal settings\n");
 			goto err1;
 		}
 	}
@@ -76,7 +76,7 @@ retry:
 
 	/* Read the password. */
 	if (fgets(passbuf, MAXPASSLEN, readfrom) == NULL) {
-		fatal(ptx, "Cannot read password");
+		fatal(ptx, "Cannot read password\n");
 		goto err2;
 	}
 
@@ -85,7 +85,7 @@ retry:
 		if (usingtty)
 			fprintf(stderr, "%s: ", confirmprompt);
 		if (fgets(confpassbuf, MAXPASSLEN, readfrom) == NULL) {
-			fatal(ptx, "Cannot read password");
+			fatal(ptx, "Cannot read password\n");
 			goto err2;
 		}
 		if (strcmp(passbuf, confpassbuf)) {
@@ -108,7 +108,7 @@ retry:
 
 	/* Copy the password out. */
 	if ((*passwd = strdup(passbuf)) == NULL) {
-		fatal(ptx, "Cannot allocate memory");
+		fatal(ptx, "Cannot allocate memory\n");
 		goto err1;
 	}
 

@@ -199,7 +199,7 @@ byte *pcp_z85_decode(PCPCTX *ptx, char *z85block, size_t *dstlen) {
   bin = ucmalloc(binlen);
 
   if(zmq_z85_decode(bin, z85block) == NULL) {
-    fatal(ptx, "zmq_z85_decode() failed, input size ! mod 5 (got %ld)", strlen(z85block));
+    fatal(ptx, "zmq_z85_decode() failed, input size ! mod 5 (got %ld)\n", strlen(z85block));
     return NULL;
   }
 
@@ -287,7 +287,7 @@ char *pcp_readz85string(PCPCTX *ptx, unsigned char *input, size_t bufsize) {
   }
 
   if(_buffer_is_binary(input, bufsize) > 0) {
-    fatal(ptx, "input is not z85 encoded and contains pure binary data");
+    fatal(ptx, "input is not z85 encoded and contains pure binary data\n");
     return NULL;
   }
 
@@ -339,7 +339,7 @@ char *pcp_readz85string(PCPCTX *ptx, unsigned char *input, size_t bufsize) {
   }
 
   if(buffer_size(z) == 0) {
-    fatal(ptx, "empty z85 encoded string");
+    fatal(ptx, "empty z85 encoded string\n");
     goto rferr;
   }
 

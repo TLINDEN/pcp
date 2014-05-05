@@ -17,14 +17,16 @@ Add newlines to headers in define.h, so strlen() later catches the whole length.
 Check is_utf8 license.
   also found in https://gd.meizo.com/_files/lpc/ext/utf8.c
 
-Vault checksum with global vault
-
 Symmetric decrypt mode tries to open vault
 
 pcp_find_primary_secret() makes a copy ???
 
 c++ destructor double free mess
 
+Use 64bit timte_t counters (either 32bit converted to 64bit or native)
+see: http://www.openbsd.org/faq/upgrade55.html#time_t
+
+change sign+encrypt to encrypt+sign
 
 Python binding, e.g.:
 py % cdll.LoadLibrary("libsodium.so.8")

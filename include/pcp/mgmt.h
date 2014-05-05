@@ -246,6 +246,7 @@ pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphras
 /* helpers */
 int _check_keysig_h(PCPCTX *ptx, Buffer *blob, rfc_pub_sig_h *h);
 int _check_hash_keysig(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, pcp_keysig_t *sk);
+int _check_sigsubs(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, rfc_pub_sig_s *subheader);
 
 #endif // _HAVE_PCP_MGMT_H
 

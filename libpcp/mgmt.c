@@ -42,36 +42,41 @@ int _check_keysig_h(PCPCTX *ptx, Buffer *blob, rfc_pub_sig_h *h) {
     h->numsubs = be16toh(h->numsubs);
 
     if(h->version != EXP_SIG_VERSION) {
-      fatal(ptx, "Unsupported pubkey signature version %d, expected %d", h->version, EXP_SIG_VERSION);
+      fatal(ptx, "Unsupported pubkey signature version %d, expected %d\n", h->version, EXP_SIG_VERSION);
       return 1;
     }
     if(h->type != EXP_SIG_TYPE) {
-      fatal(ptx, "Unsupported pubkey signature type %d, expected %d", h->type, EXP_SIG_TYPE);
+      fatal(ptx, "Unsupported pubkey signature type %d, expected %d\n", h->type, EXP_SIG_TYPE);
       return 1;
     }
     if(h->pkcipher != EXP_SIG_CIPHER) {
-      fatal(ptx, "Unsupported pubkey signature cipher %d, expected %d", h->pkcipher, EXP_SIG_CIPHER);
+      fatal(ptx, "Unsupported pubkey signature cipher %d, expected %d\n", h->pkcipher, EXP_SIG_CIPHER);
       return 1;
     }
     if(h->hashcipher != EXP_HASH_CIPHER) {
-      fatal(ptx, "Unsupported pubkey signature hash cipher %d, expected %d", h->hashcipher, EXP_HASH_CIPHER);
+      fatal(ptx, "Unsupported pubkey signature hash cipher %d, expected %d\n", h->hashcipher, EXP_HASH_CIPHER);
       return 1;
     }
     if(h->numsubs > 0 && buffer_left(blob) < sizeof(rfc_pub_sig_s) * h->numsubs) {
-      fatal(ptx, "Signature size specification invalid (sig: %ld, bytes left: %ld, numsubs: %ld",
+      fatal(ptx, "Signature size specification invalid (sig: %ld, bytes left: %ld, numsubs: %ld\n",
 	    sizeof(rfc_pub_sig_s) * h->numsubs, buffer_left(blob), h->numsubs);
       return 1;
     }
     return 0;
   }
   else {
-    fatal(ptx, "Error: input data too small, import failed");
+    fatal(ptx, "Error: input data too small, import failed\n");
     return 1;
   }
 }
 
-int _check_sigsubs(Buffer *blob, pcp_pubkey_t *p, rfc_pub_sig_s *subheader) {
+int _check_sigsubs(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, rfc_pub_sig_s *subheader) {
   byte *ignore = ucmalloc(32);
+
+  if(subheader->size > buffer_left(blob)) {
+    fatal(ptx, "Invalid header size %ld specified in source\n", subheader->size);
+    return 1;
+  }
 
   if(subheader->type == EXP_SIG_SUB_NOTATION) {
     /* mail or owner */
@@ -80,18 +85,34 @@ int _check_sigsubs(Buffer *blob, pcp_pubkey_t *p, rfc_pub_sig_s *subheader) {
 
     char *notation = ucmalloc(nsize+1);
 
-    if(buffer_get_chunk(blob, notation, nsize) == 0)
+    if(nsize >  buffer_left(blob)) {
+      fatal(ptx, "Invalid notation size %ld specified in source\n", nsize);
       return 1;
+    }
+
+    if(buffer_get_chunk(blob, notation, nsize) == 0) {
+      fatal(ptx, "Invalid notation size, expected %ld bytes, but got 0\n", nsize);
+      return 1;
+    }
 
     notation[nsize] = '\0';
 
+    if(vsize >  buffer_left(blob)) {
+      fatal(ptx, "Invalid notation value size %ld specified in source\n", vsize);
+      return 1;
+    }
+
     if(strncmp(notation, "owner", 5) == 0) {
-      if(buffer_get_chunk(blob, p->owner, vsize) == 0)
+      if(buffer_get_chunk(blob, p->owner, vsize) == 0) {
+	fatal(ptx, "Invalid 'owner' notation, expected %ld bytes, but got 0\n", vsize);
 	return 1;
+      }
     }
     else if(strncmp(notation, "mail", 4) == 0) {
-      if(buffer_get_chunk(blob, p->mail, vsize) == 0)
+      if(buffer_get_chunk(blob, p->mail, vsize) == 0) {
+	fatal(ptx, "Invalid 'mail' notation, expected %ld bytes, but got 0\n", vsize);
 	return 1;
+      }
     }
     else if(strncmp(notation, "serial", 6) == 0) {
       p->serial = buffer_get32na(blob);
@@ -100,8 +121,10 @@ int _check_sigsubs(Buffer *blob, pcp_pubkey_t *p, rfc_pub_sig_s *subheader) {
   }
   else {
     /* unsupported or ignored sig sub */
-    if(buffer_get_chunk(blob, ignore, subheader->size) == 0)
+    if(buffer_get_chunk(blob, ignore, subheader->size) == 0) {
+      fatal(ptx, "Invalid 'unsupported' notation, expected %ld bytes, but got 0\n", subheader->size);
       return 1;
+    }
   }
 
 
@@ -245,7 +268,7 @@ pcp_ks_bundle_t *pcp_import_pub_rfc(PCPCTX *ptx, Buffer *blob) {
   if(buffer_done(blob)) goto be;
 
   if(pkcipher != EXP_PK_CIPHER) {
-    fatal(ptx, "Unsupported pk cipher %d, expected %d", pkcipher, EXP_PK_CIPHER);
+    fatal(ptx, "Unsupported pk cipher %d, expected %d\n", pkcipher, EXP_PK_CIPHER);
     goto bef;
   }
 
@@ -262,7 +285,8 @@ pcp_ks_bundle_t *pcp_import_pub_rfc(PCPCTX *ptx, Buffer *blob) {
   for (i=0; i<sigheader->numsubs; i++) {
     subheader->size = buffer_get32na(blob);
     subheader->type = buffer_get8(blob);
-    _check_sigsubs(blob, p, subheader);
+    if(_check_sigsubs(ptx, blob, p, subheader) != 0)
+      goto bes;
   }
 
   /* calc id */
@@ -290,7 +314,9 @@ pcp_ks_bundle_t *pcp_import_pub_rfc(PCPCTX *ptx, Buffer *blob) {
 
 
  be:
-  fatal(ptx, "Error: input data too small, import failed");
+  fatal(ptx, "Error: input data too small, import failed\n");
+
+ bes:
 
  bef:
   buffer_free(blob);

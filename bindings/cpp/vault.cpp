@@ -28,12 +28,12 @@ Vault::Vault() {
   V = NULL;
 }
 
-Vault::Vault(PcpContext P) {
+Vault::Vault(PcpContext &P) {
   V = NULL;
   PTX = P;
 }
 
-Vault::Vault(PcpContext P, string filename) {
+Vault::Vault(PcpContext &P, string filename) {
   PTX = P;
   V = pcpvault_init(PTX.ptx, (char *)filename.c_str());
   if (V == NULL)

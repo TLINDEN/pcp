@@ -30,13 +30,13 @@ Key::Key() {
   K = NULL;
 }
 
-Key::Key(PcpContext P) {
+Key::Key(PcpContext &P) {
   stored = false;
   K = NULL;
   PTX = P;
 }
 
-Key::Key(PcpContext P, bool generate) {
+Key::Key(PcpContext &P, bool generate) {
   stored = false;
   if(generate)
     K = pcpkey_new();
@@ -45,14 +45,14 @@ Key::Key(PcpContext P, bool generate) {
   PTX = P;
 }
 
-Key::Key(PcpContext P, const string& passphrase) {
+Key::Key(PcpContext &P, const string& passphrase) {
   stored = false;
   K = pcpkey_new();
   K = pcpkey_encrypt(PTX.ptx, K, (char *)passphrase.c_str());
   PTX = P;
 }
 
-Key::Key(PcpContext P, const string& passphrase,
+Key::Key(PcpContext &P, const string& passphrase,
 	 const string& owner,
 	 const string& mail) {
   stored = false;
@@ -64,19 +64,19 @@ Key::Key(PcpContext P, const string& passphrase,
   PTX = P;
 }
 
-Key::Key(PcpContext P, pcp_key_t *k) {
+Key::Key(PcpContext &P, pcp_key_t *k) {
   stored = false;
   K = k;
   PTX = P;
 }
 
-Key::Key(PcpContext P, pcp_key_t *k, bool store) {
+Key::Key(PcpContext &P, pcp_key_t *k, bool store) {
   stored = new bool(store);
   K = k;
   PTX = P;
 }
 
-Key::Key(PcpContext P, string &z85encoded, string &passphrase) {
+Key::Key(PcpContext &P, string &z85encoded, string &passphrase) {
   stored = false;
   PTX = P;
 
@@ -214,26 +214,26 @@ PubKey::PubKey() {
   K = NULL;
 }
 
-PubKey::PubKey(PcpContext P) {
+PubKey::PubKey(PcpContext &P) {
   stored = false;
   K = NULL;
   PTX = P;
 }
 
 
-PubKey::PubKey(PcpContext P, pcp_pubkey_t *k) {
+PubKey::PubKey(PcpContext &P, pcp_pubkey_t *k) {
   stored = false;
   K = k;
   PTX = P;
 }
 
-PubKey::PubKey(PcpContext P, pcp_pubkey_t *k, bool store) {
+PubKey::PubKey(PcpContext &P, pcp_pubkey_t *k, bool store) {
   stored = store;
   K = k;
   PTX = P;
 }
 
-PubKey::PubKey(PcpContext P, string &z85encoded) {
+PubKey::PubKey(PcpContext &P, string &z85encoded) {
   stored = false;
   PTX = P;
 

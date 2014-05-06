@@ -48,10 +48,10 @@ namespace pcp {
     PcpContext PTX;
 
     // constructors
-    Signature(PcpContext P, Key &skey); // sign only
-    Signature(PcpContext P,PubKey &pkey); // verify only
-    Signature(PcpContext P,Key &skey, PubKey &pkey); // both/bulk
-    Signature(PcpContext P,Vault &v);
+    Signature(PcpContext &P, Key &skey); // sign only
+    Signature(PcpContext &P,PubKey &pkey); // verify only
+    Signature(PcpContext &P,Key &skey, PubKey &pkey); // both/bulk
+    Signature(PcpContext &P,Vault &v);
 
     // destructor
     ~Signature();

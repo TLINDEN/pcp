@@ -51,8 +51,8 @@ namespace pcp {
   public:
     // constructors
     Vault();
-    Vault(PcpContext P);
-    Vault(PcpContext P, std::string filename);
+    Vault(PcpContext &P);
+    Vault(PcpContext &P, std::string filename);
 
     // destructor
     ~Vault();

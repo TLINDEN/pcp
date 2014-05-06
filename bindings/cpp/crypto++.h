@@ -44,8 +44,8 @@ namespace pcp {
     Vault vault;
 
     // constructors
-    Crypto(PcpContext C, Key &skey, PubKey &pkey);
-    Crypto(PcpContext C, Vault &v, Key &skey, PubKey &pkey);
+    Crypto(PcpContext &C, Key &skey, PubKey &pkey);
+    Crypto(PcpContext &C, Vault &v, Key &skey, PubKey &pkey);
 
     // PK encryption methods
     // sender pubkey is P

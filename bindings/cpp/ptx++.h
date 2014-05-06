@@ -39,8 +39,9 @@ namespace pcp {
     // constructors
     PcpContext();
 
-    // destructors
-    ~PcpContext();
+    // clean up, wo don't do it in the destructor,
+    // since it will be called multiple times otherwise
+    void done();
   };
 };
 

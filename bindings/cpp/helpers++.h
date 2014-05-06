@@ -37,8 +37,9 @@ namespace pcp {
   class exception : public std::runtime_error {
   private:
     PCPCTX *ptx;
-    std::string getfatals() {
+    std::string getfatals(PcpContext &P) {
       std::string msg;
+      PCPCTX *ptx = P.ptx;
       if(ptx->pcp_errset == 1) {
 	msg = ptx->pcp_err;
       }
@@ -50,8 +51,8 @@ namespace pcp {
       return msg;
     }
   public:
-  exception(PcpContext P, const std::string & msg) : runtime_error(msg) { ptx = P.ptx; }
-  exception(PcpContext P) : runtime_error(getfatals()) { ptx = P.ptx; }
+  exception(PcpContext &P, const std::string & msg) : runtime_error(msg) { ptx = P.ptx; }
+  exception(PcpContext &P) : runtime_error(getfatals(P)) { }
   };
 
 

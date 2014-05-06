@@ -24,26 +24,26 @@
 using namespace std;
 using namespace pcp;
 
-Signature::Signature(PcpContext P, Key &skey) {
+Signature::Signature(PcpContext &P, Key &skey) {
   S = skey;
   PTX = P;
   havevault = false;
 }
 
-Signature::Signature(PcpContext C,PubKey &pkey) {
+Signature::Signature(PcpContext &C,PubKey &pkey) {
   P = pkey;
   PTX = C;
   havevault = false;
 }
 
-Signature::Signature(PcpContext C,Key &skey, PubKey &pkey) {
+Signature::Signature(PcpContext &C,Key &skey, PubKey &pkey) {
   P = pkey;
   S = skey;
   PTX = C;
   havevault = false;
 }
 
-Signature::Signature(PcpContext P,Vault &v) {
+Signature::Signature(PcpContext &P,Vault &v) {
   vault = v;
   havevault = true;
   PTX = P;

@@ -28,7 +28,7 @@ PcpContext::PcpContext() {
   ptx = ptx_new();
 }
 
-PcpContext::~PcpContext() {
+void PcpContext::done() {
   ptx_clean(ptx);
 }
 

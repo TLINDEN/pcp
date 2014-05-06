@@ -44,14 +44,34 @@ PCPCTX *ptx_new() {
 }
 
 void ptx_clean(PCPCTX *ptx) {
-  if(ptx->pcp_errset)
-    free(ptx->pcp_err);
-
+  if(ptx->pcp_errset) {
+    if(ptx->pcp_err != NULL)
+      free(ptx->pcp_err);
+    
+  }
   pcphash_clean(ptx);
 
   free(ptx);
 }
 
+void ptx_dump(PCPCTX *ptx) {
+  fprintf(stderr, "ERRSET: %d\n", ptx->pcp_errset);
+  if(ptx->pcp_errset)
+    fprintf(stderr, "   ERR: %s\n", ptx->pcp_err);
+
+  fprintf(stderr, "    sk:\n");
+  pcp_key_t *k = NULL;
+  pcphash_iterate(ptx, k) {
+    fprintf(stderr, "        id: 0x%s\n", k->id);
+  }
+
+  fprintf(stderr, "    pk:\n");
+  pcp_pubkey_t *p = NULL;
+  pcphash_iteratepub(ptx, p) {
+    fprintf(stderr, "        id: 0x%s\n", p->id);
+  }
+
+}
 
 void fatal(PCPCTX *ptx, const char * fmt, ...) {
   va_list ap;

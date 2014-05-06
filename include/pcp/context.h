@@ -91,5 +91,6 @@ void fatals_reset(PCPCTX *ptx);
 /* same as fatal() but dies immediately */
 void final(const char * fmt, ...);
 
+void ptx_dump(PCPCTX *ptx);
 
 #endif // _HAVE_PCP_CONTEXT_H

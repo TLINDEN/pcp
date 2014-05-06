@@ -31,6 +31,7 @@ Crypto::Crypto(PcpContext &C, Key &skey, PubKey &pkey) {
   PTX = C;
   havevault = false;
   pcphash_add(PTX.ptx, P.K, PCP_KEY_TYPE_PUBLIC);
+  pcphash_add(PTX.ptx, S.K, PCP_KEY_TYPE_SECRET);
 }
 
 Crypto::Crypto(PcpContext &C, Vault &v, Key &skey, PubKey &pkey) {
@@ -43,11 +44,10 @@ Crypto::Crypto(PcpContext &C, Vault &v, Key &skey, PubKey &pkey) {
 
 bool Crypto::encrypt(FILE *in, FILE *out, bool sign) {
   pcp_pubkey_t *pubhash = NULL;
-  pcphash_add(PTX.ptx, P.K, P.K->type);
-  //HASH_ADD_STR( pubhash, id, P.K);
+  HASH_ADD_STR( pubhash, id, P.K);
   Pcpstream *pin = ps_new_file(in);
   Pcpstream *pout = ps_new_file(out);
-  ptx_dump(PTX.ptx);
+
   size_t clen = pcp_encrypt_stream(PTX.ptx, pin, pout, S.K, pubhash, sign);
   if(clen <= 0)
      throw exception(PTX);
@@ -59,7 +59,7 @@ bool Crypto::encrypt(FILE *in, FILE *out, bool sign) {
 bool Crypto::decrypt(FILE *in, FILE *out, bool verify) {
   Pcpstream *pin = ps_new_file(in);
   Pcpstream *pout = ps_new_file(out);
-  ptx_dump(PTX.ptx);
+
   if(pcp_decrypt_stream(PTX.ptx, pin, pout, S.K, NULL, verify) <= 0)
     throw exception(PTX);
   ps_close(pin);

@@ -31,8 +31,7 @@ Pretty Curved Privacy - File encryption using eliptic curve cryptography.
   -R --remove-key           Remove a key from the vault.
   -s --export-secret        Export a secret key.
   -p --export-public        Export a public key.
-  -S --import-secret        Import a secret key.
-  -P --import-public        Import a public key.
+  -K --import               Import a secret or public key.
   -y --export-yaml          Export all keys as YAML formatted text.
   -F --export-format <fmt>  Specify exportformat, either 'pbp' or 'pcp'.
                             'pcp' is the default if unspecified.
@@ -373,9 +372,11 @@ Verification by recipient:
 =head1 SIGNED ENCRYPTION
 
 Beside pure encryption and signatures pcp1 also supports signed
-encryption. In this mode an input file will be signed your primary
-secret key from a BLAKE2 hash of the file contents and the recipients
-and then encrypted. The signature is encrypted as well.
+encryption. In this mode an input file will be encrypted and a
+signature of the encrypted content and encrypted recipients with your primary
+secret key will be appended.
+
+The signature is encrypted as well.
 
 Example:
 
@@ -384,24 +385,12 @@ Example:
 Please note the additional B<-g> parameter. The recipient can
 decrypt and verify the so created data like this:
 
- pcp1 -d -c -I README.asc -o README.txt
-
-Please note the additional B<-c> parameter.
+ pcp1 -d -I README.asc -o README.txt
 
 If decryption works, the output file will be written. If signature
 verification fails you will be informed, but the decrypted
 output will be left untouched. It is up to you how to react
 on an invalid signature.
-
-B<Caution: as of this writing (pcp version 0.2.0) there is
-no offset marker included into the output which separates
-the signature from the cipher. Therefore a recipient has to
-know that the file is encrypted AND signed. If, for example,
-the recpient leaves the -c parameter on such a file, the decryption
-process will fail. Otherwise, if the user supplies -c on an
-encrypted file without a signature, decryption will fail as well.>
-
-Note: this behavior might change in the future.
 
 =head1 ALTERNATIVE COMMANDLINES
 

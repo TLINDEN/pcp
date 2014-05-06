@@ -30,52 +30,56 @@ FILE *_openrd(string file, PcpContext &ptx) {
   return fd;
 }
 
-void test0(PcpContext &ptx) {
+void test0() {
   // test keygen and crypto
+  PcpContext CA; // we need different contexts for sender and recipient!
+  PcpContext CB;
+
   FILE *CLEAR, *CIPHER, *DECRYPTED;
-  Key A = Key(ptx, "a", "alicia", "alicia@local");
-  Key B = Key(ptx, "b", "bobby",  "bobby@local");
+  Key A = Key(CA, "a", "alicia", "alicia@local");
+  Key B = Key(CA, "b", "bobby",  "bobby@local");
   PubKey PA = A.get_public();
   PubKey PB = B.get_public();
 
   A.decrypt("a");
   B.decrypt("b");
   
-  Crypto A2B(ptx, A, PB);
-  Crypto B2A(ptx, B, PA);
+  Crypto A2B(CA, A, PB);
+  Crypto B2A(CB, B, PA);
 
-  CLEAR = _openwr("testcppclear", ptx);
+  CLEAR = _openwr("testcppclear", CA);
   fprintf(CLEAR, "HALLO\n");
   fclose(CLEAR);
   
-  CIPHER = _openwr("testcpcipher", ptx);
-  CLEAR = _openrd("testcppclear", ptx);
+  CIPHER = _openwr("testcpcipher", CA);
+  CLEAR = _openrd("testcppclear", CA);
 
-  cerr << "A=>B encrypt using " << PB.get_id() << endl;
   if(A2B.encrypt(CLEAR, CIPHER, false)) {
 
-    CIPHER = _openrd("testcpcipher", ptx);
-    DECRYPTED = _openwr("testcppdecrypted", ptx);
+    CIPHER = _openrd("testcpcipher", CA);
+    DECRYPTED = _openwr("testcppdecrypted", CA);
 
-    cerr << "B=>A decrypt using " << PA.get_id() << endl;
     if(B2A.decrypt(CIPHER, DECRYPTED, false)) {
 
-      DECRYPTED = _openrd("testcppdecrypted", ptx);
+      DECRYPTED = _openrd("testcppdecrypted", CA);
       char *got = (char *)ucmalloc(10);
       if(fread(got, 1, 6, DECRYPTED) < 6) {
-	throw pcp::exception(ptx, "read error, could not read decrypted content");
+	throw pcp::exception(CA, "read error, could not read decrypted content");
       }
       if(strncmp(got, "HALLO", 5) != 0) {
-	throw pcp::exception(ptx);
+	throw pcp::exception(CA);
       }
     }
     else
-      throw pcp::exception(ptx, "failed to decrypt");
+      throw pcp::exception(CA, "failed to decrypt");
   }
   else
-    throw pcp::exception(ptx, "failed to encrypt");
+    throw pcp::exception(CA, "failed to encrypt");
 
   cout << "0 ok" << endl;
+
+  CA.done();
+  CB.done();
 }
 
 void test1(PcpContext &ptx) {
@@ -167,7 +171,7 @@ int main(int argc, char **argv) {
       throw pcp::exception(ptx, "usage: cpptest N");
     switch(argv[1][0]) {
     case '0':
-      test0(ptx);
+      test0();
       break;
 
     case '1':

@@ -51,11 +51,13 @@ void test0(PcpContext &ptx) {
   CIPHER = _openwr("testcpcipher", ptx);
   CLEAR = _openrd("testcppclear", ptx);
 
+  cerr << "A=>B encrypt using " << PB.get_id() << endl;
   if(A2B.encrypt(CLEAR, CIPHER, false)) {
 
     CIPHER = _openrd("testcpcipher", ptx);
     DECRYPTED = _openwr("testcppdecrypted", ptx);
 
+    cerr << "B=>A decrypt using " << PA.get_id() << endl;
     if(B2A.decrypt(CIPHER, DECRYPTED, false)) {
 
       DECRYPTED = _openrd("testcppdecrypted", ptx);
@@ -151,9 +153,9 @@ void test4() {
   }
 
   if(b.size() == 32 * 10)
-    cout << "3 ok" << endl;
+    cout << "4 ok" << endl;
   else
-    cout << "3 failed" << endl;
+    cout << "4 failed" << endl;
 }
 
 int main(int argc, char **argv) {
@@ -192,5 +194,8 @@ int main(int argc, char **argv) {
   catch (pcp::exception &E) {
     cerr << "Catched exception: " << E.what() << endl;
   }
+
+  ptx.done();
+
   return 0;
 }

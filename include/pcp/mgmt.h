@@ -73,13 +73,19 @@
      those cipher numbers become official, I'll use them instead
      of my own.
 
+   - We use 64 bit integers for times everywhere (ctime, expire, etc),
+     to be year 2038 safe. Note, that this is a violation of the
+     RFC spec. However, said RFC have to be modified to fit 2038
+     anc beyond anyways. This applies for the keyfile ctime as
+     well for the key sig sub fields containing time values.
+
    - The exported public key packet contains a signature. We're
      filling out all required fields. A signature has a variable
      number of sig sub packets. We use only these types:
 
-            2 = Signature Creation Time     (4 byte)
-            3 = Signature Expiration Time   (4 byte)
-            9 = Key Expiration Time         (4 bytes)
+            2 = Signature Creation Time     (8 byte)
+            3 = Signature Expiration Time   (8 byte)
+            9 = Key Expiration Time         (8 bytes)
            20 = Notation Data               (4 byte flags, N bytes name+value)
            27 = Key Flags                   (1 byte, use 0x02, 0x08 and 0x80
   

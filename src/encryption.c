@@ -76,7 +76,7 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
       symkey = pcp_scrypt(ptx, passphrase, strlen(passphrase), salt, 90);
       free(salt);
     }
-    else {
+    else if(head == PCP_ASYM_CIPHER || head == PCP_ASYM_CIPHER_SIG) {
       /*  asymetric mode */
       if(useid) {
 	secret = pcphash_keyexists(ptx, id);
@@ -108,11 +108,18 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
 	secret = pcpkey_decrypt(ptx, secret, passphrase);
 	if(secret == NULL)
 	  goto errde3;
+
+	if(head == PCP_ASYM_CIPHER_SIG)
+	  verify = 1;
       }
+    }
+    else {
+      fatal(ptx, "Could not determine input file type (got: %02x)\n", head);
+      goto errde3;
     }
   }
   else {
-    fatal(ptx, "Could not determine input file type\n");
+    fatal(ptx, "Failed to read from file!\n");
     goto errde3;
   }
 

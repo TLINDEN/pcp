@@ -197,6 +197,14 @@ size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t 
       else if(head[0] == PCP_ASYM_CIPHER) {
 	self = 0;
       }
+      else if(head[0] == PCP_ASYM_CIPHER_SIG) {
+	self = 0;
+	verify = 1;
+      }
+      else {
+	fatal(ptx, "Unknown file header (got: %02x)\n", head[0]);
+	goto errdef1;
+      }
     }
   }
 
@@ -323,7 +331,10 @@ size_t pcp_encrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, pcp_key_t 
   }
 
   /*  step 1, file header */
-  head[0] = PCP_ASYM_CIPHER;
+  if(sign)
+    head[0] = PCP_ASYM_CIPHER_SIG;
+  else
+    head[0] = PCP_ASYM_CIPHER;
   ps_write(out, head, 1);
   /* fwrite(head, 1, 1, out); */
   /* fprintf(stderr, "D: header - 1\n"); */
@@ -454,7 +465,8 @@ size_t pcp_encrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, byte *
     out_size += crypto_secretbox_NONCEBYTES + es;
 
     if(recsign != NULL)
-      crypto_generichash_update(st, in_buf, cur_bufsize);
+      crypto_generichash_update(st, buf_cipher, es);
+      //crypto_generichash_update(st, in_buf, cur_bufsize);
 
 #ifdef PCP_CBC
     /*  make current cipher to next IV, ignore nonce and pad */
@@ -573,7 +585,8 @@ size_t pcp_decrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *
       /* fwrite(buf_clear, ciphersize - PCP_CRYPTO_ADD, 1, out); */
 
       if(recverify != NULL)
-	crypto_generichash_update(st, buf_clear, ciphersize - PCP_CRYPTO_ADD);
+	crypto_generichash_update(st, buf_cipher, ciphersize);
+	//crypto_generichash_update(st, buf_clear, ciphersize - PCP_CRYPTO_ADD);
 
       free(buf_clear);
 

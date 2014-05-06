@@ -343,7 +343,7 @@ typedef struct _pcp_stream_t Pcpstream;
 /* various helper structs for mgmt.c, used internally only */
 struct _pcp_rfc_pubkey_header_t {
   uint8_t version;
-  uint32_t ctime;
+  uint64_t ctime;
   uint8_t cipher;
 };
 

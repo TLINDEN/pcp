@@ -120,7 +120,12 @@ int _check_sigsubs(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, rfc_pub_sig_s *su
     ucfree(notation, nsize);
   }
   else {
-    /* unsupported or ignored sig sub */
+    /* unsupported or ignored sig subs:
+       we (currently) ignore sig ctime, expire and keyexpire,
+       since the ctime - which is the only one we need internally -
+       is already known from the key ctime. This may change in
+       the future though.
+     */
     if(buffer_get_chunk(blob, ignore, subheader->size) == 0) {
       fatal(ptx, "Invalid 'unsupported' notation, expected %ld bytes, but got 0\n", subheader->size);
       return 1;
@@ -135,6 +140,7 @@ int _check_hash_keysig(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, pcp_keysig_t 
   // read hash + sig
   size_t blobstop = blob->offset;
   size_t sigsize = crypto_sign_BYTES + crypto_generichash_BYTES_MAX;
+  size_t phead = (2 * sizeof(uint8_t)) + sizeof(uint64_t); /* rfc_pub_h */
 
   byte *signature = ucmalloc(sigsize);
   if(buffer_get_chunk(blob, signature, sigsize) == 0)
@@ -144,11 +150,11 @@ int _check_hash_keysig(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, pcp_keysig_t 
   sk->type = PCP_KEYSIG_NATIVE;
   
   /* everything minus version, ctime and cipher, 1st 3 fields */
-  sk->size = blobstop - 6;
+  sk->size = blobstop - phead;
   memcpy(sk->id, p->id, 17);
 
   /* put the whole signature blob into our keysig */
-  blob->offset = 6; /* woah, hack :) */
+  blob->offset = phead;
   sk->blob = ucmalloc(sk->size);
   buffer_get_chunk(blob, sk->blob, sk->size);
 
@@ -262,7 +268,7 @@ pcp_ks_bundle_t *pcp_import_pub_rfc(PCPCTX *ptx, Buffer *blob) {
   rfc_pub_sig_s *subheader = ucmalloc(sizeof(rfc_pub_sig_s));
 
   if(buffer_done(blob)) goto be;
-  p->ctime = buffer_get32na(blob);
+  p->ctime = buffer_get64na(blob);
 
   uint8_t pkcipher = buffer_get8(blob);
   if(buffer_done(blob)) goto be;
@@ -352,7 +358,7 @@ pcp_ks_bundle_t *pcp_import_pub_pbp(PCPCTX *ptx, Buffer *blob) {
   date[19] = '\0';
   struct tm c;
   if(strptime(date, "%Y-%m-%dT%H:%M:%S", &c) == NULL) {
-    fatal(ptx, "Failed to parse creation time in PBP public key file (<%s>)\n", date);
+    fatal(ptx, "Failed to parse creation time in PBP public key file\n");
     free(date);
     goto errimp2;
   }
@@ -594,7 +600,7 @@ Buffer *pcp_export_rfc_pub (pcp_key_t *sk) {
 
   /* add the header */
   buffer_add8(out, PCP_KEY_VERSION);
-  buffer_add32be(out, sk->ctime);
+  buffer_add64be(out, sk->ctime);
   buffer_add8(out, EXP_PK_CIPHER);
 
   /* add the keys */
@@ -619,19 +625,19 @@ Buffer *pcp_export_rfc_pub (pcp_key_t *sk) {
   buffer_add16be(raw, nsubs);
 
   /* add sig ctime */
-  buffer_add32be(raw, 4);
+  buffer_add32be(raw, 8);
   buffer_add8(raw, EXP_SIG_SUB_CTIME);
-  buffer_add32be(raw, time(0));
+  buffer_add64be(raw, time(0));
 
   /* add sig expire time */
-  buffer_add32be(raw, 4);
+  buffer_add32be(raw, 8);
   buffer_add8(raw, EXP_SIG_SUB_SIGEXPIRE);
-  buffer_add32be(raw, time(0) + 31536000);
+  buffer_add64be(raw, time(0) + 31536000);
 
   /* add key expire time */
-  buffer_add32be(raw, 4);
+  buffer_add32be(raw, 8);
   buffer_add8(raw, EXP_SIG_SUB_KEYEXPIRE);
-  buffer_add32be(raw, sk->ctime + 31536000);
+  buffer_add64be(raw, sk->ctime + 31536000);
 
   size_t notation_size = 0;
   /* add serial number notation sub */

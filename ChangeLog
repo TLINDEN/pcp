@@ -1,3 +1,33 @@
+0.2.2   Enhanded --edit-key a little, it's now possible to
+	make a secret the primary one.
+
+	Added new option -v (the previous -v has moved to
+	--version only) for verbose. Currently only supported
+	by --list-keys. In this mode more details will be
+	printed. Also added a couple of alias options for
+	existing ones (e.g. -a for armor which is an alias
+	for -z).
+
+	Removed options -P and -S, replaced by -K (long:
+	--import-key) used to import a key. The key type
+	is now determined automatically as well as the
+	encoding.
+
+	Made libpcp threadsafe by removing all global vars
+	and putting that stuff into the new PCP Context
+	class (ptx.h), which now holds errors and key hashes.
+
+	Use 64bit integers for time values in exported
+	keys (we use 64 bit internaly already), to be
+	year 2038 safe.
+
+	Added a new file type (PCP_ASYM_CIPHER_SIG) which
+	marks encrypted+signed files. This is incompatible
+	to pbp, but it doesn't support that feature anyway.
+	To decrypt encrypted+signed files the option -c
+	is therefore no more required, since pcp2 can now
+	determine the file mode itself.
+
 0.2.1   My crypt+sign implementation were wrong (better:
 	defect). It worked but a legal recipient could
 	re-encrypt the message and attach the original
@@ -81,25 +111,9 @@
 	changes. It's like a drug boosting the brain. Love
 	U, man!
 
-	Enhanded --edit-key a little, it's now possible to
-	make a secret the primary one.
 
-	Added new option -v (the previous -v has moved to
-	--version only) for verbose. Currently only supported
-	by --list-keys. In this mode more details will be
-	printed. Also added a couple of alias options for
-	existing ones (e.g. -a for armor which is an alias
-	for -z).
 
-	Removed options -P and -S, replaced by -K (long:
-	--import-key) used to import a key. The key type
-	is now determined automatically as well as the
-	encoding.
 
-	Made libpcp threadsafe by removing all global vars
-	and putting that stuff into the new PCP Context
-	class (ptx.h), which now holds errors and key hashes.
-	
 0.2.0	ED25519 and Curve25519 keys are now generated
 	separately (previously they were generated from
 	one random seed, the curve had been derived from

@@ -26,8 +26,7 @@
 "-R --remove-key           Remove a key from the vault.\n" \
 "-s --export-secret        Export a secret key.\n" \
 "-p --export-public        Export a public key.\n" \
-"-S --import-secret        Import a secret key.\n" \
-"-P --import-public        Import a public key.\n" \
+"-K --import               Import a secret or public key.\n" \
 "-y --export-yaml          Export all keys as YAML formatted text.\n" \
 "-F --export-format <fmt>  Specify exportformat, either 'pbp' or 'pcp'.\n" \
 "                          'pcp' is the default if unspecified.\n" \

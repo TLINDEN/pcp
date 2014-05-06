@@ -24,8 +24,7 @@ Keymanagement Options:
 -R --remove-key           Remove a key from the vault.
 -s --export-secret        Export a secret key.
 -p --export-public        Export a public key.
--S --import-secret        Import a secret key.
--P --import-public        Import a public key.
+-K --import               Import a secret or public key.
 -y --export-yaml          Export all keys as YAML formatted text.
 -F --export-format <fmt>  Specify exportformat, either 'pbp' or 'pcp'.
                           'pcp' is the default if unspecified.

@@ -212,10 +212,18 @@ byte *pcp_z85_decode(PCPCTX *ptx, char *z85block, size_t *dstlen) {
 
 char *pcp_z85_encode(byte *raw, size_t srclen, size_t *dstlen) {
   int pos = 0;
+  byte *padded;
   size_t outlen, blocklen, zlen;
 
-  /*  make z85 happy (size % 4) */
-  byte *padded = pcp_padfour(raw, srclen, &outlen);
+  if(srclen %4 == 0) {
+    /* no padding required */
+    padded = raw;
+    outlen = srclen;
+  }
+  else {
+    /*  make z85 happy (size % 4) */
+    padded = pcp_padfour(raw, srclen, &outlen);
+  }
 
   /*  encode to z85 */
   zlen = (outlen * 5 / 4) + 1;
@@ -245,7 +253,9 @@ char *pcp_z85_encode(byte *raw, size_t srclen, size_t *dstlen) {
 
   *dstlen = blocklen;
   free(z85); 
-  free(padded);
+
+  if(srclen %4 != 0)
+    free(padded);
 
   return z85block;
 }

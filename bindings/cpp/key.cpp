@@ -119,7 +119,7 @@ string Key::export_secret(const string &passphrase) {
     throw pcp::exception(PTX);
 
   size_t zlen;
-  char *z85 = pcp_z85_encode(buffer_get(exported_sk), buffer_size(exported_sk), &zlen);
+  char *z85 = pcp_z85_encode(buffer_get(exported_sk), buffer_size(exported_sk), &zlen, 1);
 
   string out =  string(EXP_SK_HEADER) + "\r\n" + string(z85) + "\r\n" + string(EXP_SK_FOOTER) + "\r\n";
 
@@ -135,7 +135,7 @@ string Key::export_public() {
     throw pcp::exception(PTX);
 
   size_t zlen;
-  char *z85 = pcp_z85_encode(buffer_get(exported_pk), buffer_size(exported_pk), &zlen);
+  char *z85 = pcp_z85_encode(buffer_get(exported_pk), buffer_size(exported_pk), &zlen, 1);
 
   string out =  string(EXP_PK_HEADER) + "\r\n" + string(z85) + "\r\n" + string(EXP_PK_FOOTER) + "\r\n";
 

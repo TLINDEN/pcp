@@ -60,7 +60,11 @@ Pcpstream *ps_new_outbuffer() {
 void ps_setdetermine(Pcpstream *stream, size_t blocksize) {
   assert(blocksize % 4 == 0);
   stream->determine = 1;
-  stream->blocksize = blocksize + (5 - (blocksize % 5));
+  /* expand blocksize by the remainder of %5 plus another 5 bytes
+     for the pad blob */
+  //stream->blocksize = blocksize + (5 - (blocksize % 5)) + 5;
+  stream->blocksize = blocksize + (blocksize / 4) + 5;
+  //fprintf(stderr, "blocksize: %ld\n", stream->blocksize);
   if(stream->cache == NULL) {
     stream->cache = buffer_new(32, "Pcpstreamcachedetermine");
     stream->next = buffer_new(32, "Pcpstreamcachenextdetermin");
@@ -435,8 +439,9 @@ size_t ps_read_decode(Pcpstream *stream) {
   size_t binlen, outlen;
   byte *bin = pcp_z85_decode(ptx, buffer_get_str(z), &binlen);
   //fprintf(stderr, "ps_read_decode decoding z: %ld, got: %ld\n", buffer_size(z), binlen);
-  //  _dump("bin", bin, binlen);
+  //_dump("bin", bin, binlen);
   //fatals_ifany();
+
   if(bin == NULL) {
     /* it's not z85 encoded, so threat it as binary */
     if(stream->firstread) {
@@ -550,20 +555,8 @@ size_t ps_write(Pcpstream *stream, void *buf, size_t writebytes) {
 void ps_write_encode(Pcpstream *stream, Buffer *dst) {
   size_t zlen, i, pos;
   
-  /* do z85 0 padding, manually */
-  if(buffer_size(stream->cache) % 4 != 0) {
-    size_t outlen = buffer_size(stream->cache);
-    while (outlen % 4 != 0) {
-      buffer_add8(stream->cache, 0);
-      outlen = buffer_size(stream->cache);
-    }
-  }
-
   /* z85 encode */
-  zlen = (buffer_size(stream->cache) * 5 / 4) + 1;
-  char *z85 = ucmalloc(zlen);
-
-  zmq_z85_encode(z85, buffer_get(stream->cache), buffer_size(stream->cache));
+  char *z85 = pcp_z85_encode(buffer_get(stream->cache), buffer_size(stream->cache), &zlen, 0);
 
   /* add newlines */
   pos = stream->linewr;
@@ -578,7 +571,6 @@ void ps_write_encode(Pcpstream *stream, Buffer *dst) {
     buffer_add8(dst, z85[i]);
   }
 
-  /* remember where to start next */
   stream->linewr = pos;
 }
 

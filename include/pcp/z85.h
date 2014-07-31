@@ -53,9 +53,9 @@ we pad the input with zeroes and remove them after decoding.
     the original pointer into it and adds a number of zeros so that the
     result has a size divisable by 4.
 
-    \param[in] src Unpadded data.
-    \param[in] srclen Size of unpadded data.
-    \param[in] dstlen Returned size of padded data (pointer to int).
+    \param[in]  src Unpadded data.
+    \param[in]  srclen Size of unpadded data.
+    \param[out] dstlen Returned size of padded data (pointer to int).
 
     \return Returns a pointer to the padded data.
  */
@@ -95,13 +95,14 @@ byte *pcp_z85_decode(PCPCTX *ptx, char *z85block, size_t *dstlen);
     It allocates the memory for the returned char pointer. The caller
     is responsible the free() it.
 
-    \param[in] raw Pointer to raw data.
-    \param[in] srclen Size of the data.
-    \param[in] dstlen Returned size of encoded data (pointer to int).
+    \param[in]  raw Pointer to raw data.
+    \param[in]  srclen Size of the data.
+    \param[out] dstlen Returned size of encoded data (pointer to int).
+    \param[in]  doblock If set to 1, turn the encoded data into a 72 chars wide block.
 
     \return Returns a string (char array) containing the Z85 encoded data.
 */
-char *pcp_z85_encode(byte *raw, size_t srclen, size_t *dstlen);
+char *pcp_z85_encode(byte *raw, size_t srclen, size_t *dstlen, int doblock);
 
 /** Read a Z85 encoded file.
 

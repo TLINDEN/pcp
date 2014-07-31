@@ -203,7 +203,7 @@ void pcppubkey_print(pcp_pubkey_t *key, FILE* out) {
   fprintf(out, " Mail: %s\n", key->mail);
 
   fprintf(out, " Key-ID: 0x%s\n", key->id);
-  fprintf(out, " Public-Key: %s\n", pcp_z85_encode(key->pub, 32, &zlen));
+  fprintf(out, " Public-Key: %s\n", pcp_z85_encode(key->pub, 32, &zlen, 1));
 
   /* 2004-06-14T23:34:30. */
   fprintf(out, " Creation Time: %04d-%02d-%02dT%02d:%02d:%02d\n",

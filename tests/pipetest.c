@@ -6,32 +6,26 @@
 #include <pcp.h>
 
 int main(int argc, char **argv) {
-  if(argc < 4) {
-    fprintf(stderr, "Usage: pipetest <read-blocksize> <z85-blocksize> <d|e>\n");
+  if(argc < 3) {
+    fprintf(stderr, "Usage: pipetest <read-blocksize> <d|e>\n");
     fprintf(stderr, "d - decode\ne - encode\n");
     return 1;
   }
 
-  size_t rblocksize;
-  size_t zblocksize;
+  size_t blocksize;
   char mode;
 
-  if((rblocksize = strtol(argv[1], NULL, 0)) == 0) {
+  if((blocksize = strtol(argv[1], NULL, 0)) == 0) {
     fprintf(stderr, "Error: invalid read blocksize %s\n", argv[1]);
     return 1;
   }
 
-  if((zblocksize = strtol(argv[2], NULL, 0)) == 0) {
-    fprintf(stderr, "Error: invalid z85 blocksize %s\n", argv[2]);
-    return 1;
-  }
-
-  if(zblocksize % 4 != 0) {
+  if(blocksize % 4 != 0) {
     fprintf(stderr, "Error: z85 blocksize shall be divisible by 4\n");
     return 1;
   }
 
-  mode = argv[3][0];
+  mode = argv[2][0];
 
   if(mode != 'd' && mode != 'e') {
     fprintf(stderr, "Error: invalid mode %s\n", argv[3]);
@@ -43,14 +37,14 @@ int main(int argc, char **argv) {
   size_t got;
 
   if(mode == 'e')
-    ps_armor(out, zblocksize);
+    ps_armor(out, blocksize);
   else 
-    ps_setdetermine(in, zblocksize);
+    ps_setdetermine(in, blocksize);
 
-  void *buf = ucmalloc(rblocksize);
+  void *buf = ucmalloc(blocksize);
 
   while(!ps_end(in)) {
-    got = ps_read(in, buf, rblocksize);
+    got = ps_read(in, buf, blocksize);
     if(got > 0)
       ps_write(out, buf, got);
   }

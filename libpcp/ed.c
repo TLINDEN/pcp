@@ -107,7 +107,7 @@ size_t pcp_ed_sign_buffered(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_
   if(z85) {
     ps_print(out, "\r\n%s\r\nVersion: PCP v%d.%d.%d \r\n\r\n", PCP_SIG_START, PCP_VERSION_MAJOR, PCP_VERSION_MINOR, PCP_VERSION_PATCH);
     size_t zlen;
-    char *z85encoded = pcp_z85_encode((byte*)signature, mlen, &zlen);
+    char *z85encoded = pcp_z85_encode((byte*)signature, mlen, &zlen, 1);
     ps_print(out, "%s\r\n%s\r\n", z85encoded, PCP_SIG_END);
   }
   else {
@@ -328,7 +328,7 @@ size_t pcp_ed_detachsign_buffered(Pcpstream *in, Pcpstream *out, pcp_key_t *s) {
   ps_print(out, "%s\r\nVersion: PCP v%d.%d.%d\r\n",
 	  PCP_SIG_START, PCP_VERSION_MAJOR, PCP_VERSION_MINOR, PCP_VERSION_PATCH);
   size_t zlen;
-  char *z85encoded = pcp_z85_encode((byte*)signature, mlen, &zlen);
+  char *z85encoded = pcp_z85_encode((byte*)signature, mlen, &zlen, 1);
   ps_print(out, "%s\r\n%s\r\n", z85encoded, PCP_SIG_END);
 
   free(st);

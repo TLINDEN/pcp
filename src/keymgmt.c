@@ -271,7 +271,7 @@ void pcp_exportsecret(char *keyid, int useid, char *outfile, int armor, char *pa
     if(exported_sk != NULL) {
       if(armor == 1) {
 	size_t zlen;
-	char *z85 = pcp_z85_encode(buffer_get(exported_sk), buffer_size(exported_sk), &zlen);
+	char *z85 = pcp_z85_encode(buffer_get(exported_sk), buffer_size(exported_sk), &zlen, 1);
 	fprintf(out, "%s\r\n%s\r\n%s\r\n", EXP_SK_HEADER, z85, EXP_SK_FOOTER);
 	free(z85);
       }
@@ -369,7 +369,7 @@ void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int 
       if(exported_pk != NULL) {
 	if(armor == 1) {
 	  size_t zlen;
-	  char *z85 = pcp_z85_encode(buffer_get(exported_pk), buffer_size(exported_pk), &zlen);
+	  char *z85 = pcp_z85_encode(buffer_get(exported_pk), buffer_size(exported_pk), &zlen, 1);
 	  fprintf(out, "%s\r\n%s\r\n%s\r\n", EXP_PK_HEADER, z85, EXP_PK_FOOTER);
 	  free(z85);
 	}
@@ -391,7 +391,7 @@ void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int 
       if(exported_pk != NULL) {
 	/* PBP format requires armoring always */
 	size_t zlen;
-	char *z85pbp = pcp_z85_encode(buffer_get(exported_pk), buffer_size(exported_pk), &zlen);
+	char *z85pbp = pcp_z85_encode(buffer_get(exported_pk), buffer_size(exported_pk), &zlen, 1);
 	fprintf(out, "%s", z85pbp);
 	free(z85pbp);
 	buffer_free(exported_pk);

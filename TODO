@@ -41,3 +41,7 @@ py % nacl.crypto_hash_sha256(pointer(hash), pointer(key), 32)
 py % hash.raw
 ';\xa3\xf5\xf4;\x92`&\x83\xc1\x9a\xeeb\xa2\x03B\xb0\x84\...
 py % 
+
+after new z85 padding scheme: write z85 blocksize to output
+as well? if a reader doesn't know the blocksize it won't be
+able to decode it properly. Or no issue? Not sure yet...

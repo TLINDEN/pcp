@@ -19,8 +19,8 @@ static const char *tell[] = {
 int main(int argc, char **argv) {
   int ret;
   size_t clearlen = 256;
-  size_t zlen = (clearlen * 5 / 4);
-
+  size_t zlen;
+  char *z85;
   PCPCTX *ptx = ptx_new();
 
   if(argc < 2) {
@@ -35,15 +35,15 @@ int main(int argc, char **argv) {
   }
 
   byte *clear = urmalloc(256);
-  char *z85 = ucmalloc(zlen+1);
 
-  /* we encode directly */
-  z85 = zmq_z85_encode(z85, clear, clearlen);
+  /* encode it */
+  z85 = pcp_z85_encode(clear, clearlen, &zlen, 0);
+  zlen -= 1;
 
   if(z85 == NULL) {
     ret = FALSE;
     if(ptx->pcp_errset == 0) {
-      fatal(ptx, "failed to encoded data to Z85\n");
+      fatal(ptx, "failed to encode data to Z85\n");
     }
     goto OUT;
   }

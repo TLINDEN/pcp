@@ -64,7 +64,7 @@ int pcpz85_encode(char *infile, char *outfile) {
   }
 
   size_t zlen;
-  char *encoded = pcp_z85_encode(input, inputBufSize, &zlen);
+  char *encoded = pcp_z85_encode(input, inputBufSize, &zlen, 1);
 
   if(encoded != NULL) {
     fprintf(out, "%s\n%s\n%s\n", PCP_ZFILE_HEADER, encoded, PCP_ZFILE_FOOTER);

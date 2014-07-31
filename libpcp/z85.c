@@ -184,8 +184,9 @@ size_t pcp_unpadfour(byte *src, size_t srclen) {
 
 byte *pcp_z85_decode(PCPCTX *ptx, char *z85block, size_t *dstlen) {
   byte *bin = NULL;
-  size_t binlen, outlen; 
+  size_t binlen, outlen, padlen;
   size_t srclen;
+  byte padblob[4];
  
   srclen = strlen(z85block);
 
@@ -203,61 +204,93 @@ byte *pcp_z85_decode(PCPCTX *ptx, char *z85block, size_t *dstlen) {
     return NULL;
   }
 
-  outlen = pcp_unpadfour(bin, binlen);
+  /* extract pad blob */  
+  memcpy(padblob, &bin[binlen-4], 4);
+  padlen = padblob[3];
+  if(padlen > 3) {
+    free(bin);
+    fatal(ptx, "zmq_z85_decode() failed, invalid pad counter (got %ld, expected 0-3)\n", padlen);
+    return NULL;
+  }
+
+  /*
+  fprintf(stderr, "srclen: %ld, binlen: %ld, padlen: %ld\n", srclen, binlen, padlen);
+  _dump("      z", (byte *)z85block, srclen);
+  _dump("padblob", padblob, 4);
+  */
+
+  outlen = binlen - 4 - padlen; //pcp_unpadfour(bin, binlen, padlen);
 
   *dstlen = outlen;
 
   return bin;
 }
 
-char *pcp_z85_encode(byte *raw, size_t srclen, size_t *dstlen) {
+char *pcp_z85_encode(byte *raw, size_t srclen, size_t *dstlen, int doblock) {
   int pos = 0;
   byte *padded;
-  size_t outlen, blocklen, zlen;
+  size_t outlen, blocklen, zlen, padlen;
+  char *padblob = NULL;
+  char *z85 = NULL;
+  char *z85block = NULL;
 
   if(srclen %4 == 0) {
     /* no padding required */
     padded = raw;
     outlen = srclen;
+    padlen = 0;
   }
   else {
     /*  make z85 happy (size % 4) */
     padded = pcp_padfour(raw, srclen, &outlen);
+    padlen = outlen - srclen;
   }
 
   /*  encode to z85 */
   zlen = (outlen * 5 / 4) + 1;
-  char *z85 = ucmalloc(zlen);
+  z85 = ucmalloc(zlen + 5); /* plus space for pad blob */
   z85 = zmq_z85_encode(z85, padded, outlen);
-
-
-  /*  make it a 72 chars wide block */
-  blocklen = (zlen + ((zlen / 72) * 2)) + 1;
-  char *z85block = ucmalloc(blocklen);
-
-  char *z = &z85[0];
-  char *B = &z85block[0];
-
-  while(*z != '\0') {
-    if(pos >= 71) {
-      *B++ = '\r';
-      *B++ = '\n';
-      pos = 1;
-    }
-    else {
-      pos++;
-    }
-    *B++ = *z++;
-  }
-  *B = '\0';
-
-  *dstlen = blocklen;
-  free(z85); 
 
   if(srclen %4 != 0)
     free(padded);
 
-  return z85block;
+  /*  prepare pad blob */
+  padblob = ucmalloc(6);
+  snprintf(padblob, 6, "0000%ld", padlen);
+
+  /* append pad blob to encoded output */
+  memcpy(&z85[zlen-1], padblob, 5);
+  free(padblob);
+  zlen += 5;
+
+  if(doblock) {
+    /*  make it a 72 chars wide block */
+    blocklen = (zlen + ((zlen / 72) * 2)) + 1;
+
+    z85block = ucmalloc(blocklen);
+    char *z = &z85[0];
+    char *B = &z85block[0];
+    
+    while(*z != '\0') {
+      if(pos >= 71) {
+	*B++ = '\r';
+	*B++ = '\n';
+	pos = 1;
+      }
+      else {
+	pos++;
+      }
+      *B++ = *z++;
+    }
+    *B = '\0';
+    *dstlen = blocklen;
+    free(z85); 
+    return z85block;
+  }
+  else {
+    *dstlen = zlen;
+    return z85;
+  }
 }
 
 
@@ -295,9 +328,9 @@ char *pcp_readz85string(PCPCTX *ptx, unsigned char *input, size_t bufsize) {
     fatal(ptx, "Input file is empty!\n");
     return NULL;
   }
-
+  _dump("read", input, bufsize);
   if(_buffer_is_binary(input, bufsize) > 0) {
-    fatal(ptx, "input is not z85 encoded and contains pure binary data\n");
+    fatal(ptx, "input is not z85 encoded and contains pure binary data at %ld\n", _buffer_is_binary(input, bufsize) );
     return NULL;
   }
 

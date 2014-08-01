@@ -434,7 +434,6 @@ void pcpdelete_key(char *keyid) {
   if(p != NULL) {
     /*  delete public */
     pcphash_del(ptx, p, p->type);
-    free(p);
     vault->unsafed = 1;
     fprintf(stderr, "Public key deleted.\n");
   }
@@ -443,7 +442,6 @@ void pcpdelete_key(char *keyid) {
     if(s != NULL) {
       /*  delete secret */
       pcphash_del(ptx, s, s->type);
-      free(s);
       vault->unsafed = 1;
       fprintf(stderr, "Secret key deleted.\n");
     }

@@ -54,9 +54,13 @@ int getseed(void) {
 	int r;
 	if (fd < 0) {
 		perror("open");
-		exit(0);
+		exit(1);
 	}
-	read(fd, &r, sizeof(r));
+	if(read(fd, &r, sizeof(r)) == -1) {
+	  close(fd);
+	  perror("could not read from /dev/urandom");
+	  exit(1);
+	}
 	close(fd);
 	return(r);
 }

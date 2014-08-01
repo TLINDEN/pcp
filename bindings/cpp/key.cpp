@@ -30,13 +30,13 @@ Key::Key() {
   K = NULL;
 }
 
-Key::Key(PcpContext &P) {
+Key::Key(PcpContext *P) {
   stored = false;
   K = NULL;
   PTX = P;
 }
 
-Key::Key(PcpContext &P, bool generate) {
+Key::Key(PcpContext *P, bool generate) {
   stored = false;
   if(generate)
     K = pcpkey_new();
@@ -45,50 +45,49 @@ Key::Key(PcpContext &P, bool generate) {
   PTX = P;
 }
 
-Key::Key(PcpContext &P, const string& passphrase) {
+Key::Key(PcpContext *P, const string& passphrase) {
   stored = false;
   K = pcpkey_new();
-  K = pcpkey_encrypt(PTX.ptx, K, (char *)passphrase.c_str());
+  K = pcpkey_encrypt(P->ptx, K, (char *)passphrase.c_str());
   PTX = P;
 }
 
-Key::Key(PcpContext &P, const string& passphrase,
+Key::Key(PcpContext *P, const string& passphrase,
 	 const string& owner,
 	 const string& mail) {
   stored = false;
   pcp_key_t *_K = pcpkey_new();
-  K = pcpkey_encrypt(PTX.ptx, _K, (char *)passphrase.c_str());
+  K = pcpkey_encrypt(P->ptx, _K, (char *)passphrase.c_str());
   memcpy(K->owner, owner.c_str(), owner.length()+1);
   memcpy(K->mail, mail.c_str(), mail.length()+1);
-  //  free(_K);
   PTX = P;
 }
 
-Key::Key(PcpContext &P, pcp_key_t *k) {
+Key::Key(PcpContext *P, pcp_key_t *k) {
   stored = false;
   K = k;
   PTX = P;
 }
 
-Key::Key(PcpContext &P, pcp_key_t *k, bool store) {
+Key::Key(PcpContext *P, pcp_key_t *k, bool store) {
   stored = new bool(store);
   K = k;
   PTX = P;
 }
 
-Key::Key(PcpContext &P, string &z85encoded, string &passphrase) {
+Key::Key(PcpContext *P, string &z85encoded, string &passphrase) {
   stored = false;
   PTX = P;
 
   if(z85encoded.length() == 0)
     throw pcp::exception(PTX, "Error: zero length input");
 
-  pcp_key_t *key = pcp_import_secret(PTX.ptx, (unsigned char *)z85encoded.c_str(), z85encoded.length(), (char *)passphrase.c_str());
+  pcp_key_t *key = pcp_import_secret(PTX->ptx, (unsigned char *)z85encoded.c_str(), z85encoded.length(), (char *)passphrase.c_str());
 
   if(key == NULL)
     throw pcp::exception(PTX);
 
-  if(pcp_sanitycheck_key(PTX.ptx, key) != 0) {
+  if(pcp_sanitycheck_key(PTX->ptx, key) != 0) {
     free(key);
     throw pcp::exception(PTX);
   }
@@ -103,7 +102,8 @@ Key::~Key() {
 }
 
 Key& Key::operator = (const Key &k) {
-  K = k.K;
+  K = (pcp_key_t *)ucmalloc(sizeof(pcp_key_t));
+  memcpy(K, k.K, sizeof(pcp_key_t));
   return *this;
 }
 
@@ -113,7 +113,7 @@ string Key::export_secret(const string &passphrase) {
   if(passphrase.length() == 0)
     throw pcp::exception(PTX, "Error: empty passphrase");
 
-  exported_sk =  pcp_export_secret(PTX.ptx, K, (char *)passphrase.c_str());
+  exported_sk =  pcp_export_secret(PTX->ptx, K, (char *)passphrase.c_str());
 
   if(exported_sk == NULL)
     throw pcp::exception(PTX);
@@ -152,13 +152,13 @@ bool pcp::operator!(Key& k) {
 
 
 void Key::encrypt(const string& passphrase) {
-  K = pcpkey_encrypt(PTX.ptx, K, (char *)passphrase.c_str());
+  K = pcpkey_encrypt(PTX->ptx, K, (char *)passphrase.c_str());
   if(K == NULL)
     throw exception(PTX);
 }
 
 void Key::decrypt(const string& passphrase) {
-  K = pcpkey_decrypt(PTX.ptx, K, (char *)passphrase.c_str());
+  K = pcpkey_decrypt(PTX->ptx, K, (char *)passphrase.c_str());
   if(K == NULL)
     throw exception(PTX);
 }
@@ -214,26 +214,26 @@ PubKey::PubKey() {
   K = NULL;
 }
 
-PubKey::PubKey(PcpContext &P) {
+PubKey::PubKey(PcpContext *P) {
   stored = false;
   K = NULL;
   PTX = P;
 }
 
 
-PubKey::PubKey(PcpContext &P, pcp_pubkey_t *k) {
+PubKey::PubKey(PcpContext *P, pcp_pubkey_t *k) {
   stored = false;
   K = k;
   PTX = P;
 }
 
-PubKey::PubKey(PcpContext &P, pcp_pubkey_t *k, bool store) {
+PubKey::PubKey(PcpContext *P, pcp_pubkey_t *k, bool store) {
   stored = store;
   K = k;
   PTX = P;
 }
 
-PubKey::PubKey(PcpContext &P, string &z85encoded) {
+PubKey::PubKey(PcpContext *P, string &z85encoded) {
   stored = false;
   PTX = P;
 
@@ -243,20 +243,19 @@ PubKey::PubKey(PcpContext &P, string &z85encoded) {
   Buf blob("pub", 256);
   blob.add(z85encoded.c_str(), z85encoded.length());
 
-  pcp_ks_bundle_t *KS = pcp_import_pub(PTX.ptx, buffer_get(blob.get_buffer()), buffer_size(blob.get_buffer()));
+  pcp_ks_bundle_t *KS = pcp_import_pub(PTX->ptx, buffer_get(blob.get_buffer()), buffer_size(blob.get_buffer()));
 
   if(KS == NULL) {
     throw pcp::exception(PTX);
   }
   pcp_pubkey_t *pub = KS->p;
 
-  if(pcp_sanitycheck_pub(PTX.ptx, pub) != 0) {
+  if(pcp_sanitycheck_pub(PTX->ptx, pub) != 0) {
     free(KS->p);
     free(KS->s);
     free(KS);
     throw pcp::exception(PTX);
   }
-
   K = pub;
 }
 
@@ -267,7 +266,8 @@ PubKey::~PubKey() {
 }
 
 PubKey& PubKey::operator = (const PubKey &k) {
-  K = k.K;
+  K = (pcp_pubkey_t *)ucmalloc(sizeof(pcp_pubkey_t));
+  memcpy(K, k.K, sizeof(pcp_pubkey_t));
   return *this;
 }
 

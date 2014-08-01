@@ -33,15 +33,22 @@
 namespace pcp {
 
   class PcpContext {
+  private:
+    bool iscopy;
+
   public:
     PCPCTX *ptx;
 
     // constructors
     PcpContext();
 
-    // clean up, wo don't do it in the destructor,
-    // since it will be called multiple times otherwise
-    void done();
+    // destructor
+    ~PcpContext();
+
+    // copy constructor. holds the same pointer
+    // as the original and doesn't free()
+    PcpContext& operator = (const PcpContext *PTX);
+    PcpContext(const PcpContext *PTX);    
   };
 };
 

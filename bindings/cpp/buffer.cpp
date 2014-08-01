@@ -48,11 +48,17 @@ Buf::Buf(string name, size_t blocksize) {
 }
 
 Buf::~Buf() {
-  buffer_free(B);
+  if(B != NULL) {
+    buffer_free(B);
+    B = NULL;
+  }
 }
 
 Buf& Buf::operator = (const Buf &b) {
-  B = b.B;
+  char *name = (char *)ucmalloc(20);
+  sprintf(name, "copy of %s", b.B->name);
+  B = buffer_new(32, name);
+  buffer_add_buf(B, b.B);
   return *this;
 }
 

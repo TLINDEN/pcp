@@ -14,7 +14,7 @@ void pr(string name, unsigned char *data, size_t len) {
   cout << endl;
 }
 
-FILE *_openwr(string file, PcpContext &ptx) {
+FILE *_openwr(string file, PcpContext *ptx) {
   FILE *fd;
   if((fd = fopen(file.c_str(), "wb+")) == NULL) {
     throw pcp::exception(ptx, "Could not open output file " + file + "\n");
@@ -22,7 +22,7 @@ FILE *_openwr(string file, PcpContext &ptx) {
   return fd;
 }
 
-FILE *_openrd(string file, PcpContext &ptx) {
+FILE *_openrd(string file, PcpContext *ptx) {
   FILE *fd;
   if((fd = fopen(file.c_str(), "rb")) == NULL) {
     throw pcp::exception(ptx, "Could not open input file " + file + "\n");
@@ -32,18 +32,19 @@ FILE *_openrd(string file, PcpContext &ptx) {
 
 void test0() {
   // test keygen and crypto
-  PcpContext CA; // we need different contexts for sender and recipient!
-  PcpContext CB;
+  PcpContext *CA = new PcpContext(); // we need different contexts for sender and recipient!
+  PcpContext *CB = new PcpContext();
 
   FILE *CLEAR, *CIPHER, *DECRYPTED;
   Key A = Key(CA, "a", "alicia", "alicia@local");
   Key B = Key(CA, "b", "bobby",  "bobby@local");
+
   PubKey PA = A.get_public();
   PubKey PB = B.get_public();
 
   A.decrypt("a");
   B.decrypt("b");
-  
+
   Crypto A2B(CA, A, PB);
   Crypto B2A(CB, B, PA);
 
@@ -78,11 +79,11 @@ void test0() {
 
   cout << "0 ok" << endl;
 
-  CA.done();
-  CB.done();
+  delete CA;
+  delete CB;
 }
 
-void test1(PcpContext &ptx) {
+void test1(PcpContext *ptx) {
   // test the vault
   Key A = Key(ptx, "a", "alicia", "alicia@local");
   Key B = Key(ptx, "b", "bobby",  "bobby@local");
@@ -113,7 +114,8 @@ void test1(PcpContext &ptx) {
     cout << "1 ok" << endl;
 }
 
-void test2(PcpContext &ptx) {
+void test2(PcpContext *ptx) {
+  cerr << "  enter test2()" << endl;
   // try importing a key from disk
   ifstream pf("key-bobby-pub");
   string z;
@@ -124,13 +126,14 @@ void test2(PcpContext &ptx) {
     if(strlen(buf) > 0)
       z += buf + string("\n");
   }
+  cerr << "  PubKey B(ptx, z);" << endl;
   PubKey B(ptx, z);
-  //cout << B.to_text();
-  cout << "2 ok" << endl;
+
+  cout << "2 ok " << &ptx->ptx << endl;
 }
 
 
-void test3(PcpContext &ptx) {
+void test3(PcpContext *ptx) {
   // signature test
   Key A = Key(ptx, "a", "alicia", "alicia@local");
   A.decrypt("a");
@@ -142,7 +145,7 @@ void test3(PcpContext &ptx) {
   Signature SigB(ptx, PA);
 
   if(SigA.sign((unsigned char*)message.c_str(), message.length()))
-    if(SigB.verify(SigA.sig) )
+     if(SigB.verify(SigA.sig) )
       cout << "3 ok" << endl;
 }
 
@@ -164,7 +167,7 @@ void test4() {
 
 int main(int argc, char **argv) {
   sodium_init();
-  PcpContext ptx;
+  PcpContext *ptx = new PcpContext();
 
   try {
     if(argc < 2)
@@ -199,7 +202,6 @@ int main(int argc, char **argv) {
     cerr << "Catched exception: " << E.what() << endl;
   }
 
-  ptx.done();
-
+  delete ptx;
   return 0;
 }

@@ -40,14 +40,14 @@ namespace pcp {
 
   public:
     pcp_pubkey_t *K;
-    PcpContext PTX;
+    PcpContext *PTX;
 
     // constructors
-    PubKey(PcpContext &P);
+    PubKey(PcpContext *P);
     PubKey();
-    PubKey(PcpContext &P, pcp_pubkey_t *k);
-    PubKey(PcpContext &P, pcp_pubkey_t *k, bool store);
-    PubKey(PcpContext &P, std::string &z85encoded);
+    PubKey(PcpContext *P, pcp_pubkey_t *k);
+    PubKey(PcpContext *P, pcp_pubkey_t *k, bool store);
+    PubKey(PcpContext *P, std::string &z85encoded);
 
     // destructors
     ~PubKey();
@@ -75,19 +75,19 @@ namespace pcp {
   public:
     // make access to the underlying struct easier
     pcp_key_t *K;
-    PcpContext PTX;
+    PcpContext *PTX;
 
     // constructors
     Key();
-    Key(PcpContext &P);
-    Key(PcpContext &P, bool generate);
-    Key(PcpContext &P, const std::string& passphrase);
-    Key(PcpContext &P, const std::string& passphrase,
+    Key(PcpContext *P);
+    Key(PcpContext *P, bool generate);
+    Key(PcpContext *P, const std::string& passphrase);
+    Key(PcpContext *P, const std::string& passphrase,
 	const std::string& owner,
 	const std::string& mail);
-    Key(PcpContext &P, pcp_key_t *k);
-    Key(PcpContext &P, pcp_key_t *k, bool store);
-    Key(PcpContext &P, std::string &z85encoded, std::string& passphrase);
+    Key(PcpContext *P, pcp_key_t *k);
+    Key(PcpContext *P, pcp_key_t *k, bool store);
+    Key(PcpContext *P, std::string &z85encoded, std::string& passphrase);
 
     // destructor
     ~Key();

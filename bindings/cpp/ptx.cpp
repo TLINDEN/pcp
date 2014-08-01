@@ -26,9 +26,22 @@ using namespace pcp;
 
 PcpContext::PcpContext() {
   ptx = ptx_new();
+  iscopy = false;
 }
 
-void PcpContext::done() {
-  ptx_clean(ptx);
+PcpContext::~PcpContext() {
+  if(!iscopy) {
+    ptx_clean(ptx);
+  }
 }
 
+PcpContext& PcpContext::operator = (const PcpContext *PTX) {
+  ptx = PTX->ptx;
+  iscopy = 1;
+  return *this;
+}
+
+PcpContext::PcpContext(const PcpContext *PTX) {
+  ptx = PTX->ptx;
+  iscopy = 1;
+}

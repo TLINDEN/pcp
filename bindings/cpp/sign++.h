@@ -43,15 +43,15 @@ namespace pcp {
     PubKey P;
     Key S;
     Vault vault;
-    PubKey Signedby;
+    PubKey *Signedby;
     Buf sig;
-    PcpContext PTX;
+    PcpContext *PTX;
 
     // constructors
-    Signature(PcpContext &P, Key &skey); // sign only
-    Signature(PcpContext &P,PubKey &pkey); // verify only
-    Signature(PcpContext &P,Key &skey, PubKey &pkey); // both/bulk
-    Signature(PcpContext &P,Vault &v);
+    Signature(PcpContext *P, Key &skey); // sign only
+    Signature(PcpContext *P,PubKey &pkey); // verify only
+    Signature(PcpContext *P,Key &skey, PubKey &pkey); // both/bulk
+    Signature(PcpContext *P,Vault &v);
 
     // destructor
     ~Signature();
@@ -65,7 +65,8 @@ namespace pcp {
     // verify using P or use vault if defined
     bool verify(std::vector<unsigned char> message);
     bool verify(unsigned char *signature, size_t mlen);
-    bool verify(Buf _sig);
+    bool verify(Buf &_sig);
+    // FIXME: return Signedby
   };
 };
 

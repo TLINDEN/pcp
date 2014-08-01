@@ -24,33 +24,41 @@
 using namespace std;
 using namespace pcp;
 
-Signature::Signature(PcpContext &P, Key &skey) {
+Signature::Signature(PcpContext *ptx, Key &skey) {
   S = skey;
-  PTX = P;
+  PTX = ptx;
+  sig = Buf("sign2");
   havevault = false;
+  Signedby = NULL;
 }
 
-Signature::Signature(PcpContext &C,PubKey &pkey) {
+Signature::Signature(PcpContext *C,PubKey &pkey) {
   P = pkey;
   PTX = C;
   havevault = false;
+  sig = Buf("sign1");
+  Signedby = NULL;
 }
 
-Signature::Signature(PcpContext &C,Key &skey, PubKey &pkey) {
+Signature::Signature(PcpContext *C,Key &skey, PubKey &pkey) {
   P = pkey;
   S = skey;
   PTX = C;
   havevault = false;
+  Signedby = NULL;
 }
 
-Signature::Signature(PcpContext &P,Vault &v) {
+Signature::Signature(PcpContext *C,Vault &v) {
   vault = v;
   havevault = true;
-  PTX = P;
+  PTX = C;
   S = vault.get_primary();
+  Signedby = NULL;
 }
 
 Signature::~Signature() {
+  if(Signedby != NULL)
+    delete Signedby;
 }
 
 bool Signature::sign(std::vector<unsigned char> message) {
@@ -102,7 +110,7 @@ bool Signature::sign(unsigned char *message, size_t mlen) {
 bool Signature::sign(Pcpstream *message) {
   Pcpstream *out = ps_new_outbuffer();
 
-  size_t sigsize = pcp_ed_sign_buffered(PTX.ptx, message, out, S.K, 0);
+  size_t sigsize = pcp_ed_sign_buffered(PTX->ptx, message, out, S.K, 0);
 
   if(sigsize > 0) {
     Buffer *o = ps_buffer(out);
@@ -142,15 +150,21 @@ bool Signature::verify(unsigned char *signature, size_t mlen) {
 }
 
 
-bool Signature::verify(Buf _sig) {
+bool Signature::verify(Buf &_sig) {
   Pcpstream *p = ps_new_inbuffer(_sig.get_buffer());
 
-  pcp_pubkey_t *pub = pcp_ed_verify_buffered(PTX.ptx, p, P.K);
+  /* 
+     we need to exclude current public key from free'ing
+     because it's used as a hash in ed.c:276.
+   */
+  P.is_stored(true);
+
+  pcp_pubkey_t *pub = pcp_ed_verify_buffered(PTX->ptx, p, P.K);
 
   ps_close(p);
 
   if(pub != NULL) {
-    Signedby = PubKey(PTX, pub);
+    Signedby = new PubKey(PTX, pub);
     return true;
   }
   else {

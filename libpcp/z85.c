@@ -328,7 +328,7 @@ char *pcp_readz85string(PCPCTX *ptx, unsigned char *input, size_t bufsize) {
     fatal(ptx, "Input file is empty!\n");
     return NULL;
   }
-  _dump("read", input, bufsize);
+
   if(_buffer_is_binary(input, bufsize) > 0) {
     fatal(ptx, "input is not z85 encoded and contains pure binary data at %ld\n", _buffer_is_binary(input, bufsize) );
     return NULL;

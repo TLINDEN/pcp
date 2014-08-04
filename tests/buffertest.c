@@ -45,7 +45,7 @@ int main() {
     fprintf(stderr, "\n");
   }
 
-  buffer_extract(test, g, 28, 38);
+  buffer_extract(test, g, 28, 10);
   _dump("extracted", g, 10);
 
   uint8_t c = buffer_last8(test);
@@ -87,6 +87,7 @@ int main() {
   }
 
   buffer_free(rb);
+  free(chunk);
 
   _dump("r", r, rs); /* should work! */
 
@@ -94,6 +95,7 @@ int main() {
   fclose(RFD);
 
   fatals_ifany(ptx);
+  ptx_clean(ptx);
 
   return 0;
 }

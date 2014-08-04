@@ -48,7 +48,8 @@ Buffer *buffer_new_str(char *name) {
 }
 
 Buffer *buffer_new_buf(char *name, void *data, size_t datasize) {
-  Buffer *b = buffer_new(256, name);
+  Buffer *b = ucmalloc(sizeof(Buffer));
+  buffer_init(b, 256, name);
   b->allocated = 0;
   b->buf = data;
   b->size = datasize;
@@ -66,6 +67,7 @@ void buffer_free(Buffer *b) {
       free(b->buf);
       b->allocated = 0;
     }
+    free(b->name);
     free(b);
   }
 }

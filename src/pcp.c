@@ -317,60 +317,75 @@ int main (int argc, char **argv)  {
        current mode and other given parameters */
     extra = ucmalloc(strlen(argv[0])+1);
     strncpy(extra, argv[0], strlen(argv[0])+1);
+    int useex = 0;
 
     switch (mode) {
     case PCP_MODE_DECRYPT:
-      if(infile == NULL)
+      if(infile == NULL) {
 	infile = extra;
+	useex = 1;
+      }
       break;
 
     case PCP_MODE_ENCRYPT:
-      if(infile == NULL)
+      if(infile == NULL) {
 	infile = extra;
+	useex = 1;
+      }
       else if(userec == 0 && useid == 0) {
 	userec = 1;
 	int i;
 	for (i=0; i<argc; i++) {
 	  p_add(&recipient, argv[i]);
 	}
-	free(extra);
       }
       break;
 
     case PCP_MODE_IMPORT: 
-      if(infile == NULL)
+      if(infile == NULL) {
 	infile = extra;
+	useex = 1;
+      }
       break;
 
     case PCP_MODE_EXPORT_SECRET:
     case PCP_MODE_EXPORT_PUBLIC:
-      if(outfile == NULL)
+      if(outfile == NULL) {
 	outfile = extra;
+	useex = 1;
+      }
       else if(useid == 0 && userec == 0) {
 	p_add(&recipient, extra);
+	useex = 1;
 	userec = 1;
       }
       break;
 
     case PCP_MODE_VERIFY:
-      if(infile == NULL)
+      if(infile == NULL) {
 	infile = extra;
+	useex = 1;
+      }
       else if (useid == 0) {
 	id = extra;
 	useid = 1;
+	useex = 1;
       }
       break;
 
     case PCP_MODE_SIGN:
-      if(infile == NULL)
+      if(infile == NULL) {
 	infile = extra;
-      else if(outfile == NULL && detach == 0)
+	useex = 1;
+      }
+      else if(outfile == NULL && detach == 0) {
 	outfile = extra;
+	useex = 1;
+      }
       break;
-
-    default:
-      free(extra); /* not used */
     }
+    if(useex)
+      free(extra);
   }
 
   /* check if there's some enviroment we could use */
@@ -393,8 +408,6 @@ int main (int argc, char **argv)  {
       switch (mode) {
       case  PCP_MODE_KEYGEN:
 	pcp_keygen(xpass);
-	if(xpass != NULL)
-	  free(xpass);
 	break;
 
       case PCP_MODE_LISTKEYS:
@@ -406,7 +419,6 @@ int main (int argc, char **argv)  {
 	  id = pcp_normalize_id(keyid);
 	  if(id != NULL) {
 	    pcp_exportsecret(id, useid, outfile, armor, xpass);
-	    free(id);
 	  }
 	}
 	else {
@@ -421,10 +433,6 @@ int main (int argc, char **argv)  {
 	    break;
 	}
 	pcp_exportpublic(id, xpass, outfile, exportformat, armor);
-	if(xpass != NULL)
-	  free(xpass);
-	if(recipient != NULL)
-	  free(recipient);
 	break;
 
       case PCP_MODE_IMPORT:
@@ -433,7 +441,6 @@ int main (int argc, char **argv)  {
 	else {
 	  if((in = fopen(infile, "rb")) == NULL) {
 	    fatal(ptx, "Could not open input file %s\n", infile);
-	    free(infile);
 	    break;
 	  }
 	}
@@ -445,7 +452,6 @@ int main (int argc, char **argv)  {
 	  id = pcp_normalize_id(keyid);
 	  if(id != NULL) {
 	    pcpdelete_key(id);
-	    free(id);
 	  }
 	}
 	else {
@@ -458,7 +464,6 @@ int main (int argc, char **argv)  {
 	  id = pcp_normalize_id(keyid);
 	  if(id != NULL) {
 	    pcpedit_key(id);
-	    free(id);
 	  }
 	}
 	else {
@@ -480,12 +485,6 @@ int main (int argc, char **argv)  {
 	  /*  -i and -r specified */
 	  fatal(ptx, "You can't specify both -i and -r, use either -i or -r!\n");
 	}
-	if(id != NULL)
-	  free(id);
-	if(xpass != NULL)
-	    free(xpass);
-	if(recipient != NULL)
-	  p_clean(recipient);
 
 	break;
 
@@ -494,14 +493,11 @@ int main (int argc, char **argv)  {
 	  id = pcp_normalize_id(keyid);
 	  if(id != NULL) {
 	    pcpdecrypt(id, useid, infile, outfile, xpass, signcrypt);
-	    free(id);
 	  }
 	}
 	else {
 	  pcpdecrypt(NULL, useid, infile, outfile, xpass, signcrypt);
 	}
-	if(xpass != NULL)
-	  free(xpass);
 	break;	
 
       case PCP_MODE_SIGN:
@@ -520,7 +516,6 @@ int main (int argc, char **argv)  {
 	  id = pcp_normalize_id(keyid);
 	  if(id != NULL) {
 	    pcpverify(infile, sigfile, id, detach);
-	    free(id);
 	  }
 	}
 	else {
@@ -538,7 +533,6 @@ int main (int argc, char **argv)  {
 	break;
       }
       pcpvault_close(ptx, vault);
-      free(vaultfile);
     }
   }
   else {
@@ -569,11 +563,9 @@ int main (int argc, char **argv)  {
 	  id = pcp_normalize_id(keyid);
 	  if(id != NULL) {
 	    pcptext_key(id);
-	    free(id);
 	  }
 	}
 	pcpvault_close(ptx, vault);
-	free(vaultfile);
       }
       break;
 
@@ -587,5 +579,21 @@ int main (int argc, char **argv)  {
   fatals_ifany(ptx);
   int e = ptx->pcp_exit;
   ptx_clean(ptx);
+
+  if(infile != NULL)
+    free(infile);
+  if(outfile != NULL)
+    free(outfile);
+  if(vaultfile != NULL)
+    free(vaultfile);
+  if(sigfile != NULL)
+    free(sigfile);
+  if(xpass != NULL)
+    ucfree(xpass, strlen(xpass));
+  if(recipient != NULL)
+    p_clean(recipient);
+  if(id != NULL)
+    free(id);
+
   return e;
 }

@@ -156,14 +156,14 @@ int pcpvault_addkey(PCPCTX *ptx, vault_t *vault, void *item, uint8_t type) {
   size_t itemsize;
 
   void *saveitem = NULL;
-  Buffer *blob = NULL;
+  Buffer *blob = buffer_new(PCP_RAW_KEYSIZE, "bs");
 
   if(type == PCP_KEY_TYPE_PUBLIC) {
     itemsize = PCP_RAW_PUBKEYSIZE;
     saveitem = ucmalloc(sizeof(pcp_pubkey_t));
     memcpy(saveitem, item, sizeof(pcp_pubkey_t));
     pubkey2be((pcp_pubkey_t *)item);
-    blob = pcp_keyblob(item, type);
+    pcp_pubkeyblob(blob, (pcp_pubkey_t *)item);
   }
   else if(type == PCP_KEYSIG_NATIVE || type == PCP_KEYSIG_NATIVE) {
     pcp_keysig_t *sk = (pcp_keysig_t *)item;
@@ -179,6 +179,7 @@ int pcpvault_addkey(PCPCTX *ptx, vault_t *vault, void *item, uint8_t type) {
     memcpy(saveitem, item, sizeof(pcp_key_t));
     key2be((pcp_key_t *)item);
     blob = pcp_keyblob(item, type);
+    pcp_seckeyblob(blob, (pcp_key_t *)item);
   }
 
 
@@ -274,7 +275,7 @@ void pcpvault_update_checksum(PCPCTX *ptx, vault_t *vault) {
 
 byte *pcpvault_create_checksum(PCPCTX *ptx) {
   pcp_key_t *k = NULL;
-  Buffer *blob = NULL;
+  Buffer *blob = buffer_new(PCP_RAW_KEYSIZE, "blob");;
   size_t datapos = 0;
 
   int numskeys = pcphash_count(ptx);
@@ -287,7 +288,7 @@ byte *pcpvault_create_checksum(PCPCTX *ptx) {
 
   pcphash_iterate(ptx, k) {
     key2be(k);
-    blob = pcp_keyblob(k, PCP_KEY_TYPE_SECRET);
+    pcp_seckeyblob(blob, (pcp_key_t *)k);
     memcpy(&data[datapos], buffer_get(blob), PCP_RAW_KEYSIZE);
     buffer_clear(blob);
     key2native(k);
@@ -298,7 +299,7 @@ byte *pcpvault_create_checksum(PCPCTX *ptx) {
   pcphash_iteratepub(ptx, p) {
     /* pcp_dumppubkey(p); */
     pubkey2be(p);
-    blob = pcp_keyblob(p, PCP_KEY_TYPE_PUBLIC);
+    pcp_pubkeyblob(blob, (pcp_pubkey_t *)p);
     memcpy(&data[datapos], buffer_get(blob), PCP_RAW_PUBKEYSIZE);
     buffer_clear(blob);
     pubkey2native(p);
@@ -371,6 +372,7 @@ int pcpvault_close(PCPCTX *ptx, vault_t *vault) {
       }
       fclose(vault->fd);
     }
+    free(vault->filename);
     free(vault);
     vault = NULL;
   }

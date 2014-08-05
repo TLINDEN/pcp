@@ -70,6 +70,7 @@ void test0() {
       if(strncmp(got, "HALLO", 5) != 0) {
 	throw pcp::exception(CA);
       }
+      free(got);
     }
     else
       throw pcp::exception(CA, "failed to decrypt");

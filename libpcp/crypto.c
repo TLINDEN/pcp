@@ -276,14 +276,17 @@ size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t 
     pcp_rec_t *rec = pcp_rec_new(reccipher, nrec * PCP_ASYM_RECIPIENT_SIZE, NULL, cur);
     size_t s = pcp_decrypt_stream_sym(ptx, in, out, symkey, rec);
     pcp_rec_free(rec);
+    ucfree(symkey, crypto_secretbox_KEYBYTES);
     return s;
   }
   else {
     size_t s = pcp_decrypt_stream_sym(ptx, in, out, symkey, NULL);
+    ucfree(symkey, crypto_secretbox_KEYBYTES);
     return s;
   }
 
  errdef1:
+  ucfree(symkey, crypto_secretbox_KEYBYTES);
   return 0;
 }
 
@@ -384,14 +387,12 @@ size_t pcp_encrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, pcp_key_t 
     goto errec1;
 
 
-  return out_size + sym_size;
-
-  
-
- errec1:
   memset(symkey, 0, crypto_secretbox_KEYBYTES);
   free(symkey);
   free(recipients_cipher);
+  return out_size + sym_size;
+
+ errec1:
 
   return 0;
 }

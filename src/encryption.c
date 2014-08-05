@@ -106,6 +106,7 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
 	}
 
 	secret = pcpkey_decrypt(ptx, secret, passphrase);
+	ucfree(passphrase, strlen(passphrase));
 	if(secret == NULL)
 	  goto errde3;
 

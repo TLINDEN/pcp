@@ -329,6 +329,8 @@ size_t buffer_fd_read(Buffer *b, FILE *in, size_t len) {
   if(s > 0)
     buffer_add(b, data, len);
 
+  ucfree(data, len); /* FIXME: re-use data */
+
   return s;
 }
 

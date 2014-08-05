@@ -26,7 +26,7 @@
 /*
  * AS of 16/01/2014 I'm using scrypt() instead of my crafted key
  * derivation function. However, I create a hash from the pcp_scrypt()
- * result anyway because I need a cure25519 secret.
+ * result anyway because I need a curve25519 secret.
  */
 byte *pcp_derivekey(PCPCTX *ptx, char *passphrase, byte *nonce) {
   byte *key = ucmalloc(crypto_secretbox_KEYBYTES);
@@ -43,9 +43,8 @@ byte *pcp_derivekey(PCPCTX *ptx, char *passphrase, byte *nonce) {
   key[31] &= 127;
   key[31] |= 64;
 
-  /* disabled, must be done outside 
-     memset(passphrase, 0, plen); */
-
+  /* done */
+  ucfree(scrypted, 64);
   return key;
 }
 
@@ -114,8 +113,11 @@ pcp_key_t * pcpkey_new () {
   memcpy (key->secret, cs, 32);
   memcpy (key->edpub, sp, 32);
   memcpy (key->edsecret, ss, 64);
-  memcpy (key->id, pcp_getkeyid(key), 17);
-  
+
+  char *id = pcp_getkeyid(key);
+  memcpy (key->id, id, 17);
+  free(id);
+
   key->ctime = (long)time(0);
 
   key->version = PCP_KEY_VERSION;
@@ -164,9 +166,10 @@ pcp_key_t *pcpkey_encrypt(PCPCTX *ptx, pcp_key_t *key, char *passphrase) {
   buffer_free(both);
   free(encryptkey);
 
-  if(es == 176) {
+  if(es == 176) { /* FIXME: calc! */
     /*  success */
     memcpy(key->encrypted, encrypted, 176);
+    ucfree(encrypted, es);
     arc4random_buf(key->secret, 32);
     arc4random_buf(key->edsecret, 64);
     arc4random_buf(key->mastersecret, 64);
@@ -176,7 +179,8 @@ pcp_key_t *pcpkey_encrypt(PCPCTX *ptx, pcp_key_t *key, char *passphrase) {
   }
   else {
     fatal(ptx, "failed to encrypt the secret key!\n");
-    free(key);
+    ucfree(encrypted, es);
+    ucfree(key, sizeof(pcp_key_t));
     return NULL;
   }
 
@@ -191,18 +195,19 @@ pcp_key_t *pcpkey_decrypt(PCPCTX *ptx, pcp_key_t *key, char *passphrase) {
   
   es = pcp_sodium_verify_mac(&decrypted, key->encrypted, 176, key->nonce, encryptkey);
 
-  memset(encryptkey, 0, 32);
-  free(encryptkey);
+  ucfree(encryptkey, 32);
 
   if(es == 0) {
     /*  success */
     memcpy(key->mastersecret, decrypted, 64);
     memcpy(key->edsecret, decrypted + 64, 64);    
     memcpy(key->secret, decrypted +128, 32);
+    ucfree(decrypted, 176);
   }
   else {
     fatal(ptx, "failed to decrypt the secret key (got %d, expected 32)!\n", es);
-    free(key);
+    ucfree(decrypted, 176);
+    ucfree(key, sizeof(pcp_key_t));
     return NULL;
   }
 

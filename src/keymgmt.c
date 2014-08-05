@@ -173,13 +173,10 @@ char *pcp_normalize_id(char *keyid) {
 }
 
 pcp_key_t *pcp_find_primary_secret() {
-  pcp_key_t *key = NULL;
   pcp_key_t *k;
   pcphash_iterate(ptx, k) {
     if(k->type == PCP_KEY_TYPE_MAINSECRET) {
-      key = ucmalloc(sizeof(pcp_key_t));
-      memcpy(key, k, sizeof(pcp_key_t));
-      return key;
+      return k;
     }
   }
 
@@ -187,9 +184,7 @@ pcp_key_t *pcp_find_primary_secret() {
   int nkeys = pcphash_count(ptx);
   if(nkeys == 1) {
     pcphash_iterate(ptx, k) {
-      key = ucmalloc(sizeof(pcp_key_t));
-      memcpy(key, k, sizeof(pcp_key_t));
-      return key;
+      return k;
     }
   }
 

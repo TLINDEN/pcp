@@ -145,6 +145,19 @@ size_t buffer_get_chunk(Buffer *b, void *buf, size_t len) {
   return len;
 }
 
+size_t buffer_fwd_offset(Buffer *b, size_t fwdby) {
+  if(fwdby  > b->end - b->offset) {
+    final("[buffer %s] attempt to set offset %ld bytes forward data from buffer with %ld bytes left at offset %ld\n",
+	  b->name, fwdby, b->end - b->offset, b->offset);
+  }
+  else if(fwdby == 0) {
+    return 0;
+  }
+
+  b->offset += fwdby;
+  return fwdby;
+}
+
 size_t buffer_get_chunk_tobuf(Buffer *b, Buffer *dst, size_t len) {
   if(len > b->end - b->offset) {
     final("[buffer %s] attempt to read %ld bytes data from buffer with %ld bytes left at offset %ld\n",

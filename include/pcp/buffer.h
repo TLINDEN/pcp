@@ -415,6 +415,17 @@ byte *buffer_get_remainder(Buffer *b);
 */
 size_t buffer_extract(Buffer *b, void *buf, size_t offset, size_t len);
 
+/** Forward read offset of given buffer. Use to ignore a couple of bytes.
+
+    \param[in] b The Buffer object to read from.
+    \param[in] fwdby Bytes to forward read offset.
+
+    \return Returns the size of bytes forwarded. Returns 0 in case of
+    an overflow, which can be catched with fatals_ifany().
+
+ */
+size_t buffer_fwd_offset(Buffer *b, size_t fwdby);
+
 /** Dump the Buffer contents to stderr in hex form.
 
     \param[in] b The Buffer object to dump.

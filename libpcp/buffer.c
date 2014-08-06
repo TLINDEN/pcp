@@ -176,14 +176,12 @@ size_t buffer_get_chunk_tobuf(Buffer *b, Buffer *dst, size_t len) {
 }
 
 byte *buffer_get_remainder(Buffer *b) {
-  void *buf = ucmalloc(b->end - b->offset);
-  if(buffer_get_chunk(b, buf, b->end - b->offset) == 0) {
-    free(buf);
+  if(buffer_left(b) == 0)
     return NULL;
-  }
   else {
-    return buf;
-  }
+    byte *buf = b->buf;
+    return &buf[b->offset];
+  } 
 }
 
 uint8_t buffer_get8(Buffer *b) {

@@ -62,7 +62,6 @@ void ps_setdetermine(Pcpstream *stream, size_t blocksize) {
   stream->determine = 1;
   /* expand blocksize by the remainder of %5 plus another 5 bytes
      for the pad blob */
-  //stream->blocksize = blocksize + (5 - (blocksize % 5)) + 5;
   stream->blocksize = blocksize + (blocksize / 4) + 5;
   //fprintf(stderr, "blocksize: %ld\n", stream->blocksize);
   if(stream->cache == NULL) {
@@ -243,6 +242,7 @@ size_t ps_read_next(Pcpstream *stream) {
       void *buf = ucmalloc(stream->blocksize);
       size_t got = ps_read_raw(stream, buf, stream->blocksize);
       buffer_add(stream->next, buf, got);
+      free(buf);
       return got;
     }
   }
@@ -459,6 +459,7 @@ size_t ps_read_decode(Pcpstream *stream) {
   else {
     /* yes, successfully decoded it, put into cache */
     buffer_add(stream->next, bin, binlen);
+    free(bin);
     outlen = binlen;
   }
 
@@ -529,6 +530,7 @@ size_t ps_write(Pcpstream *stream, void *buf, size_t writebytes) {
 	/* there is an overlapping rest, put it into the cache
 	   the caller needs to call ps_finish() to put it out */
 	buffer_add(stream->cache, aside, overlap);
+	free(aside);
       }
     }
   }

@@ -101,7 +101,7 @@ vault_t *pcpvault_new(PCPCTX *ptx, char *filename, int is_tmp) {
   return vault;
 
  errn:
-  free(vault);
+  pcpvault_free(vault);
   return NULL;
 }
 
@@ -118,6 +118,7 @@ int pcpvault_create(PCPCTX *ptx, vault_t *vault) {
   fseek(vault->fd, 0, SEEK_SET);
 
   fwrite(header, sizeof(vault_header_t), 1, vault->fd);
+  free(header);
 
   if(ferror(vault->fd) != 0) {
     fatal(ptx, "Failed to write fileheader to vault %s!\n", vault->filename);
@@ -138,6 +139,7 @@ int pcpvault_additem(PCPCTX *ptx, vault_t *vault, void *item, size_t itemsize, u
   ih2be(header);
 
   fwrite(header, sizeof(vault_item_header_t), 1, vault->fd);
+  free(header);
   fwrite(item, itemsize, 1, vault->fd);
 
   if(ferror(vault->fd) != 0) {
@@ -156,22 +158,21 @@ int pcpvault_addkey(PCPCTX *ptx, vault_t *vault, void *item, uint8_t type) {
   size_t itemsize;
 
   void *saveitem = NULL;
-  Buffer *blob = buffer_new(PCP_RAW_KEYSIZE, "bs");
+  Buffer *blob = NULL;
 
   if(type == PCP_KEY_TYPE_PUBLIC) {
     itemsize = PCP_RAW_PUBKEYSIZE;
     saveitem = ucmalloc(sizeof(pcp_pubkey_t));
     memcpy(saveitem, item, sizeof(pcp_pubkey_t));
     pubkey2be((pcp_pubkey_t *)item);
+    blob = buffer_new(PCP_RAW_KEYSIZE, "bs");
     pcp_pubkeyblob(blob, (pcp_pubkey_t *)item);
   }
   else if(type == PCP_KEYSIG_NATIVE || type == PCP_KEYSIG_NATIVE) {
-    pcp_keysig_t *sk = (pcp_keysig_t *)item;
-   
-    blob = pcp_keysig2blob(sk);
+    saveitem = ucmalloc(sizeof(pcp_keysig_t));
+    memcpy(saveitem, item, sizeof(pcp_keysig_t));
+    blob = pcp_keysig2blob(item);
     itemsize = buffer_size(blob);
-
-    saveitem = (void *)sk;
   }
   else {
     itemsize = PCP_RAW_KEYSIZE;
@@ -181,7 +182,6 @@ int pcpvault_addkey(PCPCTX *ptx, vault_t *vault, void *item, uint8_t type) {
     blob = pcp_keyblob(item, type);
     pcp_seckeyblob(blob, (pcp_key_t *)item);
   }
-
 
   if(tmp != NULL) {
     if(pcpvault_copy(ptx, vault, tmp) != 0)
@@ -200,7 +200,7 @@ int pcpvault_addkey(PCPCTX *ptx, vault_t *vault, void *item, uint8_t type) {
       goto errak1;
     }
     buffer_free(blob);
-    free(tmp);
+    pcpvault_free(tmp);
     return 0;
   }
 
@@ -265,11 +265,14 @@ void pcpvault_update_checksum(PCPCTX *ptx, vault_t *vault) {
   header->version = PCP_VAULT_VERSION;
   memcpy(header->checksum, checksum, 32);
   memcpy(vault->checksum, checksum, 32);
+  ucfree(checksum, 32);
   
   vh2be(header);
 
   fseek(vault->fd, 0, SEEK_SET);
   fwrite(header, sizeof(vault_header_t), 1, vault->fd);
+  free(header);
+
   fseek(vault->fd, 0, SEEK_END);
 }
 
@@ -336,8 +339,10 @@ int pcpvault_copy(PCPCTX *ptx, vault_t *tmp, vault_t *vault) {
   if(fwrite(in, tmpsize, 1, vault->fd) != 1) {
     fatal(ptx, "Failed to copy %s to %s (write) [keeping %s]\n",
 	  tmp->filename, vault->filename, tmp->filename);
+    ucfree(in, tmpsize);
     return 1;
   }
+  ucfree(in, tmpsize);
 
   if(fflush(vault->fd) != 0) {
     fatal(ptx, "Failed to copy %s to %s (flush) [keeping %s]\n",
@@ -372,11 +377,17 @@ int pcpvault_close(PCPCTX *ptx, vault_t *vault) {
       }
       fclose(vault->fd);
     }
-    free(vault->filename);
-    free(vault);
+    pcpvault_free(vault);
     vault = NULL;
   }
   return 0;
+}
+
+void pcpvault_free(vault_t *vault) {
+  if(vault != NULL) {
+    free(vault->filename);
+    free(vault);
+  }
 }
 
 vault_header_t * vh2be(vault_header_t *h) {

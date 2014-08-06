@@ -21,7 +21,7 @@
 
 
 #include "keyhash.h"
-
+#include "util.h"
 
 void pcphash_del(PCPCTX *ptx, void *key, int type) {
   if(type == PCP_KEY_TYPE_SECRET) {

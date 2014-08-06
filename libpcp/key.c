@@ -148,6 +148,7 @@ pcp_key_t *pcpkey_encrypt(PCPCTX *ptx, pcp_key_t *key, char *passphrase) {
   if(key->nonce[0] == 0) {
     byte *nonce = pcp_gennonce();
     memcpy (key->nonce, nonce, crypto_secretbox_NONCEBYTES);
+    ucfree(nonce, crypto_secretbox_NONCEBYTES);
   }
 
   byte *encryptkey = pcp_derivekey(ptx, passphrase, key->nonce);  

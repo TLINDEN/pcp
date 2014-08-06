@@ -95,6 +95,10 @@ void fatal(PCPCTX *ptx, const char * fmt, ...) {
 
 void fatals_reset(PCPCTX *ptx) {
   ptx->pcp_errset = 0;
+  if(ptx->pcp_err != NULL) {
+    free(ptx->pcp_err);
+    ptx->pcp_err = NULL;
+  }
 }
 
 void fatals_ifany(PCPCTX *ptx) {

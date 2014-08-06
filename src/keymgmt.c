@@ -667,7 +667,6 @@ int pcp_import (vault_t *vault, FILE *in, char *passwd) {
 	if(pcp_storekey(sk) == 0) {
 	  pcpkey_printshortinfo(sk); 
 	  success = 0;
-	  sk = NULL;
 	}
       }
     }

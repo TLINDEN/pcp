@@ -201,6 +201,7 @@ byte *pcp_z85_decode(PCPCTX *ptx, char *z85block, size_t *dstlen) {
 
   if(zmq_z85_decode(bin, z85block) == NULL) {
     fatal(ptx, "zmq_z85_decode() failed, input size ! mod 5 (got %ld)\n", strlen(z85block));
+    free(bin);
     return NULL;
   }
 

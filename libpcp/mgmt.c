@@ -340,11 +340,11 @@ pcp_ks_bundle_t *pcp_import_pub_rfc(PCPCTX *ptx, Buffer *blob) {
 pcp_ks_bundle_t *pcp_import_pub_pbp(PCPCTX *ptx, Buffer *blob) {
   char *date  = ucmalloc(20);
   char *parts = NULL;
-  byte *sig = ucmalloc(crypto_sign_BYTES);;
+  byte *sig = ucmalloc(crypto_sign_BYTES);
   int pnum;
-  pbp_pubkey_t *b = ucmalloc(sizeof(pbp_pubkey_t));
-  pcp_pubkey_t *tmp = ucmalloc(sizeof(pcp_pubkey_t));
-  pcp_pubkey_t *pub = ucmalloc(sizeof(pcp_pubkey_t));
+  pbp_pubkey_t *b = NULL;
+  pcp_pubkey_t *tmp = NULL;
+  pcp_pubkey_t *pub = NULL;
 
   buffer_get_chunk(blob, sig, crypto_sign_BYTES);
 
@@ -354,6 +354,7 @@ pcp_ks_bundle_t *pcp_import_pub_pbp(PCPCTX *ptx, Buffer *blob) {
     goto errimp2;
   }
 
+  b = ucmalloc(sizeof(pbp_pubkey_t)); /* FIXME: separate type really needed? */
   buffer_get_chunk(blob, b->sigpub, crypto_sign_PUBLICKEYBYTES);
   buffer_get_chunk(blob, b->edpub, crypto_sign_PUBLICKEYBYTES);
   buffer_get_chunk(blob, b->pub, crypto_box_PUBLICKEYBYTES);
@@ -364,6 +365,7 @@ pcp_ks_bundle_t *pcp_import_pub_pbp(PCPCTX *ptx, Buffer *blob) {
   if(strptime(date, "%Y-%m-%dT%H:%M:%S", &c) == NULL) {
     fatal(ptx, "Failed to parse creation time in PBP public key file\n");
     free(date);
+    ucfree(b, sizeof(pbp_pubkey_t));
     goto errimp2;
   }
   
@@ -373,6 +375,7 @@ pcp_ks_bundle_t *pcp_import_pub_pbp(PCPCTX *ptx, Buffer *blob) {
   /*  parse the name */
   parts = strtok (b->name, "<>");
   pnum = 0;
+  pub = ucmalloc(sizeof(pcp_pubkey_t));
   while (parts != NULL) {
     if(pnum == 0)
       memcpy(pub->owner, parts, strlen(parts));
@@ -396,8 +399,10 @@ pcp_ks_bundle_t *pcp_import_pub_pbp(PCPCTX *ptx, Buffer *blob) {
   memcpy(pub->edpub, b->edpub, crypto_sign_PUBLICKEYBYTES);
   memcpy(pub->id, pcp_getpubkeyid(pub), 17);
   _lc(pub->owner);
+  ucfree(b, sizeof(pbp_pubkey_t));
 
   /* edpub used for signing, might differ */
+  tmp = ucmalloc(sizeof(pcp_pubkey_t));
   memcpy(tmp->edpub, b->sigpub, crypto_sign_PUBLICKEYBYTES);
 
   byte *verify = pcp_ed_verify(ptx, buffer_get(blob), buffer_size(blob), tmp);
@@ -421,11 +426,14 @@ pcp_ks_bundle_t *pcp_import_pub_pbp(PCPCTX *ptx, Buffer *blob) {
     pub->valid = 1;
     bundle->s = sk;
     bundle->p = pub;
+    free(verify);
   }
   
+  free(sig);
   return bundle;
 
  errimp2:
+  free(sig);
   return NULL;
 }
 
@@ -819,7 +827,8 @@ pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphras
   cipherlen = buffer_left(cipher);
   if(cipherlen < minlen) {
     fatal(ptx, "failed to decrypt the secret key file:\n"
-	  "expected encrypted secret key size %ld is less than minimum len %ld\n", cipherlen, minlen);
+	  "expected encrypted secret key size %ld is less than minimum len %ld\n",
+	  cipherlen, minlen);
     goto impserr1;
   }
 
@@ -857,16 +866,18 @@ pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphras
   sk->version = buffer_get32na(blob);
   sk->serial = buffer_get32na(blob);
 
-  /* ready */
-  ucfree(clear, cipherlen - PCP_CRYPTO_ADD);
-  ucfree(nonce, crypto_secretbox_NONCEBYTES);
-  buffer_free(blob);
 
   /* fill in the calculated fields */
   char *id = pcp_getkeyid(sk);
   memcpy (sk->id, id, 17);
-  free(id);
   sk->type = PCP_KEY_TYPE_SECRET;
+
+  /* ready */
+  ucfree(clear, cipherlen - PCP_CRYPTO_ADD);
+  ucfree(nonce, crypto_secretbox_NONCEBYTES);
+  buffer_free(blob);
+  ucfree(symkey, 64);
+  free(id);
 
   return sk;
 
@@ -877,5 +888,7 @@ pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphras
   ucfree(nonce, crypto_secretbox_NONCEBYTES);
   ucfree(sk, sizeof(pcp_key_t));
   buffer_free(blob);
+  if(symkey != NULL)
+    ucfree(symkey, 64);
   return NULL;
 }

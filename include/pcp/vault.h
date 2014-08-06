@@ -175,6 +175,11 @@ int pcpvault_addkey(PCPCTX *ptx, vault_t *vault, void *item, uint8_t type);
  */
 int pcpvault_close(PCPCTX *ptx, vault_t *vault);
 
+/** Free vault resources
+
+    \param[in] vault The vault object.
+*/
+void pcpvault_free(vault_t *vault);
 
 /** Reads in the vault contents.
 

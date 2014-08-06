@@ -464,7 +464,7 @@ int z85_isbegin(Buffer *buf) {
   size_t blen;
   const char *begin;
   long int offset;
-  int i;
+  int i, isb;
 
   if(! z85_isheader(buf))
     return 0;
@@ -474,18 +474,21 @@ int z85_isbegin(Buffer *buf) {
 
   /* determine type */
   len = buffer_left(buf);
+  isb = -1;
   byte *line = ucmalloc(len); /* FIXME: maybe wrong, check it */
   buffer_get_chunk(buf, line, offset);
+
   for(i=0; (begin=begins[i]); i++ ) {
-    if(begin == NULL) break;
+    if(begin == NULL)
+      break;
     blen = strlen(begin);
     if(blen <= len)
       if(_findoffset(line+buf->offset, len, (char *)begin, blen) >= 0)
-	return i; /* i = ENUM ZBEGINS */
+	isb = i; /* i = ENUM ZBEGINS */
   }
 
-  /* unknown but valid */
-  return -1;
+  free(line);
+  return isb;
 }
 
 int z85_iscomment(Buffer *buf) {

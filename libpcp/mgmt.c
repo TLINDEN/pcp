@@ -203,6 +203,7 @@ int _check_hash_keysig(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, pcp_keysig_t 
 
 pcp_ks_bundle_t *pcp_import_binpub(PCPCTX *ptx, byte *raw, size_t rawsize) {
   Buffer *blob = buffer_new(512, "importblob");
+  pcp_ks_bundle_t *bundle = NULL;
 
   buffer_add(blob, raw, rawsize);
 
@@ -211,12 +212,16 @@ pcp_ks_bundle_t *pcp_import_binpub(PCPCTX *ptx, byte *raw, size_t rawsize) {
 
   if(version == PCP_KEY_VERSION) {
     /* ah, homerun */
-    return pcp_import_pub_rfc(ptx, blob);
+    bundle = pcp_import_pub_rfc(ptx, blob);
   }
   else {
     /* nope, it's probably pbp */
-    return pcp_import_pub_pbp(ptx, blob);
+    bundle = pcp_import_pub_pbp(ptx, blob);
   }
+
+  buffer_free(blob);
+  return bundle;
+
 }
 
 pcp_ks_bundle_t *pcp_import_pub(PCPCTX *ptx, byte *raw, size_t rawsize) {
@@ -333,8 +338,7 @@ pcp_ks_bundle_t *pcp_import_pub_rfc(PCPCTX *ptx, Buffer *blob) {
 }
 
 pcp_ks_bundle_t *pcp_import_pub_pbp(PCPCTX *ptx, Buffer *blob) {
-  char *date  = ucmalloc(19);
-  char *ignore = ucmalloc(46);
+  char *date  = ucmalloc(20);
   char *parts = NULL;
   byte *sig = ucmalloc(crypto_sign_BYTES);;
   int pnum;
@@ -363,8 +367,7 @@ pcp_ks_bundle_t *pcp_import_pub_pbp(PCPCTX *ptx, Buffer *blob) {
     goto errimp2;
   }
   
-  buffer_get_chunk(blob, ignore, 46);
-  free(ignore);
+  buffer_fwd_offset(blob, 46);
   memcpy(b->name, buffer_get(blob), buffer_left(blob));
 
   /*  parse the name */
@@ -791,7 +794,10 @@ pcp_key_t *pcp_import_secret(PCPCTX *ptx, byte *raw, size_t rawsize, char *passp
   }
 
   /* now we've got the blob, parse it */
-  return pcp_import_secret_native(ptx, blob, passphrase);
+  pcp_key_t *sk = pcp_import_secret_native(ptx, blob, passphrase);
+  buffer_free(blob);
+
+  return sk;
 }
 
 pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphrase) {
@@ -857,7 +863,9 @@ pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphras
   buffer_free(blob);
 
   /* fill in the calculated fields */
-  memcpy (sk->id, pcp_getkeyid(sk), 17);
+  char *id = pcp_getkeyid(sk);
+  memcpy (sk->id, id, 17);
+  free(id);
   sk->type = PCP_KEY_TYPE_SECRET;
 
   return sk;

@@ -88,8 +88,11 @@
  */
 void pcphash_del(PCPCTX *ptx, void *key, int type);
 
-/** Free memory used by key hashes. */
+/** Free memory used by key global ptx-attached hashes. */
 void pcphash_clean(PCPCTX *ptx);
+
+/** Free memory by local pubkey hash */
+void pcphash_cleanpub(pcp_pubkey_t *pub);
 
 /** Check if a secret key with a given key-id exists in the hash.
 

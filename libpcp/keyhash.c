@@ -64,6 +64,14 @@ void pcphash_clean(PCPCTX *ptx) {
   }
 }
 
+void pcphash_cleanpub(pcp_pubkey_t *pub) {
+  pcp_pubkey_t *current_pub, *ptmp;
+  HASH_ITER(hh, pub, current_pub, ptmp) {
+    HASH_DEL(pub, (pcp_pubkey_t *)current_pub);
+    memset(current_pub, 0, sizeof(pcp_pubkey_t));
+    free(current_pub);
+  }
+}
 
 pcp_keysig_t *pcphash_keysigexists(PCPCTX *ptx, char *id) {
   pcp_keysig_t *keysig = NULL;

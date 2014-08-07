@@ -168,9 +168,14 @@ int pcpvault_addkey(PCPCTX *ptx, vault_t *vault, void *item, uint8_t type) {
     blob = buffer_new(PCP_RAW_KEYSIZE, "bs");
     pcp_pubkeyblob(blob, (pcp_pubkey_t *)item);
   }
-  else if(type == PCP_KEYSIG_NATIVE || type == PCP_KEYSIG_NATIVE) {
+  else if(type == PCP_KEYSIG_NATIVE || type == PCP_KEYSIG_PBP) {
     saveitem = ucmalloc(sizeof(pcp_keysig_t));
-    memcpy(saveitem, item, sizeof(pcp_keysig_t));
+    pcp_keysig_t *ksin = (pcp_keysig_t *)item;
+    pcp_keysig_t *ksout = (pcp_keysig_t *)saveitem;
+    
+    memcpy(ksout, ksin, sizeof(pcp_keysig_t));
+    ksout->blob = ucmalloc(ksin->size);
+    memcpy(ksout->blob, ksin->blob, ksin->size);
     blob = pcp_keysig2blob(item);
     itemsize = buffer_size(blob);
   }

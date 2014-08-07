@@ -589,7 +589,6 @@ int pcp_import (vault_t *vault, FILE *in, char *passwd) {
       if(pcpvault_addkey(ptx, vault, (void *)pub,  PCP_KEY_TYPE_PUBLIC) == 0) {
 	fprintf(stderr, "key 0x%s added to %s.\n", pub->id, vault->filename);
 	/* avoid double free */
-	pub = NULL;
 	success = 0;
       }
       else
@@ -600,7 +599,6 @@ int pcp_import (vault_t *vault, FILE *in, char *passwd) {
 	  /* FIXME: remove pubkey if storing the keysig failed */
 	  goto errimp2;
 	}
-	keysig = NULL;
       }
     }
     else

@@ -196,7 +196,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
       /*  found one by id, copy into local hash */
       pub = ucmalloc(sizeof(pcp_pubkey_t));
       memcpy(pub, tmp, sizeof(pcp_pubkey_t));
-      HASH_ADD_STR( pubhash, id, tmp);
+      HASH_ADD_STR( pubhash, id, pub);
     }
   }
   else if(recipient != NULL) {
@@ -211,7 +211,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
 	if(strnstr(tmp->mail, rec->value, 255) != NULL || strnstr(tmp->owner, rec->value, 255) != NULL) {
 	  pub = ucmalloc(sizeof(pcp_pubkey_t));
 	  memcpy(pub, tmp, sizeof(pcp_pubkey_t));
-	  HASH_ADD_STR( pubhash, id, tmp);
+	  HASH_ADD_STR( pubhash, id, pub);
 	  /* fprintf(stderr, "  => found a matching key %s\n", tmp->id); */
 	}
 	rec = rec->next;
@@ -247,6 +247,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
 	strncpy(passphrase, passwd, strlen(passwd)+1);
       }
       secret = pcpkey_decrypt(ptx, secret, passphrase);
+      ucfree(passphrase, strlen(passwd)+1);
       if(secret == NULL)
 	goto erren2;
     }
@@ -297,27 +298,25 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
   ps_close(pin);
 
   if(clen > 0) {
-    if(id == NULL && recipient == NULL)
+    if(id == NULL && recipient == NULL) {
       fprintf(stderr, "Encrypted %"FMT_SIZE_T" bytes symetrically\n", (SIZE_T_CAST)clen);
-    else if(id != NULL)
-      fprintf(stderr, "Encrypted %"FMT_SIZE_T" bytes for 0x%s successfully\n", (SIZE_T_CAST)clen, id);
+    }
     else {
       fprintf(stderr, "Encrypted %"FMT_SIZE_T" bytes for:\n", (SIZE_T_CAST)clen);
-      pcp_pubkey_t *cur;
-      pcphash_iteratepub(ptx, cur) {
-	fprintf(stderr, "%s <%s>\n", cur->owner, cur->mail);
+      pcp_pubkey_t *cur, *t;
+      HASH_ITER(hh, pubhash, cur, t) {
+	fprintf(stderr, "  0x%s - %s <%s>\n", cur->id, cur->owner, cur->mail);
       }
-      free(cur);
     }
     if(signcrypt)
       fprintf(stderr, "Signed encrypted file successfully\n");
+
+    pcphash_cleanpub(pubhash);
     return 0;
   }
 
  erren2:
-  free(pubhash); /*  FIXME: it's a uthash, dont use free() but func instead */
-  free(tmp);
-  free(pub);
+  pcphash_cleanpub(pubhash);
 
  erren3:
 

@@ -38,7 +38,7 @@ void *ucmalloc(size_t s) {
 
   memset (value, 0, size);
 
-  /* printf("allocated %d bytes at %p\n", (int)size, value); */
+  /* printf("allocated %ld bytes at %p\n", size, value); */
 
   return value;
 }

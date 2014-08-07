@@ -594,6 +594,7 @@ int main (int argc, char **argv)  {
     p_clean(recipient);
   if(id != NULL)
     free(id);
-
+  if(keyid != NULL)
+    free(keyid);
   return e;
 }

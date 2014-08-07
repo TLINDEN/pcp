@@ -71,8 +71,6 @@ int _check_keysig_h(PCPCTX *ptx, Buffer *blob, rfc_pub_sig_h *h) {
 }
 
 int _check_sigsubs(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, rfc_pub_sig_s *subheader) {
-  byte *ignore = ucmalloc(32);
-
   if(subheader->size > buffer_left(blob)) {
     fatal(ptx, "Invalid header size %ld specified in source\n", subheader->size);
     return 1;
@@ -126,7 +124,7 @@ int _check_sigsubs(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, rfc_pub_sig_s *su
        is already known from the key ctime. This may change in
        the future though.
      */
-    if(buffer_get_chunk(blob, ignore, subheader->size) == 0) {
+    if(buffer_fwd_offset(blob, subheader->size) == 0) {
       fatal(ptx, "Invalid 'unsupported' notation, expected %ld bytes, but got 0\n", subheader->size);
       return 1;
     }
@@ -267,10 +265,11 @@ pcp_ks_bundle_t *pcp_import_pub(PCPCTX *ptx, byte *raw, size_t rawsize) {
 }
 
 pcp_ks_bundle_t *pcp_import_pub_rfc(PCPCTX *ptx, Buffer *blob) {
-  pcp_pubkey_t *p = ucmalloc(sizeof(pcp_pubkey_t));
-  pcp_keysig_t *sk = ucmalloc(sizeof(pcp_keysig_t));
+  pcp_keysig_t *sk = NULL;
+  pcp_ks_bundle_t *b = NULL;
   rfc_pub_sig_h *sigheader = ucmalloc(sizeof(rfc_pub_sig_h));
   rfc_pub_sig_s *subheader = ucmalloc(sizeof(rfc_pub_sig_s));
+  pcp_pubkey_t *p = ucmalloc(sizeof(pcp_pubkey_t));
 
   if(buffer_done(blob)) goto be;
   p->ctime = buffer_get64na(blob);
@@ -299,6 +298,8 @@ pcp_ks_bundle_t *pcp_import_pub_rfc(PCPCTX *ptx, Buffer *blob) {
     if(_check_sigsubs(ptx, blob, p, subheader) != 0)
       goto bes;
   }
+  ucfree(sigheader, sizeof(rfc_pub_sig_h));
+  ucfree(subheader, sizeof(rfc_pub_sig_s));
 
   /* calc id */
   char *id = pcp_getpubkeyid(p);
@@ -309,9 +310,10 @@ pcp_ks_bundle_t *pcp_import_pub_rfc(PCPCTX *ptx, Buffer *blob) {
   p->type = PCP_KEY_TYPE_PUBLIC;
   p->version = PCP_KEY_VERSION;
 
-  pcp_ks_bundle_t *b = ucmalloc(sizeof(pcp_ks_bundle_t));
-
   /* retrieve signature, store and verify it */
+  b = ucmalloc(sizeof(pcp_ks_bundle_t));
+  sk = ucmalloc(sizeof(pcp_keysig_t));
+
   if(_check_hash_keysig(ptx, blob, p, sk) != 0) {
     b->p = p;
     b->s = NULL;

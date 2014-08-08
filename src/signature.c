@@ -67,6 +67,7 @@ int pcpsign(char *infile, char *outfile, char *passwd, int z85, int detach) {
     }
 
     secret = pcpkey_decrypt(ptx, secret, passphrase);
+    ucfree(passphrase, strlen(passwd)+1);
     if(secret == NULL)
       goto errs1;
   }

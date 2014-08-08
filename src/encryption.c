@@ -74,6 +74,7 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
       }
 
       symkey = pcp_scrypt(ptx, passphrase, strlen(passphrase), salt, 90);
+      ucfree(passphrase, strlen(passwd)+1);
       free(salt);
     }
     else if(head == PCP_ASYM_CIPHER || head == PCP_ASYM_CIPHER_SIG) {
@@ -124,10 +125,13 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
     goto errde3;
   }
 
-  if(symkey == NULL)
+  if(symkey == NULL) {
     dlen = pcp_decrypt_stream(ptx, pin, pout, secret, NULL, verify);
-  else
+  }
+  else {
     dlen = pcp_decrypt_stream(ptx, pin, pout, NULL, symkey, verify);
+    ucfree(symkey, 64);
+  }
 
   ps_close(pin);
   ps_close(pout);
@@ -142,6 +146,9 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
 
 
  errde3:
+  if(symkey != NULL)
+     ucfree(symkey, 64);
+
   return 1;
 }
 
@@ -174,6 +181,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
     memcpy(salt, stsalt, 90);
     symkey = pcp_scrypt(ptx, passphrase, strlen(passphrase), salt, 90);
     free(salt);
+    ucfree(passphrase, strlen(passwd)+1);
   }
   else if(id != NULL && recipient == NULL) {
     /*  lookup by id */
@@ -282,10 +290,13 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
     ps_armor(pout, PCP_BLOCK_SIZE/2);
   }
 
-  if(self == 1)
+  if(self == 1) {
     clen = pcp_encrypt_stream_sym(ptx, pin, pout, symkey, 0, NULL);
-  else
+    ucfree(symkey, 64);
+  }
+  else {
     clen = pcp_encrypt_stream(ptx, pin, pout, secret, pubhash, signcrypt);
+  }
 
   if(armor == 1) {
     ps_finish(pout);
@@ -317,6 +328,9 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
 
  erren2:
   pcphash_cleanpub(pubhash);
+
+  if(symkey != NULL)
+    ucfree(symkey, 64);
 
  erren3:
 

@@ -331,6 +331,8 @@ size_t pcp_ed_detachsign_buffered(Pcpstream *in, Pcpstream *out, pcp_key_t *s) {
   char *z85encoded = pcp_z85_encode((byte*)signature, mlen, &zlen, 1);
   ps_print(out, "%s\r\n%s\r\n", z85encoded, PCP_SIG_END);
 
+  free(signature);
+  free(z85encoded);
   free(st);
 
   return outsize;
@@ -355,6 +357,7 @@ pcp_pubkey_t *pcp_ed_detachverify_buffered(PCPCTX *ptx, Pcpstream *in, Pcpstream
   }
 
   crypto_generichash_final(st, hash, crypto_generichash_BYTES_MAX);
+  free(st);
 
   /*  read the sig */
   byte *sig = NULL;

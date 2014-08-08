@@ -246,8 +246,8 @@ int pcpvault_writeall(PCPCTX *ptx, vault_t *vault) {
       if(pcpvault_copy(ptx, tmp, vault) == 0) {
 	pcpvault_unlink(tmp);
       }
-      free(tmp);
-      buffer_clear(blob);
+      pcpvault_free(tmp);
+      buffer_free(blob);
       return 0;
     }
   }

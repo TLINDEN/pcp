@@ -64,8 +64,9 @@ int pcptext_infile(char *infile) {
     fprintf(stdout, "%s isn't properly Z85 encoded - unknown file type.\n", infile);
     goto errtinf1;
   }
-
-  /* FIXME: try to import pk or sk */
+  else
+    /* FIXME: try to import pk or sk */
+    free(bin);
 
   /*  still there? */
   fprintf(stdout, "%s looks Z85 encoded but otherwise unknown and is possibly encrypted.\n", infile);

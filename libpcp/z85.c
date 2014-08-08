@@ -297,7 +297,7 @@ char *pcp_z85_encode(byte *raw, size_t srclen, size_t *dstlen, int doblock) {
 
 char *pcp_readz85file(PCPCTX *ptx, FILE *infile) {
   byte *input = NULL;
-  byte *tmp = NULL;
+  char *out = NULL;
   size_t bufsize = 0;
   byte byte[1];
 
@@ -306,19 +306,21 @@ char *pcp_readz85file(PCPCTX *ptx, FILE *infile) {
       break;
     if(ferror(infile) != 0)
       break;
-    tmp = realloc(input, bufsize + 1);
-    input = tmp;
+    input = realloc(input, bufsize + 1);
     memmove(&input[bufsize], byte, 1);
     bufsize ++;
   }
 
   if(bufsize == 0) {
     fatal(ptx, "Input file is empty!\n");
-    free(tmp);
+    free(input);
     return NULL;
   }
 
-  return pcp_readz85string(ptx, input, bufsize);
+  out = pcp_readz85string(ptx, input, bufsize);
+  free(input);
+
+  return out;
 }
 
 char *pcp_readz85string(PCPCTX *ptx, unsigned char *input, size_t bufsize) {

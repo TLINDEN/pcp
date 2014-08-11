@@ -4,7 +4,7 @@
 "Usage: pcp1 [ --help          | --version ]\n" \
 "            [ --keygen        | --listkeys      | --remove-key | --edit-key ]\n" \
 "            [ --export-public | --export-secret | --import ]\n" \
-"            [ --encrypt       | --decrypt ]\n" \
+"            [ --encrypt       | --decrypt       ]\n" \
 "            [ --sign          | --check-signature ]\n" \
 "            [ arguments ]\n" \
 "\n" \
@@ -33,6 +33,7 @@
 "Encryption Options:\n" \
 "-e --encrypt              Asym-Encrypt a message. If none of -i or -r\n" \
 "                          has been given, encrypt the message symetrically.\n" \
+"-A --anonymous            Use anonymous sender key pair.\n" \
 "-m --encrypt-me           Symetrically encrypt a message.\n" \
 "-d --decrypt              Decrypt a message.\n" \
 "\n" \

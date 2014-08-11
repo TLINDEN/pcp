@@ -2,7 +2,7 @@
 Usage: pcp1 [ --help          | --version ]
             [ --keygen        | --listkeys      | --remove-key | --edit-key ]
             [ --export-public | --export-secret | --import ]
-            [ --encrypt       | --decrypt ]
+            [ --encrypt       | --decrypt       ]
             [ --sign          | --check-signature ]
             [ arguments ]
 
@@ -31,6 +31,7 @@ Keymanagement Options:
 Encryption Options:
 -e --encrypt              Asym-Encrypt a message. If none of -i or -r
                           has been given, encrypt the message symetrically.
+-A --anonymous            Use anonymous sender key pair.
 -m --encrypt-me           Symetrically encrypt a message.
 -d --decrypt              Decrypt a message.
 

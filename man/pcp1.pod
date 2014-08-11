@@ -9,7 +9,7 @@ Pretty Curved Privacy - File encryption using eliptic curve cryptography.
   Usage: pcp1 [ --help          | --version ]
               [ --keygen        | --listkeys      | --remove-key | --edit-key ]
               [ --export-public | --export-secret | --import ]
-              [ --encrypt       | --decrypt ]
+              [ --encrypt       | --decrypt       ]
               [ --sign          | --check-signature ]
               [ arguments ]
   
@@ -38,6 +38,7 @@ Pretty Curved Privacy - File encryption using eliptic curve cryptography.
   Encryption Options:
   -e --encrypt              Asym-Encrypt a message. If none of -i or -r
                             has been given, encrypt the message symetrically.
+  -A --anonymous            Use anonymous sender key pair.
   -m --encrypt-me           Symetrically encrypt a message.
   -d --decrypt              Decrypt a message.
   
@@ -134,6 +135,10 @@ Pretty Curved Privacy - File encryption using eliptic curve cryptography.
                            the message symetrically. This is the same
                            as -m (self-encryption mode).
                            Add -z to ascii armor the output using Z85.
+ -A --anonymous            Use anonymous sender key pair instead or
+                           your own primary key pair. In this mode the
+                           recipient doesn't need to have your public
+                           key.
  -m --encrypt-me           Sym-Encrypt a message. Specify -I and/or
                            -O for input/output file. You will be asked
                            for a passphrase. No key material will

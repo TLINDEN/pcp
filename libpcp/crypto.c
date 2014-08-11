@@ -161,19 +161,15 @@ byte *pcp_box_decrypt(PCPCTX *ptx, pcp_key_t *secret, pcp_pubkey_t *pub,
   return NULL;
 }
 
-size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t *s, byte *symkey, int verify) {
+size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t *s, byte *symkey, int verify, int anon) {
   pcp_pubkey_t *cur = NULL;
   byte *reccipher = NULL;
   int recmatch, self;
   uint32_t lenrec;
   byte head[1];
   size_t cur_bufsize, rec_size, nrec;
-  
   byte *rec_buf = NULL;
-
-#ifdef PCP_ASYM_ADD_SENDER_PUB
-  byte *senderpub;
-#endif
+  pcp_pubkey_t *senderpub = NULL; /* anon only */
 
   nrec = recmatch = self = 0;
 
@@ -194,6 +190,10 @@ size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t 
 	  goto errdef1;
 	}
       }
+      else if(head[0] == PCP_ASYM_CIPHER_ANON) {
+	self = 0;
+	anon = 1;
+      }
       else if(head[0] == PCP_ASYM_CIPHER) {
 	self = 0;
       }
@@ -213,14 +213,15 @@ size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t 
     return pcp_decrypt_stream_sym(ptx, in, out, symkey, NULL);
   }
 
-#ifdef PCP_ASYM_ADD_SENDER_PUB
-  /*  step 2, sender's pubkey */
-  cur_bufsize = ps_read(in, &in_buf, crypto_box_PUBLICKEYBYTES);
-  if(cur_bufsize !=  crypto_box_PUBLICKEYBYTES && !ps_end(in) && !ps_err(in)) {
-    fatal(ptx, "Error: input file doesn't contain senders public key\n");
-    goto errdef1;
+  if(anon) {
+    /*  step 2, sender's pubkey */
+    senderpub = ucmalloc(sizeof(pcp_pubkey_t));
+    cur_bufsize = ps_read(in, senderpub->pub, crypto_box_PUBLICKEYBYTES);
+    if(cur_bufsize !=  crypto_box_PUBLICKEYBYTES && !ps_end(in) && !ps_err(in)) {
+      fatal(ptx, "Error: input file doesn't contain senders public key\n");
+      goto errdef1;
+    }
   }
-#endif
 
   /*  step 3, check len recipients */
   cur_bufsize = ps_read(in, &lenrec, 4); /* fread(&lenrec, 1, 4, in); */
@@ -247,16 +248,35 @@ size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t 
     }
     recmatch = 0;
 
-    pcphash_iteratepub(ptx, cur) {
+    if(anon) {
+      /* anonymous sender */
       byte *recipient;
-      recipient = pcp_box_decrypt(ptx, s, cur, rec_buf, PCP_ASYM_RECIPIENT_SIZE, &rec_size);
+      recipient = pcp_box_decrypt(ptx, s, senderpub, rec_buf, PCP_ASYM_RECIPIENT_SIZE, &rec_size);
       if(recipient != NULL && rec_size == crypto_secretbox_KEYBYTES) {
 	/*  found a match */
 	recmatch = 1;
 	symkey = ucmalloc(crypto_secretbox_KEYBYTES);
 	memcpy(symkey, recipient, crypto_secretbox_KEYBYTES);
 	free(recipient);
+	ucfree(senderpub, sizeof(pcp_pubkey_t));
 	break;
+      }
+      free(recipient);
+    }
+    else {
+      /* dig through our list of known public keys for a match */
+      pcphash_iteratepub(ptx, cur) {
+	byte *recipient;
+	recipient = pcp_box_decrypt(ptx, s, cur, rec_buf, PCP_ASYM_RECIPIENT_SIZE, &rec_size);
+	if(recipient != NULL && rec_size == crypto_secretbox_KEYBYTES) {
+	  /*  found a match */
+	  recmatch = 1;
+	  symkey = ucmalloc(crypto_secretbox_KEYBYTES);
+	  memcpy(symkey, recipient, crypto_secretbox_KEYBYTES);
+	  free(recipient);
+	  break;
+	}
+	free(recipient);
       }
     }
     if(verify) {
@@ -290,7 +310,7 @@ size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t 
   return 0;
 }
 
-size_t pcp_encrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, pcp_key_t *s, pcp_pubkey_t *p, int sign) {
+size_t pcp_encrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, pcp_key_t *s, pcp_pubkey_t *p, int sign, int anon) {
   byte *symkey;
   int recipient_count;
   byte *recipients_cipher;
@@ -336,24 +356,25 @@ size_t pcp_encrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, pcp_key_t 
   /*  step 1, file header */
   if(sign)
     head[0] = PCP_ASYM_CIPHER_SIG;
+  else if(anon)
+    head[0] = PCP_ASYM_CIPHER_ANON;
   else
     head[0] = PCP_ASYM_CIPHER;
   ps_write(out, head, 1);
-  /* fwrite(head, 1, 1, out); */
-  /* fprintf(stderr, "D: header - 1\n"); */
+
   if(ps_err(out) != 0) {
     fatal(ptx, "Failed to write encrypted output!\n");
     goto errec1;
   }
 
-#ifdef PCP_ASYM_ADD_SENDER_PUB
-  /*  step 2, sender's pubkey */
-  ps_write(out, s->pub, crypto_box_PUBLICKEYBYTES);
-  /*fwrite(s->pub, crypto_box_PUBLICKEYBYTES, 1, out); */
-  /* fprintf(stderr, "D: sender pub - %d\n", crypto_box_PUBLICKEYBYTES); */
-  if(ps_err(out) != 0)
-    goto errec1;
-#endif
+  if(anon) {
+    /*  step 2, sender's pubkey */
+    ps_write(out, s->pub, crypto_box_PUBLICKEYBYTES);
+    /*fwrite(s->pub, crypto_box_PUBLICKEYBYTES, 1, out); */
+    /* fprintf(stderr, "D: sender pub - %d\n", crypto_box_PUBLICKEYBYTES); */
+    if(ps_err(out) != 0)
+      goto errec1;
+  }
 
   /*  step 3, len recipients, big endian */
   lenrec = recipient_count;

@@ -54,7 +54,7 @@ bool Crypto::encrypt(FILE *in, FILE *out, bool sign) {
   Pcpstream *pin = ps_new_file(in);
   Pcpstream *pout = ps_new_file(out);
 
-  size_t clen = pcp_encrypt_stream(PTX->ptx, pin, pout, S.K, pubhash, sign);
+  size_t clen = pcp_encrypt_stream(PTX->ptx, pin, pout, S.K, pubhash, sign, 0); // FIXME: add anon support
   if(clen <= 0)
      throw exception(PTX);
   ps_close(pin);
@@ -66,7 +66,7 @@ bool Crypto::decrypt(FILE *in, FILE *out, bool verify) {
   Pcpstream *pin = ps_new_file(in);
   Pcpstream *pout = ps_new_file(out);
 
-  if(pcp_decrypt_stream(PTX->ptx, pin, pout, S.K, NULL, verify) <= 0)
+  if(pcp_decrypt_stream(PTX->ptx, pin, pout, S.K, NULL, verify, 0) <= 0)
     throw exception(PTX);
   ps_close(pin);
   ps_close(pout);

@@ -195,11 +195,13 @@ byte *pcp_box_decrypt(PCPCTX *ptx, pcp_key_t *secret, pcp_pubkey_t *pub,
 
     \param[in] p Public key hash containing a list of the recipients.
 
-    \param signcrypt Flag to indicate sign+crypt. If 1 it adds a signature, otherwise not.
+    \param[in] signcrypt Flag to indicate sign+crypt. If 1 it adds a signature, otherwise not.
+
+    \param[in] anon Flag to indicate if using anonymous sender key. 0 retains std behaviour, not anon.
 
     \return Returns the size of the output written to the output stream or 0 in case of errors.
 */
-size_t pcp_encrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t *s, pcp_pubkey_t *p, int signcrypt);
+size_t pcp_encrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t *s, pcp_pubkey_t *p, int signcrypt, int anon);
 
 /** Symmetrically encrypt a file or a buffer stream.
 
@@ -248,9 +250,11 @@ size_t pcp_encrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *
 
     \param verify Flag to indicate sign+crypt. If 1 it tries to verify a signature, otherwise not.
 
+    \param[in] anon Flag to indicate if using anonymous sender key. 0 retains std behaviour, not anon.
+
     \return Returns the size of the output written to the output stream or 0 in case of errors.
 */
-size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t *s, byte *symkey, int verify);
+size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t *s, byte *symkey, int verify, int anon);
 
 
 /** Symmetrically decrypt a file or a buffer stream.

@@ -1,3 +1,16 @@
+0.2.3   Z85 block encoding changed. 4 bytes are appended
+	to each input block to denote if and how many
+	zeroes have been used for padding, necessary
+	since z85 doesn't have any native padding scheme,
+	and only padding with zeroes is insuffucient. This
+	change breaks - currently - compatibility to pbp.
+
+	Added new option --anonymous (-A) which uses a
+	generated keypair for encryption and puts the
+	public part into the encrypted message.
+
+	Fixed lots of memory leaks.
+
 0.2.2   Enhanded --edit-key a little, it's now possible to
 	make a secret the primary one.
 

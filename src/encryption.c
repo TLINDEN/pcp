@@ -29,6 +29,7 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
   byte *symkey = NULL;
   size_t dlen;
   uint8_t head;
+  int anon = 0;
 
   if(infile == NULL)
     in = stdin;
@@ -77,7 +78,7 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
       ucfree(passphrase, strlen(passwd)+1);
       free(salt);
     }
-    else if(head == PCP_ASYM_CIPHER || head == PCP_ASYM_CIPHER_SIG) {
+    else if(head == PCP_ASYM_CIPHER || head == PCP_ASYM_CIPHER_SIG || head == PCP_ASYM_CIPHER_ANON) {
       /*  asymetric mode */
       if(useid) {
 	secret = pcphash_keyexists(ptx, id);
@@ -111,6 +112,9 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
 	if(secret == NULL)
 	  goto errde3;
 
+	if(head == PCP_ASYM_CIPHER_ANON)
+	  anon = 1;
+
 	if(head == PCP_ASYM_CIPHER_SIG)
 	  verify = 1;
       }
@@ -126,10 +130,10 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
   }
 
   if(symkey == NULL) {
-    dlen = pcp_decrypt_stream(ptx, pin, pout, secret, NULL, verify);
+    dlen = pcp_decrypt_stream(ptx, pin, pout, secret, NULL, verify, anon);
   }
   else {
-    dlen = pcp_decrypt_stream(ptx, pin, pout, NULL, symkey, verify);
+    dlen = pcp_decrypt_stream(ptx, pin, pout, NULL, symkey, verify, 0);
     ucfree(symkey, 64);
   }
 
@@ -154,7 +158,7 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
 
 
 
-int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *recipient, int signcrypt, int armor) {
+int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *recipient, int signcrypt, int armor, int anon) {
   FILE *in = NULL;
   FILE *out = NULL;
   pcp_pubkey_t *pubhash = NULL; /*  FIXME: add free() */
@@ -234,32 +238,33 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
 
   if(self != 1) {
   /*  we're using a random secret keypair on our side */
-#ifdef PCP_ASYM_ADD_SENDER_PUB
-    secret = pcpkey_new();
-#else
-    secret = pcp_find_primary_secret();
-    if(secret == NULL) {
-      fatal(ptx, "Could not find a secret key in vault %s!\n", id, vault->filename);
-      goto erren2;
+    if(anon) {
+      secret = pcpkey_new();
     }
-
-    if(secret->secret[0] == 0) {
-      /*  encrypted, decrypt it */
-      char *passphrase;
-      if(passwd == NULL) {
-	pcp_readpass(&passphrase,
-		     "Enter passphrase to decrypt your secret key", NULL, 1);
-      }
-      else {
-	passphrase = ucmalloc(strlen(passwd)+1);
-	strncpy(passphrase, passwd, strlen(passwd)+1);
-      }
-      secret = pcpkey_decrypt(ptx, secret, passphrase);
-      ucfree(passphrase, strlen(passwd)+1);
-      if(secret == NULL)
+    else {
+      secret = pcp_find_primary_secret();
+      if(secret == NULL) {
+        fatal(ptx, "Could not find a secret key in vault %s!\n", id, vault->filename);
 	goto erren2;
+      }
+
+      if(secret->secret[0] == 0) {
+        /*  encrypted, decrypt it */
+        char *passphrase;
+	if(passwd == NULL) {
+          pcp_readpass(&passphrase,
+		     "Enter passphrase to decrypt your secret key", NULL, 1);
+        }
+	else {
+          passphrase = ucmalloc(strlen(passwd)+1);
+	  strncpy(passphrase, passwd, strlen(passwd)+1);
+        }
+	secret = pcpkey_decrypt(ptx, secret, passphrase);
+	ucfree(passphrase, strlen(passwd)+1);
+	if(secret == NULL)
+	  goto erren2;
+      }
     }
-#endif
   }
 
   if(infile == NULL)
@@ -295,7 +300,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
     ucfree(symkey, 64);
   }
   else {
-    clen = pcp_encrypt_stream(ptx, pin, pout, secret, pubhash, signcrypt);
+    clen = pcp_encrypt_stream(ptx, pin, pout, secret, pubhash, signcrypt, anon);
   }
 
   if(armor == 1) {

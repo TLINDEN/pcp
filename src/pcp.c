@@ -46,7 +46,7 @@ char *default_vault() {
 }
 
 int main (int argc, char **argv)  {
-  int opt, mode, usevault, useid, userec, lo, armor, detach, signcrypt, exportformat;
+  int opt, mode, usevault, useid, userec, lo, armor, detach, signcrypt, exportformat, anon;
   char *vaultfile = default_vault();
   char *outfile = NULL;
   char *infile = NULL;
@@ -68,6 +68,7 @@ int main (int argc, char **argv)  {
   armor = 0;
   detach = 0;
   signcrypt = 0;
+  anon = 0;
   exportformat = EXP_FORMAT_NATIVE;
 
   ptx = ptx_new();
@@ -100,6 +101,7 @@ int main (int argc, char **argv)  {
     { "encrypt",         no_argument,       NULL,           'e' },
     { "encrypt-me",      no_argument,       NULL,           'm' },
     { "decrypt",         no_argument,       NULL,           'd' },
+    { "anonymous",       no_argument,       NULL,           'A' },
 
     /*  encoding */
     { "z85-encode",      no_argument,       NULL,           'z' },
@@ -120,7 +122,7 @@ int main (int argc, char **argv)  {
     { NULL,              0,                 NULL,            0 }
   };
 
-  while ((opt = getopt_long(argc, argv, "klLV:vdehsO:i:I:pSPRtEx:DzaZr:gcymf:b1F:0K",
+  while ((opt = getopt_long(argc, argv, "klLV:vdehsO:i:I:pSPRtEx:DzaZr:gcymf:b1F:0KA",
 			    longopts, NULL)) != -1) {
   
     switch (opt)  {
@@ -184,6 +186,9 @@ int main (int argc, char **argv)  {
 	break;
       case 'Z':
 	armor = 2;
+	break;
+      case 'A':
+	anon = 1;
 	break;
       case 'F':
 	if(strncmp(optarg, "pbp", 3) == 0) {
@@ -475,11 +480,11 @@ int main (int argc, char **argv)  {
 	if(useid == 1 && userec == 0) {
 	  /*  one dst, FIXME: make id a list as well */
 	  id = pcp_normalize_id(keyid);
-	  pcpencrypt(id, infile, outfile, xpass, NULL, signcrypt, armor);
+	  pcpencrypt(id, infile, outfile, xpass, NULL, signcrypt, armor, anon);
 	}
 	else if(useid == 0 && userec == 1) {
 	  /*  multiple dst */
-	  pcpencrypt(NULL, infile, outfile, xpass, recipient, signcrypt, armor);
+	  pcpencrypt(NULL, infile, outfile, xpass, recipient, signcrypt, armor, anon);
 	}
 	else {
 	  /*  -i and -r specified */
@@ -547,7 +552,7 @@ int main (int argc, char **argv)  {
       break;
 
     case PCP_MODE_ENCRYPT_ME:
-      pcpencrypt(NULL, infile, outfile, xpass, NULL, 0, armor);
+      pcpencrypt(NULL, infile, outfile, xpass, NULL, 0, armor, 0);
       break;
 
     case PCP_MODE_TEXT:

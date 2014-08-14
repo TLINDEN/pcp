@@ -257,7 +257,7 @@ char *pcp_z85_encode(byte *raw, size_t srclen, size_t *dstlen, int doblock) {
 
   /*  prepare pad blob */
   padblob = ucmalloc(6);
-  snprintf(padblob, 6, "0000%ld", padlen);
+  snprintf(padblob, 6, "0000%d", padlen);
 
   /* append pad blob to encoded output */
   memcpy(&z85[zlen-1], padblob, 5);

@@ -123,14 +123,18 @@ AC_TRY_LINK([
 AC_CHECK_DECLS([be64enc], [], [], [[#include <sys/endian.h>]])
 AC_CHECK_FUNCS(posix_memalign)
 
+cross_compile="no"
 AC_MSG_CHECKING([compiler and flags for sanity])
 AC_RUN_IFELSE([AC_LANG_PROGRAM([[ #include <stdio.h> ]], [[ exit(0); ]])],
-        [       AC_MSG_RESULT([yes]) ],
+        [   AC_MSG_RESULT([yes]) ],
         [
-                AC_MSG_RESULT([no])
-                AC_MSG_ERROR([*** compiler cannot create working executables, check config.log ***])
+            AC_MSG_RESULT([no])
+            AC_MSG_ERROR([*** compiler cannot create working executables, check config.log ***])
         ],
-        [       AC_MSG_WARN([cross compiling: not checking compiler sanity]) ]
+        [
+	    AC_MSG_WARN([cross compiling: not checking compiler sanity])
+	    [cross_compile="yes"]
+	]
 )
 
 _havenacl=no
@@ -248,6 +252,7 @@ if test -n "$_ldlib"; then
 	export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${_ldlib}"
 fi
 
+if test "$cross_compile" = "no"; then
 AC_MSG_CHECKING([is libsodium compiled correctly])
 AC_RUN_IFELSE([
 AC_LANG_PROGRAM([[
@@ -263,8 +268,9 @@ AC_LANG_PROGRAM([[
 	AC_MSG_ERROR([no. please check your libsodium installation, consider re-installing])
     ]
 )
+fi
 
-
+if test "$cross_compile" = "no"; then
 # check endianess
 # program returns 0 on little and 1 on big endian systems
 AC_MSG_CHECKING([are we on a big endian system])
@@ -279,6 +285,7 @@ AC_LANG_PROGRAM([[]],[[long one= 1; exit(!(*((char *)(&one)))); ]])],
 	bigendian=1
     ]
 )
+fi
 
 if test -n "$bigendian"; then
     CFLAGS="$CFLAGS -D__CPU_IS_BIG_ENDIAN=1"

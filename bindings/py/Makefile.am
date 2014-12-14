@@ -5,4 +5,4 @@ install:
 	python setup.py install
 
 clean:
-	rm -rf build
+	rm -rf build pypcp/*.pyc

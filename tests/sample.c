@@ -7,13 +7,15 @@ int main() {
   Pcpstream *clear_in, *crypt_out, *clear_out;
   PCPCTX *ptx;
   char message[] = "hello world"; 
-
+  printf("hh: %ld\n", sizeof(UT_hash_handle));
   /* we always need a context */
   ptx = ptx_new();
 
   /* generate the keypairs for both */
   alice = pcpkey_new();
   bob = pcpkey_new();
+
+  pcpkey_setowner(alice, "alicia", "alicia@local");
 
   /* get the public parts of them */
   alicepub = pcpkey_pub_from_secret(alice);

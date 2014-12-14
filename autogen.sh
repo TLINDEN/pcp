@@ -59,6 +59,12 @@ Pretty Curved Privacy - File encryption using eliptic curve cryptography.
     # generate usage.h
     (cd src && ./usage.sh)
 
+    # generate pypcp types
+    bindings/py/gencffi.pl include/pcp/defines.h include/pcp/structs.h include/pcp/key.h \
+	                   include/pcp/buffer.h include/pcp/context.h include/pcp/mac.h \
+	                   include/pcp/ed.h include/pcp/crypto.h include/pcp/vault.h \
+	                   include/pcp/pcpstream.h include/pcp/z85.h > bindings/py/pypcp/raw.py
+
     exit
 fi
 

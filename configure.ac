@@ -294,8 +294,27 @@ fi
 CFLAGS="$CFLAGS -Werror -Wextra -O2"
 CXXFLAGS="$CFLAGS"
 
+AC_ARG_WITH([python-binding],
+            [AS_HELP_STRING([--with-python-binding],
+                            [Enable python binding])],
+            [python="yes"],
+            [])
+
+
+
 AC_SUBST(PACKAGE_VERSION)
 
 # Specify output files
 AC_CONFIG_FILES([Makefile include/Makefile libpcp/Makefile src/Makefile man/Makefile tests/Makefile libpcp/libpcp1.pc bindings/cpp/Makefile])
+
+
+if test "x$python" = "xyes"; then
+    if python -c "import cffi" > /dev/null 2>&1; then
+	AC_CONFIG_FILES([bindings/py/Makefile])
+    else
+	AC_MSG_ERROR([python or cffi is not installed])
+    fi
+fi
+
+
 AC_OUTPUT

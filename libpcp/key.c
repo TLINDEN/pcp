@@ -144,6 +144,11 @@ byte * pcp_gennonce() {
   return nonce;
 }
 
+void pcpkey_setowner(pcp_key_t *key, char *owner, char *mail) {
+  strcpy(key->owner, owner);
+  strcpy(key->mail, mail);
+}
+
 pcp_key_t *pcpkey_encrypt(PCPCTX *ptx, pcp_key_t *key, char *passphrase) {
   if(key->nonce[0] == 0) {
     byte *nonce = pcp_gennonce();
@@ -216,7 +221,6 @@ pcp_key_t *pcpkey_decrypt(PCPCTX *ptx, pcp_key_t *key, char *passphrase) {
 }
 
 pcp_pubkey_t *pcpkey_pub_from_secret(pcp_key_t *key) {
-  /* pcp_dumpkey(key); */
   pcp_pubkey_t *pub = urmalloc(sizeof (pcp_pubkey_t));
   memcpy(pub->masterpub, key->masterpub, 32);
   memcpy(pub->pub, key->pub, 32);

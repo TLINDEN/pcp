@@ -245,34 +245,6 @@ byte *pcppubkey_getchecksum(pcp_pubkey_t *k);
 byte *pcpkey_getchecksum(pcp_key_t *k);
 
 
-/** Checks if a secret key structure is registered in the secret key hash.
-
-    Returns a pointer to a pcp_key_t structure if there
-    exists a secret key structure with the given id in the
-    secret key hash.
-
-    FIXME: needs to be moved to keyhash.h.
-
-    \param[in] id A null-terminated char pointer of 17 bytes containing a key-id.
-
-    \return Returns a pointer to a pcp_key_t struture or NULL if no key exists.
- */
-pcp_key_t *pcpkey_exists(char *id);
-
-/** Checks if a public key structure is registered in the public key hash.
-
-    Returns a pointer to a pcp_pubkey_t structure if there
-    exists a public key structure with the given id in the
-    public key hash.
-
-    FIXME: needs to be moved to keyhash.h.
-
-    \param[in] id A null-terminated char pointer of 17 bytes containing a key-id.
-
-    \return Returns a pointer to a pcp_pubkey_t struture or NULL if no key exists.
- */
-pcp_pubkey_t *pcppubkey_exists(char *id);
-
 pcp_key_t * key2be(pcp_key_t *k);
 pcp_key_t *key2native(pcp_key_t *k);
 pcp_pubkey_t * pubkey2be(pcp_pubkey_t *k);
@@ -332,6 +304,13 @@ void pcp_dumpkey(pcp_key_t *k);
 */
 void pcp_dumppubkey(pcp_pubkey_t *k);
 
+/** Set Owner and Mail.
+ 
+    \param[in] key The secret key structure.
+    \param[in] owner Owner string.
+    \param[in] mail Email string.
+*/
+void pcpkey_setowner(pcp_key_t *key, char *owner, char *mail);
 
 #endif /*  _HAVE_PCP_KEYPAIR_H */
 

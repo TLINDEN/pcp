@@ -19,8 +19,7 @@
     You can contact me by mail: <tom AT vondein DOT org>.
 */
 
-#define _XOPEN_SOURCE /* strptime, linux glibc*/
-#define _BSD_SOURCE
+/* #define _XOPEN_SOURCE strptime, linux glibc*/ 
 
 #include "mgmt.h"
 

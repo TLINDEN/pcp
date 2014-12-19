@@ -23,8 +23,10 @@
 #ifndef _HAVE_PCP_H
 #define _HAVE_PCP_H
 
-#ifndef _BSD_SOURCE
-#define _BSD_SOURCE
+#if defined __linux__ || defined __GNU__ || defined __GLIBC__
+#define _DEFAULT_SOURCE 1
+#else
+#define _BSD_SOURCE 1
 #endif
 
 #include <unistd.h>

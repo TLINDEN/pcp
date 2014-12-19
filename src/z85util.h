@@ -23,10 +23,6 @@
 #ifndef _HAVE_PCP_Z85
 #define _HAVE_PCP_Z85
 
-#ifndef _BSD_SOURCE
-#define _BSD_SOURCE
-#endif
-
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>

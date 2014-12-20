@@ -26,6 +26,22 @@
 #ifndef _HAVE_PCP_MGMT_H
 #define _HAVE_PCP_MGMT_H
 
+#if defined __linux__ || defined __GNU__ || defined __GLIBC__
+#  ifndef _DEFAULT_SOURCE
+#    define _DEFAULT_SOURCE 1
+#  endif
+#
+#  ifndef _XOPEN_SOURCE
+#    define _XOPEN_SOURCE 1
+#  endif
+#
+#  ifndef _GNU_SOURCE
+#    define _GNU_SOURCE 1
+#  endif
+#else
+#  define _BSD_SOURCE 1
+#endif
+
 #include <sodium.h>
 #include <string.h>
 #include <stdio.h>

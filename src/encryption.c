@@ -75,7 +75,7 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
       }
 
       symkey = pcp_scrypt(ptx, passphrase, strlen(passphrase), salt, 90);
-      ucfree(passphrase, strlen(passwd)+1);
+      ucfree(passphrase, strlen(passphrase));
       free(salt);
     }
     else if(head == PCP_ASYM_CIPHER || head == PCP_ASYM_CIPHER_SIG || head == PCP_ASYM_CIPHER_ANON) {
@@ -260,7 +260,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
 	  strncpy(passphrase, passwd, strlen(passwd)+1);
         }
 	secret = pcpkey_decrypt(ptx, secret, passphrase);
-	ucfree(passphrase, strlen(passwd)+1);
+	ucfree(passphrase, strlen(passphrase));
 	if(secret == NULL)
 	  goto erren2;
       }

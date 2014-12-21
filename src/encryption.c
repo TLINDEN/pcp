@@ -185,7 +185,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
     memcpy(salt, stsalt, 90);
     symkey = pcp_scrypt(ptx, passphrase, strlen(passphrase), salt, 90);
     free(salt);
-    ucfree(passphrase, strlen(passwd)+1);
+    ucfree(passphrase, strlen(passphrase));
   }
   else if(id != NULL && recipient == NULL) {
     /*  lookup by id */

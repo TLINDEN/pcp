@@ -3,16 +3,20 @@
 from pypcp import *
 from pprint import pprint
 
-sk = Key("tom", "me@there")
-sk.dump()
+zbobsec = open("../../tests/key-bobby-sec", "r").read()
 
-encoded = open("../../tests/key-bobby-sec", "r").read()
+bobsec = Key(encoded=zbobsec, passphrase="b")
+#bobsec.dump()
 
-sk = Key(encoded=encoded, passphrase="b")
-sk.dump()
+zalipub = open("../../tests/key-alicia-pub", "r").read()
+alipub = PublicKey(encoded=zalipub)
+#alipub.dump()
 
-p = open("../../tests/key-bobby-pub", "r").read()
-pk = PublicKey(encoded=p)
-pk.dump()
+ctx = Context()
 
-pprint(pk.masterpub)
+encrypted = ctx.encrypt(string="hello world", passphrase="x")
+
+ctx.addkey(bobsec)
+ctx.recipients(alipub)
+encrypted = ctx.encrypt(string="hello world")
+

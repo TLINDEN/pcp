@@ -26,6 +26,7 @@ my %sobytes = (
 	      );
 
 my @code;
+my %defs;
 
 foreach my $head (@ARGV) {
   open HEAD, "<$head" or die "Could not open $head: $!\n";
@@ -62,6 +63,16 @@ foreach my $head (@ARGV) {
     push @code, $c;
   }
 
+  # a definition
+  while ($raw =~ /^\s*#define ((EXP|PCP|PBP).*)$/gm) {
+    my ($name, $def) = split /\s\s*/, $1, 2;
+    $def =~ s/\/\*.*//;
+    if (!exists $defs{$name} && $def !~ /(sizeof| \+ )/) {
+      print STDERR "name: $name\ndef: $def\n\n";
+      $defs{$name} = "\n# $0: from $head:$.\n$name = $def\n";
+    }
+  }
+
   close $head;
 }
 
@@ -71,3 +82,5 @@ print "PCP_RAW_CODE = '''\n";
 print join "\n", @code;
 print "'''\n";
 
+
+print join "\n", values %defs;

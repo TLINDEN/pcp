@@ -1,7 +1,7 @@
 #
 #    This file is part of Pretty Curved Privacy (pcp1).
 #
-#    Copyright (C) 2013 T.Linden.
+#    Copyright (C) 2013-2015 T.Linden.
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -19,7 +19,15 @@
 #    You can contact me by mail: <tlinden AT cpan DOT org>.
 #
 
-SUBDIRS = include libpcp src man tests bindings/cpp
+if BUILDPY
+  MAYPY=bindings/py
+endif
+
+if BUILDCPP
+  MAYCPP=bindings/cpp
+endif
+
+SUBDIRS = include libpcp src man tests $(MAYCPP) $(MAYPY)
 ACLOCAL_AMFLAGS = -I config
 
 test:

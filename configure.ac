@@ -2,7 +2,7 @@
 #
 #    This file is part of Pretty Curved Privacy (pcp1).
 #
-#    Copyright (C) 2013 T.Linden.
+#    Copyright (C) 2013-2015 T.Linden.
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -294,27 +294,42 @@ fi
 CFLAGS="$CFLAGS -Werror -Wextra -O2"
 CXXFLAGS="$CFLAGS"
 
-AC_ARG_WITH([python-binding],
-            [AS_HELP_STRING([--with-python-binding],
-                            [Enable python binding])],
-            [python="yes"],
-            [])
+# conditionals for bindings and stuff
+
+# c++
+AC_ARG_ENABLE([cpp-binding],
+	      [AS_HELP_STRING([--disable-cpp-binding],
+                              [Disable C++ binding])],
+	     )
+
+AM_CONDITIONAL([BUILDCPP], [test "x$enable_cpp_binding" != "xno"])
+
+# py
+AC_ARG_ENABLE([python-binding],
+              [AS_HELP_STRING([--enable-python-binding],
+                              [Enable python binding])],
+              [python="yes"],
+              [])
+
+if test "x$python" = "xyes"; then
+    if ! python -c "import cffi" > /dev/null 2>&1; then
+	python="no"
+	AC_MSG_ERROR([python or cffi is not installed])
+    fi
+fi
+
+AM_CONDITIONAL([BUILDPY], [test "x$python" = "xyes"])
 
 
 
 AC_SUBST(PACKAGE_VERSION)
 
 # Specify output files
-AC_CONFIG_FILES([Makefile include/Makefile libpcp/Makefile src/Makefile man/Makefile tests/Makefile libpcp/libpcp1.pc bindings/cpp/Makefile])
+AC_CONFIG_FILES([Makefile include/Makefile libpcp/Makefile src/Makefile man/Makefile \
+		 tests/Makefile libpcp/libpcp1.pc bindings/cpp/Makefile bindings/py/Makefile])
 
 
-if test "x$python" = "xyes"; then
-    if python -c "import cffi" > /dev/null 2>&1; then
-	AC_CONFIG_FILES([bindings/py/Makefile])
-    else
-	AC_MSG_ERROR([python or cffi is not installed])
-    fi
-fi
+
 
 
 AC_OUTPUT

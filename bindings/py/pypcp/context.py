@@ -29,8 +29,9 @@ class Context(object):
         for key in recipients:
             libpcp.pcphash_add(self._ctx, key._pk, key._pk.type)
 
-    def encrypt(self, string=None, file=None, sign=False, passphrase=None):
+    def encrypt(self, string=None, file=None, sign=False, passphrase=None, armor=False):
         anon = 0
+        dosign = 0
         instream = None
         outstream = None
         
@@ -40,30 +41,86 @@ class Context(object):
             instream = Stream(file)
 
         outstream = Stream()
-            
+        
+        if armor:
+            # enable z85 encoding
+            libpcp.ps_armor(outstream._stream, PCP_BLOCK_SIZE/2)
+            libpcp.ps_print(outstream._stream, PCP_ENFILE_HEADER)
+
         if self.pubkeycount() > 0:
+            # asymmetric
+
             if not self._sk:
+                # no secret key known, anonymous mode
                 anon = 1
                 
-            dosign = 0
             if sign:
                 dosign = 1
 
             size = libpcp.pcp_encrypt_stream(self._ctx, instream._stream, outstream._stream,
                                              self._sk, self._ctx.pcppubkey_hash, dosign, anon)
-
             if size <= 0:
                 self.throw(IOError, "failed to encrypt")
 
-            return ffi.buffer(libpcp.buffer_get_remainder(outstream._stream.b), libpcp.buffer_size(outstream._stream.b))[:]
-            
         else:
             # symmetric
             salt = ffi.new("byte[]", PBP_COMPAT_SALT)
-            symkey = libpcp.pcp_scrypt(self._ctx, passphrase, len(passphrase), salt, 90);
-            size =  libpcp.pcp_encrypt_stream_sym(self._ctx, instream._stream, outstream._stream, symkey, 0, ffi.NULL)
-
+            symkey = libpcp.pcp_scrypt(self._ctx, passphrase, len(passphrase), salt, 90)
+            size =  libpcp.pcp_encrypt_stream_sym(self._ctx, instream._stream,
+                                                  outstream._stream, symkey, 0, ffi.NULL)
             if size <= 0:
                 self.throw(IOError, "failed to encrypt")
 
-            return ffi.buffer(libpcp.buffer_get_remainder(outstream._stream.b), libpcp.buffer_size(outstream._stream.b))[:]
+
+        if armor:
+            # finish z85 encoding
+            libpcp.ps_finish(outstream._stream);
+            libpcp.ps_unarmor(outstream._stream);
+            libpcp.ps_print(outstream._stream, PCP_ENFILE_FOOTER)
+
+        # return the raw buffer contents, wether encoded or not
+        return ffi.buffer(libpcp.buffer_get_remainder(outstream._stream.b),
+                          libpcp.buffer_size(outstream._stream.b))[:]
+
+
+
+    def decrypt(self, string=None, file=None, verify=False, passphrase=None):
+        doverify = 0
+        instream = None
+        outstream = None
+
+        if verify:
+            doverify = 1
+
+        if string:
+            instream = Stream(string=string)
+        else:
+            instream = Stream(file)
+
+        libpcp.ps_setdetermine(instream._stream, PCP_BLOCK_SIZE/2)
+        outstream = Stream()
+
+        # determine input type
+        head = ffi.new("byte *")
+        got = libpcp.ps_read(instream._stream, head, 1)
+
+        if got <= 0:
+            self.throw(IOError, "failed to read from input stream")
+
+        if head[0] == PCP_SYM_CIPHER:
+            # symmetric
+            salt = ffi.new("byte[]", PBP_COMPAT_SALT)
+            symkey = libpcp.pcp_scrypt(self._ctx, passphrase, len(passphrase), salt, 90)
+            size = libpcp.pcp_decrypt_stream(self._ctx, instream._stream,
+                                             outstream._stream, ffi.NULL,
+                                             symkey, doverify, 0)
+            if size <= 0:
+                self.throw(IOError, "failed to decrypt")
+        else:
+            # asymmetric
+            # TODO
+            pass
+
+        # return the raw buffer contents
+        return ffi.buffer(libpcp.buffer_get_remainder(outstream._stream.b),
+                          libpcp.buffer_size(outstream._stream.b))[:]

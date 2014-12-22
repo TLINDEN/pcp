@@ -273,7 +273,7 @@ void buffer_dump(const Buffer *b) {
 }
 
 void buffer_info(const Buffer *b) {
-  fprintf(stderr, "   buffer: %s\n", b->name);
+  fprintf(stderr, "   buffer: %s at %p\n", b->name, b);
   fprintf(stderr, "blocksize: %"FMT_SIZE_T"\n", (SIZE_T_CAST)b->blocksize);
   fprintf(stderr, "     size: %"FMT_SIZE_T"\n", (SIZE_T_CAST)b->size);
   fprintf(stderr, "   offset: %"FMT_SIZE_T"\n", (SIZE_T_CAST)b->offset);

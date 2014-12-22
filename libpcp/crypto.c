@@ -437,6 +437,14 @@ size_t pcp_encrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, byte *
   byte *hash = NULL;
   byte head[1];
 
+  if(in->is_buffer) {
+    if(buffer_size(in->b) == 0) {
+      /* FIXME: add a ps_stream function for this */
+      fatal(ptx, "Empty input stream buffer at %p!\n", in->b);
+      return 0;
+    }
+  }
+  
   if(recsign != NULL) {
     st = ucmalloc(sizeof(crypto_generichash_state));
     hash = ucmalloc(crypto_generichash_BYTES_MAX);

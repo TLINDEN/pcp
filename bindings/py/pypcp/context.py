@@ -29,16 +29,16 @@ class Context(object):
         for key in recipients:
             libpcp.pcphash_add(self._ctx, key._pk, key._pk.type)
 
-    def encrypt(self, string=None, file=None, sign=False, passphrase=None, armor=False):
+    def encrypt(self, source=None, sign=False, passphrase=None, armor=False):
         anon = 0
         dosign = 0
         instream = None
         outstream = None
         
-        if string:
-            instream = Stream(string=string)
+        if source:
+            instream = Stream(source)
         else:
-            instream = Stream(file)
+            self.throw(RuntimeError, "source argument required")
 
         outstream = Stream()
         
@@ -84,18 +84,19 @@ class Context(object):
 
 
 
-    def decrypt(self, string=None, file=None, verify=False, passphrase=None):
+    def decrypt(self, source=None, verify=False, passphrase=None):
         doverify = 0
+        doanon = 0
         instream = None
         outstream = None
 
         if verify:
             doverify = 1
 
-        if string:
-            instream = Stream(string=string)
+        if source:
+            instream = Stream(source)
         else:
-            instream = Stream(file)
+            self.throw(RuntimeError, "source argument required")
 
         libpcp.ps_setdetermine(instream._stream, PCP_BLOCK_SIZE/2)
         outstream = Stream()
@@ -118,8 +119,19 @@ class Context(object):
                 self.throw(IOError, "failed to decrypt")
         else:
             # asymmetric
-            # TODO
-            pass
+            if not self._sk:
+                self.throw(RuntimeError, "no secret key associated with current context")
+
+            if head[0] == PCP_ASYM_CIPHER_ANON:
+                doanon = 1
+            if head[0] == PCP_ASYM_CIPHER_SIG:
+                doverify
+
+            size = libpcp.pcp_decrypt_stream(self._ctx, instream._stream,
+                                             outstream._stream, self._sk,
+                                             ffi.NULL, doverify, doanon)
+            if size <= 0:
+                self.throw(IOError, "failed to decrypt")
 
         # return the raw buffer contents
         return ffi.buffer(libpcp.buffer_get_remainder(outstream._stream.b),

@@ -2,12 +2,12 @@ from pypcp.dll import *
 
 
 class Stream(object):
-    def __init__(self, string=None, file=None):
-        if file:
-            fd = open(file, 'r')
+    def __init__(self, backend=None):
+        if type(backend) is file:
+            fd = open(backend, 'r')
             self._stream = libpcp.ps_new_file(fd)
-        elif string:
-            buf = libpcp.buffer_new_buf('inbuf', string, len(string))
+        elif type(backend) is str:
+            buf = libpcp.buffer_new_buf('inbuf', backend, len(backend))
             self._stream = libpcp.ps_new_inbuffer(buf)
         else:
             self._stream = libpcp.ps_new_outbuffer()

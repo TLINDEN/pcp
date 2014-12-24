@@ -645,16 +645,13 @@ void ps_close(Pcpstream *stream) {
 
   buffer_free(stream->save);
 
-  if(stream->is_buffer) {
-    buffer_clear(stream->b);
-    free(stream);
-  }
-  else {
+  if(! stream->is_buffer) {
     /* only close files, not terminal devices */
     if(fileno(stream->fd) > 2)
       fclose(stream->fd);
-    free(stream);
   }
+  
+  free(stream);
 }
 
 int ps_end(Pcpstream *stream) {

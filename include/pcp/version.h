@@ -25,7 +25,7 @@
 
 #define PCP_VERSION_MAJOR 0
 #define PCP_VERSION_MINOR 2
-#define PCP_VERSION_PATCH 3
+#define PCP_VERSION_PATCH 4
 
 #define PCP_MAKE_VERSION(major, minor, patch) \
     ((major) * 10000 + (minor) * 100 + (patch))

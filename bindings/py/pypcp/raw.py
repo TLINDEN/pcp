@@ -545,205 +545,205 @@ vault_item_header_t * ih2be(vault_item_header_t *h);
 /*** bindings/py/gencffi.pl: from include/pcp/vault.h:2453 */
 vault_item_header_t * ih2native(vault_item_header_t *h);
 
-/*** bindings/py/gencffi.pl: from include/pcp/mgmt.h:2712 */
+/*** bindings/py/gencffi.pl: from include/pcp/mgmt.h:2728 */
 Buffer *pcp_export_rfc_pub (pcp_key_t *sk);
 
-/*** bindings/py/gencffi.pl: from include/pcp/mgmt.h:2712 */
+/*** bindings/py/gencffi.pl: from include/pcp/mgmt.h:2728 */
 Buffer *pcp_export_pbp_pub(pcp_key_t *sk);
 
-/*** bindings/py/gencffi.pl: from include/pcp/mgmt.h:2712 */
+/*** bindings/py/gencffi.pl: from include/pcp/mgmt.h:2728 */
 Buffer *pcp_export_yaml_pub(pcp_key_t *sk);
 
-/*** bindings/py/gencffi.pl: from include/pcp/mgmt.h:2712 */
+/*** bindings/py/gencffi.pl: from include/pcp/mgmt.h:2728 */
 Buffer *pcp_export_perl_pub(pcp_key_t *sk);
 
-/*** bindings/py/gencffi.pl: from include/pcp/mgmt.h:2712 */
+/*** bindings/py/gencffi.pl: from include/pcp/mgmt.h:2728 */
 Buffer *pcp_export_c_pub(pcp_key_t *sk);
 
-/*** bindings/py/gencffi.pl: from include/pcp/mgmt.h:2712 */
+/*** bindings/py/gencffi.pl: from include/pcp/mgmt.h:2728 */
 Buffer *pcp_export_secret(PCPCTX *ptx, pcp_key_t *sk, char *passphrase);
 
-/*** bindings/py/gencffi.pl: from include/pcp/mgmt.h:2712 */
+/*** bindings/py/gencffi.pl: from include/pcp/mgmt.h:2728 */
 pcp_ks_bundle_t *pcp_import_binpub(PCPCTX *ptx, byte *raw, size_t rawsize);
 
-/*** bindings/py/gencffi.pl: from include/pcp/mgmt.h:2712 */
+/*** bindings/py/gencffi.pl: from include/pcp/mgmt.h:2728 */
 pcp_ks_bundle_t *pcp_import_pub(PCPCTX *ptx, byte *raw, size_t rawsize);
 
-/*** bindings/py/gencffi.pl: from include/pcp/mgmt.h:2712 */
+/*** bindings/py/gencffi.pl: from include/pcp/mgmt.h:2728 */
 pcp_ks_bundle_t *pcp_import_pub_rfc(PCPCTX *ptx, Buffer *blob);
 
-/*** bindings/py/gencffi.pl: from include/pcp/mgmt.h:2712 */
+/*** bindings/py/gencffi.pl: from include/pcp/mgmt.h:2728 */
 pcp_ks_bundle_t *pcp_import_pub_pbp(PCPCTX *ptx, Buffer *blob);
 
-/*** bindings/py/gencffi.pl: from include/pcp/mgmt.h:2712 */
+/*** bindings/py/gencffi.pl: from include/pcp/mgmt.h:2728 */
 pcp_key_t *pcp_import_binsecret(PCPCTX *ptx, byte *raw, size_t rawsize, char *passphrase);
 
-/*** bindings/py/gencffi.pl: from include/pcp/mgmt.h:2712 */
+/*** bindings/py/gencffi.pl: from include/pcp/mgmt.h:2728 */
 pcp_key_t *pcp_import_secret(PCPCTX *ptx, byte *raw, size_t rawsize, char *passphrase);
 
-/*** bindings/py/gencffi.pl: from include/pcp/mgmt.h:2712 */
+/*** bindings/py/gencffi.pl: from include/pcp/mgmt.h:2728 */
 pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphrase);
 
-/*** bindings/py/gencffi.pl: from include/pcp/mgmt.h:2712 */
+/*** bindings/py/gencffi.pl: from include/pcp/mgmt.h:2728 */
 int _check_keysig_h(PCPCTX *ptx, Buffer *blob, rfc_pub_sig_h *h);
 
-/*** bindings/py/gencffi.pl: from include/pcp/mgmt.h:2712 */
+/*** bindings/py/gencffi.pl: from include/pcp/mgmt.h:2728 */
 int _check_hash_keysig(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, pcp_keysig_t *sk);
 
-/*** bindings/py/gencffi.pl: from include/pcp/mgmt.h:2712 */
+/*** bindings/py/gencffi.pl: from include/pcp/mgmt.h:2728 */
 int _check_sigsubs(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, rfc_pub_sig_s *subheader);
 
-/*** bindings/py/gencffi.pl: from include/pcp/keyhash.h:2865 */
+/*** bindings/py/gencffi.pl: from include/pcp/keyhash.h:2881 */
 void pcphash_del(PCPCTX *ptx, void *key, int type);
 
-/*** bindings/py/gencffi.pl: from include/pcp/keyhash.h:2865 */
+/*** bindings/py/gencffi.pl: from include/pcp/keyhash.h:2881 */
 void pcphash_clean(PCPCTX *ptx);
 
-/*** bindings/py/gencffi.pl: from include/pcp/keyhash.h:2865 */
+/*** bindings/py/gencffi.pl: from include/pcp/keyhash.h:2881 */
 void pcphash_cleanpub(pcp_pubkey_t *pub);
 
-/*** bindings/py/gencffi.pl: from include/pcp/keyhash.h:2865 */
+/*** bindings/py/gencffi.pl: from include/pcp/keyhash.h:2881 */
 pcp_key_t *pcphash_keyexists(PCPCTX *ptx, char *id);
 
-/*** bindings/py/gencffi.pl: from include/pcp/keyhash.h:2865 */
+/*** bindings/py/gencffi.pl: from include/pcp/keyhash.h:2881 */
 pcp_pubkey_t *pcphash_pubkeyexists(PCPCTX *ptx, char *id);
 
-/*** bindings/py/gencffi.pl: from include/pcp/keyhash.h:2865 */
+/*** bindings/py/gencffi.pl: from include/pcp/keyhash.h:2881 */
 void pcphash_add(PCPCTX *ptx, void *key, int type);
 
-/*** bindings/py/gencffi.pl: from include/pcp/keyhash.h:2865 */
+/*** bindings/py/gencffi.pl: from include/pcp/keyhash.h:2881 */
 int pcphash_count(PCPCTX *ptx);
 
-/*** bindings/py/gencffi.pl: from include/pcp/keyhash.h:2865 */
+/*** bindings/py/gencffi.pl: from include/pcp/keyhash.h:2881 */
 int pcphash_countpub(PCPCTX *ptx);
 
-/*** bindings/py/gencffi.pl: from include/pcp/keyhash.h:2865 */
+/*** bindings/py/gencffi.pl: from include/pcp/keyhash.h:2881 */
 pcp_keysig_t *pcphash_keysigexists(PCPCTX *ptx, char *id);
 
-/*** bindings/py/gencffi.pl: from include/pcp/scrypt.h:2908 */
+/*** bindings/py/gencffi.pl: from include/pcp/scrypt.h:2924 */
 byte * pcp_scrypt(PCPCTX *ptx, char *passwd, size_t passwdlen, byte *nonce, size_t noncelen);
 
-/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3199 */
+/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3215 */
 Pcpstream *ps_init(void);
 
-/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3199 */
+/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3215 */
 Pcpstream *ps_new_file(FILE *backendfd);
 
-/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3199 */
+/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3215 */
 Pcpstream *ps_new_inbuffer(Buffer *b);
 
-/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3199 */
+/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3215 */
 Pcpstream *ps_new_outbuffer();
 
-/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3199 */
+/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3215 */
 size_t ps_read(Pcpstream *stream, void *buf, size_t readbytes);
 
-/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3199 */
+/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3215 */
 size_t ps_write(Pcpstream *stream, void *buf, size_t writebytes);
 
-/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3199 */
+/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3215 */
 size_t ps_finish(Pcpstream *stream);
 
-/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3199 */
+/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3215 */
 size_t ps_print(Pcpstream *stream, const char * fmt, ...);
 
-/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3199 */
+/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3215 */
 size_t ps_tell(Pcpstream *stream);
 
-/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3199 */
+/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3215 */
 Buffer *ps_buffer(Pcpstream *stream);
 
-/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3199 */
+/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3215 */
 void ps_close(Pcpstream *stream);
 
-/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3199 */
+/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3215 */
 int ps_end(Pcpstream *stream);
 
-/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3199 */
+/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3215 */
 int ps_err(Pcpstream *stream);
 
-/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3199 */
+/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3215 */
 void ps_setdetermine(Pcpstream *stream, size_t blocksize);
 
-/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3199 */
+/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3215 */
 void ps_armor(Pcpstream *stream, size_t blocksize);
 
-/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3199 */
+/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3215 */
 void ps_unarmor(Pcpstream *stream);
 
-/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3199 */
+/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3215 */
 size_t ps_read_decode(Pcpstream *stream);
 
-/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3199 */
+/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3215 */
 void ps_determine(Pcpstream *stream);
 
-/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3199 */
+/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3215 */
 size_t ps_read_next(Pcpstream *stream);
 
-/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3199 */
+/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3215 */
 size_t ps_read_cached(Pcpstream *stream, void *buf, size_t readbytes);
 
-/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3199 */
+/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3215 */
 size_t ps_read_raw(Pcpstream *stream, void *buf, size_t readbytes);
 
-/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3199 */
+/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3215 */
 void ps_write_encode(Pcpstream *stream, Buffer *dst);
 
-/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3199 */
+/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3215 */
 size_t ps_write_buf(Pcpstream *stream, Buffer *z);
 
-/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3199 */
+/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3215 */
 int ps_left(Pcpstream *stream);
 
-/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3199 */
+/*** bindings/py/gencffi.pl: from include/pcp/pcpstream.h:3215 */
 int ps_readline(Pcpstream *stream, Buffer *line);
 
-/*** bindings/py/gencffi.pl: from include/pcp/z85.h:3377 */
+/*** bindings/py/gencffi.pl: from include/pcp/z85.h:3393 */
 byte *pcp_padfour(byte *src, size_t srclen, size_t *dstlen);
 
-/*** bindings/py/gencffi.pl: from include/pcp/z85.h:3377 */
+/*** bindings/py/gencffi.pl: from include/pcp/z85.h:3393 */
 size_t pcp_unpadfour(byte *src, size_t srclen);
 
-/*** bindings/py/gencffi.pl: from include/pcp/z85.h:3377 */
+/*** bindings/py/gencffi.pl: from include/pcp/z85.h:3393 */
 byte *pcp_z85_decode(PCPCTX *ptx, char *z85block, size_t *dstlen);
 
-/*** bindings/py/gencffi.pl: from include/pcp/z85.h:3377 */
+/*** bindings/py/gencffi.pl: from include/pcp/z85.h:3393 */
 char *pcp_z85_encode(byte *raw, size_t srclen, size_t *dstlen, int doblock);
 
-/*** bindings/py/gencffi.pl: from include/pcp/z85.h:3377 */
+/*** bindings/py/gencffi.pl: from include/pcp/z85.h:3393 */
 char *pcp_readz85file(PCPCTX *ptx, FILE *infile);
 
-/*** bindings/py/gencffi.pl: from include/pcp/z85.h:3377 */
+/*** bindings/py/gencffi.pl: from include/pcp/z85.h:3393 */
 char *pcp_readz85string(PCPCTX *ptx, byte *input, size_t bufsize);
 
-/*** bindings/py/gencffi.pl: from include/pcp/z85.h:3377 */
+/*** bindings/py/gencffi.pl: from include/pcp/z85.h:3393 */
 uint8_t is_utf8(const byte * bytes);
 
-/*** bindings/py/gencffi.pl: from include/pcp/z85.h:3377 */
+/*** bindings/py/gencffi.pl: from include/pcp/z85.h:3393 */
 size_t _buffer_is_binary(byte *buf, size_t len);
 
-/*** bindings/py/gencffi.pl: from include/pcp/z85.h:3377 */
+/*** bindings/py/gencffi.pl: from include/pcp/z85.h:3393 */
 uint8_t _parse_zchar(Buffer *z, uint8_t c, uint8_t is_comment);
 
-/*** bindings/py/gencffi.pl: from include/pcp/z85.h:3377 */
+/*** bindings/py/gencffi.pl: from include/pcp/z85.h:3393 */
 long int z85_header_startswith(Buffer *buf, char *what);
 
-/*** bindings/py/gencffi.pl: from include/pcp/z85.h:3377 */
+/*** bindings/py/gencffi.pl: from include/pcp/z85.h:3393 */
 int z85_isheader(Buffer *buf);
 
-/*** bindings/py/gencffi.pl: from include/pcp/z85.h:3377 */
+/*** bindings/py/gencffi.pl: from include/pcp/z85.h:3393 */
 int z85_isend(Buffer *buf);
 
-/*** bindings/py/gencffi.pl: from include/pcp/z85.h:3377 */
+/*** bindings/py/gencffi.pl: from include/pcp/z85.h:3393 */
 int z85_isbegin(Buffer *buf);
 
-/*** bindings/py/gencffi.pl: from include/pcp/z85.h:3377 */
+/*** bindings/py/gencffi.pl: from include/pcp/z85.h:3393 */
 int z85_iscomment(Buffer *buf);
 
-/*** bindings/py/gencffi.pl: from include/pcp/z85.h:3377 */
+/*** bindings/py/gencffi.pl: from include/pcp/z85.h:3393 */
 int z85_isempty(Buffer *line);
 
-/*** bindings/py/gencffi.pl: from include/pcp/z85.h:3377 */
+/*** bindings/py/gencffi.pl: from include/pcp/z85.h:3393 */
 int z85_isencoded(Buffer *line);'''
 
 # bindings/py/gencffi.pl: from include/pcp/defines.h:187

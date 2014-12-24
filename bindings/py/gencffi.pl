@@ -68,7 +68,6 @@ foreach my $head (@ARGV) {
     my ($name, $def) = split /\s\s*/, $1, 2;
     $def =~ s/\/\*.*//;
     if (!exists $defs{$name} && $def !~ /(sizeof| \+ )/) {
-      print STDERR "name: $name\ndef: $def\n\n";
       $defs{$name} = "\n# $0: from $head:$.\n$name = $def\n";
     }
   }

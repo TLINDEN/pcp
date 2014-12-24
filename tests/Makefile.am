@@ -1,7 +1,7 @@
 #
 #    This file is part of Pretty Curved Privacy (pcp1).
 #
-#    Copyright (C) 2013 T.Linden.
+#    Copyright (C) 2013-2015 T. von Dein.
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -64,10 +64,19 @@ cpptest_SOURCES = cpptest.cpp
 # %wheel ALL = NOPASSWD: /sbin/umount
 # %wheel ALL = NOPASSWD: /sbin/mdmfs 
 
-test: check
+if BUILDPY
+  MAYPY=pytest
+endif
+
+test: check $(MAYPY)
+
+ctest:
 	rm -f test* v* stresstest/*
 	./unittests.pl unittests.cfg $(CHECK)
 	@echo "To run a single test only, type: 'make test CHECK=testname'"
+
+pytest:
+	./unittests.pl pyunittests.cfg $(CHECK)
 
 stresstest: check
 	./unittests.pl stresstests.cfg

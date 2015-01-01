@@ -278,16 +278,16 @@ AC_RUN_IFELSE([
 AC_LANG_PROGRAM([[]],[[long one= 1; exit(!(*((char *)(&one)))); ]])],
     [
 	AC_MSG_RESULT([no])
-	bigendian=""
+	bigendian="no"
     ],
     [
 	AC_MSG_RESULT([yes])
-	bigendian=1
+	bigendian="yes"
     ]
 )
 fi
 
-if test -n "$bigendian"; then
+if test "x$bigendian" = "xyes"; then
     CFLAGS="$CFLAGS -D__CPU_IS_BIG_ENDIAN=1"
 fi
 
@@ -316,6 +316,8 @@ if test "x$python" = "xyes"; then
 	python="no"
 	AC_MSG_ERROR([python or cffi is not installed])
     fi
+else
+    python="no"
 fi
 
 AM_CONDITIONAL([BUILDPY], [test "x$python" = "xyes"])
@@ -331,5 +333,23 @@ AC_CONFIG_FILES([Makefile include/Makefile libpcp/Makefile src/Makefile man/Make
 
 
 
-
 AC_OUTPUT
+
+AC_MSG_RESULT([
+    $PACKAGE $VERSION
+        CC:                     ${CC}
+        CFLAGS:                 ${CFLAGS}
+        CXX:                    ${CXX}
+        CXXFLAGS:               ${CXXFLAGS}
+        LDFLAGS:                ${LDFLAGS}
+        LIBS:                   ${LIBS}
+
+        prefix:                 ${prefix}
+        sysconfdir:             ${sysconfdir}
+        libdir:                 ${libdir}
+        includedir:             ${includedir}
+
+        bigendian:              ${bigendian}
+
+	build python binding:   ${python}
+])

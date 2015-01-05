@@ -23,6 +23,11 @@ PCPEXPORT = pcp.h \
             pcp/mgmt.h \
             pcp/pcpstream.h \
             pcp/keysig.h \
-	    pcp/context.h
+	    pcp/context.h \
+	    pcp/structs.h \
+	    pcp/util.h \
+	    pcp/plist.h \
+	    pcp/scrypt.h \
+	    pcp/crypto_scrypt.h
 
 nobase_include_HEADERS = $(PCPEXPORT)

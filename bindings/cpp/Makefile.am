@@ -18,9 +18,13 @@
 #
 #    You can contact me by mail: <tlinden AT cpan DOT org>.
 #
-AM_CXXFLAGS = -I../../include -I../../libpcp/scrypt/crypto -I../../libpcp/scrypt/util -Wall -g
+AM_CXXFLAGS = -I../../include -I../../libpcp/scrypt/crypto -I../../libpcp/scrypt/util
 
 lib_LTLIBRARIES      = libpcp1++.la
 
 libpcp1___la_SOURCES = pcp++.h ptx.cpp key.cpp vault.cpp crypto.cpp sign.cpp buffer.cpp
 include_HEADERS      = pcp++.h
+
+libpcp1___la_CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+                       --mode=link $(CXXLD) $(AM_LDFLAGS) \
+                       $(LDFLAGS) -o $@

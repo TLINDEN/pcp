@@ -18,7 +18,9 @@
 #
 #    You can contact me by mail: <tlinden AT cpan DOT org>.
 #
-AM_CFLAGS = -I../include/pcp -Iscrypt/crypto -Iscrypt/util -Wall -g
+AM_CFLAGS =  -I../include/pcp -Iscrypt/crypto -Iscrypt/util
+
+
 
 lib_LTLIBRARIES      = libpcp1.la
 
@@ -33,3 +35,7 @@ libpcp1_la_SOURCES = platform.c mac.c mem.c pad.c version.c \
 		    base85.c util.c buffer.c mgmt.c keysig.c pcpstream.c
 
 include_HEADERS      = ../include/pcp.h
+
+libpcp1_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+                  --mode=link $(CCLD) $(AM_LDFLAGS) \
+	          $(LDFLAGS) -o $@

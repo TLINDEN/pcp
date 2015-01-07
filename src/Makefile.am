@@ -20,7 +20,7 @@
 #
 
 
-AM_CFLAGS = -I../include/pcp -I../libpcp/scrypt/crypto -Wall -g
+AM_CFLAGS = -I../include/pcp -I../libpcp/scrypt/crypto
 
 bin_PROGRAMS = pcp1
 
@@ -29,3 +29,6 @@ pcp1_SOURCES = pcp.c keymgmt.c keyprint.c readpass.c \
                encryption.c z85util.c signature.c \
                compat_getopt.c
 
+pcp1_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+            --mode=link $(CCLD) $(AM_LDFLAGS) \
+	    $(LDFLAGS) -o $@

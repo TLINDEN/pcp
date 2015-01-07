@@ -19,9 +19,18 @@
 #    You can contact me by mail: <tlinden AT cpan DOT org>.
 #
 
-AM_CFLAGS = -I../include/pcp -I../src -I../libpcp/scrypt/crypto -Wall -g
+AM_CFLAGS = -I../include/pcp -I../src -I../libpcp/scrypt/crypto
 check_PROGRAMS = col invalidkeys gencheader statictest cpptest \
 		 buffertest sample streamtest pipetest decodertest mangle
+
+
+LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+        --mode=link $(CCLD) $(AM_LDFLAGS) \
+        $(LDFLAGS) -o $@
+
+CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+        --mode=link $(CXXLD) $(AM_LDFLAGS) \
+        $(LDFLAGS) -o $@
 
 gencheader_LDADD = ../libpcp/.libs/libpcp1.a
 gencheader_SOURCES = gencheader.c
@@ -54,7 +63,7 @@ invalidkeys_LDADD = ../libpcp/.libs/libpcp1.a \
 		    ../src/keyprint.o ../src/keymgmt.o ../src/readpass.o
 invalidkeys_SOURCES = invalidkeys.c
 
-AM_CXXFLAGS = -I../include -I../bindings/cpp -I../libpcp/scrypt/crypto -Wall -g
+AM_CXXFLAGS = -I../include -I../bindings/cpp -I../libpcp/scrypt/crypto
 cpptest_LDADD = ../bindings/cpp/.libs/libpcp1++.a ../libpcp/.libs/libpcp1.a
 cpptest_SOURCES = cpptest.cpp
 

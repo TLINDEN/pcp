@@ -34,6 +34,7 @@ LT_INIT
 
 ORIG_CFLAGS="${CFLAGS:-none}"
 
+
 # Checks for programs
 AC_PROG_CXX
 AC_PROG_CXXCPP
@@ -45,7 +46,9 @@ AC_PROG_SED
 AC_PROG_AWK
 AC_PROG_INSTALL
 
-
+# remove flags set by AC_PROG_CC (duplicates and/or invalid for clang)
+CFLAGS=""
+CXXFLAGS=""
 
 
 # Host speciffic checks
@@ -291,8 +294,36 @@ if test "x$bigendian" = "xyes"; then
     CFLAGS="$CFLAGS -D__CPU_IS_BIG_ENDIAN=1"
 fi
 
-CFLAGS="$CFLAGS -Werror -Wextra -O2"
+# prepare FLAGS
+CFLAGS="$CFLAGS -Werror -Wextra -Wall"
+
+AC_ARG_ENABLE([debug],
+    AS_HELP_STRING([--disable-debug], [Disable debugging]))
+
+AS_IF([test "x$enable_debug" != "xno"], [
+	  CFLAGS="$CFLAGS -g"
+	  enable_debug="yes"
+])
+
+AC_ARG_ENABLE([optimize],
+    AS_HELP_STRING([--disable-optimize], [Disable optimization]))
+
+AS_IF([test "x$enable_optimize" != "xno"], [
+	  case $enable_optimize in
+	      -O*)
+		  CFLAGS="$CFLAGS $enable_optimize"
+		  enable_optimize="$enable_optimize"
+		  ;;
+	      *)
+		  CFLAGS="$CFLAGS -O2"
+		  enable_optimize="-O2"
+		  ;;
+	  esac
+])
+
+
 CXXFLAGS="$CFLAGS"
+
 
 # conditionals for bindings and stuff
 
@@ -302,12 +333,17 @@ AC_ARG_ENABLE([cpp-binding],
                               [Disable C++ binding])],
 	     )
 
+AS_IF([test "x$enable_cpp_binding" != "xno"], [
+	  enable_cpp_binding=yes
+      ])
+
 AM_CONDITIONAL([BUILDCPP], [test "x$enable_cpp_binding" != "xno"])
 
 # py
 AC_ARG_ENABLE([python-binding],
               [AS_HELP_STRING([--enable-python-binding],
-                              [Enable python binding])],
+                              [Enable python binding])
+	      ],
               [python="yes"],
               [])
 
@@ -336,20 +372,26 @@ AC_CONFIG_FILES([Makefile include/Makefile libpcp/Makefile src/Makefile man/Make
 AC_OUTPUT
 
 AC_MSG_RESULT([
-    $PACKAGE $VERSION
+    Build configured for $PACKAGE $VERSION:
         CC:                     ${CC}
         CFLAGS:                 ${CFLAGS}
         CXX:                    ${CXX}
         CXXFLAGS:               ${CXXFLAGS}
         LDFLAGS:                ${LDFLAGS}
         LIBS:                   ${LIBS}
-
+	debug:                  ${enable_debug}
+	optimize:               ${enable_optimize}
+	
         prefix:                 ${prefix}
-        sysconfdir:             ${sysconfdir}
         libdir:                 ${libdir}
         includedir:             ${includedir}
 
-        bigendian:              ${bigendian}
+	target platform:        ${host}
+        big endian cpu:         ${bigendian}
 
 	build python binding:   ${python}
+	build c++ binding:      ${enable_cpp_binding}
+
+    Type 'make' to build, 'make install' to install.
+    To execute unit tests, type 'make test'.
 ])

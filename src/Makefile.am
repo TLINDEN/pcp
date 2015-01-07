@@ -22,6 +22,8 @@
 
 AM_CFLAGS = -I../include/pcp -I../libpcp/scrypt/crypto
 
+EXTRA_DIST = *.h
+
 bin_PROGRAMS = pcp1
 
 pcp1_LDADD = ../libpcp/.libs/libpcp1.a

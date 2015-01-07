@@ -1,3 +1,5 @@
+EXTRA_DIST = setup.py Makefile.am pypcp/*.py Makefile.in
+
 all:
 	python setup.py build
 

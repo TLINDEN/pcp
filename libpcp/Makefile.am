@@ -20,8 +20,7 @@
 #
 AM_CFLAGS =  -I../include/pcp -Iscrypt/crypto -Iscrypt/util
 
-
-
+SUBDIRS = scrypt
 lib_LTLIBRARIES      = libpcp1.la
 
 pkgconfigdir = $(libdir)/pkgconfig

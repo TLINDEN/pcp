@@ -20,6 +20,8 @@
 #
 AM_CXXFLAGS = -I../../include -I../../libpcp/scrypt/crypto -I../../libpcp/scrypt/util
 
+EXTRA_DIST = *.h
+
 lib_LTLIBRARIES      = libpcp1++.la
 
 libpcp1___la_SOURCES = pcp++.h ptx.cpp key.cpp vault.cpp crypto.cpp sign.cpp buffer.cpp

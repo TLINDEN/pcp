@@ -54,7 +54,7 @@ Pretty Curved Privacy - File encryption using eliptic curve cryptography.
 
     # generate the top level readme
     cat man/pcp.pod man/install.pod man/footer.pod > README.pod
-    pod2text README.pod > README.txt
+    pod2text README.pod > README
 
     # generate usage.h
     (cd src && ./usage.sh)
@@ -73,7 +73,6 @@ fi
 
 if test "$mode" = "config"; then
   mkdir -p ./config
-  touch README
   
   if ! command -v libtool >/dev/null 2>&1; then
       echo "could not find libtool." 1>&2
@@ -112,7 +111,7 @@ EOF
 chmod 700 clean.sh
 
 
-rm -rf README include/pcp/config.h.in~ libpcp/stamp-h1 autom4te.cache
+rm -rf include/pcp/config.h.in~ libpcp/stamp-h1 autom4te.cache
 
 sleep 1
 touch Makefile.in configure */Makefile.in

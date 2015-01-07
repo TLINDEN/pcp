@@ -23,6 +23,8 @@ AM_CFLAGS = -I../include/pcp -I../src -I../libpcp/scrypt/crypto
 check_PROGRAMS = col invalidkeys gencheader statictest cpptest \
 		 buffertest sample streamtest pipetest decodertest mangle
 
+EXTRA_DIST = Makefile.am Makefile.in *.c *.h *.sh *.pl *.py *.cfg *.cpp \
+	     jot key-* unkn* README bart* env/* md5
 
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
         --mode=link $(CCLD) $(AM_LDFLAGS) \
@@ -77,7 +79,7 @@ if BUILDPY
   MAYPY=pytest
 endif
 
-test: check $(MAYPY)
+test: check ctest $(MAYPY)
 
 ctest:
 	rm -f test* v* stresstest/*

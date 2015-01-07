@@ -363,7 +363,7 @@ AM_CONDITIONAL([BUILDPY], [test "x$python" = "xyes"])
 AC_SUBST(PACKAGE_VERSION)
 
 # Specify output files
-AC_CONFIG_FILES([Makefile include/Makefile libpcp/Makefile src/Makefile man/Makefile \
+AC_CONFIG_FILES([Makefile include/Makefile libpcp/Makefile libpcp/scrypt/Makefile src/Makefile man/Makefile \
 		 tests/Makefile libpcp/libpcp1.pc bindings/cpp/Makefile bindings/py/Makefile])
 
 

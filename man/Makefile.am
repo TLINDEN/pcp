@@ -21,8 +21,8 @@
 dist_man_MANS = pcp1.1
 DATAROOTDIR = /usr
 DOXDIR = $(prefix)/share/doc/libpcp-$(VERSION)
-
-DOC_FILES = html/* ../README.txt ../COPYING ../AUTHORS ../INSTALL ../ChangeLog ../config.log
+EXTRA_DIST = html/*
+DOC_FILES = html/* ../README ../COPYING ../AUTHORS ../INSTALL ../ChangeLog ../config.log
 
 # FIXME: make doc install optional...
 install-data-local:

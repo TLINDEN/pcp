@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013-2014 T.v.Dein.
+    Copyright (C) 2013-2015 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -81,7 +81,7 @@ byte *pcp_ed_sign(byte *message, size_t messagesize, pcp_key_t *s);
 
     The signature must contain the message+nacl signature (with size crypto_sign_BYTES).
 
-    \param[in] pcp context.
+    \param[in] ptx pcp context.
 
     \param[in] signature Message+signature.
 
@@ -100,7 +100,7 @@ byte *pcp_ed_verify(PCPCTX *ptx, byte *signature, size_t siglen, pcp_pubkey_t *p
 
     The signature must contain the message+nacl signature (with size crypto_sign_BYTES).
 
-    \param[in] pcp context.
+    \param[in] ptx pcp context.
 
     \param[in] signature Message+signature.
 
@@ -119,7 +119,7 @@ byte *pcp_ed_verify_key(PCPCTX *ptx, byte *signature, size_t siglen, pcp_pubkey_
     of the contents of the stream. It outputs the stream to \a out, also blockwise
     and appends the signature afterwards, which consists of the hash+nacl-signature.
 
-    \param[in] pcp context.
+    \param[in] ptx pcp context.
 
     \param[in] in Stream to read from.
 
@@ -147,7 +147,7 @@ size_t pcp_ed_sign_buffered(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, pcp_key_
     the global public key hash pcppubkey_hash to find a public key which is able to verify
     the signature.
 
-    \param[in] pcp context.
+    \param[in] ptx pcp context.
 
     \param[in] in Stream to read from.
 
@@ -183,7 +183,7 @@ size_t pcp_ed_detachsign_buffered(Pcpstream *in, Pcpstream *out, pcp_key_t *s);
     the signature hash with the hash it calculated
     from the signed content.
 
-    \param[in] pcp context.
+    \param[in] ptx pcp context.
 
     \param[in] in Stream to read from.
 

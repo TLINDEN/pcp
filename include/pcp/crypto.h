@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013 T.Linden.
+    Copyright (C) 2013-2015 T.Linden.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -134,6 +134,8 @@ int pcp_sodium_verify_box(byte **cleartext, byte* message,
     requirement to work with raw NaCL crypto_box() output. This
     function adds the neccessary padding and it uses PCP key structures.
 
+    \param[in] ptx pcp context.
+
     \param[in] secret The secret key structure from the sender.
 
     \param[in] pub The public key structure from the recipient.
@@ -158,7 +160,7 @@ byte *pcp_box_encrypt(PCPCTX *ptx, pcp_key_t *secret, pcp_pubkey_t *pub,
     requirement to work with raw NaCL crypto_box() output. This
     function adds the neccessary padding and it uses PCP key structures.
 
-    \param[in] pcp context.
+    \param[in] ptx pcp context.
 
     \param[in] secret The secret key structure from the sender.
 
@@ -185,7 +187,7 @@ byte *pcp_box_decrypt(PCPCTX *ptx, pcp_key_t *secret, pcp_pubkey_t *pub,
 
     Calls pcp_encrypt_stream_sym() after assembling the encrypted recipient list.
 
-    \param[in] pcp context.
+    \param[in] ptx pcp context.
 
     \param[in] in Stream to read the data to encrypt from.
 
@@ -211,7 +213,7 @@ size_t pcp_encrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t 
 
     Uses crypto_secret_box() for each 32k-block with a random nonce for each.
 
-    \param[in] pcp context.
+    \param[in] ptx pcp context.
 
     \param[in] in Stream to read the data to encrypt from.
 
@@ -238,7 +240,7 @@ size_t pcp_encrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *
 
     FIXME: should return the pcp_rec_t structure upon successfull verification somehow.
 
-    \param[in] pcp context.
+    \param[in] ptx pcp context.
 
     \param[in] in Stream to read the data to decrypt from.
 
@@ -266,7 +268,7 @@ size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t 
 
     Uses crypto_secret_box_open() for each 32k+16-block with a random nonce for each.
 
-    \param[in] pcp context.
+    \param[in] ptx pcp context.
 
     \param[in] in Stream to read the data to decrypt from.
 

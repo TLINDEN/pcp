@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013-2014 T.v.Dein.
+    Copyright (C) 2013-2015 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -78,7 +78,7 @@ size_t pcp_unpadfour(byte *src, size_t srclen);
 
     The input \a z85block may contain newlines which will be removed.
 
-    \param[in] the pcp context object.
+    \param[in] ptx pcp context object.
     \param[in] z85block The Z85 encoded string.
     \param[in] dstlen Returned size of decoded data (pointer to int).
 
@@ -109,7 +109,7 @@ char *pcp_z85_encode(byte *raw, size_t srclen, size_t *dstlen, int doblock);
     Reads a file and returns the raw Z85 encoded string.
     It ignores newlines, comments and Headerstrings.
 
-    \param[in] the pcp context object.
+    \param[in] ptx  pcp context object.
     \param[in] infile FILE stream to read from.
 
     \return Raw Z85 encoded string with comments, headers and newlines removed.
@@ -121,7 +121,7 @@ char *pcp_readz85file(PCPCTX *ptx, FILE *infile);
     Parses the given input string and returns the raw Z85 encoded string.
     It ignores newlines, comments and Headerstrings.
 
-    \param[in] the pcp context object.
+    \param[in] ptx pcp context object.
     \param[in] input Z85 encoded string.
     \param[in] bufsize Size of the string.
 

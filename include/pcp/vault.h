@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013-2014 T.v.Dein.
+    Copyright (C) 2013-2015 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -96,7 +96,7 @@
 /** Open a vault file.
     If the file doesn't exist, it will be created.
 
-    \param[in] pcp context.
+    \param[in] ptx pcp context.
     \param[in] filename The filename of the vault file.
 
     \return Returns a vault object.
@@ -124,7 +124,7 @@ int pcpvault_create(PCPCTX *ptx, vault_t *vault);
     This function writes directly into the vault file. Use
     with care. To be safe, use pcpvault_addkey() instead.
 
-    \param[in] pcp context.
+    \param[in] ptx pcp context.
     \param[out] vault The vault object.
     \param[in] item The item to write.
     \param[in] itemsize Size of the item.
@@ -148,7 +148,7 @@ int pcpvault_additem(PCPCTX *ptx, vault_t *vault, void *item, size_t itemsize, u
     back to the original location. It then re-calculates the
     vault checksum and puts it into the vault header.
 
-    \param[in] pcp context.
+    \param[in] ptx pcp context.
     \param[out] vault The vault object.
     \param[in] item The item to write (a key or keysig)
     \param[in] type Type of the item.  \see _PCP_KEY_TYPES.
@@ -167,7 +167,7 @@ int pcpvault_addkey(PCPCTX *ptx, vault_t *vault, void *item, uint8_t type);
     contain the filename of the backup file, so that the user
     doesn't loose data.
 
-    \param[in] pcp context.
+    \param[in] ptx pcp context.
     \param[out] vault The vault object.
 
     \return Returns 0. Check fatals_if_any() anyway.
@@ -195,7 +195,7 @@ void pcpvault_free(vault_t *vault);
     contents and compares it with the one stored in the vault
     header. If it doesn't match an error will be thrown.
 
-    \param[in] pcp context.
+    \param[in] ptx pcp context.
     \param[out] vault The vault object.
 
     \return Returns 0 on success or -1 in case of errors. Check fatals_if_any().

@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013 T.Linden.
+    Copyright (C) 2013-2015 T.Linden.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -79,7 +79,7 @@
 
 /** Delete an entry from a hash.
 
-    \param[in] PCP Context object.
+    \param[in] ptx Pcp Context object.
 
     \param[in] key A pointer to the key structure to delete.
 
@@ -96,7 +96,7 @@ void pcphash_cleanpub(pcp_pubkey_t *pub);
 
 /** Check if a secret key with a given key-id exists in the hash.
 
-    \param[in] PCP Context object.
+    \param[in] ptx Pcp Context object.
 
     \param[in] id A string with the key-id (max 17 chars incl 0).
 
@@ -106,7 +106,7 @@ pcp_key_t *pcphash_keyexists(PCPCTX *ptx, char *id);
 
 /** Check if a publickey with a given key-id exists in the hash.
 
-    \param[in] PCP Context object.
+    \param[in] ptx Pcp Context object.
 
     \param[in] id A string with the key-id (max 17 chars incl 0).
 
@@ -116,7 +116,7 @@ pcp_pubkey_t *pcphash_pubkeyexists(PCPCTX *ptx, char *id);
 
 /** Add a key structure to the hash list.
 
-    \param[in] PCP Context object.
+    \param[in] ptx Pcp Context object.
     
     \param[in] key A pointer to the key structure to delete.
 
@@ -126,7 +126,7 @@ void pcphash_add(PCPCTX *ptx, void *key, int type);
 
 /** Returns the number of secret keys in the hash.
 
-    \param[in] PCP Context object.
+    \param[in] ptx Pcp Context object.
 
     \return Number of keys.
 */
@@ -134,7 +134,7 @@ int pcphash_count(PCPCTX *ptx);
 
 /** Returns the number of public keys in the hash.
 
-    \param[in] PCP Context object.
+    \param[in] ptx Pcp Context object.
 
     \return Number of keys.
 */

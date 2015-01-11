@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013-2014 T.v.Dein.
+    Copyright (C) 2013-2015 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -280,8 +280,7 @@ int buffer_done(Buffer *b);
     be 0 in case of errors. See also: fatals_ifany(), buffer_done() and buffer_left().
 
     \param[in] b The Buffer object to read from.
-    \param[out] buf The destination pointer where the data will be copied to. This pointer
-must be allocated by the caller properly and it must have at least a size of len.
+    \param[out] buf The destination pointer where the data will be copied to. This pointer must be allocated by the caller properly and it must have at least a size of len.
     \param[in] len The number of bytes to read from the Buffer.
     \return Returns the size of bytes read, 0 in case an error occurred.
 */

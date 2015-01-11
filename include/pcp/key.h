@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013-2014 T.v.Dein.
+    Copyright (C) 2013-2015 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -134,7 +134,7 @@ char *pcpkey_get_art(pcp_key_t *k);
     The caller is responsible to clear the passphrase right after
     use and free() it as soon as possible.
 
-    \param[in] pcp context.
+    \param[in] ptx pcp context.
 
     \param[in,out] key The secret key structure.
 
@@ -160,7 +160,7 @@ pcp_key_t *pcpkey_encrypt(PCPCTX *ptx, pcp_key_t *key, char *passphrase);
     The caller is responsible to clear the passphrase right after
     use and free() it as soon as possible.
 
-    \param[in] pcp context.
+    \param[in] ptx pcp context.
 
     \param[in,out] key The secret key structure.
 
@@ -178,8 +178,6 @@ pcp_key_t *pcpkey_decrypt(PCPCTX *ptx, pcp_key_t *key, char *passphrase);
     allocated pcp_pubkey_t structure.
 
     The caller is responsible to clear and free() it after use.
-
-    \param[in] pcp context.
 
     \param[in] key The secret key structure.
 
@@ -272,6 +270,8 @@ Buffer *pcp_keyblob(void *k, int type); /*  allocates blob */
 
 /** Make a sanity check of the given public key structure.
 
+    \param[in] ptx pcp context.
+
     \param[in] key The public key structure.
 
     \return Returns 1 if the sanity check succeeds, 0 otherwise.
@@ -281,7 +281,7 @@ int pcp_sanitycheck_pub(PCPCTX *ptx, pcp_pubkey_t *key);
 
 /** Make a sanity check of the given secret key structure.
 
-    \param[in] pcp context.
+    \param[in] ptx pcp context.
 
     \param[in] key The secret key structure.
 
@@ -291,8 +291,6 @@ int pcp_sanitycheck_pub(PCPCTX *ptx, pcp_pubkey_t *key);
 int pcp_sanitycheck_key(PCPCTX *ptx, pcp_key_t *key);
 
 /** Dump a secret key structure to stderr.
-
-    \param[in] pcp context.
 
     \param[in] k Secret key to dump.
 */

@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013-2014 T.v.Dein.
+    Copyright (C) 2013-2015 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -51,7 +51,7 @@ PCPCTX *ptx_new();
 
 /** Frees the memory allocated by the context. 
 
-    \param[in] PCP Context object.
+    \param[in] ptx PCP Context object.
 */
 void ptx_clean(PCPCTX *ptx);
 
@@ -62,7 +62,7 @@ void ptx_clean(PCPCTX *ptx);
     which it stores in the global PCP_ERR variable
     and sets PCP_ERRSET to 1.
 
-    \param[in] PCP Context object.
+    \param[in] ptx PCP Context object.
 
     \param[in] fmt printf() like format description.
 
@@ -75,7 +75,7 @@ void fatal(PCPCTX *ptx, const char * fmt, ...);
     FIXME: add something like this which returns the
     message.
 
-    \param[in] PCP Context object.
+    \param[in] ptx PCP Context object.
 */
 void fatals_ifany(PCPCTX *ptx);
 
@@ -84,7 +84,7 @@ void fatals_ifany(PCPCTX *ptx);
     This can be used to ignore previous errors.
     Use with care.
 
-    \param[in] PCP Context object.
+    \param[in] ptx PCP Context object.
 */
 void fatals_reset(PCPCTX *ptx);
 

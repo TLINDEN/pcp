@@ -1,3 +1,10 @@
+NEXT
+	removed hand-written padding stuff and using
+	libsodiums _easy() functions for crypto now
+	instead of the raw nacl ones.
+
+	using secure memory where applicable.
+	
 0.2.4	fixed compiler macro misplacement (github#4).
 
 	fixed invalid free (github#5).

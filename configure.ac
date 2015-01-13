@@ -78,6 +78,7 @@ AC_CHECK_FUNCS( \
     memset \
     memcpy \
     perror \
+    setrlimit \
     strnlen \
     strnstr \
     strlen \
@@ -192,10 +193,29 @@ if test "x${_havenacl}" = "xno"; then
 		LDFLAGS=`pkg-config --libs libsodium`
 		CFLAGS=`pkg-config --cflags libsodium`
 		_ldlib=`pkg-config --libs libsodium | cut -d ' ' -f 1 | cut -d L -f 2`
+		_havenacl=yes
 		AC_MSG_RESULT([yes])
 	else
 		AC_MSG_RESULT([no])
 	fi
+fi
+
+if test "x${_havenacl}" != "xno" -a "x$cross_compile" = "xno"; then
+    AC_MSG_CHECKING([libsodium version compatible])
+    AC_RUN_IFELSE([
+	    AC_LANG_PROGRAM([[
+#include <sodium.h>
+			]],[[
+			if (sodium_library_version_major() >= 7) { exit(0); }
+			else { exit(1); }    
+			    ]])],
+	[
+	    AC_MSG_RESULT([yes])
+	    ],
+	[
+	    AC_MSG_ERROR([no, libsodium too old. please update your libsodium installation])
+	]
+    )
 fi
 
 AC_ARG_ENABLE([cbc],
@@ -260,6 +280,7 @@ AC_MSG_CHECKING([is libsodium compiled correctly])
 AC_RUN_IFELSE([
 AC_LANG_PROGRAM([[
 #include <sodium.h>
+#include <stdlib.h>
 #if crypto_box_PUBLICKEYBYTES != 32 || crypto_box_SECRETKEYBYTES != 32 || crypto_sign_PUBLICKEYBYTES != 32 || crypto_sign_PUBLICKEYBYTES != 32
 #   error "libsodium not built correctly"
 #endif
@@ -301,7 +322,7 @@ AC_ARG_ENABLE([debug],
     AS_HELP_STRING([--disable-debug], [Disable debugging]))
 
 AS_IF([test "x$enable_debug" != "xno"], [
-	  CFLAGS="$CFLAGS -g"
+	  CFLAGS="$CFLAGS -g -DDEBUG"
 	  enable_debug="yes"
 ])
 
@@ -388,6 +409,8 @@ AC_MSG_RESULT([
 
 	target platform:        ${host}
         big endian cpu:         ${bigendian}
+	cross compile:          ${cross_compile}
+	have nacl:              ${_havenacl}
 
 	build python binding:   ${python}
 	build c++ binding:      ${enable_cpp_binding}

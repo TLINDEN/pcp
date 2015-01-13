@@ -309,6 +309,13 @@ int main (int argc, char **argv)  {
 
 
   sodium_init(); /*  FIXME: better called from the lib? */
+
+#ifndef DEBUG
+#  ifdef HAVE_SETRLIMIT
+     setrlimit(RLIMIT_CORE, &(struct rlimit) {0, 0});
+#  endif
+#endif  
+
   errno = 0; /* FIXME: workaround for https://github.com/jedisct1/libsodium/issues/114 */
 
   if(mode == PCP_MODE_ENCRYPT && useid == 0 && userec == 0) {

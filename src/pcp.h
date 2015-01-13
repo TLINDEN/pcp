@@ -28,6 +28,14 @@
 #include <stdlib.h>
 #include <compat_getopt.h>
 
+#ifndef DEBUG
+#  ifdef HAVE_SETRLIMIT
+#    include <sys/types.h>
+#    include <sys/time.h>
+#    include <sys/resource.h>
+#  endif
+#endif
+
 /*  lib */
 #include "mem.h"
 #include "z85.h"

@@ -26,22 +26,25 @@ c++ destructor double free mess
 cpptest 0 uses same Context for encryptor and decryptor,
 must be another one for the latter!
 
-Python binding, e.g.:
-py % cdll.LoadLibrary("libsodium.so.8")
-<CDLL 'libsodium.so.8', handle 800776c00 at 80192a3d0>
-py % nacl = CDLL("libsodium.so.8")
-py % hash = create_string_buffer('\000' * 64)
-py % hash
-<ctypes.c_char_Array_65 object at 0x80182c560>
-py % hash.raw
-'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x...
-py % key = create_string_buffer('a' * 32)
-py % nacl.crypto_hash_sha256(pointer(hash), pointer(key), 32)
-0
-py % hash.raw
-';\xa3\xf5\xf4;\x92`&\x83\xc1\x9a\xeeb\xa2\x03B\xb0\x84\...
-py % 
-
 after new z85 padding scheme: write z85 blocksize to output
 as well? if a reader doesn't know the blocksize it won't be
 able to decode it properly. Or no issue? Not sure yet...
+
+
+(gdb) set args  -V v1 -p -x xxx -z -i 0x8671F4264E20F179
+(gdb) r
+Starting program: /usr/home/sciplocal/D/github/pcp/src/pcp1 -V v1 -p -x xxx -z -i 0x8671F4264E20F179
+failed to decrypt the secret key (got -1, expected 32)!
+Error: Operation not permitted
+
+Program received signal SIGSEGV, Segmentation fault.
+0x000000000040f8e8 in pcphash_del (ptx=0x801017040, key=0x80107b100, type=Variable "type" is not available.
+) at keyhash.c:28
+28          HASH_DEL(ptx->pcpkey_hash, (pcp_key_t *)key);
+(gdb) bt
+#0  0x000000000040f8e8 in pcphash_del (ptx=0x801017040, key=0x80107b100, type=Variable "type" is not available.
+) at keyhash.c:28
+#1  0x000000000040fba7 in pcphash_clean (ptx=0x801017040) at keyhash.c:50
+#2  0x00000000004084ff in ptx_clean (ptx=0x801017040) at context.c:52
+#3  0x0000000000402557 in main (argc=Variable "argc" is not available.
+) at pcp.c:593

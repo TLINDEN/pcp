@@ -7,9 +7,7 @@ PCPEXPORT = pcp.h \
             pcp/jenhash.h \
             pcp/key.h \
             pcp/keyhash.h \
-            pcp/mac.h \
             pcp/mem.h \
-            pcp/pad.h \
             pcp/platform.h \
             pcp/randomart.h \
             pcp/uthash.h \

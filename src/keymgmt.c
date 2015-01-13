@@ -83,7 +83,7 @@ void pcp_keygen(char *passwd) {
   }
   else {
     passphrase = ucmalloc(strlen(passwd)+1);
-    strncpy(passphrase, passwd, strlen(passwd)+1);
+    memcpy(passphrase, passwd, strlen(passwd)+1);
   }
 
   if(strnlen(passphrase, 1024) > 0)
@@ -234,12 +234,10 @@ void pcp_exportsecret(char *keyid, int useid, char *outfile, int armor, char *pa
 		     "Enter passphrase to decrypt your secret key", NULL, 1);
 	key = pcpkey_decrypt(ptx, key, passphrase);
 	if(key == NULL) {
-	  memset(passphrase, 0, strlen(passphrase));
-	  free(passphrase);
+	  sfree(passphrase);
 	  goto errexpse1;
 	}
-	memset(passphrase, 0, strlen(passphrase));
-	free(passphrase);
+	sfree(passphrase);
       }
       else {
 	key = pcpkey_decrypt(ptx, key, passwd);
@@ -259,8 +257,7 @@ void pcp_exportsecret(char *keyid, int useid, char *outfile, int armor, char *pa
       pcp_readpass(&passphrase,
                   "Enter passphrase to encrypt the exported secret key", "Repeat passphrase", 1);
       exported_sk = pcp_export_secret(ptx, key, passphrase);
-      memset(passphrase, 0, strlen(passphrase));
-      free(passphrase);
+      sfree(passphrase);
     }
 
     if(exported_sk != NULL) {
@@ -349,8 +346,7 @@ void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int 
       pcp_readpass(&passphrase,
 		   "Enter passphrase to decrypt your secret key", NULL, 1);
       sk = pcpkey_decrypt(ptx, sk, passphrase);
-      memset(passphrase, 0, strlen(passphrase));
-      free(passphrase);
+      sfree(passphrase);
     }
     if(sk == NULL) {
       goto errpcpexpu1;
@@ -454,7 +450,7 @@ void pcpedit_key(char *keyid) {
       char *passphrase;
       pcp_readpass(&passphrase, "Enter passphrase to decrypt the key", NULL, 1);
       key = pcpkey_decrypt(ptx, key, passphrase);
-      ucfree(passphrase, strlen(passphrase));
+      sfree(passphrase);
     }
 
     if(key != NULL) {
@@ -509,7 +505,7 @@ void pcpedit_key(char *keyid) {
 
       if(strnlen(passphrase, 1024) > 0) {
 	key = pcpkey_encrypt(ptx, key, passphrase);
-	ucfree(passphrase, strlen(passphrase));
+	sfree(passphrase);
       }
 
       if(key != NULL) {
@@ -616,7 +612,7 @@ int pcp_import (vault_t *vault, FILE *in, char *passwd) {
       pcp_readpass(&passphrase,
 		   "Enter passphrase to decrypt the secret key file", NULL, 1);
       sk = pcp_import_secret(ptx, buf, bufsize, passphrase);
-      ucfree(passphrase, strlen(passphrase));
+      sfree(passphrase);
     }
 
     if(sk == NULL) {
@@ -645,7 +641,7 @@ int pcp_import (vault_t *vault, FILE *in, char *passwd) {
       if(strnlen(passphrase, 1024) > 0) {
 	/* encrypt the key */
 	sk = pcpkey_encrypt(ptx, sk, passphrase);
-	ucfree(passphrase, strlen(passphrase));
+	sfree(passphrase);
       }
       else {
 	/* ask for confirmation if we shall store it in the clear */

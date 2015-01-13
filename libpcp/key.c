@@ -29,7 +29,7 @@
  * result anyway because I need a curve25519 secret.
  */
 byte *pcp_derivekey(PCPCTX *ptx, char *passphrase, byte *nonce) {
-  byte *key = ucmalloc(crypto_secretbox_KEYBYTES);
+  byte *key = smalloc(crypto_secretbox_KEYBYTES);
   size_t plen = strnlen(passphrase, 255);
 
   /*  create the scrypt hash */
@@ -44,7 +44,7 @@ byte *pcp_derivekey(PCPCTX *ptx, char *passphrase, byte *nonce) {
   key[31] |= 64;
 
   /* done */
-  ucfree(scrypted, 64);
+  sfree(scrypted);
   return key;
 }
 
@@ -168,9 +168,8 @@ pcp_key_t *pcpkey_encrypt(PCPCTX *ptx, pcp_key_t *key, char *passphrase) {
 
   es = pcp_sodium_mac(&encrypted, buffer_get(both), buffer_size(both), key->nonce, encryptkey);
 
-  memset(encryptkey, 0, 32);
   buffer_free(both);
-  free(encryptkey);
+  sfree(encryptkey);
 
   if(es == 176) { /* FIXME: calc! */
     /*  success */
@@ -201,7 +200,7 @@ pcp_key_t *pcpkey_decrypt(PCPCTX *ptx, pcp_key_t *key, char *passphrase) {
   
   es = pcp_sodium_verify_mac(&decrypted, key->encrypted, 176, key->nonce, encryptkey);
 
-  ucfree(encryptkey, 32);
+  sfree(encryptkey);
 
   if(es == 0) {
     /*  success */

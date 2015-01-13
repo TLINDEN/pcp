@@ -36,15 +36,38 @@ void *ucmalloc(size_t s) {
     exit(-1);
   }
 
-  memset (value, 0, size);
+  sodium_memzero(value, size);
 
   /* printf("allocated %ld bytes at %p\n", size, value); */
 
   return value;
 }
 
+void *smalloc(size_t s) {
+  if (s == 0)
+    return NULL;
+
+  size_t size = s * sizeof(byte);
+  void *value = sodium_malloc (size);
+
+  if (value == NULL) {
+    err(errno, "Cannot allocate %d bytes of memory", (int)s);
+    exit(-1);
+  }
+
+  return value;
+}
+
 void *urmalloc(size_t s) {
   void *value = ucmalloc (s);
+
+  arc4random_buf(value, s);
+
+  return value;
+}
+
+void *srmalloc(size_t s) {
+  void *value = sodium_malloc (s);
 
   arc4random_buf(value, s);
 
@@ -74,4 +97,8 @@ void ucfree(void *d, size_t len) {
     memset(d, 0, len);
     free(d);
   }
+}
+
+void sfree(void *d) {
+  sodium_free(d);
 }

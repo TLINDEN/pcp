@@ -107,10 +107,15 @@ retry:
 		fclose(readfrom);
 
 	/* Copy the password out. */
+	char *p = smalloc(strlen(passbuf) + 1);
+	memcpy(p, passbuf, strlen(passbuf) + 1 );
+	*passwd = p;
+	/*
 	if ((*passwd = strdup(passbuf)) == NULL) {
 		fatal(ptx, "Cannot allocate memory\n");
 		goto err1;
 	}
+	*/
 
 	/* Zero any stored passwords. */
 	memset(passbuf, 0, MAXPASSLEN);

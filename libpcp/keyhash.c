@@ -27,6 +27,7 @@ void pcphash_del(PCPCTX *ptx, void *key, int type) {
   if(type == PCP_KEY_TYPE_SECRET) {
     HASH_DEL(ptx->pcpkey_hash, (pcp_key_t *)key);
     memset(key, 0, sizeof(pcp_key_t));
+    sodium_munlock(key, sizeof(pcp_key_t));
   }
   else if(type == PCP_KEYSIG_NATIVE || type == PCP_KEYSIG_PBP) {
     pcp_keysig_t *keysig = (pcp_keysig_t *)key;
@@ -37,6 +38,7 @@ void pcphash_del(PCPCTX *ptx, void *key, int type) {
   else {
     HASH_DEL(ptx->pcppubkey_hash, (pcp_pubkey_t *)key);
     memset(key, 0, sizeof(pcp_pubkey_t));
+    sodium_munlock(key, sizeof(pcp_pubkey_t));
   }
   free(key);
 }
@@ -94,6 +96,7 @@ pcp_pubkey_t *pcphash_pubkeyexists(PCPCTX *ptx, char *id) {
 void pcphash_add(PCPCTX *ptx, void *key, int type) {
   if(type == PCP_KEY_TYPE_PUBLIC) {
     pcp_pubkey_t *k = (pcp_pubkey_t *)key;
+    sodium_mlock(key, sizeof(pcp_pubkey_t));
     HASH_ADD_STR( ptx->pcppubkey_hash, id, k );
   }
   else if(type == PCP_KEYSIG_NATIVE || type == PCP_KEYSIG_PBP) {
@@ -101,7 +104,8 @@ void pcphash_add(PCPCTX *ptx, void *key, int type) {
     HASH_ADD_STR( ptx->pcpkeysig_hash, id, keysig);
   }
   else {
-    pcp_key_t *k = (pcp_key_t *)key;    
+    pcp_key_t *k = (pcp_key_t *)key;
+    sodium_mlock(key, sizeof(pcp_key_t)); 
     HASH_ADD_STR( ptx->pcpkey_hash, id, k);
   }
 }

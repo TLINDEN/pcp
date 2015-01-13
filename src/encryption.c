@@ -70,12 +70,12 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
 		     "Enter passphrase for symetric decryption", NULL, 1);
       }
       else {
-	passphrase = ucmalloc(strlen(passwd)+1);
-	strncpy(passphrase, passwd, strlen(passwd));
+	passphrase = smalloc(strlen(passwd)+1);
+	memcpy(passphrase, passwd, strlen(passwd) + 1);
       }
 
       symkey = pcp_scrypt(ptx, passphrase, strlen(passphrase), salt, 90);
-      ucfree(passphrase, strlen(passphrase));
+      sfree(passphrase);
       free(salt);
     }
     else if(head == PCP_ASYM_CIPHER || head == PCP_ASYM_CIPHER_SIG || head == PCP_ASYM_CIPHER_ANON) {
@@ -103,12 +103,12 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
 		       "Enter passphrase to decrypt your secret key", NULL, 1);
 	}
 	else {
-	  passphrase = ucmalloc(strlen(passwd)+1);
-	  strncpy(passphrase, passwd, strlen(passwd)+1);
+	  passphrase = smalloc(strlen(passwd)+1);
+	  memcpy(passphrase, passwd, strlen(passwd)+1);
 	}
 
 	secret = pcpkey_decrypt(ptx, secret, passphrase);
-	ucfree(passphrase, strlen(passphrase));
+	sfree(passphrase);
 	if(secret == NULL)
 	  goto errde3;
 
@@ -134,7 +134,7 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
   }
   else {
     dlen = pcp_decrypt_stream(ptx, pin, pout, NULL, symkey, verify, 0);
-    ucfree(symkey, 64);
+    sfree(symkey);
   }
 
   ps_close(pin);
@@ -151,7 +151,7 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
 
  errde3:
   if(symkey != NULL)
-     ucfree(symkey, 64);
+     free(symkey);
 
   return 1;
 }
@@ -177,15 +177,15 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
                    "Enter passphrase for symetric encryption", "Repeat passphrase", 1);
     }
     else {
-      passphrase = ucmalloc(strlen(passwd)+1);
-      strncpy(passphrase, passwd, strlen(passwd));
+      passphrase = smalloc(strlen(passwd)+1);
+      memcpy(passphrase, passwd, strlen(passwd)+1);
     }
     byte *salt = ucmalloc(90); /*  FIXME: use random salt, concat it with result afterwards */
     char stsalt[] = PBP_COMPAT_SALT;
     memcpy(salt, stsalt, 90);
     symkey = pcp_scrypt(ptx, passphrase, strlen(passphrase), salt, 90);
     free(salt);
-    ucfree(passphrase, strlen(passphrase));
+    sfree(passphrase);
   }
   else if(id != NULL && recipient == NULL) {
     /*  lookup by id */
@@ -256,11 +256,11 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
 		     "Enter passphrase to decrypt your secret key", NULL, 1);
         }
 	else {
-          passphrase = ucmalloc(strlen(passwd)+1);
-	  strncpy(passphrase, passwd, strlen(passwd)+1);
+          passphrase = smalloc(strlen(passwd)+1);
+	  memcpy(passphrase, passwd, strlen(passwd)+1);
         }
 	secret = pcpkey_decrypt(ptx, secret, passphrase);
-	ucfree(passphrase, strlen(passphrase));
+	sfree(passphrase);
 	if(secret == NULL)
 	  goto erren2;
       }
@@ -297,7 +297,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
 
   if(self == 1) {
     clen = pcp_encrypt_stream_sym(ptx, pin, pout, symkey, 0, NULL);
-    ucfree(symkey, 64);
+    sfree(symkey);
   }
   else {
     clen = pcp_encrypt_stream(ptx, pin, pout, secret, pubhash, signcrypt, anon);
@@ -335,7 +335,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
   pcphash_cleanpub(pubhash);
 
   if(symkey != NULL)
-    ucfree(symkey, 64);
+    sfree(symkey);
 
  erren3:
 

@@ -442,7 +442,8 @@ int pcpvault_fetchall(PCPCTX *ptx, vault_t *vault) {
   vault_item_header_t *item = ucmalloc(sizeof(vault_item_header_t));
   got = fread(header, 1, sizeof(vault_header_t), vault->fd);
   if(got < sizeof(vault_header_t)) {
-    fatal(ptx, "empty or invalid vault header size (got %ld, expected %ld)\n", got,  sizeof(vault_header_t)); 
+    fatal(ptx, "empty or invalid vault header size (got %ld, expected %ld)\n",
+	  got,  sizeof(vault_header_t)); 
     goto err;
   }
   vh2native(header);
@@ -494,12 +495,14 @@ int pcpvault_fetchall(PCPCTX *ptx, vault_t *vault) {
 	      buffer_free(rawks);
 	    }
 	    else {
-	      fatal(ptx, "Failed to read vault - invalid key type: %02X! at %d\n", item->type, readpos);
+	      fatal(ptx, "Failed to read vault - invalid key type: %02X! at %d\n",
+		    item->type, readpos);
 	      goto err;
 	    }
 	  }
 	  else {
-	    fatal(ptx, "Failed to read vault - that's no pcp key at %d (size %ld)!\n", readpos, bytesleft);
+	    fatal(ptx, "Failed to read vault - that's no pcp key at %d (size %ld)!\n",
+		  readpos, bytesleft);
 	    goto err;
 	  }
 	}

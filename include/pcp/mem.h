@@ -25,6 +25,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <sodium.h>
 #include "defines.h"
 #include "platform.h"
 
@@ -36,13 +37,22 @@
 /*  available. */
 void *ucmalloc(size_t s);
 
+/* same as ucmalloc, but uses secure allocation */
+void *smalloc(size_t s);
+
 /*  the same but it fills the pointer with random values */
 void *urmalloc(size_t s);
+
+/*  same as urmalloc(), but uses secure allocation using sodium_malloc() */
+void *srmalloc(size_t s);
 
 /* resize a a pointer and fill the added remainder with zeroes */
 void *ucrealloc(void *d, size_t oldlen, size_t newlen);
 
 /* clear and free */
 void ucfree(void *d, size_t len);
+
+/* same, but free a sodium pointer */
+void sfree(void *d);
 
 #endif /*  _HAVE_PCP_MEM */

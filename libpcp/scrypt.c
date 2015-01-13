@@ -22,7 +22,7 @@
 #include "scrypt.h"
 
 byte* pcp_scrypt(PCPCTX *ptx, char *passwd, size_t passwdlen, byte *nonce, size_t noncelen) {
-  uint8_t *dk = ucmalloc(64); /*  resulting hash */
+  uint8_t *dk = smalloc(64); /*  resulting hash */
 
   /*  constants */
   uint64_t N = 1 << 14;

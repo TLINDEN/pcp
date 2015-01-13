@@ -62,12 +62,12 @@ int pcpsign(char *infile, char *outfile, char *passwd, int z85, int detach) {
 		   "Enter passphrase to decrypt your secret key", NULL, 1);
     }
     else {
-      passphrase = ucmalloc(strlen(passwd)+1);
-      strncpy(passphrase, passwd, strlen(passwd)+1);
+      passphrase = smalloc(strlen(passwd)+1);
+      memcpy(passphrase, passwd, strlen(passwd)+1);
     }
 
     secret = pcpkey_decrypt(ptx, secret, passphrase);
-    ucfree(passphrase, strlen(passwd)+1);
+    sfree(passphrase);
     if(secret == NULL)
       goto errs1;
   }

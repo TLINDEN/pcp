@@ -30,7 +30,6 @@
 #include <wctype.h>
 
 #include "randomart.h"
-#include "mac.h"
 #include "key.h"
 #include "pcp.h"
 #include "vault.h"

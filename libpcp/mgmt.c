@@ -761,7 +761,7 @@ Buffer *pcp_export_secret(PCPCTX *ptx, pcp_key_t *sk, char *passphrase) {
 
   buffer_free(raw);
   ucfree(nonce, crypto_secretbox_NONCEBYTES);
-  ucfree(symkey, 64);
+  sfree(symkey);
   ucfree(cipher, es);
 
   return out;
@@ -877,7 +877,7 @@ pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphras
   ucfree(clear, cipherlen - PCP_CRYPTO_ADD);
   ucfree(nonce, crypto_secretbox_NONCEBYTES);
   buffer_free(blob);
-  ucfree(symkey, 64);
+  sfree(symkey);
   free(id);
 
   return sk;
@@ -890,6 +890,6 @@ pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphras
   ucfree(sk, sizeof(pcp_key_t));
   buffer_free(blob);
   if(symkey != NULL)
-    ucfree(symkey, 64);
+    sfree(symkey);
   return NULL;
 }

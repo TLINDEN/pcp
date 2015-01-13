@@ -22,86 +22,26 @@
 
 #include "crypto.h"
 
-size_t pcp_sodium_box(byte **cipher,
-		      byte *cleartext,
-		      size_t clearsize,
-		      byte *nonce,
-		      byte *secret,
-		      byte *pub) {
-
-  byte *pad_clear;
-  byte *pad_cipher;
-
-  size_t ciphersize = (clearsize + crypto_box_ZEROBYTES) - crypto_box_BOXZEROBYTES;
-
-  pad_cipher = ucmalloc(crypto_box_ZEROBYTES + clearsize);
-  pcp_pad_prepend(&pad_clear, cleartext, crypto_box_ZEROBYTES, clearsize);
-  
-  /*  crypto_box(c,m,mlen,n,pk,sk); */
-  crypto_box(pad_cipher, pad_clear,
-	     clearsize + crypto_box_ZEROBYTES, nonce, pub, secret);
-
-  pcp_pad_remove(cipher, pad_cipher, crypto_secretbox_BOXZEROBYTES, ciphersize);
-
-  free(pad_clear);
-  free(pad_cipher);
-
-  return ciphersize;
-}
 
 
 
-
-int pcp_sodium_verify_box(byte **cleartext, byte* message,
-			  size_t messagesize, byte *nonce,
-			  byte *secret, byte *pub) {
-  /*  verify/decrypt the box */
-  byte *pad_cipher;
-  byte *pad_clear;
-  int success = -1;
-
-  pcp_pad_prepend(&pad_cipher, message, crypto_box_BOXZEROBYTES, messagesize);
-  pad_clear = (byte *)ucmalloc((crypto_box_ZEROBYTES+ messagesize));
-
-  /*  crypto_box_open(m,c,clen,n,pk,sk); */
-  if (crypto_box_open(pad_clear, pad_cipher,
-		      messagesize + crypto_box_BOXZEROBYTES,
-		      nonce, pub, secret) == 0) {
-    success = 0;
-  }
-
-  pcp_pad_remove(cleartext, pad_clear, crypto_box_ZEROBYTES, messagesize);
-
-  free(pad_clear);
-  free(pad_cipher);
-
-  return success;
-}
-
-
-
-
+/* asym encr */
 byte *pcp_box_encrypt(PCPCTX *ptx, pcp_key_t *secret, pcp_pubkey_t *pub,
 			       byte *message, size_t messagesize,
 			       size_t *csize) {
 
   byte *nonce = pcp_gennonce();
 
-  byte *cipher;
+  size_t es = messagesize + crypto_box_MACBYTES;
+  byte *cipher = ucmalloc(es);
 
-  size_t es = pcp_sodium_box(&cipher, message, messagesize, nonce,
-		 secret->secret, pub->pub);
+  if(crypto_box_easy(cipher, message, messagesize, nonce, pub->pub, secret->secret) != 0)
+    es = 0; /* signal sodium error */
 
   if(es <= messagesize) {
     fatal(ptx, "failed to encrypt message!\n");
     goto errbec;
   }
-
-  /*  scip */
-  /* fprintf(stderr, "public: "); pcpprint_bin(stderr, pub->pub, 32); fprintf(stderr, "\n"); */
-  /* fprintf(stderr, "secret: "); pcpprint_bin(stderr, secret->secret, 32); fprintf(stderr, "\n"); */
-  /* fprintf(stderr, "cipher: "); pcpprint_bin(stderr, cipher, es); fprintf(stderr, "\n"); */
-  /* fprintf(stderr, " nonce: "); pcpprint_bin(stderr, nonce, crypto_secretbox_NONCEBYTES); fprintf(stderr, "\n"); */
 
   /*  put nonce and cipher together */
   byte *combined = ucmalloc(es + crypto_secretbox_NONCEBYTES);
@@ -124,6 +64,7 @@ byte *pcp_box_encrypt(PCPCTX *ptx, pcp_key_t *secret, pcp_pubkey_t *pub,
 }
 
 
+/* asym decr */
 byte *pcp_box_decrypt(PCPCTX *ptx, pcp_key_t *secret, pcp_pubkey_t *pub,
 			       byte *cipher, size_t ciphersize,
 			       size_t *dsize) {
@@ -137,9 +78,9 @@ byte *pcp_box_decrypt(PCPCTX *ptx, pcp_key_t *secret, pcp_pubkey_t *pub,
   memcpy(cipheronly, &cipher[crypto_secretbox_NONCEBYTES],
 	 ciphersize - crypto_secretbox_NONCEBYTES);
 
-  if(pcp_sodium_verify_box(&message, cipheronly,
-			   ciphersize - crypto_secretbox_NONCEBYTES,
-			   nonce, secret->secret, pub->pub) != 0){
+  message = ucmalloc(ciphersize - crypto_secretbox_NONCEBYTES - crypto_box_MACBYTES);
+  if(crypto_box_open_easy(message, cipheronly, ciphersize - crypto_secretbox_NONCEBYTES,
+			  nonce, pub->pub, secret->secret) != 0) {
     fatal(ptx, "failed to decrypt message!\n");
     goto errbed;
   }
@@ -160,6 +101,29 @@ byte *pcp_box_decrypt(PCPCTX *ptx, pcp_key_t *secret, pcp_pubkey_t *pub,
 
   return NULL;
 }
+
+/* sym encr */
+size_t pcp_sodium_mac(byte **cipher,
+		byte *cleartext,
+		size_t clearsize,
+		byte *nonce,
+		byte *key) {
+
+  *cipher = ucmalloc(clearsize + crypto_secretbox_MACBYTES);
+  crypto_secretbox_easy(*cipher, cleartext, clearsize, nonce, key);
+
+  return clearsize + crypto_secretbox_MACBYTES;
+}
+
+/* sym decr */
+int pcp_sodium_verify_mac(byte **cleartext, byte* message,
+			  size_t messagesize, byte *nonce,
+			  byte *key) {
+
+  *cleartext = ucmalloc(messagesize - crypto_secretbox_MACBYTES);
+  return crypto_secretbox_open_easy(*cleartext, message, messagesize, nonce, key);
+}
+
 
 size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t *s, byte *symkey, int verify, int anon) {
   pcp_pubkey_t *cur = NULL;
@@ -255,7 +219,7 @@ size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t 
       if(recipient != NULL && rec_size == crypto_secretbox_KEYBYTES) {
 	/*  found a match */
 	recmatch = 1;
-	symkey = ucmalloc(crypto_secretbox_KEYBYTES);
+	symkey = smalloc(crypto_secretbox_KEYBYTES);
 	memcpy(symkey, recipient, crypto_secretbox_KEYBYTES);
 	free(recipient);
 	ucfree(senderpub, sizeof(pcp_pubkey_t));
@@ -271,7 +235,7 @@ size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t 
 	if(recipient != NULL && rec_size == crypto_secretbox_KEYBYTES) {
 	  /*  found a match */
 	  recmatch = 1;
-	  symkey = ucmalloc(crypto_secretbox_KEYBYTES);
+	  symkey = smalloc(crypto_secretbox_KEYBYTES);
 	  memcpy(symkey, recipient, crypto_secretbox_KEYBYTES);
 	  free(recipient);
 	  break;
@@ -296,17 +260,17 @@ size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t 
     pcp_rec_t *rec = pcp_rec_new(reccipher, nrec * PCP_ASYM_RECIPIENT_SIZE, NULL, cur);
     size_t s = pcp_decrypt_stream_sym(ptx, in, out, symkey, rec);
     pcp_rec_free(rec);
-    ucfree(symkey, crypto_secretbox_KEYBYTES);
+    sfree(symkey);
     return s;
   }
   else {
     size_t s = pcp_decrypt_stream_sym(ptx, in, out, symkey, NULL);
-    ucfree(symkey, crypto_secretbox_KEYBYTES);
+    sfree(symkey);
     return s;
   }
 
  errdef1:
-  ucfree(symkey, crypto_secretbox_KEYBYTES);
+  sfree(symkey);
   return 0;
 }
 
@@ -329,7 +293,7 @@ size_t pcp_encrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, pcp_key_t 
 
   /*  preparation */
   /*  A, generate sym key */
-  symkey = urmalloc(crypto_secretbox_KEYBYTES);
+  symkey = srmalloc(crypto_secretbox_KEYBYTES);
 
   /*  B, encrypt it asymetrically for each recipient */
   recipient_count = HASH_COUNT(p);
@@ -408,8 +372,7 @@ size_t pcp_encrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, pcp_key_t 
     goto errec1;
 
 
-  memset(symkey, 0, crypto_secretbox_KEYBYTES);
-  free(symkey);
+  sfree(symkey);
   free(recipients_cipher);
   return out_size + sym_size;
 
@@ -709,12 +672,12 @@ void pcp_rec_free(pcp_rec_t *r) {
   free(r->cipher);
 
   if(r->secret != NULL) {
-    memset(r->secret, 0, sizeof(pcp_key_t));
+    sodium_memzero(r->secret, sizeof(pcp_key_t));
     free(r->secret);
   }
 
   if(r->pub != NULL) {
-    memset(r->pub, 0, sizeof(pcp_pubkey_t));
+    sodium_memzero(r->pub, sizeof(pcp_pubkey_t));
     free(r->pub);
   }
 

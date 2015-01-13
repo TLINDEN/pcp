@@ -116,16 +116,6 @@
    of 32k, N is a nonce (new per block) and S the symmetric key.
 */
 
-size_t pcp_sodium_box(byte **cipher,
-                      byte *cleartext,
-                      size_t clearsize,
-                      byte *nonce,
-                      byte *secret,
-                      byte *pub);
-
-int pcp_sodium_verify_box(byte **cleartext, byte* message,
-                          size_t messagesize, byte *nonce,
-                          byte *secret, byte *pub);
 
 /** Asymmetrically encrypt a message.
 
@@ -281,6 +271,64 @@ size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t 
     \return Returns the size of the output written to the output stream or 0 in case of errors.
 */
 size_t pcp_decrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *symkey, pcp_rec_t *recverify);
+
+
+
+
+/** Symmetrically encrypt a message.
+
+    This function encrypts a message symmetrically
+    using crypto_secretbox() using the given Curve25519 raw
+    secret key and the nonce.
+
+    It allocates apropriate memory for the result,
+    which will be stored in \a cipher.
+
+    \param[out] cipher Encrypted result.
+    \param[in] cleartext Clear message.
+    \param[in] clearsize Size of message.
+    \param[in] nonce A random nonce (24 Bytes).
+    \param[in] key A Curve25519 key (32 Bytes).
+
+    \return Returns the size of \a cipher.
+ */
+size_t pcp_sodium_mac(byte **cipher,
+                      byte *cleartext,
+                      size_t clearsize,
+                      byte *nonce,
+                      byte *key);
+
+
+/** Decrypt a symmetrically encrypted message.
+
+    This function decrypts a symmetrically encrypted message
+    using crypto_secretbox_open() using the given Curve25519 raw
+    secret key and the nonce.
+
+    It allocates apropriate memory for the result,
+    which will be stored in \a cleartext.
+
+    \param[out] cleartext The decrypted result.
+    \param[in] message The encrypted message.
+    \param[in] messagesize Size of message.
+    \param[in] nonce A random nonce (24 Bytes).
+    \param[in] key A Curve25519 key (32 Bytes).
+
+    \return Returns 0 in case of success of -1 in case of an error. Check fatals_if_any().
+
+ */
+int pcp_sodium_verify_mac(byte **cleartext,
+                          byte* message,
+                          size_t messagesize,
+                          byte *nonce,
+                          byte *key);
+
+
+
+
+
+
+
 
 pcp_rec_t *pcp_rec_new(byte *cipher, size_t clen, pcp_key_t *secret, pcp_pubkey_t *pub);
 void pcp_rec_free(pcp_rec_t *r);

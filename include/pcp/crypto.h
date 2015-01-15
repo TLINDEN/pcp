@@ -333,6 +333,11 @@ int pcp_sodium_verify_mac(byte **cleartext,
 pcp_rec_t *pcp_rec_new(byte *cipher, size_t clen, pcp_key_t *secret, pcp_pubkey_t *pub);
 void pcp_rec_free(pcp_rec_t *r);
 
+/* CTR mode helpers */
+byte *_gen_ctr_nonce(uint64_t ctr);
+uint64_t _get_nonce_ctr(byte *nonce);
+
+
 #endif /*  _HAVE_PCP_CRYPTO_H */
 
 /**@}*/

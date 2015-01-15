@@ -399,6 +399,7 @@ size_t pcp_encrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, byte *
   crypto_generichash_state *st = NULL;
   byte *hash = NULL;
   byte head[1];
+  uint64_t ctr = 1;
 
   if(in->is_buffer) {
     if(buffer_size(in->b) == 0) {
@@ -441,7 +442,9 @@ size_t pcp_encrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, byte *
     cur_bufsize = ps_read(in, in_buf, PCP_BLOCK_SIZE);
     if(cur_bufsize <= 0)
       break;
-    buf_nonce = pcp_gennonce();
+
+    /* generate nonce and put current buffer counter into it */
+    buf_nonce = _gen_ctr_nonce(ctr++);
 
 #ifdef PCP_CBC
     /*  apply IV to current clear */
@@ -513,7 +516,9 @@ size_t pcp_decrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *
   size_t out_size, cur_bufsize, es;
   size_t ciphersize = (PCP_BLOCK_SIZE_IN) - crypto_secretbox_NONCEBYTES;
   byte *in_buf = NULL;
-
+  uint64_t ctr, pastctr;
+  pastctr = 0;
+ 
   buf_nonce  = ucmalloc(crypto_secretbox_NONCEBYTES);
   buf_cipher = ucmalloc(ciphersize);
   out_size = 0;
@@ -564,6 +569,16 @@ size_t pcp_decrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *
     memcpy(buf_nonce, in_buf, crypto_secretbox_NONCEBYTES);
     memcpy(buf_cipher, &in_buf[crypto_secretbox_NONCEBYTES], ciphersize);
 
+    /* extract counter from nonce and check if it is in line with previous one
+       TODO: save unordered buffers to disk and continue writing to out if
+       buffers are in order again */
+    ctr = _get_nonce_ctr(buf_nonce);
+    if(ctr -1 != pastctr) {
+      fatal(ptx, "Mangled packet order, bailing out (got: %ld, expected: %ld)!\n", ctr, pastctr+1);
+      out_size = 0;
+      break;
+    }
+    pastctr = ctr;
     es = pcp_sodium_verify_mac(&buf_clear, buf_cipher, ciphersize, buf_nonce, symkey);
 
 #ifdef PCP_CBC
@@ -684,3 +699,136 @@ void pcp_rec_free(pcp_rec_t *r) {
   free(r);
 }
 
+/*
+  extract buffer counter from given nonce.
+
+  the first byte denotes the size of the
+  counter in bytes (1,2,4,...). we extract
+  an integer of the given size from the
+  bytes afterwards and cast it into an uint64_t,
+  convert back to native endianes.
+ */
+uint64_t _get_nonce_ctr(byte *nonce) {
+  uint64_t ctr;
+  uint8_t    i = nonce[0];
+  uint16_t m16;
+  uint32_t m32;
+  
+  switch(i) {
+  case 1:
+    ctr = nonce[1];
+    break;
+  case 2:
+    memcpy(&m16, &nonce[1], 2);
+    ctr = be16toh(m16);
+    break;
+  case 4:
+    memcpy(&m32, &nonce[1], 4);
+    ctr = be32toh(m32);
+    break;
+  case 8:
+    memcpy(&ctr, &nonce[1], 8);
+    ctr = be64toh(ctr);
+    break;
+  }
+  
+  return ctr;
+}
+
+/*
+  generate a new random nonce and put the
+  given buffer counter into the front of it.
+
+  the counter has a variable size, starting at
+  1 byte. if the counter overflows, we double
+  the counter written to the nonce (and modify
+  the size indicator accordingly). it will be
+  converted to big endian if larger than 1 byte.
+
+  since the nonce has a size of 24 bytes and we use
+  the first byte as the size indicator, the maximum
+  possible counter size would be a 184 bit integer.
+  due to the use of 32kb input buffers, encryption
+  is limited to files with a maximum size of
+  784.637.716.923.335.095.479.473.677.900.958.302.012.794.430.558.004.314.112.000 bytes.
+
+  sapperlot, did I really put this number in here?
+
+  back to reality: while this protocol allows
+  184 bit counters, my current implementation
+  is limited to 64 bit counters, which results
+  in a maximum file size of around 590 zetta bytes
+  or 590 sextillion bytes. 'nough time to learn
+  big integer crunching...
+
+  why?
+
+  we use a varable size counter, because in this
+  way we avoid nonces with an insufficient amount
+  of randomness. compare these two examples:
+
+  0101da63b0a8b1d4e7c32b367b7deedb8032604ed45bdf34
+
+  vs:
+
+  01000000000000000183475b2969bbb20a03ff41e8002659
+
+  the first nonce uses a variable sized counter
+  (1 byte) with the value 1 and the latter a fixed
+  size 64bit counter also with the value 1. as you
+  can see, it only contains 15 random bytes, 7 bytes
+  are just zeros.
+
+  also, I assume that such large inputs will
+  be very rare, so in almost all cases we would end
+  up with just 15 or 16 random bytes. that's beyond
+  the idea of nacl's crypto_box, unacceptable and
+  doesn't look the way I'm accustomed. hence variable
+  size counters.
+
+  returns the counter nonce.
+ */
+byte *_gen_ctr_nonce(uint64_t ctr) {
+  uint8_t  m8  = -1;
+  uint16_t m16 = -1;
+  uint32_t m32 = -1;
+  uint64_t m64 = -1;
+  uint8_t    i = 1;
+  
+  byte *nonce = pcp_gennonce();
+
+  if(ctr > m32) {
+    i = 8;
+    m64 = htobe64(ctr);
+    memcpy(&nonce[1], &m64, 8);
+  }
+  else if(ctr < m32 && ctr > m16) {
+    i = 4;
+    m32 = htobe32(ctr);
+    memcpy(&nonce[1], &m32, 4);
+  }
+  else if(ctr < m16 && ctr > m8) {
+    i = 2;
+    m16 = htobe16(ctr);
+    memcpy(&nonce[1], &m16, 2);
+  }
+  else {
+    i = 1;
+    nonce[1] = ctr;
+  }
+  nonce[0] = i;
+
+
+  m64 = htobe64(ctr);
+  memcpy(&nonce[1], &m64, 8);
+
+  _dump("nonce", nonce, 24);
+
+  return nonce;
+}
+
+/*
+TODO: how to go past 64 bits:
+http://mrob.com/pub/math/int128.c.txt
+http://locklessinc.com/articles/256bit_arithmetic/
+*/

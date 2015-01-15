@@ -377,8 +377,4 @@ struct _pcp_ks_bundle_t {
 };
 typedef struct _pcp_ks_bundle_t pcp_ks_bundle_t;
 
-
-
-
-
 #endif //_HAVE_PCP_STRUCTS_H

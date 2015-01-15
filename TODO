@@ -48,3 +48,11 @@ Program received signal SIGSEGV, Segmentation fault.
 #2  0x00000000004084ff in ptx_clean (ptx=0x801017040) at context.c:52
 #3  0x0000000000402557 in main (argc=Variable "argc" is not available.
 ) at pcp.c:593
+
+
+
+
+_havenacl sometimes "no", even if old version is installed, followed by:
+
+mem.c:51: warning: implicit declaration of function 'sodium_malloc'
+mem.c:51: warning: initialization makes pointer from integer without a cast

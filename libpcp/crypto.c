@@ -818,12 +818,6 @@ byte *_gen_ctr_nonce(uint64_t ctr) {
   }
   nonce[0] = i;
 
-
-  m64 = htobe64(ctr);
-  memcpy(&nonce[1], &m64, 8);
-
-  _dump("nonce", nonce, 24);
-
   return nonce;
 }
 

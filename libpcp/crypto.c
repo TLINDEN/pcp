@@ -781,7 +781,7 @@ uint64_t _get_nonce_ctr(byte *nonce) {
 
   also, I assume that such large inputs will
   be very rare, so in almost all cases we would end
-  up with just 15 or 16 random bytes. that's beyond
+  up with just 15 or 14 random bytes. that's beyond
   the idea of nacl's crypto_box, unacceptable and
   doesn't look the way I'm accustomed. hence variable
   size counters.

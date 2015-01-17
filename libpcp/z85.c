@@ -166,22 +166,6 @@ byte *pcp_padfour(byte *src, size_t srclen, size_t *dstlen) {
   return dst;
 }
 
-size_t pcp_unpadfour(byte *src, size_t srclen) {
-  size_t outlen;
-  long int i;
-
-  outlen = srclen;
-
-  for(i=srclen-1; i>=0; i--) {
-    if(src[i] != '\0') {
-      outlen = i + 1;
-      break;
-    }
-  }
-
-  return outlen;
-}
-
 byte *pcp_z85_decode(PCPCTX *ptx, char *z85block, size_t *dstlen) {
   byte *bin = NULL;
   size_t binlen, outlen, padlen;
@@ -214,13 +198,7 @@ byte *pcp_z85_decode(PCPCTX *ptx, char *z85block, size_t *dstlen) {
     return NULL;
   }
 
-  /*
-  fprintf(stderr, "srclen: %ld, binlen: %ld, padlen: %ld\n", srclen, binlen, padlen);
-  _dump("      z", (byte *)z85block, srclen);
-  _dump("padblob", padblob, 4);
-  */
-
-  outlen = binlen - 4 - padlen; //pcp_unpadfour(bin, binlen, padlen);
+  outlen = binlen - 4 - padlen;
 
   *dstlen = outlen;
 
@@ -229,7 +207,7 @@ byte *pcp_z85_decode(PCPCTX *ptx, char *z85block, size_t *dstlen) {
 
 char *pcp_z85_encode(byte *raw, size_t srclen, size_t *dstlen, int doblock) {
   int pos = 0;
-  byte *padded;
+  byte *padded, *rpad;
   size_t outlen, blocklen, zlen, padlen;
   char *padblob = NULL;
   char *z85 = NULL;
@@ -257,7 +235,9 @@ char *pcp_z85_encode(byte *raw, size_t srclen, size_t *dstlen, int doblock) {
 
   /*  prepare pad blob */
   padblob = ucmalloc(6);
-  snprintf(padblob, 6, "0000%d", (int)padlen);
+  rpad = urmalloc(4);
+  rpad[3] = (int)padlen;
+  zmq_z85_encode(padblob, rpad, 4);
 
   /* append pad blob to encoded output */
   memcpy(&z85[zlen-1], padblob, 5);

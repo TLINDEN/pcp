@@ -1,10 +1,37 @@
 NEXT
 	removed hand-written padding stuff and using
 	libsodiums _easy() functions for crypto now
-	instead of the raw nacl ones.
+	instead of the raw nacl ones. instead we use
+	the _easy variants of the crypto_*box functions,
+	which libsodium provides. I didn't use them so
+	far because I wasn't aware of their existence.
 
 	using secure memory where applicable.
-	
+
+	changed encryption protocol, now we're using
+	counter mode for stream encryption. we use the
+	nonce, which is required by crypto_secretbox
+	anyway, as a counter. our counter has a variable
+	size and starts with one byte. the first byte
+	of the nonce signifies the counter size and the
+	following byte(s) are used as the counter. if it
+	is larger than one byte, it will be converted to
+	big endian. maximum possible counter size is 184
+	bit, current maximum implemented counter size is
+	64 bit.
+
+	removed CBC mode support, it wasn't enabled by
+	default anyway.
+
+	using libsodium memory protection facilities where
+	applicable (keys, passwords, hashes).
+
+	fixed compilation failure when using clang.
+
+	fixed self-mode crypto. now -m enables symmetric
+	encryption, while -M adds the senders primary pub
+	key to the list of recipients in asymmetric mode.
+
 0.2.4	fixed compiler macro misplacement (github#4).
 
 	fixed invalid free (github#5).

@@ -166,11 +166,11 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
   pcp_pubkey_t *pub = NULL;
   pcp_key_t *secret = NULL;
   byte *symkey = NULL;
-  int self = 0;
+  int symmode = 0;
 
   if(id == NULL && recipient == NULL) {
-    /*  self mode */
-    self = 1;
+    /*  sym mode */
+    symmode = 1;
     char *passphrase;
     if(passwd == NULL) {
       pcp_readpass(&passphrase,
@@ -195,8 +195,9 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
       pcp_key_t *s = pcphash_keyexists(ptx, id);
       if(s != NULL) {
 	tmp = pcpkey_pub_from_secret(s);
-	HASH_ADD_STR( pubhash, id, tmp);
-	self = 1;
+	pub = ucmalloc(sizeof(pcp_pubkey_t));
+	memcpy(pub, tmp, sizeof(pcp_pubkey_t));
+	HASH_ADD_STR( pubhash, id, pub);
       }
       else {
 	fatal(ptx, "Could not find a public key with id 0x%s in vault %s!\n",
@@ -220,7 +221,8 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
       rec = recipient->first;
       while (rec != NULL) {
 	_lc(rec->value);
-	if(strnstr(tmp->mail, rec->value, 255) != NULL || strnstr(tmp->owner, rec->value, 255) != NULL) {
+	if(strnstr(tmp->mail, rec->value, 255) != NULL 
+	   || strnstr(tmp->owner, rec->value, 255) != NULL) {
 	  pub = ucmalloc(sizeof(pcp_pubkey_t));
 	  memcpy(pub, tmp, sizeof(pcp_pubkey_t));
 	  HASH_ADD_STR( pubhash, id, pub);
@@ -229,6 +231,19 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
 	rec = rec->next;
       }
     }
+
+    /* look if we need to add ourselfes */
+    rec = recipient->first;
+    while (rec != NULL) {
+      if(strnstr("__self__", rec->value, 13) != NULL) {
+	pcp_key_t *s = pcp_find_primary_secret();
+	pcp_pubkey_t *p = pcpkey_pub_from_secret(s);
+	HASH_ADD_STR( pubhash, id, p);
+	break;
+      }
+      rec = rec->next;
+    }
+    
     if(HASH_COUNT(pubhash) == 0) {
       fatal(ptx, "no matching key found for specified recipient(s)!\n");
       goto erren3;
@@ -236,7 +251,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
   }
 
 
-  if(self != 1) {
+  if(symmode != 1) {
   /*  we're using a random secret keypair on our side */
     if(anon) {
       secret = pcpkey_new();
@@ -295,7 +310,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
     ps_armor(pout, PCP_BLOCK_SIZE/2);
   }
 
-  if(self == 1) {
+  if(symmode == 1) {
     clen = pcp_encrypt_stream_sym(ptx, pin, pout, symkey, 0, NULL);
     sfree(symkey);
   }
@@ -338,6 +353,9 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
     sfree(symkey);
 
  erren3:
+
+  if(tmp != NULL)
+    ucfree(tmp, sizeof(pcp_pubkey_t));
 
   return 1;
 }

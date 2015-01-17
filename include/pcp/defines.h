@@ -114,21 +114,11 @@ typedef enum _PCP_KEY_TYPES {
 #define PCP_SIG_VERSION 2
 
 /*  crypto file format stuff */
-/*  enabled via config.h (configure --enable-cbc) */
-#ifndef PCP_CBC
-  #define PCP_ASYM_CIPHER         5
-  #define PCP_ASYM_CIPHER_ANON    6
-  #define PCP_SYM_CIPHER          23
-  #define PCP_ASYM_CIPHER_SIG     24
-  #define PCP_BLOCK_SIZE          32 * 1024
-#else
-/*  CBC mode, use smaller blocks */
-  #define PCP_ASYM_CIPHER         7
-  #define PCP_ASYM_CIPHER_ANON    9
-  #define PCP_ASYM_CIPHER_SIG     8
-  #define PCP_SYM_CIPHER          25
-  #define PCP_BLOCK_SIZE          1 * 1024
-#endif
+#define PCP_ASYM_CIPHER         5
+#define PCP_ASYM_CIPHER_ANON    6
+#define PCP_SYM_CIPHER          23
+#define PCP_ASYM_CIPHER_SIG     24
+#define PCP_BLOCK_SIZE          32 * 1024
 
 #define PCP_CRYPTO_ADD          (crypto_box_ZEROBYTES - crypto_box_BOXZEROBYTES)
 #define PCP_BLOCK_SIZE_IN       (PCP_BLOCK_SIZE) + PCP_CRYPTO_ADD + crypto_secretbox_NONCEBYTES

@@ -60,6 +60,13 @@ static inline void p_add(plist_t **lst, char *value) {
   }
 }
 
+static inline void p_add_me(plist_t **lst) {
+  char *me = (char *)malloc(13);
+  strcpy(me, "__self__");
+  p_add(lst, me);
+  free(me);
+}
+
 static inline void p_clean(plist_t *lst) {
   plist_t *iter = lst->first;
   plist_t *tmp;

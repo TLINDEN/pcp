@@ -207,12 +207,11 @@ pcp_key_t *pcpkey_decrypt(PCPCTX *ptx, pcp_key_t *key, char *passphrase) {
     memcpy(key->mastersecret, decrypted, 64);
     memcpy(key->edsecret, decrypted + 64, 64);    
     memcpy(key->secret, decrypted +128, 32);
-    ucfree(decrypted, 176);
+    ucfree(decrypted, 160);
   }
   else {
     fatal(ptx, "failed to decrypt the secret key (got %d, expected 32)!\n", es);
-    ucfree(decrypted, 176);
-    ucfree(key, sizeof(pcp_key_t));
+    ucfree(decrypted, 160);
     return NULL;
   }
 

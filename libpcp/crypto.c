@@ -242,6 +242,24 @@ size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t 
 	}
 	free(recipient);
       }
+
+      /* do the same with our secret keys, just in case the sender used -M */
+      if(recmatch == 0) {
+	pcp_key_t *k;
+	pcphash_iterate(ptx, k) {
+	  cur = pcpkey_pub_from_secret(k);
+	  byte *recipient;
+	  recipient = pcp_box_decrypt(ptx, s, cur, rec_buf, PCP_ASYM_RECIPIENT_SIZE, &rec_size);
+	  if(recipient != NULL && rec_size == crypto_secretbox_KEYBYTES) {
+	    /*  found a match */
+	    recmatch = 1;
+	    symkey = smalloc(crypto_secretbox_KEYBYTES);
+	    memcpy(symkey, recipient, crypto_secretbox_KEYBYTES);
+	    free(recipient);
+	    break;
+	  }
+	}
+      }
     }
     if(verify) {
       size_t R = nrec * (PCP_ASYM_RECIPIENT_SIZE);
@@ -255,11 +273,14 @@ size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t 
     goto errdef1;
   }
 
+  fatals_reset(ptx);
+
   /*  step 5, actually decrypt the file, finally */
   if(verify) {
     pcp_rec_t *rec = pcp_rec_new(reccipher, nrec * PCP_ASYM_RECIPIENT_SIZE, NULL, cur);
     size_t s = pcp_decrypt_stream_sym(ptx, in, out, symkey, rec);
     pcp_rec_free(rec);
+    ucfree(reccipher, lenrec * PCP_ASYM_RECIPIENT_SIZE);
     sfree(symkey);
     return s;
   }
@@ -425,17 +446,6 @@ size_t pcp_encrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, byte *
     }
   }
 
-#ifdef PCP_CBC
-  /*  write the IV, pad it with rubbish, since pcp_decrypt_file_sym */
-  /*  reads in with  PCP_BLOCK_SIZE_IN buffersize and uses the last */
-  /*  PCP_BLOCK_SIZE as IV. */
-  byte *iv = urmalloc(PCP_BLOCK_SIZE);
-  byte *ivpad = urmalloc(PCP_BLOCK_SIZE_IN - PCP_BLOCK_SIZE);
-
-  ps_write(out, ivpad, PCP_BLOCK_SIZE_IN - PCP_BLOCK_SIZE);
-  ps_write(out, iv, PCP_BLOCK_SIZE);
-#endif
-
   /*  32k-Block-mode. */
   in_buf = ucmalloc(PCP_BLOCK_SIZE);
   while(!ps_end(in)) {
@@ -445,11 +455,6 @@ size_t pcp_encrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, byte *
 
     /* generate nonce and put current buffer counter into it */
     buf_nonce = _gen_ctr_nonce(ctr++);
-
-#ifdef PCP_CBC
-    /*  apply IV to current clear */
-    _xorbuf(iv, in_buf, cur_bufsize);
-#endif
 
     es = pcp_sodium_mac(&buf_cipher, in_buf, cur_bufsize, buf_nonce, symkey);
 
@@ -464,10 +469,6 @@ size_t pcp_encrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, byte *
       crypto_generichash_update(st, buf_cipher, es);
       //crypto_generichash_update(st, in_buf, cur_bufsize);
 
-#ifdef PCP_CBC
-    /*  make current cipher to next IV, ignore nonce and pad */
-    memcpy(iv, &buf_cipher[PCP_CRYPTO_ADD], PCP_BLOCK_SIZE);
-#endif
   }
 
   if(ps_err(out) != 0) {
@@ -537,10 +538,6 @@ size_t pcp_decrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *
     signature_cr = ucmalloc(siglen_cr);
   }
 
-#ifdef PCP_CBC
-  byte *iv = NULL; /*  will be filled during 1st loop */
-#endif
-
 
   in_buf = ucmalloc(PCP_BLOCK_SIZE_IN);
   while(!ps_end(in)) {
@@ -555,15 +552,6 @@ size_t pcp_decrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *
 	cur_bufsize -= siglen_cr;
       }
     }
-
-#ifdef PCP_CBC
-    if(iv == NULL) {
-      /*  first block is the IV, don't write it out and skip to the next block */
-      iv = ucmalloc(PCP_BLOCK_SIZE);
-      memcpy(iv, &in_buf[PCP_CRYPTO_ADD + crypto_secretbox_NONCEBYTES], PCP_BLOCK_SIZE);
-      continue;
-    }
-#endif
 
     ciphersize = cur_bufsize - crypto_secretbox_NONCEBYTES;
     memcpy(buf_nonce, in_buf, crypto_secretbox_NONCEBYTES);
@@ -580,11 +568,6 @@ size_t pcp_decrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *
     }
     pastctr = ctr;
     es = pcp_sodium_verify_mac(&buf_clear, buf_cipher, ciphersize, buf_nonce, symkey);
-
-#ifdef PCP_CBC
-    /*  take last IV and apply it to current clear */
-    _xorbuf(iv, buf_clear, cur_bufsize - (PCP_CRYPTO_ADD + crypto_secretbox_NONCEBYTES));
-#endif 
 
     out_size += ciphersize - PCP_CRYPTO_ADD;
 
@@ -610,10 +593,6 @@ size_t pcp_decrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *
       out_size = 0;
       break;
     }
-#ifdef PCP_CBC
-    /*  use last cipher as next IV */
-    memcpy(iv, &in_buf[PCP_CRYPTO_ADD + crypto_secretbox_NONCEBYTES], PCP_BLOCK_SIZE);
-#endif
   }
 
   ucfree(in_buf, PCP_BLOCK_SIZE_IN);

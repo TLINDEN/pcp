@@ -218,12 +218,6 @@ if test "x${_havenacl}" != "xno" -a "x$cross_compile" = "xno"; then
     )
 fi
 
-AC_ARG_ENABLE([cbc],
-            [AS_HELP_STRING([--enable-cbc],
-                            [Enable CBC@1k encryption mode (default: EBC @32k)])],
-            [AC_DEFINE(PCP_CBC, 1, Define if you want to enable CBC mode)],
-             [])
-
 
 # Check for some target-specific stuff
 case "$host" in
@@ -410,7 +404,6 @@ AC_MSG_RESULT([
 	target platform:        ${host}
         big endian cpu:         ${bigendian}
 	cross compile:          ${cross_compile}
-	have nacl:              ${_havenacl}
 
 	build python binding:   ${python}
 	build c++ binding:      ${enable_cpp_binding}

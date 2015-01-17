@@ -99,9 +99,10 @@ int main (int argc, char **argv)  {
 
     /*  crypto */
     { "encrypt",         no_argument,       NULL,           'e' },
-    { "encrypt-me",      no_argument,       NULL,           'm' },
+    { "encrypt-sym",     no_argument,       NULL,           'm' },
     { "decrypt",         no_argument,       NULL,           'd' },
     { "anonymous",       no_argument,       NULL,           'A' },
+    { "add-myself",      no_argument,       NULL,           'M' },
 
     /*  encoding */
     { "z85-encode",      no_argument,       NULL,           'z' },
@@ -122,7 +123,7 @@ int main (int argc, char **argv)  {
     { NULL,              0,                 NULL,            0 }
   };
 
-  while ((opt = getopt_long(argc, argv, "klLV:vdehsO:i:I:pSPRtEx:DzaZr:gcymf:b1F:0KA",
+  while ((opt = getopt_long(argc, argv, "klLV:vdehsO:i:I:pSPRtEx:DzaZr:gcymf:b1F:0KAM",
 			    longopts, NULL)) != -1) {
   
     switch (opt)  {
@@ -263,6 +264,10 @@ int main (int argc, char **argv)  {
 	break;
       case 'r':
 	p_add(&recipient, optarg);
+	userec = 1;
+	break;
+      case 'M':
+	p_add_me(&recipient);
 	userec = 1;
 	break;
 

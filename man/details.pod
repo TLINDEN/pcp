@@ -27,7 +27,7 @@ B<-t> option.
 
 =head1 ENCRYPTION
 
-There are 2 modes of encryption available in pcp1:
+There are 3 modes of encryption available in pcp1:
 
 =over
 
@@ -48,10 +48,28 @@ Another example:
 
  pcp1 -e -r Bobby -r McCoy -I message.txt -O message.asc
 
+As you can see, it is also possible to encrypt a message for multiple
+recipients.
+
+=item B<Aonymous public key encryption>
+
+In anonymous mode a random generated keypair will be used on the
+sender side. This way the recipient doesn't have to have your public
+key.
+
+Example command:
+
+ pcp1 -r -r Bobby -A -I message.txt -O message.asc
+
+The public key part of the generated key pair will be included in
+the output, which potentiall lessens security. Use with care and
+avoid this mode when possible.
+
 =item B<Self encryption mode>
 
 You can also encrypt a file symetrically. No public key material
 will be used in this mode.
+
 While this works, the security of it totally depends on the
 strength of the passphrase used for encryption.
 
@@ -59,9 +77,11 @@ Example command:
 
  pcp1 -e -I message.txt -O cipher.z85
 
-As you can see we didn't specify -i or -r and therefore pcp1
-operates in self mode for encryption. It will ask you for a passphrase
-to protect the encryption key.
+As you can see we didn't specify any recipients (-i or -r) and therefore pcp1
+operates in self mode encryption. It will ask you for a passphrase, from which
+an encryption key will be derived using scrypt().
+
+PCP doesn't validate the security of the passphrase.
 
 =back
 
@@ -378,37 +398,55 @@ Take a look at the function B<pcp_keypairs()> for details.
 
 =head2 ENCRYPTED OUTPUT FORMAT
 
-Encrypted output will always written as binary files. No armoring
-supported yet. The encryption process works as this:
+The encryption protocol used by PCP uses mostly standard
+libsodium facilities with the exception that PCP uses counter
+mode (CTR-Mode) for stream encryption.
+
+ Detailed description:
 
 =over
 
-=item generate a random symetric 32 byte key B<S>
+=item generate a random ephemeral 32 byte key B<S>
 
 =item encrypt it asymetrically for each recipient using a unique nonce (B<R>)
 
-=item encrypt the input file 32k blockwise using the symetric key
+=item encrypt the input file 32k blockwise using the ephemeral key
+
+=over
+
+=item for each input block with a size of 32k bytes:
+
+=item generate a random nonce B<N>
+
+=item put the current counter size into the first byte of the nonce
+
+=item put the current counter (starting with 1) into the following byte(s), if larger than 1 byte, in big endian mode
+
+=item encrypt the 32k block using B<crypto_secretbox()> with the nonce B<N> and the ephemeral key B<S>
 
 =back
 
-Symetric encryption works the very same with the recipient stuff
-left out.
+=back
+
+Symetric encryption works the very same without the recipient stuff.
 
 Formal format description, asymetric encrypted files:
 
- +---------------------------------------------------------+
- | Field         Size      Description                     |
- +-------------+--------+----------------------------------+
- | Type        |      1 | Filetype, 5=ASYM, 23=SYM         |
- +-------------|--------|----------------------------------+
- | Len R       |      4 | Number of recipients         (*) |
- +-------------|--------|----------------------------------+
- | Recipients  |   R*72 | C(recipient)|C(recipient)... (*) |
- +-------------|--------|----------------------------------+
- | Encrypted   |      ~ | The actual encrypted data        |
- +-------------|--------|----------------------------------+
+ +-----------------------------------------------------------+
+ | Field         Size      Description                       |
+ +-------------+--------+------------------------------------+
+ | Type        |      1 | Filetype, 5=ASYM, 23=SYM, 6=ANON   |
+ +-------------|--------|------------------------------------+
+ | Anon PUB *  |     32 | anon pubkey, only used with type 6 |
+ +-------------|--------|------------------------------------+
+ | Len R *     |      4 | Number of recipients         (*)   |
+ +-------------|--------|------------------------------------+
+ | Recipients *|   R*72 | C(recipient)|C(recipient)... (*)   |
+ +-------------|--------|------------------------------------+
+ | Encrypted   |      ~ | The actual encrypted data          |
+ +-------------|--------|------------------------------------+
 
-Left out when doing symetric encryption.
+*) not included when doing symetric encryption.
 
 Recipient field format:
 
@@ -420,7 +458,7 @@ Recipient field format:
  | Cipher      |     48 | S encrypted with PK or R         |
  +-------------|--------|----------------------------------+
 
-R is calculated using public key encryption using the senders
+R is generated using B<crypto_box()> with the senders
 secret key, the recipients public key and a random nonce.
 
 Pseudocode:
@@ -435,6 +473,12 @@ where P is the public key of a recipient, SK is the senders
 secret key, R is the recipient list, L is the number of recipients,
 T is the filetype header, I is a block of input with a size
 of 32k, N is a nonce (new per block) and S the symmetric key.
+
+If using anonymous encryption, the sender generates a ephemeral
+key pair, uses the secret part of it to generate R. The public
+part will be included with the output (right after the file type.
+In this mode a recipient is not required to have the public key
+of the sender.
 
 The encrypted output maybe Z85 encoded. In this case the Z85
 encoding will be done blockwise with blocks of 16k bytes. The
@@ -545,7 +589,7 @@ secret signing key and S the symmetric key.
 B<pcp1> uses Z85 to encode binary data (if requested with -z) such
 as encrypted data, exported keys or armored signatures.
 
-Encoded data are always enclosed by a header and a footer and may have any number
+Encoded data is always enclosed by a header and a footer and may have any number
 of comments. Example:
 
  ----- PCP ENCRYPTED FILE -----
@@ -556,8 +600,17 @@ of comments. Example:
 
 However, the parser tries to be as tolerant as possible. It also accepts
 Z85 encoded data without headers or without newlines, empty lines or lines
-containing a space are ignored as are comments. Empty comments are not
+containing a space are ignored as well as comments. Empty comments are not
 allowed.
+
+=head3 Z85 PADDING
+
+PCP uses a custom padding scheme. Z85 input data size must be a multiple
+of 4. To fulfill this requirement, PCP padds the input with zeros as
+neccessary. To tell the decoder if padding took place and how much zeros
+have been added, PCP adds another 4 bytes after each Z85 encoded block,
+from the last one which contains the number of zeros used for padding,
+even if the input hasn't been padded.
 
 =head3 Z85 BACKGROUND
 

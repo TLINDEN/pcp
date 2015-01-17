@@ -79,14 +79,17 @@
                            the message symetrically. This is the same
                            as -m (self-encryption mode).
                            Add -z to ascii armor the output using Z85.
- -A --anonymous            Use anonymous sender key pair instead or
+ -A --anonymous            Use anonymous sender key pair instead of
                            your own primary key pair. In this mode the
                            recipient doesn't need to have your public
                            key.
- -m --encrypt-me           Sym-Encrypt a message. Specify -I and/or
+ -m --encrypt-sym          Sym-Encrypt a message. Specify -I and/or
                            -O for input/output file. You will be asked
                            for a passphrase. No key material will
                            be used. Same as -e without -r and -i.
+ -M --add-myself           Add yourself to list of recipients in asymmetric
+                           encryption mode, so that you can decrypt it as
+                           well.
  -d --decrypt              Decrypt a message. Read from stdin or
                            specified via -I. Output to stdout or
                            written to the file specified via -O.

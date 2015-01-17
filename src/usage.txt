@@ -32,7 +32,8 @@ Encryption Options:
 -e --encrypt              Asym-Encrypt a message. If none of -i or -r
                           has been given, encrypt the message symetrically.
 -A --anonymous            Use anonymous sender key pair.
--m --encrypt-me           Symetrically encrypt a message.
+-M --add-myself           Add you primary pub key to list of recipients.
+-m --encrypt-sym          Symetrically encrypt a message.
 -d --decrypt              Decrypt a message.
 
 Signature Options:

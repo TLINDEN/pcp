@@ -62,18 +62,6 @@ we pad the input with zeroes and remove them after decoding.
 byte *pcp_padfour(byte *src, size_t srclen, size_t *dstlen);
 
 
-/** Unpad padded input data.
-
-    It just calculates the size of the unpadded result (size - all trailing zeroes).
-    Doesn't allocate any memory or modify anything.
-
-    \param[in] src Padded data.
-    \param[in] srclen Size of padded data.
-
-    \return Returns the unpadded size of the data.
- */
-size_t pcp_unpadfour(byte *src, size_t srclen);
-
 /** Decode data from Z85 encoding.
 
     The input \a z85block may contain newlines which will be removed.

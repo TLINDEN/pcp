@@ -55,12 +55,12 @@
 #         error Need either netinet/in.h or arpa/inet.h for ntohl() and htonl()
 #       endif
 #     endif
-#     define be16toh(x)	((u_int16_t)ntohl((uint16_t)(x)))
-#     define htobe16(x)	((u_int16_t)htonl((uint16_t)(x)))
-#     define be32toh(x)	((u_int32_t)ntohl((uint32_t)(x)))
-#     define htobe32(x)	((u_int32_t)htonl((uint32_t)(x)))
-#     define be64toh(x)	((u_int64_t)ntohl((uint64_t)(x)))
-#     define htobe64(x)	((u_int64_t)htonl((uint64_t)(x)))
+#     define be16toh(x)	((uint16_t)ntohl((uint16_t)(x)))
+#     define htobe16(x)	((uint16_t)htonl((uint16_t)(x)))
+#     define be32toh(x)	((uint32_t)ntohl((uint32_t)(x)))
+#     define htobe32(x)	((uint32_t)htonl((uint32_t)(x)))
+#     define be64toh(x)	((uint64_t)ntohl((uint64_t)(x)))
+#     define htobe64(x)	((uint64_t)htonl((uint64_t)(x)))
 #   endif
 #  endif /*  HAVE_SYS_ENDIAN_H */
 #endif /*  HAVE_ENDIAN_H */

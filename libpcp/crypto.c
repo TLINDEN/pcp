@@ -562,7 +562,8 @@ size_t pcp_decrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *
        buffers are in order again */
     ctr = _get_nonce_ctr(buf_nonce);
     if(ctr -1 != pastctr) {
-      fatal(ptx, "Mangled packet order, bailing out (got: %ld, expected: %ld)!\n", ctr, pastctr+1);
+      fatal(ptx, "Mangled packet order, bailing out (got: %ld, expected: %ld)!\n",
+	    ctr, pastctr+1);
       out_size = 0;
       break;
     }
@@ -688,10 +689,10 @@ void pcp_rec_free(pcp_rec_t *r) {
   convert back to native endianes.
  */
 uint64_t _get_nonce_ctr(byte *nonce) {
-  uint64_t ctr;
+  uint64_t ctr = 0;
   uint8_t    i = nonce[0];
-  uint16_t m16;
-  uint32_t m32;
+  uint16_t m16 = 0;
+  uint32_t m32 = 0;
   
   switch(i) {
   case 1:

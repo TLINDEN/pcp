@@ -29,7 +29,7 @@ AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR(config)
 
 AC_CONFIG_HEADER(include/pcp/config.h)
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([subdir-objects])
 LT_INIT
 
 ORIG_CFLAGS="${CFLAGS:-none}"

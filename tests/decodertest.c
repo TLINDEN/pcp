@@ -7,20 +7,23 @@
 #define TRUE 1
 #define FALSE 0
 
-static const char *tell[] = {
-  NULL,
-  "Headers: no,  Newlines: yes, Compliant: yes",
-  "Headers: no,  Newlines: no,  Compliant: yes",
-  "Headers: no,  Newlines: yes, Compliant: yes - no begin header",
-  "Headers: yes, Newlines: yes, Compliant: no - empty comment",
-  "Headers: yes, Newlines: yes, Compliant: no - missing z85 char",
-};
+
 
 int main(int argc, char **argv) {
   int ret;
   size_t clearlen = 256;
   size_t zlen;
   char *z85;
+
+  static const char *tellmsg[] = {
+    NULL,
+    "Headers: no,  Newlines: yes, Compliant: yes",
+    "Headers: no,  Newlines: no,  Compliant: yes",
+    "Headers: no,  Newlines: yes, Compliant: yes - no begin header",
+    "Headers: yes, Newlines: yes, Compliant: no - empty comment",
+    "Headers: yes, Newlines: yes, Compliant: no - missing z85 char",
+  };
+
   PCPCTX *ptx = ptx_new();
 
   if(argc < 2) {
@@ -101,7 +104,7 @@ int main(int argc, char **argv) {
 
   /* control output */
   
-  fprintf(stderr, "%s:\n\n%s\n", tell[mode], buffer_get_str(zdone));
+  fprintf(stderr, "%s:\n\n%s\n", tellmsg[mode], buffer_get_str(zdone));
 
   /* line decoder */
 

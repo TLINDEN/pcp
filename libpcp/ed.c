@@ -278,6 +278,21 @@ pcp_pubkey_t *pcp_ed_verify_buffered(PCPCTX *ptx, Pcpstream *in, pcp_pubkey_t *p
       if(verifiedhash != NULL)
 	break;
     }
+
+        /* no pubkey found yet, try our own */
+    pcp_key_t *k;
+    pcp_pubkey_t *pub;
+    pcphash_iterate(ptx, k) {
+      if(k->type == PCP_KEY_TYPE_MAINSECRET) {
+	pub = pcpkey_pub_from_secret(k);
+	verifiedhash = pcp_ed_verify(ptx, sighash, mlen, pub);
+	if(verifiedhash != NULL) {
+	  /* good, self-signed */
+	  p = pub;
+	  break;
+	}
+      }
+    }
   }
   else {
     verifiedhash = pcp_ed_verify(ptx, sighash, mlen, p);

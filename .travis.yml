@@ -2,16 +2,14 @@ language: c
 os:
   - linux
 before_install:
-  - git clone git@github.com:jedisct1/libsodium.git
+  - git clone https://github.com/jedisct1/libsodium
   - cd libsodium
   - ./autogen.sh
   - ./configure
-  - make
-  - cd ..
-  - ./autogen.sh
+  - make install
 compiler:
   - clang
   - gcc
 script:
- - ./configure --with-libsodium-lib-dir libsodium/src/libsodium/.libs --with-libsodium-include-dir libsodium/src/libsodium/include
+ - ./configure
  - make

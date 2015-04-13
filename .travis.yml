@@ -6,7 +6,7 @@ before_install:
   - cd libsodium
   - ./autogen.sh
   - ./configure
-  - sudo make install
+  - sudo  make install
 compiler:
   - clang
   - gcc

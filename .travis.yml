@@ -9,9 +9,13 @@ before_install:
   - make
   - sudo make install
   - cd ..
+  - ./autogen.sh
+  - cpanm Test::More IPC::Open3 Config::General Tie::IxHash
 compiler:
   - clang
   - gcc
 script:
  - ./configure
  - make
+ - make check
+ - make test

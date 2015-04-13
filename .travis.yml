@@ -1,0 +1,10 @@
+language: c
+os:
+  - linux
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq libsodium
+  - ./autogen.sh
+compiler:
+  - clang
+  - gcc

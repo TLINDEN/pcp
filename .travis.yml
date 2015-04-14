@@ -16,8 +16,7 @@ compiler:
   - gcc
 script:
  - ./configure
- - gcc sv.c -lsodium -o sv
- - ./sv
+ - find tests/lib -ls
  - make
  - make check
  - make test

@@ -23,12 +23,12 @@ use lib qw(lib);
 
 BEGIN {
   eval {
-    require IPC::Run;
+    require IPC::Run; # on win32
   };
-};
+}
 
+use IPC::Open3; # unix et al use this
 use Test::More;
-use IPC::Open3;
 use IO::Select;
 use FileHandle;
 use Config::General qw(ParseConfig);
@@ -220,6 +220,7 @@ sub run3 {
     else {
       @c = split /\s\s*/, $cmd;
     }
+
     my $ret = IPC::Run::run( \@c, \$input, \$o, \$e, IPC::Run::timeout( $timeout ));
     $$output = $o;
     $$error = $e;

@@ -10,13 +10,11 @@ before_install:
   - sudo make install
   - cd ..
   - ./autogen.sh
-  - perlbrew use `perlbrew list | grep 5.20 | head -1`
-  - cpanm Test::More IPC::Open3 Config::General Tie::IxHash
+  - perl -MIPC::Open3 -e0
+  - perl -MTest::More
 compiler:
   - clang
   - gcc
 script:
  - ./configure
  - make
- - make check
- - make test

@@ -31,8 +31,6 @@ use IPC::Open3; # unix et al use this
 use Test::More;
 use IO::Select;
 use FileHandle;
-#use Config::General qw(ParseConfig);
-#use Tie::IxHash;
 use Data::Dumper;
 
 sub run3;
@@ -46,7 +44,7 @@ if (! $config) {
   die "usage: $0 <config>\n";
 }
 
-my %cfg = ParseConfig(-ConfigFile => $config,
+my %cfg = Config::General::ParseConfig(-ConfigFile => $config,
 		      -InterPolateVars => 1,
 		      -UseApacheInclude => 1,
 		      -Tie => "Tie::IxHash" );

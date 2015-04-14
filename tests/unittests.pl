@@ -32,7 +32,7 @@ use Test::More;
 use IO::Select;
 use FileHandle;
 use Data::Dumper;
-use Config::General;
+use Config::General qw(ParseConfig);
 
 sub run3;
 sub execute;

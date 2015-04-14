@@ -10,11 +10,13 @@ before_install:
   - sudo make install
   - cd ..
   - ./autogen.sh
-  - perl -MIPC::Open3 -e0
-  - perl -MTest::More
+  - git clone https://github.com/tlinden/p5mode tests/lib
 compiler:
   - clang
   - gcc
 script:
  - ./configure
  - make
+ - make check
+ - make test
+

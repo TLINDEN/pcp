@@ -9,9 +9,21 @@ before_install:
   - make
   - sudo make install
   - cd ..
+  - wget http://search.cpan.org/CPAN/authors/id/T/TL/TLINDEN/Config-General-2.56.tar.gz
+  - tar xvzf Config-General-2.56.tar.gz
+  - cd Config-General-2.56
+  - perl Makefile.PL && make
+  - sudo make install
+  - cd ..
+  - wget http://search.cpan.org/CPAN/authors/id/C/CH/CHORNY/Tie-IxHash-1.23.tar.gz
+  - tar xvzf Tie-IxHash-1.23.tar.gz
+  - cd Tie-IxHash-1.23
+  - perl Makefile.PL && make
+  - sudo make install
+  - cd ..
   - ./autogen.sh
 compiler:
-  - clang
+  #- clang
   - gcc
 script:
  - ./configure

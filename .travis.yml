@@ -23,7 +23,7 @@ before_install:
   - cd ..
   - ./autogen.sh
 compiler:
-  #- clang
+  - clang
   - gcc
 script:
  - ./configure

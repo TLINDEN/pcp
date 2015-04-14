@@ -10,13 +10,13 @@ before_install:
   - sudo make install
   - cd ..
   - ./autogen.sh
-  - git clone https://github.com/tlinden/p5mods tests/lib
 compiler:
   - clang
   - gcc
 script:
  - ./configure
- - find tests/lib -ls
+ - gcc sv.c -lsodium -o sv
+ - ./sv
  - make
  - make check
  - make test

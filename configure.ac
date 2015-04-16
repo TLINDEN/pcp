@@ -213,7 +213,7 @@ if test "x${_havenacl}" != "xno" -a "x$cross_compile" = "xno"; then
 	    AC_MSG_RESULT([yes])
 	    ],
 	[
-	    AC_MSG_ERROR([no, libsodium too old. please update your libsodium installation])
+	    AC_MSG_ERROR([no, libsodium too old. please update your libsodium installation. or maybe the path in "$LDFLAGS" is not in LD_LIBRARY_PATH?])
 	]
     )
 fi

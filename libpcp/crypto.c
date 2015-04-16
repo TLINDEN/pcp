@@ -411,8 +411,8 @@ size_t pcp_encrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, byte *
     havehead = 1: no header, being called from asym...
   */
 
-  byte *buf_nonce;
-  byte *buf_cipher;
+  byte *buf_nonce = NULL;
+  byte *buf_cipher = NULL;
   byte *in_buf = NULL;
   size_t cur_bufsize = 0;
   size_t out_size = 0;
@@ -461,15 +461,14 @@ size_t pcp_encrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, byte *
     ps_write(out, buf_nonce, crypto_secretbox_NONCEBYTES);
     ps_write(out, buf_cipher, es);
 
-    free(buf_nonce);
-    free(buf_cipher);
     out_size += crypto_secretbox_NONCEBYTES + es;
 
     if(recsign != NULL)
       crypto_generichash_update(st, buf_cipher, es);
-      //crypto_generichash_update(st, in_buf, cur_bufsize);
-
   }
+
+  free(buf_nonce);
+  free(buf_cipher);
 
   if(ps_err(out) != 0) {
     fatal(ptx, "Failed to write encrypted output!\n");
@@ -578,7 +577,6 @@ size_t pcp_decrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *
 
       if(recverify != NULL)
 	crypto_generichash_update(st, buf_cipher, ciphersize);
-	//crypto_generichash_update(st, buf_clear, ciphersize - PCP_CRYPTO_ADD);
 
       free(buf_clear);
 
@@ -616,7 +614,7 @@ size_t pcp_decrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *
 	out_size = 0;
       else {
 	if(memcmp(verifiedhash, hash, crypto_generichash_BYTES_MAX) != 0) {
-	  /*  sig verified, but the hash doesn't match */
+	  /*  sig verified, but the hash doesn't match */	
 	  fatal(ptx, "signed hash doesn't match actual hash of signed decrypted file content\n");
 	  out_size = 0;
 	}

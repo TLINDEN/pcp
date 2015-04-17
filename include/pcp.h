@@ -10,7 +10,6 @@ extern "C" {
 #include "pcp/buffer.h"
 #include "pcp/context.h"
 #include "pcp/crypto.h"
-#include "pcp/crypto_scrypt.h"
 #include "pcp/defines.h"
 #include "pcp/digital_crc32.h"
 #include "pcp/ed.h"

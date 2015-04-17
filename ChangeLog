@@ -32,6 +32,20 @@ NEXT
 	encryption, while -M adds the senders primary pub
 	key to the list of recipients in asymmetric mode.
 
+	added automated tests using travis-ci:
+	https://travis-ci.org/TLINDEN/pcp/
+
+	fixed several use-after-free bugs in encryption
+	code.
+
+	made configure more portable, esp. fixed finding
+	of libsodium.
+
+	replaced star's incorporated scrypt() with the
+	one libsodium now provides. breaks compatibility
+	to older pcp versions, but is more portable and
+	removes to burden to keep this code up to date.
+
 0.2.4	fixed compiler macro misplacement (github#4).
 
 	fixed invalid free (github#5).

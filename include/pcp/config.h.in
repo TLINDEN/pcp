@@ -12,10 +12,6 @@
 /* Define if be32toh() is available */
 #undef HAVE_BE32TOH
 
-/* Define to 1 if you have the declaration of `be64enc', and to 0 if you
-   don't. */
-#undef HAVE_DECL_BE64ENC
-
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 

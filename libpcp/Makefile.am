@@ -18,9 +18,8 @@
 #
 #    You can contact me by mail: <tlinden AT cpan DOT org>.
 #
-AM_CFLAGS =  -I../include/pcp -Iscrypt/crypto -Iscrypt/util
+AM_CFLAGS =  -I../include/pcp -Iscrypt/util
 
-SUBDIRS = scrypt
 lib_LTLIBRARIES      = libpcp1.la
 
 pkgconfigdir = $(libdir)/pkgconfig
@@ -30,7 +29,6 @@ libpcp1_la_SOURCES = platform.c  mem.c version.c \
 		    context.c z85.c zmq_z85.c key.c randomart.c \
 		    vault.c jenhash.c digital_crc32.c \
                     crypto.c ed.c keyhash.c scrypt.c \
-		    scrypt/crypto/sha256.c scrypt/crypto/crypto_scrypt-nosse.c \
 		    base85.c util.c buffer.c mgmt.c keysig.c pcpstream.c
 
 include_HEADERS      = ../include/pcp.h

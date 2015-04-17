@@ -18,7 +18,7 @@
 #
 #    You can contact me by mail: <tlinden AT cpan DOT org>.
 #
-AM_CXXFLAGS = -I../../include -I../../libpcp/scrypt/crypto -I../../libpcp/scrypt/util
+AM_CXXFLAGS = -I../../include
 
 EXTRA_DIST = *.h
 

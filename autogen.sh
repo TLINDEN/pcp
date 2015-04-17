@@ -63,7 +63,7 @@ Pretty Curved Privacy - File encryption using eliptic curve cryptography.
     bindings/py/gencffi.pl include/pcp/defines.h include/pcp/structs.h include/pcp/key.h \
 	                   include/pcp/buffer.h include/pcp/context.h \
 	                   include/pcp/ed.h include/pcp/crypto.h include/pcp/vault.h \
-	                   include/pcp/mgmt.h include/pcp/keyhash.h include/pcp/scrypt.h \
+	                   include/pcp/mgmt.h include/pcp/keyhash.h \
 	                   include/pcp/pcpstream.h include/pcp/z85.h > bindings/py/pypcp/raw.py
 
     exit

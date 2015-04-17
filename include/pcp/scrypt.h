@@ -32,7 +32,6 @@
 
 #include <sodium.h>
 
-#include "crypto_scrypt.h"
 #include "mem.h"
 #include "defines.h"
 #include "context.h"

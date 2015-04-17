@@ -169,7 +169,7 @@ AC_ARG_WITH([libsodium-include-dir],
 
 if test "x$search_libsodium_include" = "xyes"; then
     if test -r "${with_libsodium_include_dir}/sodium.h"; then
-        CFLAGS="-I${with_libsodium_include_dir}/include ${CFLAGS}"
+        CFLAGS="-I${with_libsodium_include_dir} ${CFLAGS}"
 	_havenacl=yes
     fi
 fi
@@ -181,10 +181,10 @@ AC_ARG_WITH([libsodium_lib_dir],
             [])
 
 if test "x$search_libsodium_lib" = "xyes"; then
-    if test -r "${with_libsodium_lib_dir}/libsodium.{a|so|dylib}"; then
-        LDFLAGS="-L${with_libsodium}/lib ${LDFLAGS}"
+    if test -r "${with_libsodium_lib_dir}/libsodium.dylib" -o -r "${with_libsodium_lib_dir}/libsodium.so" -o -r "${with_libsodium_lib_dir}/libsodium.a"; then
+        LDFLAGS="-L${with_libsodium_lib_dir} ${LDFLAGS}"
 	_havenacl=yes
-	_ldlib="${with_libsodium}/lib"
+	_ldlib="${with_libsodium_lib_dir}"
     fi
 fi
 
@@ -204,6 +204,9 @@ fi
 
 if test "x${_havenacl}" != "xno" -a "x$cross_compile" = "xno"; then
     LIBS="-lsodium" # gcc
+    export LDFLAGS="$LDFLAGS"
+    export CFLAGS="$CFLAGS"
+    export LIBS="$LIBS"
     AC_MSG_CHECKING([libsodium version compatible])
     AC_RUN_IFELSE([
 	    AC_LANG_PROGRAM([[
@@ -265,7 +268,6 @@ case "$host" in
     *-*-ultrix*) ;;
     *-*-lynxos) ;;
 esac
-
 AC_CHECK_LIB(sodium, sodium_init, , [AC_MSG_ERROR([cannot link with -lsodium, install libsodium.])])
 
 if test -n "$_ldlib"; then

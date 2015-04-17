@@ -822,9 +822,7 @@ pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphras
   if(buffer_get_chunk(cipher, nonce, crypto_secretbox_NONCEBYTES) == 0)
     goto impserr1;
 
-  fprintf(stderr, "import\n");
   symkey = pcp_scrypt(ptx, passphrase, strlen(passphrase), nonce, crypto_secretbox_NONCEBYTES);
-  fprintf(stderr, "import done\n");
 
   cipherlen = buffer_left(cipher);
   if(cipherlen < minlen) {

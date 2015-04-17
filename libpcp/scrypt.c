@@ -35,6 +35,7 @@ byte* pcp_scrypt(PCPCTX *ptx, char *passwd, size_t passwdlen, byte *nonce, size_
     _dump("nonce", nonce, noncelen);
     _dump(" pass", (byte*)passwd, passwdlen);
     _dump("   dk", dk, 64);
+    fprintf(stderr, "N: %ld, r: %d, p: %d\n", N, r, p);
     return dk;
   }
   else {

@@ -331,7 +331,6 @@ pcp_ks_bundle_t *pcp_import_pub_rfc(PCPCTX *ptx, Buffer *blob) {
  bes:
 
  bef:
-  buffer_free(blob);
   ucfree(sigheader, sizeof(rfc_pub_sig_h));
   ucfree(subheader, sizeof(rfc_pub_sig_s));
   ucfree(p, sizeof(pcp_pubkey_t));

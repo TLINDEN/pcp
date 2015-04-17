@@ -201,6 +201,7 @@ if test "x${_havenacl}" = "xno"; then
 fi
 
 if test "x${_havenacl}" != "xno" -a "x$cross_compile" = "xno"; then
+    LIBS="-lsodium" # gcc
     AC_MSG_CHECKING([libsodium version compatible])
     AC_RUN_IFELSE([
 	    AC_LANG_PROGRAM([[

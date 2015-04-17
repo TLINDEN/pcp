@@ -457,7 +457,6 @@ size_t pcp_encrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, byte *
     buf_nonce = _gen_ctr_nonce(ctr++);
 
     es = pcp_sodium_mac(&buf_cipher, in_buf, cur_bufsize, buf_nonce, symkey);
-
     ps_write(out, buf_nonce, crypto_secretbox_NONCEBYTES);
     ps_write(out, buf_cipher, es);
 
@@ -465,12 +464,13 @@ size_t pcp_encrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, byte *
 
     if(recsign != NULL)
       crypto_generichash_update(st, buf_cipher, es);
+
+    ucfree(buf_nonce, crypto_secretbox_NONCEBYTES);
+    free(buf_cipher);
   }
 
-  free(buf_nonce);
-  free(buf_cipher);
-
   if(ps_err(out) != 0) {
+    free(buf_cipher);
     fatal(ptx, "Failed to write encrypted output!\n");
     goto errsym1;
   }
@@ -492,8 +492,10 @@ size_t pcp_encrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, byte *
     ps_write(out, buf_cipher, es);
 
     free(st);
-    ucfree(signature, siglen);
     free(hash);
+    ucfree(buf_nonce, crypto_secretbox_NONCEBYTES);
+    free(buf_cipher);
+    ucfree(signature, siglen);
   }
 
   ucfree(in_buf, PCP_BLOCK_SIZE);
@@ -521,6 +523,7 @@ size_t pcp_decrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *
  
   buf_nonce  = ucmalloc(crypto_secretbox_NONCEBYTES);
   buf_cipher = ucmalloc(ciphersize);
+  buf_clear  = ucmalloc(ciphersize);
   out_size = 0;
 
   byte *signature = NULL;
@@ -573,12 +576,9 @@ size_t pcp_decrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *
 
     if(es == 0) {
       ps_write(out, buf_clear, ciphersize - PCP_CRYPTO_ADD);
-      /* fwrite(buf_clear, ciphersize - PCP_CRYPTO_ADD, 1, out); */
 
       if(recverify != NULL)
 	crypto_generichash_update(st, buf_cipher, ciphersize);
-
-      free(buf_clear);
 
       if(ps_err(out) != 0) {
 	fatal(ptx, "Failed to write decrypted output!\n");
@@ -588,7 +588,6 @@ size_t pcp_decrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *
     }
     else {
       fatal(ptx, "Failed to decrypt file content!\n");
-      free(buf_clear);
       out_size = 0;
       break;
     }
@@ -596,6 +595,7 @@ size_t pcp_decrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *
 
   ucfree(in_buf, PCP_BLOCK_SIZE_IN);
   ucfree(buf_cipher, ciphersize);
+  ucfree(buf_clear, ciphersize);
 
   if(recverify != NULL) {
     /* decrypt the signature */

@@ -46,6 +46,6 @@ script:
  - make check
  - make test
  - cd tests
- - ls -l
- - valgrind --leak-check=full --show-reachable=yes ../src/pcp1 -V va -K -I key-alicia-sec -x a
+ - rm va
+ - ../src/pcp1 -V va -K -I key-alicia-sec -x a
 

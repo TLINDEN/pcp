@@ -802,7 +802,6 @@ pcp_key_t *pcp_import_secret(PCPCTX *ptx, byte *raw, size_t rawsize, char *passp
   }
 
   /* now we've got the blob, parse it */
-  buffer_dump(blob); 
   pcp_key_t *sk = pcp_import_secret_native(ptx, blob, passphrase);
   buffer_free(blob);
 
@@ -823,7 +822,9 @@ pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphras
   if(buffer_get_chunk(cipher, nonce, crypto_secretbox_NONCEBYTES) == 0)
     goto impserr1;
 
+  fprintf(stderr, "import\n");
   symkey = pcp_scrypt(ptx, passphrase, strlen(passphrase), nonce, crypto_secretbox_NONCEBYTES);
+  fprintf(stderr, "import done\n");
 
   cipherlen = buffer_left(cipher);
   if(cipherlen < minlen) {
@@ -834,11 +835,9 @@ pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphras
   }
 
   /* decrypt the blob */
-  buffer_info(cipher);
-  fprintf(stderr, "cipherpen: %ld\n", cipherlen);
-  _dump("   symkey", symkey, crypto_secretbox_KEYBYTES);
   if(pcp_sodium_verify_mac(&clear, buffer_get_remainder(cipher),
 			   cipherlen, nonce, symkey) != 0) {
+
     fatal(ptx, "failed to decrypt the secret key file\n");
     goto impserr1;
   }
@@ -894,5 +893,7 @@ pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphras
   buffer_free(blob);
   if(symkey != NULL)
     sfree(symkey);
+  if(clear != NULL)
+    free(clear);
   return NULL;
 }

@@ -20,6 +20,7 @@
 */
 
 #include "scrypt.h"
+#include "util.h"
 
 byte* pcp_scrypt(PCPCTX *ptx, char *passwd, size_t passwdlen, byte *nonce, size_t noncelen) {
   uint8_t *dk = smalloc(64); /*  resulting hash */
@@ -31,6 +32,9 @@ byte* pcp_scrypt(PCPCTX *ptx, char *passwd, size_t passwdlen, byte *nonce, size_
   size_t buflen = 64;
 
   if (crypto_scrypt((byte *)passwd, passwdlen, (uint8_t *)nonce, noncelen, N, r, p, dk, buflen) == 0) {
+    _dump("nonce", nonce, noncelen);
+    _dump(" pass", (byte*)passwd, passwdlen);
+    _dump("   dk", dk, 64);
     return dk;
   }
   else {

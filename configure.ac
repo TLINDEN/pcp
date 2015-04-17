@@ -77,7 +77,9 @@ AC_CHECK_FUNCS( \
     malloc \
     memset \
     memcpy \
+    mmap \
     perror \
+    posix_memalign \
     setrlimit \
     strnlen \
     strnstr \

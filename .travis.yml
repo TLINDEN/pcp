@@ -27,6 +27,13 @@ before_install:
   - perl Makefile.PL && make
   - sudo make install
   - cd ..
+  - wget http://valgrind.org/downloads/valgrind-3.10.1.tar.bz2
+  - tar xvjf valgrind-3.10.1.tar.bz2
+  - cd valgrind-3.10.1
+  - ./configure --prefix=/usr
+  - make
+  - sudo make install
+  - cd ..
   - ./autogen.sh
 compiler:
   - clang

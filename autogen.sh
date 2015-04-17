@@ -103,7 +103,7 @@ find . -name .libs       -exec rm -rf {} \;  > /dev/null 2>&1
 find . -name .o          -exec rm -rf {} \;  > /dev/null 2>&1
 find . -name .lo         -exec rm -rf {} \;  > /dev/null 2>&1
 find . -name .pyc        -exec rm -rf {} \;  > /dev/null 2>&1
-
+find . -name .dirstamp   -exec rm -rf {} \;  > /dev/null 2>&1
 rm -rf aclocal.m4 libtool configure config.* config autom4te.cache tests/test* tests/v* tests/stresstest/* libpcp/libpcp1.pc
 rm clean.sh
 EOF

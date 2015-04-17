@@ -22,6 +22,8 @@ HAVESODIUM = $(PREFIX)/_havesodium
 SRCSODIUM = $(BUILD)/libsodium
 SRCPCP    = $(BUILD)/pcp
 
+PERLVERSION = $(shell perl -e 'print "$^V"' sed 's/v//')
+
 all: prepare fetch config-sodium compile-sodium install-sodium config-pcp compile-pcp install-pcp test-pcp
 	@echo done
 
@@ -86,5 +88,5 @@ clean:
 	rm -rf $(PREFIX)
 
 test-pcp: perl
-	ln -sf $(PREFIX)/share/perl/5.10.1 $(SRCPCP)/tests/lib
+	ln -sf $(PREFIX)/share/perl/$(PERLVERSION) $(SRCPCP)/tests/lib
 	cd $(SRCPCP) && make test

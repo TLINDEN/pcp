@@ -34,13 +34,14 @@ before_install:
   - make
   - sudo make install
   - cd ..
+  - sudo apt-get update
+  - sudo apt-get install libc6-dbg
   - ./autogen.sh
 compiler:
   - clang
   - gcc
 script:
  - ./configure
- - cat config.log
  - make
  - make check
  - make test

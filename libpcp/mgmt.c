@@ -802,6 +802,7 @@ pcp_key_t *pcp_import_secret(PCPCTX *ptx, byte *raw, size_t rawsize, char *passp
   }
 
   /* now we've got the blob, parse it */
+  buffer_dump(blob); 
   pcp_key_t *sk = pcp_import_secret_native(ptx, blob, passphrase);
   buffer_free(blob);
 
@@ -833,6 +834,9 @@ pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphras
   }
 
   /* decrypt the blob */
+  buffer_info(cipher);
+  fprintf(stderr, "cipherpen: %ld\n", cipherlen);
+  _dump("   symkey", symkey, crypto_secretbox_KEYBYTES);
   if(pcp_sodium_verify_mac(&clear, buffer_get_remainder(cipher),
 			   cipherlen, nonce, symkey) != 0) {
     fatal(ptx, "failed to decrypt the secret key file\n");

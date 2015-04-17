@@ -595,7 +595,7 @@ size_t pcp_decrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *
 
   ucfree(in_buf, PCP_BLOCK_SIZE_IN);
   ucfree(buf_cipher, ciphersize);
-  ucfree(buf_clear, ciphersize);
+  ucfree(buf_clear, ciphersize - PCP_CRYPTO_ADD);
 
   if(recverify != NULL) {
     /* decrypt the signature */

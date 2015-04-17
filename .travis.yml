@@ -21,6 +21,12 @@ before_install:
   - perl Makefile.PL && make
   - sudo make install
   - cd ..
+  - wget http://search.cpan.org/CPAN/authors/id/I/IN/INGY/YAML-1.14.tar.gz
+  - tar xvfz YAML-1.14.tar.gz
+  - cd YAML-1.14
+  - perl Makefile.PL && make
+  - sudo make install
+  - cd ..
   - ./autogen.sh
 compiler:
   - clang

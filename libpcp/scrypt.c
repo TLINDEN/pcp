@@ -23,25 +23,23 @@
 #include "util.h"
 
 byte* pcp_scrypt(PCPCTX *ptx, char *passwd, size_t passwdlen, byte *nonce, size_t noncelen) {
-  uint8_t *dk = smalloc(64); /*  resulting hash */
+  byte *dk = smalloc(64);
+  byte *salt = malloc(crypto_pwhash_scryptsalsa208sha256_SALTBYTES);
+  
+  crypto_generichash(salt, crypto_pwhash_scryptsalsa208sha256_SALTBYTES,
+                   nonce, noncelen, NULL, 0);
 
-  /*  constants */
-  uint64_t N = 1 << 14;
-  uint32_t r = 8;
-  uint32_t p = 1;
-  size_t buflen = 64;
+  int status = crypto_pwhash_scryptsalsa208sha256(dk, 64, passwd, passwdlen, salt,
+						  crypto_pwhash_scryptsalsa208sha256_OPSLIMIT_INTERACTIVE,
+						  crypto_pwhash_scryptsalsa208sha256_MEMLIMIT_INTERACTIVE);
 
-  if (crypto_scrypt((byte *)passwd, passwdlen, (uint8_t *)nonce, noncelen, N, r, p, dk, buflen) == 0) {
-    _dump("nonce", nonce, noncelen);
-    _dump(" pass", (byte*)passwd, passwdlen);
-    _dump("   dk", dk, 64);
-    fprintf(stderr, "N: %ld, r: %d, p: %d\n", N, r, p);
+  ucfree(salt, crypto_pwhash_scryptsalsa208sha256_SALTBYTES);
+  if (status == 0) {
     return dk;
   }
   else {
-    fatal(ptx, "crypto_scrypt() failed\n");
+    fatal(ptx, "crypto_pwhash_scryptsalsa208sha256() failed\n");
     return NULL;
   }
-
-  return NULL;
 }
+

@@ -45,7 +45,4 @@ script:
  - make
  - make check
  - make test
- - cd tests
- - rm va
- - ../src/pcp1 -V va -K -I key-alicia-sec -x a
 

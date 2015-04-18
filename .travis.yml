@@ -41,7 +41,7 @@ compiler:
   - clang
   - gcc
 script:
- - ./configure
+ - ./configure --enable-python-binding
  - make
  - make check
  - make test

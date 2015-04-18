@@ -27,10 +27,8 @@
 #define PCP_VERSION_MINOR 2
 #define PCP_VERSION_PATCH 6
 
-#define PCP_MAKE_VERSION(major, minor, patch) \
-  ((major * 10000) + (minor * 100) + (patch))
-#define PCP_VERSION \
-    PCP_MAKE_VERSION(PCP_VERSION_MAJOR, PCP_VERSION_MINOR, PCP_VERSION_PATCH)
+#define PCP_VERSION PCP_MAKE_VERSION(PCP_VERSION_MAJOR, PCP_VERSION_MINOR, PCP_VERSION_PATCH)
+#define PCP_MAKE_VERSION(major, minor, patch) ((major * 10000) + (minor * 100) + (patch))
 
 int pcp_version();
 

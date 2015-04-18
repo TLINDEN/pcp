@@ -25,10 +25,15 @@ my %sobytes = (
 	       'crypto_generichash_BYTES_MAX' => 64,
 	      );
 
+my @ignore = qw(digital_crc32.h base85.h uthash.h);
+
 my @code;
+my @structs;
+my @typedefs;
 my %defs;
 
 foreach my $head (@ARGV) {
+  next if grep { $head =~ $_} @ignore;
   open HEAD, "<$head" or die "Could not open $head: $!\n";
   my $raw = join '', <HEAD>;
 
@@ -42,8 +47,8 @@ foreach my $head (@ARGV) {
 
   # 1line type
   while ($raw =~ /^(typedef .*;)/gm) {
-    push @code, ('', "/*** $0: from $head:$. */");
-    push @code, $1;
+    push @typedefs, ('', "/*** $0: from $head:$. */");
+    push @typedefs, $1;
   }
 
   # a struct
@@ -52,8 +57,8 @@ foreach my $head (@ARGV) {
   while ($raw =~ /(struct [^\s]* \{[^\}]*\};)/gs) {
     my $code = $1;
     $code =~ s/UT_hash_handle hh/byte hh[56]/g;
-    push @code, ('', "/*** $0: from $head:$. */");
-    push @code, $code;
+    push @structs, ('', "/*** $0: from $head:$. */");
+    push @structs, $code;
   }
 
   # a function
@@ -67,17 +72,21 @@ foreach my $head (@ARGV) {
   while ($raw =~ /^\s*#define ((EXP|PCP|PBP).*)$/gm) {
     my ($name, $def) = split /\s\s*/, $1, 2;
     $def =~ s/\/\*.*//;
+    next if ($name =~ /_VERSION/);
     if (!exists $defs{$name} && $def !~ /(sizeof| \+ )/) {
       $defs{$name} = "\n# $0: from $head:$.\n$name = $def\n";
     }
   }
 
   close $head;
+  $. = 0;
 }
 
 
 
 print "PCP_RAW_CODE = '''\n";
+print join "\n", @typedefs;
+print join "\n", @structs;
 print join "\n", @code;
 print "'''\n";
 

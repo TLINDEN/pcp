@@ -40,6 +40,8 @@ PCPCTX *ptx_new() {
   p->pcppubkey_hash = NULL;
   p->pcpkeysig_hash = NULL;
 
+  sodium_init();
+
   return p;
 }
 

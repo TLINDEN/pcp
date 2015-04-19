@@ -2,6 +2,7 @@ language: c
 os:
   - linux
 before_install:
+  # runtime dependency
   - git clone https://github.com/jedisct1/libsodium
   - cd libsodium
   - ./autogen.sh
@@ -9,6 +10,8 @@ before_install:
   - make
   - sudo make install
   - cd ..
+  #
+  # unittest dependencies, perl modules
   - wget http://search.cpan.org/CPAN/authors/id/T/TL/TLINDEN/Config-General-2.56.tar.gz
   - tar xvzf Config-General-2.56.tar.gz
   - cd Config-General-2.56
@@ -27,21 +30,31 @@ before_install:
   - perl Makefile.PL && make
   - sudo make install
   - cd ..
-  - wget http://valgrind.org/downloads/valgrind-3.10.1.tar.bz2
-  - tar xvjf valgrind-3.10.1.tar.bz2
-  - cd valgrind-3.10.1
-  - ./configure --prefix=/usr
-  - make
-  - sudo make install
-  - cd ..
-  - sudo apt-get update
-  - sudo apt-get install libc6-dbg
+  #
+  # for debugging - just in case, uncomment this and the next if needed
+  #- wget http://valgrind.org/downloads/valgrind-3.10.1.tar.bz2
+  #- tar xvjf valgrind-3.10.1.tar.bz2
+  #- cd valgrind-3.10.1
+  #- ./configure --prefix=/usr
+  #- make
+  #- sudo make install
+  #- cd ..
+  #
+  # valgrind runtime dependency
+  #- sudo apt-get update
+  #- sudo apt-get install libc6-dbg
+  #
+  # python bindings runtime dependencies
+  - sudo apt-get install python-pip python-dev libffi-dev libffi5
+  - sudo pip install cffi
+  #
+  # finally prepare autoconf stuff
   - ./autogen.sh
 compiler:
   - clang
   - gcc
 script:
- - ./configure
+ - ./configure --enable-python-binding
  - make
  - make check
  - make test

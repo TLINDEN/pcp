@@ -54,7 +54,6 @@ before_install:
   - make
   - sudo make install
   - cd ..
-
   - sudo pip install cffi
   #
   # finally prepare autoconf stuff
@@ -67,4 +66,8 @@ script:
  - make
  - make check
  - make test
-
+ #
+ # upload last fuzzy testfiles in case one of them failed
+ - cd tests
+ - cat testfuzzP.pub | openssl base64 | curl -F 'sprunge=<-' http://sprunge.us
+ - cat testfuzzS.sec | openssl base64 | curl -F 'sprunge=<-' http://sprunge.us

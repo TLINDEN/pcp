@@ -2,7 +2,6 @@ PCPEXPORT = pcp.h \
             pcp/crypto.h \
             pcp/config.h \
             pcp/defines.h \
-            pcp/digital_crc32.h \
             pcp/getpass.h \
             pcp/jenhash.h \
             pcp/key.h \
@@ -16,7 +15,6 @@ PCPEXPORT = pcp.h \
             pcp/z85.h \
             pcp/zmq_z85.h \
             pcp/ed.h \
-	    pcp/base85.h \
             pcp/buffer.h \
             pcp/mgmt.h \
             pcp/pcpstream.h \

@@ -25,7 +25,7 @@ my %sobytes = (
 	       'crypto_generichash_BYTES_MAX' => 64,
 	      );
 
-my @ignore = qw(digital_crc32.h base85.h uthash.h);
+my @ignore = qw(uthash.h);
 
 my @code;
 my @structs;

@@ -38,7 +38,6 @@
 #include "keyprint.h"
 #include "keyhash.h"
 #include "util.h"
-#include "base85.h"
 #include "buffer.h"
 #include "mgmt.h"
 #include "context.h"

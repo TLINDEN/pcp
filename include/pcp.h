@@ -6,12 +6,10 @@ extern "C" {
 #endif
 
 #include "pcp/config.h"
-#include "pcp/base85.h"
 #include "pcp/buffer.h"
 #include "pcp/context.h"
 #include "pcp/crypto.h"
 #include "pcp/defines.h"
-#include "pcp/digital_crc32.h"
 #include "pcp/ed.h"
 #include "pcp/getpass.h"
 #include "pcp/jenhash.h"

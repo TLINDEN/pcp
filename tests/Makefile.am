@@ -20,7 +20,7 @@
 #
 
 AM_CFLAGS = -I../include/pcp -I../src -I../libpcp/scrypt/crypto
-check_PROGRAMS = col invalidkeys gencheader statictest cpptest \
+check_PROGRAMS = invalidkeys gencheader statictest cpptest \
 		 buffertest sample streamtest pipetest decodertest mangle
 
 EXTRA_DIST = Makefile.am Makefile.in *.c *.h *.sh *.pl *.py *.cfg *.cpp \
@@ -54,9 +54,6 @@ pipetest_SOURCES = pipetest.c
 
 decodertest_LDADD = ../libpcp/.libs/libpcp1.a
 decodertest_SOURCES = decodertest.c
-
-col_LDADD = ../libpcp/.libs/libpcp1.a
-col_SOURCES = collisions.c ../src/compat_getopt.c
 
 mangle_LDADD = 
 mangle_SOURCES = mangle.c

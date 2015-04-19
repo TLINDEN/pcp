@@ -27,9 +27,9 @@ pkgconfig_DATA = libpcp1.pc
 
 libpcp1_la_SOURCES = platform.c  mem.c version.c \
 		    context.c z85.c zmq_z85.c key.c randomart.c \
-		    vault.c jenhash.c digital_crc32.c \
+		    vault.c jenhash.c  \
                     crypto.c ed.c keyhash.c scrypt.c \
-		    base85.c util.c buffer.c mgmt.c keysig.c pcpstream.c
+		    util.c buffer.c mgmt.c keysig.c pcpstream.c
 
 include_HEADERS      = ../include/pcp.h
 

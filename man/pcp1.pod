@@ -39,7 +39,8 @@ Pretty Curved Privacy - File encryption using eliptic curve cryptography.
   -e --encrypt              Asym-Encrypt a message. If none of -i or -r
                             has been given, encrypt the message symetrically.
   -A --anonymous            Use anonymous sender key pair.
-  -m --encrypt-me           Symetrically encrypt a message.
+  -M --add-myself           Add you primary pub key to list of recipients.
+  -m --encrypt-sym          Symetrically encrypt a message.
   -d --decrypt              Decrypt a message.
   
   Signature Options:
@@ -139,10 +140,13 @@ Pretty Curved Privacy - File encryption using eliptic curve cryptography.
                            your own primary key pair. In this mode the
                            recipient doesn't need to have your public
                            key.
- -m --encrypt-me           Sym-Encrypt a message. Specify -I and/or
+ -m --encrypt-sym          Sym-Encrypt a message. Specify -I and/or
                            -O for input/output file. You will be asked
                            for a passphrase. No key material will
                            be used. Same as -e without -r and -i.
+ -M --add-myself           Add yourself to list of recipients in asymmetric
+                           encryption mode, so that you can decrypt it as
+                           well.
  -d --decrypt              Decrypt a message. Read from stdin or
                            specified via -I. Output to stdout or
                            written to the file specified via -O.
@@ -302,6 +306,9 @@ key given with -i will be used directly.
 Another example:
 
  pcp1 -e -r Bobby -r McCoy -I message.txt -O message.asc
+
+As you can see, it is also possible to encrypt a message for multiple
+recipients.
 
 =item B<Aonymous public key encryption>
 

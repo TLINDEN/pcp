@@ -34,7 +34,8 @@
 "-e --encrypt              Asym-Encrypt a message. If none of -i or -r\n" \
 "                          has been given, encrypt the message symetrically.\n" \
 "-A --anonymous            Use anonymous sender key pair.\n" \
-"-m --encrypt-me           Symetrically encrypt a message.\n" \
+"-M --add-myself           Add you primary pub key to list of recipients.\n" \
+"-m --encrypt-sym          Symetrically encrypt a message.\n" \
 "-d --decrypt              Decrypt a message.\n" \
 "\n" \
 "Signature Options:\n" \

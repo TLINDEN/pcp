@@ -316,7 +316,7 @@ RECURSIVE              = NO
 # excluded from the INPUT source files. This way you can easily exclude a 
 # subdirectory from a directory tree whose root is specified with the INPUT tag. 
 
-EXCLUDE                = include/pcp/base85.h include/pcp/config.h include/pcp/digital_crc32.h include/pcp/jenhash.h include/pcp/platform.h include/pcp/uthash.h include/pcp/zmq_z85.h
+EXCLUDE                = include/pcp/config.h include/pcp/jenhash.h include/pcp/platform.h include/pcp/uthash.h include/pcp/zmq_z85.h
 
 # If the value of the INPUT tag contains directories, you can use the 
 # EXCLUDE_PATTERNS tag to specify one or more wildcard patterns to exclude 

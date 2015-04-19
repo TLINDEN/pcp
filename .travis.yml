@@ -45,6 +45,8 @@ before_install:
   #- sudo apt-get install libc6-dbg
   #
   # python bindings runtime dependencies
+  - sudo apt-get update -qq
+  - sudo apt-get install python-pip texi2html
   - git clone https://github.com/atgreen/libffi
   - cd libffi
   - ./autogen.sh
@@ -52,8 +54,7 @@ before_install:
   - make
   - sudo make install
   - cd ..
-  - sudo apt-get update -qq
-  - sudo apt-get install python-pip
+
   - sudo pip install cffi
   #
   # finally prepare autoconf stuff

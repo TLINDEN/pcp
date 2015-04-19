@@ -46,8 +46,7 @@ before_install:
   #
   # python bindings runtime dependencies
   - sudo apt-get update -qq
-  - sudo apt-cache search libffi
-  - sudo apt-get install python-pip python-dev libffi-dev libffi5
+  - sudo apt-get install python-pip python-dev lib64ffi-dev libffi6 -qq
   - sudo pip install cffi
   #
   # finally prepare autoconf stuff

@@ -45,6 +45,8 @@ before_install:
   #- sudo apt-get install libc6-dbg
   #
   # python bindings runtime dependencies
+  - sudo apt-get update -qq
+  - sudp apt-cache search libffi
   - sudo apt-get install python-pip python-dev libffi-dev libffi5
   - sudo pip install cffi
   #

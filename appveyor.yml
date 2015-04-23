@@ -1,0 +1,28 @@
+environment:
+  global:
+    CYG_ROOT: C:\cygwin
+    CYG_BASH: C:\cygwin\bin\bash
+
+os: unstable
+
+platform:
+  - Win32
+
+test: off
+
+init:
+  - git config --global core.autocrlf input
+
+install:
+  - '%CYG_ROOT%/bin/bash -lc "git clone https://github.com/jedisct1/libsodium /tmp/libsodium"'
+  - '%CYG_ROOT%/bin/bash -lc "cd /tmp/libsodium && ./autoconf.sh"'
+  - '%CYG_ROOT%/bin/bash -lc "cd /tmp/libsodium && ./configure --prefix=/usr"'
+  - '%CYG_ROOT%/bin/bash -lc "cd /tmp/libsodium && make"'
+  - '%CYG_ROOT%/bin/bash -lc "cd /tmp/libsodium && make install"'
+
+
+build_script:
+  - '%CYG_BASH% -lc "cd $APPVEYOR_BUILD_FOLDER; exec 0</dev/null; ./autogen.sh"'
+  - '%CYG_BASH% -lc "cd $APPVEYOR_BUILD_FOLDER; exec 0</dev/null; ./configure"'
+  - '%CYG_BASH% -lc "cd $APPVEYOR_BUILD_FOLDER; exec 0</dev/null; cat config.log"'
+  - '%CYG_BASH% -lc "cd $APPVEYOR_BUILD_FOLDER; exec 0</dev/null; make"'

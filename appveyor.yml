@@ -15,10 +15,10 @@ init:
 
 install:
   - '%CYG_ROOT%/bin/bash -lc "git clone https://github.com/jedisct1/libsodium /tmp/libsodium"'
-  - '%CYG_ROOT%/bin/bash -lc "cd /tmp/libsodium && ./autogen.sh"'
-  - '%CYG_ROOT%/bin/bash -lc "cd /tmp/libsodium && ./configure --prefix=/usr"'
-  - '%CYG_ROOT%/bin/bash -lc "cd /tmp/libsodium && make"'
-  - '%CYG_ROOT%/bin/bash -lc "cd /tmp/libsodium && make install"'
+  - '%CYG_ROOT%/bin/bash -lc "cd /tmp/libsodium; exec 0</dev/null; ./autogen.sh"'
+  - '%CYG_ROOT%/bin/bash -lc "cd /tmp/libsodium; exec 0</dev/null; ./configure --prefix=/usr"'
+  - '%CYG_ROOT%/bin/bash -lc "cd /tmp/libsodium; exec 0</dev/null; make"'
+  - '%CYG_ROOT%/bin/bash -lc "cd /tmp/libsodium; exec 0</dev/null; make install"'
 
 
 build_script:

@@ -47,8 +47,9 @@ AC_PROG_AWK
 AC_PROG_INSTALL
 
 # remove flags set by AC_PROG_CC (duplicates and/or invalid for clang)
-CFLAGS=""
-CXXFLAGS=""
+# FIXME: why did I do this?!
+#CFLAGS=""
+#CXXFLAGS=""
 
 
 # Host speciffic checks

@@ -1,0 +1,4 @@
+= build a static binary =
+
+./configure --disable-debug
+make LDFLAGS="-all-static -s"

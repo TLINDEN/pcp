@@ -190,8 +190,8 @@ if test "x${_havenacl}" = "xno"; then
 	AC_MSG_CHECKING([pkg-config for libsodium])
 	if pkg-config --exists libsodium; then
 		# found it
-		LDFLAGS=`pkg-config --libs libsodium`
-		CFLAGS=`pkg-config --cflags libsodium`
+		LDFLAGS="`pkg-config --libs libsodium` ${LDFLAGS}"
+		CFLAGS="`pkg-config --cflags libsodium` ${CFLAGS}"
 		_ldlib=`pkg-config --libs libsodium | cut -d ' ' -f 1 | cut -d L -f 2`
 		_havenacl=yes
 		AC_MSG_RESULT([yes])

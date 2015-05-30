@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013 T.Linden.
+    Copyright (C) 2013-2015 T.Linden.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -45,8 +45,17 @@ char *default_vault() {
   return path; 
 }
 
+char *altin(char *infile, int stdinused) {
+  if(infile == NULL && stdinused == 1) {
+    fprintf(stderr, "Error: cannot use <stdin> because -X had precedence!\n");
+    exit(1);
+  }
+  return infile;
+}
+
 int main (int argc, char **argv)  {
-  int opt, mode, usevault, useid, userec, lo, armor, detach, signcrypt, exportformat, anon;
+  int opt, mode, usevault, useid, userec, lo, armor, detach, \
+    signcrypt, exportformat, anon, xpf;
   char *vaultfile = default_vault();
   char *outfile = NULL;
   char *infile = NULL;
@@ -54,6 +63,7 @@ int main (int argc, char **argv)  {
   char *keyid = NULL;
   char *id = NULL;
   char *xpass = NULL;
+  char *xpassfile = NULL;
   char *extra = NULL;
   plist_t *recipient = NULL;
   FILE *in;
@@ -69,6 +79,7 @@ int main (int argc, char **argv)  {
   detach = 0;
   signcrypt = 0;
   anon = 0;
+  xpf = 0;
   exportformat = EXP_FORMAT_NATIVE;
 
   ptx = ptx_new();
@@ -81,6 +92,7 @@ int main (int argc, char **argv)  {
     { "keyid",           required_argument, NULL,           'i' },
     { "text",            required_argument, NULL,           't' },
     { "xpass",           required_argument, NULL,           'x' },
+    { "password-file",   required_argument, NULL,           'X' },
     { "recipient",       required_argument, NULL,           'r' },
 
     /*  key management */
@@ -123,7 +135,7 @@ int main (int argc, char **argv)  {
     { NULL,              0,                 NULL,            0 }
   };
 
-  while ((opt = getopt_long(argc, argv, "klLV:vdehsO:i:I:pSPRtEx:DzaZr:gcymf:b1F:0KAM",
+  while ((opt = getopt_long(argc, argv, "klLV:vdehsO:i:I:pSPRtEx:DzaZr:gcymf:b1F:0KAMX:",
 			    longopts, NULL)) != -1) {
   
     switch (opt)  {
@@ -251,13 +263,18 @@ int main (int argc, char **argv)  {
 	  strncpy(infile, optarg, strlen(optarg)+1);
 	}
 	break;
+      case 'X':
+	xpassfile = ucmalloc(strlen(optarg)+1);
+	strncpy(xpassfile, optarg, strlen(optarg)+1);
+	xpf = 1;
+	break;
       case 'i':
 	keyid = ucmalloc(19);
 	strncpy(keyid, optarg, 19);
 	useid = 1;
 	break;
       case 'x':
-	xpass = ucmalloc(strlen(optarg)+1);
+	xpass = smalloc(strlen(optarg)+1);
 	strncpy(xpass, optarg, strlen(optarg)+1);
 	if(strncmp(xpass, "n/a", 3) == 0)
 	  xpass[0] = '\0';
@@ -405,6 +422,13 @@ int main (int argc, char **argv)  {
       free(extra);
   }
 
+  if(xpassfile != NULL) {
+    pcp_readpass(&xpass, "passphrase", NULL, 0, xpassfile);
+    if(xpassfile[0] != '-')
+      xpf = 0; 
+    free(xpassfile);
+  }
+
   /* check if there's some enviroment we could use */
   if(usevault == 1) {
     char *_vaultfile = getenv("PCP_VAULT");
@@ -453,8 +477,10 @@ int main (int argc, char **argv)  {
 	break;
 
       case PCP_MODE_IMPORT:
-	if(infile == NULL)
+	if(infile == NULL) {
+	  altin(NULL, xpf);
 	  in = stdin;
+	}
 	else {
 	  if((in = fopen(infile, "rb")) == NULL) {
 	    fatal(ptx, "Could not open input file %s\n", infile);
@@ -492,11 +518,11 @@ int main (int argc, char **argv)  {
 	if(useid == 1 && userec == 0) {
 	  /*  one dst, FIXME: make id a list as well */
 	  id = pcp_normalize_id(keyid);
-	  pcpencrypt(id, infile, outfile, xpass, NULL, signcrypt, armor, anon);
+	  pcpencrypt(id, altin(infile, xpf), outfile, xpass, NULL, signcrypt, armor, anon);
 	}
 	else if(useid == 0 && userec == 1) {
 	  /*  multiple dst */
-	  pcpencrypt(NULL, infile, outfile, xpass, recipient, signcrypt, armor, anon);
+	  pcpencrypt(NULL, altin(infile, xpf), outfile, xpass, recipient, signcrypt, armor, anon);
 	}
 	else {
 	  /*  -i and -r specified */
@@ -509,11 +535,11 @@ int main (int argc, char **argv)  {
 	if(useid) {
 	  id = pcp_normalize_id(keyid);
 	  if(id != NULL) {
-	    pcpdecrypt(id, useid, infile, outfile, xpass, signcrypt);
+	    pcpdecrypt(id, useid, altin(infile, xpf), outfile, xpass, signcrypt);
 	  }
 	}
 	else {
-	  pcpdecrypt(NULL, useid, infile, outfile, xpass, signcrypt);
+	  pcpdecrypt(NULL, useid, altin(infile, xpf), outfile, xpass, signcrypt);
 	}
 	break;	
 
@@ -522,21 +548,21 @@ int main (int argc, char **argv)  {
 	  if(outfile != NULL && sigfile != NULL)
 	    fatal(ptx, "You can't both specify -O and -f, use -O for std signatures and -f for detached ones\n");
 	  else
-	    pcpsign(infile, sigfile, xpass, armor, detach);
+	    pcpsign(altin(infile, xpf), sigfile, xpass, armor, detach);
 	}
 	else
-	  pcpsign(infile, outfile, xpass, armor, detach);
+	  pcpsign(altin(infile, xpf), outfile, xpass, armor, detach);
 	break;
 
       case PCP_MODE_VERIFY:
 	if(useid) {
 	  id = pcp_normalize_id(keyid);
 	  if(id != NULL) {
-	    pcpverify(infile, sigfile, id, detach);
+	    pcpverify(altin(infile, xpf), sigfile, id, detach);
 	  }
 	}
 	else {
-	  pcpverify(infile, sigfile, NULL, detach);
+	  pcpverify(altin(infile, xpf), sigfile, NULL, detach);
 	}
 	break;
 
@@ -564,7 +590,7 @@ int main (int argc, char **argv)  {
       break;
 
     case PCP_MODE_ENCRYPT_ME:
-      pcpencrypt(NULL, infile, outfile, xpass, NULL, 0, armor, 0);
+      pcpencrypt(NULL, altin(infile, xpf), outfile, xpass, NULL, 0, armor, 0);
       break;
 
     case PCP_MODE_TEXT:
@@ -606,7 +632,7 @@ int main (int argc, char **argv)  {
   if(sigfile != NULL)
     free(sigfile);
   if(xpass != NULL)
-    ucfree(xpass, strlen(xpass));
+    sfree(xpass);
   if(recipient != NULL)
     p_clean(recipient);
   if(id != NULL)

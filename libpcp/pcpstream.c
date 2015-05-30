@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013-2014 T.v.Dein.
+    Copyright (C) 2013-2015 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -39,7 +39,10 @@ Pcpstream *ps_init(void) {
 
 Pcpstream *ps_new_file(FILE *backendfd) {
   Pcpstream *stream = ps_init();
-  stream->fd = backendfd;
+  if(backendfd == NULL)
+    stream->err = 1;
+  else
+    stream->fd = backendfd;
   return stream;
 }
 

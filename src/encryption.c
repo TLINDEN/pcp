@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013-2014 T.v.Dein.
+    Copyright (C) 2013-2015 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -67,7 +67,7 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
       char *passphrase;
       if(passwd == NULL) {
 	pcp_readpass(&passphrase,
-		     "Enter passphrase for symetric decryption", NULL, 1);
+		     "Enter passphrase for symetric decryption", NULL, 1, NULL);
       }
       else {
 	passphrase = smalloc(strlen(passwd)+1);
@@ -100,7 +100,7 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
 	char *passphrase;
 	if(passwd == NULL) {
 	  pcp_readpass(&passphrase,
-		       "Enter passphrase to decrypt your secret key", NULL, 1);
+		       "Enter passphrase to decrypt your secret key", NULL, 1, NULL);
 	}
 	else {
 	  passphrase = smalloc(strlen(passwd)+1);
@@ -174,7 +174,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
     char *passphrase;
     if(passwd == NULL) {
       pcp_readpass(&passphrase,
-                   "Enter passphrase for symetric encryption", "Repeat passphrase", 1);
+                   "Enter passphrase for symetric encryption", "Repeat passphrase", 1, NULL);
     }
     else {
       passphrase = smalloc(strlen(passwd)+1);
@@ -268,7 +268,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
         char *passphrase;
 	if(passwd == NULL) {
           pcp_readpass(&passphrase,
-		     "Enter passphrase to decrypt your secret key", NULL, 1);
+		       "Enter passphrase to decrypt your secret key", NULL, 1, NULL);
         }
 	else {
           passphrase = smalloc(strlen(passwd)+1);

@@ -21,6 +21,7 @@ Pretty Curved Privacy - File encryption using eliptic curve cryptography.
   -V --vault <vaultfile>    Specify an alternate vault file.
   -O --outfile <file>       Output file. STDOUT if unspecified.
   -I --infile <file>        Input file. STDIN if unspecified.
+  -X --password-file <file> Read passphrase from <file>.
   -i --keyid <id>           Specify a key id for various operations.
   -r --recipient <string>   Specify a recpipient, multiple allowed.
   -t --text                 Print textual representation of ojects.
@@ -66,6 +67,10 @@ Pretty Curved Privacy - File encryption using eliptic curve cryptography.
                            will be used.
  -I --infile <file>        Input file. If not specified, stdin
                            will be used.
+ -X --password-file <file> Read passphrase from <file>. If <file>
+                           is -, read from stdin. This takes
+                           precedence over other uses of stdin
+                           elsewhere, see below for more details.
  -i --keyid <id>           Specify a key id to import/export.
  -r --recipient <string>   Specify a recpipient, used for public
                            key export and encryption.
@@ -257,6 +262,39 @@ Oh - and if you're wondering why I named them Alicia and Bobby:
 I was just sick of Alice and Bob. We're running NSA-free, so we're
 using other sample names as well.
 
+=head1 FILES AND PIPES
+
+Pcp behaves like any other unix tool. If not otherwise specified
+it will read input from standard input (STDIN) and print output
+to standard output (STDOUT). For instance:
+
+ pcp1 -e -O output
+
+will read the text to be encrypted from standard input, because B<-I>
+has not been specified. It works the same with B<-O>:
+
+ pcp1 -e -I myfile
+
+In this case the encrypted result will be written to standard output.
+
+Therefore it is possible to use pcp within pipes. Another more
+realistic example:
+
+ ssh remote cat file | pcp1 -ez | mailx -s 'as requested' bob@somewhere
+
+here we encrypt a file symmetrically without downloading it from a
+remote ssh server and sending the encrypted result via email to
+someone.
+
+The behavior is the same with any other functionality where files are involved
+like importing or exporting keys. However, there's one exception:
+If the option B<-X> (B<--password-file>) has been used and is set
+to B<->, then this will take precedence over any other possible use
+of standard input. So if you want to encrypt something and don't 
+specify an input file you cannot use B<-X ->, and vice versa. IF
+you use B<-X -> the passphrase will be read from standard input, which
+then can't be used further for input files elsewhere. Pcp will exit
+with an error in such a case.
 
 =head1 PCP1 KEYS
 

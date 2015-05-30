@@ -2,3 +2,59 @@
 
 ./configure --disable-debug
 make LDFLAGS="-all-static -s"
+
+
+= choosing a strong passphrase =
+
+A passphrase like Ahc<e3% is not really secure. First
+it's difficult to memorize, second it's easy for a computer
+to compute. The better aproach is to use a passphrase 
+you can easily momorize and which is hard for a computer
+to compute (i.e. to guess) like: Phantom orchestra boredom popcorn.
+
+Read [1] to learn more.
+
+Pcp doesn't enforce a password policy nor does it check
+the password quality. Use something like pwqcheck [2].
+
+
+= supply password non-interactively without blocking stdin =
+
+Sometimes (e.g. for tests) there's no controlling terminal from
+which pcp could request a passphrase if needed. In such cases
+you can use the option -X <file> so that it reads the passphrase
+from that file.
+
+However if you call -X - then it will read the passphrase from
+stdin. But what if the data to be processed shall be read from
+stdin as well?
+
+Use a pipe:
+
+ mkfifo /tmp/pwpipe
+ chmod 600 /tmp/pwpipe
+ export HISTIGNORE=printf
+ printf "%s\n", "password" > /tmp/pwpipe &
+ cat cleartext | pcp1 -e -O output -X /tmp/pwpipe
+ rm -f /tmp/pwpipe
+
+So, what happens here? We create a named pipe in /tmp/pwpipe and
+print the passphrase into it. We use printf, because this is a
+shell built-in and does not appear in any process listing or
+process accounting. But note the '&' after the printf command:
+we're sending it into the background. Why? Because a named pipe
+is a real simple device. It blocks writing if there's no reader
+and it blocks reading if there's no writer. So in our case we
+put the passphrase into it, but the printf command will be blocked
+until some other process reads it from the pipe, which is precisely
+what happens in the next line. Pcp uses the pipe (because of -X),
+reads the passphrase from there and proceeds with it's normal
+business. Meanwhile the printf command exits.
+
+
+
+[1]
+https://firstlook.org/theintercept/2015/03/26/passphrases-can-memorize-attackers-cant-guess/
+
+[2]
+http://www.openwall.com/passwdqc/

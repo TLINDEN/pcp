@@ -46,6 +46,8 @@ NEXT
 	to older pcp versions, but is more portable and
 	removes to burden to keep this code up to date.
 
+	added option -X (read passphrase from file).
+
 0.2.4	fixed compiler macro misplacement (github#4).
 
 	fixed invalid free (github#5).

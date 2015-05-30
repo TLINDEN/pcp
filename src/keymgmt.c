@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013 T.Linden.
+    Copyright (C) 2013-2015 T.Linden.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -79,7 +79,7 @@ void pcp_keygen(char *passwd) {
   if(passwd == NULL) {
     pcp_readpass(&passphrase,
 		 "Enter passphrase for key encryption",
-		 "Enter the passphrase again", 1);
+		 "Enter the passphrase again", 1, NULL);
   }
   else {
     passphrase = ucmalloc(strlen(passwd)+1);
@@ -231,7 +231,7 @@ void pcp_exportsecret(char *keyid, int useid, char *outfile, int armor, char *pa
       if(passwd == NULL) {
 	char *passphrase;
 	pcp_readpass(&passphrase,
-		     "Enter passphrase to decrypt your secret key", NULL, 1);
+		     "Enter passphrase to decrypt your secret key", NULL, 1, NULL);
 	key = pcpkey_decrypt(ptx, key, passphrase);
 	if(key == NULL) {
 	  sfree(passphrase);
@@ -255,7 +255,8 @@ void pcp_exportsecret(char *keyid, int useid, char *outfile, int armor, char *pa
     else {
       char *passphrase;
       pcp_readpass(&passphrase,
-                  "Enter passphrase to encrypt the exported secret key", "Repeat passphrase", 1);
+                  "Enter passphrase to encrypt the exported secret key",
+		   "Repeat passphrase", 1, NULL);
       exported_sk = pcp_export_secret(ptx, key, passphrase);
       sfree(passphrase);
     }
@@ -344,7 +345,7 @@ void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int 
     else {
       char *passphrase;
       pcp_readpass(&passphrase,
-		   "Enter passphrase to decrypt your secret key", NULL, 1);
+		   "Enter passphrase to decrypt your secret key", NULL, 1, NULL);
       sk = pcpkey_decrypt(ptx, sk, passphrase);
       sfree(passphrase);
     }
@@ -448,7 +449,7 @@ void pcpedit_key(char *keyid) {
   if(key != NULL) {
     if(key->secret[0] == 0) {
       char *passphrase;
-      pcp_readpass(&passphrase, "Enter passphrase to decrypt the key", NULL, 1);
+      pcp_readpass(&passphrase, "Enter passphrase to decrypt the key", NULL, 1, NULL);
       key = pcpkey_decrypt(ptx, key, passphrase);
       sfree(passphrase);
     }
@@ -501,7 +502,7 @@ void pcpedit_key(char *keyid) {
       char *passphrase;
       pcp_readpass(&passphrase,
 		   "Enter new passphrase for key encryption (press enter to keep current)",
-		   "Enter the passphrase again", 1);
+		   "Enter the passphrase again", 1, NULL);
 
       if(strnlen(passphrase, 1024) > 0) {
 	key = pcpkey_encrypt(ptx, key, passphrase);
@@ -610,7 +611,7 @@ int pcp_import (vault_t *vault, FILE *in, char *passwd) {
     else {
       char *passphrase;
       pcp_readpass(&passphrase,
-		   "Enter passphrase to decrypt the secret key file", NULL, 1);
+		   "Enter passphrase to decrypt the secret key file", NULL, 1, NULL);
       sk = pcp_import_secret(ptx, buf, bufsize, passphrase);
       sfree(passphrase);
     }
@@ -636,7 +637,7 @@ int pcp_import (vault_t *vault, FILE *in, char *passwd) {
       char *passphrase;
       pcp_readpass(&passphrase,
 		   "Enter passphrase for key encryption",
-		   "Enter the passphrase again", 1);
+		   "Enter the passphrase again", 1, NULL);
     
       if(strnlen(passphrase, 1024) > 0) {
 	/* encrypt the key */

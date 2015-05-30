@@ -40,7 +40,7 @@
  */
 int
 pcp_readpass(char ** passwd, const char * prompt,
-    const char * confirmprompt, int devtty)
+	     const char * confirmprompt, int devtty, char *readfromfile)
 {
 	FILE * readfrom;
 	char passbuf[MAXPASSLEN];
@@ -51,9 +51,27 @@ pcp_readpass(char ** passwd, const char * prompt,
 	/*
 	 * If devtty != 0, try to open /dev/tty; if that fails, or if devtty
 	 * is zero, we'll read the password from stdin instead.
+	 *
+	 * Added by tlinden: however, if readfromfile is defined, we'll
+	 * read the password from there, but if it is '-' we'll use stdin
+	 * as well.
 	 */
-	if ((devtty == 0) || ((readfrom = fopen("/dev/tty", "r")) == NULL))
-		readfrom = stdin;
+	if ((devtty == 0) || ((readfrom = fopen("/dev/tty", "r")) == NULL)) {
+	  if(readfromfile != NULL) {
+	    if(readfromfile[0] == '-') {
+	      readfrom = stdin;
+	    }
+	    else {
+	      if((readfrom = fopen(readfromfile, "r")) == NULL) {
+		fatal(ptx, "Could not open password file '%s'\n", readfromfile);
+		goto err1;
+	      }
+	    }
+	  }
+	  else {
+	    readfrom = stdin;
+	  }
+	}
 
 	/* If we're reading from a terminal, try to disable echo. */
 	if ((usingtty = isatty(fileno(readfrom))) != 0) {
@@ -102,20 +120,20 @@ retry:
 	if (usingtty)
 		tcsetattr(fileno(readfrom), TCSANOW, &term_old);
 
-	/* Close /dev/tty if we opened it. */
-	if (readfrom != stdin)
-		fclose(readfrom);
+	/* Close /dev/tty if we opened it.
+	   if readfromfile is defined and set to -, disable stdin */
+	if (readfrom != stdin) {
+	  fclose(readfrom);
+	}
+	else {
+	  if(readfromfile != NULL)
+	    stdin = NULL;
+	}
 
 	/* Copy the password out. */
 	char *p = smalloc(strlen(passbuf) + 1);
 	memcpy(p, passbuf, strlen(passbuf) + 1 );
 	*passwd = p;
-	/*
-	if ((*passwd = strdup(passbuf)) == NULL) {
-		fatal(ptx, "Cannot allocate memory\n");
-		goto err1;
-	}
-	*/
 
 	/* Zero any stored passwords. */
 	memset(passbuf, 0, MAXPASSLEN);

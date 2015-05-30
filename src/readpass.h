@@ -52,6 +52,6 @@
  * ${passwd}.  The obscure name is to avoid namespace collisions due to the
  * getpass / readpass / readpassphrase / etc. functions in various libraries.
  */
-int pcp_readpass(char **, const char *, const char *, int);
+int pcp_readpass(char **, const char *, const char *, int, char *);
 
 #endif /* !_READPASS_H_ */

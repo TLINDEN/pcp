@@ -16,6 +16,7 @@
 "-V --vault <vaultfile>    Specify an alternate vault file.\n" \
 "-O --outfile <file>       Output file. STDOUT if unspecified.\n" \
 "-I --infile <file>        Input file. STDIN if unspecified.\n" \
+"-X --password-file <file> Read passphrase from <file>.\n" \
 "-i --keyid <id>           Specify a key id for various operations.\n" \
 "-r --recipient <string>   Specify a recpipient, multiple allowed.\n" \
 "-t --text                 Print textual representation of ojects.\n" \

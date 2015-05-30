@@ -124,7 +124,7 @@
 .\" ========================================================================
 .\"
 .IX Title "PCP1 1"
-.TH PCP1 1 "2015-04-19" "PCP 0.2.6" "USER CONTRIBUTED DOCUMENTATION"
+.TH PCP1 1 "2015-05-30" "PCP 0.2.6" "USER CONTRIBUTED DOCUMENTATION"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -149,6 +149,7 @@ Pretty Curved Privacy \- File encryption using eliptic curve cryptography.
 \&  \-V \-\-vault <vaultfile>    Specify an alternate vault file.
 \&  \-O \-\-outfile <file>       Output file. STDOUT if unspecified.
 \&  \-I \-\-infile <file>        Input file. STDIN if unspecified.
+\&  \-X \-\-password\-file <file> Read passphrase from <file>.
 \&  \-i \-\-keyid <id>           Specify a key id for various operations.
 \&  \-r \-\-recipient <string>   Specify a recpipient, multiple allowed.
 \&  \-t \-\-text                 Print textual representation of ojects.
@@ -195,6 +196,10 @@ Pretty Curved Privacy \- File encryption using eliptic curve cryptography.
 \&                           will be used.
 \& \-I \-\-infile <file>        Input file. If not specified, stdin
 \&                           will be used.
+\& \-X \-\-password\-file <file> Read passphrase from <file>. If <file>
+\&                           is \-, read from stdin. This takes
+\&                           precedence over other uses of stdin
+\&                           elsewhere, see below for more details.
 \& \-i \-\-keyid <id>           Specify a key id to import/export.
 \& \-r \-\-recipient <string>   Specify a recpipient, used for public
 \&                           key export and encryption.
@@ -392,6 +397,45 @@ to actually decrypt the message.
 Oh \- and if you're wondering why I named them Alicia and Bobby:
 I was just sick of Alice and Bob. We're running NSA-free, so we're
 using other sample names as well.
+.SH "FILES AND PIPES"
+.IX Header "FILES AND PIPES"
+Pcp behaves like any other unix tool. If not otherwise specified
+it will read input from standard input (\s-1STDIN\s0) and print output
+to standard output (\s-1STDOUT\s0). For instance:
+.PP
+.Vb 1
+\& pcp1 \-e \-O output
+.Ve
+.PP
+will read the text to be encrypted from standard input, because \fB\-I\fR
+has not been specified. It works the same with \fB\-O\fR:
+.PP
+.Vb 1
+\& pcp1 \-e \-I myfile
+.Ve
+.PP
+In this case the encrypted result will be written to standard output.
+.PP
+Therefore it is possible to use pcp within pipes. Another more
+realistic example:
+.PP
+.Vb 1
+\& ssh remote cat file | pcp1 \-ez | mailx \-s \*(Aqas requested\*(Aq bob@somewhere
+.Ve
+.PP
+here we encrypt a file symmetrically without downloading it from a
+remote ssh server and sending the encrypted result via email to
+someone.
+.PP
+The behavior is the same with any other functionality where files are involved
+like importing or exporting keys. However, there's one exception:
+If the option \fB\-X\fR (\fB\-\-password\-file\fR) has been used and is set
+to \fB\-\fR, then this will take precedence over any other possible use
+of standard input. So if you want to encrypt something and don't 
+specify an input file you cannot use \fB\-X \-\fR, and vice versa. \s-1IF\s0
+you use \fB\-X \-\fR the passphrase will be read from standard input, which
+then can't be used further for input files elsewhere. Pcp will exit
+with an error in such a case.
 .SH "PCP1 KEYS"
 .IX Header "PCP1 KEYS"
 \&\fBpcp1\fR keys are stored in a binary file, called \fBthe vault\fR.

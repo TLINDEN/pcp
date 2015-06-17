@@ -1,0 +1,23 @@
+#
+# Dockerfile to run build and unittests iniside a docker container.
+#
+# How to use:
+#   - mkdir pcpdocker
+#   - cp .docker pcpdocker/Dockerfile
+#   - cd pcpdocker
+#   - docker build -t $youruser/pcp:$tag .
+#   - docker run -t -i --name pcp -v $pcpgitpath:/src/pcp $yourname/pcp:$tag /bin/bash
+#   - cd /src/pcp
+#   - ./autogen.sh
+#   - ./configure --enable-python-binding
+#   - make
+#   - make test
+#   - make clean && ./clean.sh
+#   - ^D
+#   - docker rm pcp
+
+FROM gcc:latest
+MAINTAINER T.v.Dein <tlinden@cpan.org>
+RUN apt-get update && apt-get install -y libconfig-general-perl libtie-ixhash-perl libyaml-perl less python-pip python-dev procps
+RUN git clone https://github.com/jedisct1/libsodium.git && cd libsodium && ./autogen.sh && ./configure --prefix=/usr && make && make install && cd .. && rm -rf libsodium
+RUN pip install cffi

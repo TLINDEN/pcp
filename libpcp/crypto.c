@@ -145,7 +145,7 @@ size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t 
   else {
     /*  step 1, check header */
     cur_bufsize = ps_read(in, head, 1); /* fread(head, 1, 1, in); */
-    if(cur_bufsize != 1 && !ps_end(in) && !ps_err(in)) {
+    if(cur_bufsize == 1 && !ps_end(in) && !ps_err(in)) {
       if(head[0] == PCP_SYM_CIPHER) {
 	if(symkey != NULL)
 	  self = 1;
@@ -206,7 +206,8 @@ size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t 
   for(nrec=0; nrec<lenrec; nrec++) {
     cur_bufsize = ps_read(in, rec_buf, PCP_ASYM_RECIPIENT_SIZE);
     if(cur_bufsize != PCP_ASYM_RECIPIENT_SIZE && !ps_end(in) && !ps_err(in)) {
-      fatal(ptx, "Error: input file corrupted, incomplete or no recipients (got %ld, exp %ld)\n", cur_bufsize, PCP_ASYM_RECIPIENT_SIZE );
+      fatal(ptx, "Error: input file corrupted, incomplete or no recipients (got %ld, exp %ld)\n",
+	    cur_bufsize, PCP_ASYM_RECIPIENT_SIZE );
       ucfree(rec_buf, PCP_ASYM_RECIPIENT_SIZE);
       goto errdef1;
     }
@@ -691,6 +692,12 @@ uint64_t _get_nonce_ctr(byte *nonce) {
   uint8_t    i = nonce[0];
   uint16_t m16 = 0;
   uint32_t m32 = 0;
+
+  if(i > 16) {
+    /* counter bigger than max allowed by protocol, could lead to overflow, therefore die hard here */
+    fprintf(stderr, "invalid counter size %d!", i);
+    abort();
+  }
   
   switch(i) {
   case 1:

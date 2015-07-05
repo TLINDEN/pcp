@@ -70,6 +70,9 @@ int _check_keysig_h(PCPCTX *ptx, Buffer *blob, rfc_pub_sig_h *h) {
 }
 
 int _check_sigsubs(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, rfc_pub_sig_s *subheader) {
+  uint16_t nsize, vsize;
+  char *notation = NULL;
+  
   if(subheader->size > buffer_left(blob)) {
     fatal(ptx, "Invalid header size %ld specified in source\n", subheader->size);
     return 1;
@@ -77,44 +80,44 @@ int _check_sigsubs(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, rfc_pub_sig_s *su
 
   if(subheader->type == EXP_SIG_SUB_NOTATION) {
     /* mail or owner */
-    uint16_t nsize = buffer_get16na(blob);
-    uint16_t vsize = buffer_get16na(blob);
-
-    char *notation = ucmalloc(nsize+1);
+    nsize = buffer_get16na(blob);
+    vsize = buffer_get16na(blob);
 
     if(nsize >  buffer_left(blob)) {
       fatal(ptx, "Invalid notation size %ld specified in source\n", nsize);
       return 1;
     }
 
+    notation = ucmalloc(nsize+1);
+
     if(buffer_get_chunk(blob, notation, nsize) == 0) {
       fatal(ptx, "Invalid notation size, expected %ld bytes, but got 0\n", nsize);
-      return 1;
+      goto sgcerr;
     }
 
     notation[nsize] = '\0';
 
-    if(vsize >  buffer_left(blob)) {
+    if(vsize >  buffer_left(blob) || vsize > 255) {
       fatal(ptx, "Invalid notation value size %ld specified in source\n", vsize);
-      return 1;
+      goto sgcerr;
     }
 
     if(strncmp(notation, "owner", 5) == 0) {
       if(buffer_get_chunk(blob, p->owner, vsize) == 0) {
 	fatal(ptx, "Invalid 'owner' notation, expected %ld bytes, but got 0\n", vsize);
-	return 1;
+	goto sgcerr;
       }
     }
     else if(strncmp(notation, "mail", 4) == 0) {
       if(buffer_get_chunk(blob, p->mail, vsize) == 0) {
 	fatal(ptx, "Invalid 'mail' notation, expected %ld bytes, but got 0\n", vsize);
-	return 1;
+	goto sgcerr;
       }
     }
     else if(strncmp(notation, "serial", 6) == 0) {
       p->serial = buffer_get32na(blob);
     }
-    ucfree(notation, nsize);
+    ucfree(notation, nsize+1);
   }
   else {
     /* unsupported or ignored sig subs:
@@ -129,8 +132,11 @@ int _check_sigsubs(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, rfc_pub_sig_s *su
     }
   }
 
-
   return 0;
+
+ sgcerr:
+  ucfree(notation, nsize+1);
+  return 1;
 }
 
 int _check_hash_keysig(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, pcp_keysig_t *sk) {
@@ -814,7 +820,7 @@ pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphras
   byte *symkey = NULL;
   byte *clear = NULL;
   size_t cipherlen = 0;
-  size_t minlen = (64 * 2) + (32 * 4) + 8 + 4 + 4;
+  size_t minlen = (64 * 2) + (32 * 4) + 8 + 4 + 4; /* key material and mandatory field sizes */
   uint16_t notationlen = 0;
 
   Buffer *blob = buffer_new(512, "secretdecryptbuf");
@@ -853,11 +859,19 @@ pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphras
   buffer_get_chunk(blob, sk->edpub, 32);
 
   notationlen = buffer_get16na(blob);
-  if(notationlen > 0)
+  if(notationlen > 255) {
+    fatal(ptx, "Invalid notation value size for owner\n");
+    goto impserr2;
+  }
+  else if(notationlen > 0)
     buffer_get_chunk(blob, sk->owner, notationlen);
 
   notationlen = buffer_get16na(blob);
-  if(notationlen > 0)
+  if(notationlen > 255) {
+    fatal(ptx, "Invalid notation value size for mail\n");
+    goto impserr2;
+  }
+  else if(notationlen > 0)
     buffer_get_chunk(blob, sk->mail, notationlen);
 
   if(buffer_done(blob) == 1)

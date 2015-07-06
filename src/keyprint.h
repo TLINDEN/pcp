@@ -44,7 +44,6 @@ void pcptext_key(char *keyid);
 void pcptext_vault(vault_t *vault);
 int pcptext_infile(char *infile);
 
-void pcpexport_yaml(char *outfile);
 void pcpprint_bin(FILE *out, byte *data, size_t len);
 
 #endif /*  _HAVE_PCP_KEYPRINT_H */

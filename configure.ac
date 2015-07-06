@@ -143,6 +143,7 @@ AC_RUN_IFELSE([AC_LANG_PROGRAM([[ #include <stdio.h> ]], [[ exit(0); ]])],
 
 _havenacl=no
 _ldlib=""
+_have_json=no
 
 AC_ARG_WITH([libsodium],
             [AS_HELP_STRING([--with-libsodium],
@@ -220,6 +221,20 @@ if test "x${_havenacl}" != "xno" -a "x$cross_compile" = "xno"; then
 	    AC_MSG_ERROR([no, libsodium too old. please update your libsodium installation. or maybe the path in "$LDFLAGS" is not in LD_LIBRARY_PATH?])
 	]
     )
+fi
+
+
+AC_ARG_WITH([json],
+            [AS_HELP_STRING([--with-json],
+                            [enable JSON support])],
+            [search_json="yes"],
+            [])
+		  
+if test "x$search_json" = "xyes"; then
+    # use pkg only
+    _have_json="yes"
+    LDFLAGS="$LDFLAGS -ljansson"
+    CFLAGS="$CFLAGS -DHAVE_JSON=1"
 fi
 
 
@@ -411,6 +426,7 @@ AC_MSG_RESULT([
 	build python binding:   ${python}
 	build c++ binding:      ${enable_cpp_binding}
 
+	json support            ${_have_json}
     Type 'make' to build, 'make install' to install.
     To execute unit tests, type 'make test'.
 ])

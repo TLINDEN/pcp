@@ -1,3 +1,11 @@
+JSON:
+- export secret as json
+- import pub und secret as json
+- export vault as json
+
+detach keysig generation from pub key export, so that an existing
+keysig can be verified later.
+
 key++: normalize id and lc()
 
 allow signing using an alternate secret key, like in pcpdecrypt()

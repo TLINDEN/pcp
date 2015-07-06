@@ -74,3 +74,12 @@ void _dump(char *n, byte *d, size_t s) {
   }
   fprintf(stderr, "\n");
 }
+
+char *_bin2hex(byte *bin, size_t len) {
+  char *out = malloc((len*2) + 1);
+  size_t i;
+  for(i=0; i<len; ++i)
+    sprintf(&out[i*2], "%02x", bin[i]);
+  out[len*2] = '\0';
+  return out;
+}

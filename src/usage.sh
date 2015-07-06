@@ -6,5 +6,5 @@ echo -n "#define PCP_HELP " >> usage.h
 
 cat usage.txt | sed -e 's/^/"/' -e 's/$/\\n" \\/' >> usage.h
 
-echo "\"\\n\"" >> usage.h
+printf "\"\"\\n" >> usage.h
 echo "#endif" >> usage.h

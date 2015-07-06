@@ -47,6 +47,10 @@
 #include <stdio.h>
 #include <time.h>
 
+#ifdef HAVE_JSON
+#include <jansson.h>
+#endif
+
 #include "defines.h"
 #include "platform.h"
 #include "structs.h"
@@ -58,7 +62,7 @@
 #include "scrypt.h"
 #include "context.h"
 
-/* key management api, export, import, yaml and stuff */
+/* key management api, export, import, and stuff */
 
 
 /**
@@ -163,7 +167,8 @@
         blob in the format described above.
   
 */
-Buffer *pcp_export_rfc_pub (pcp_key_t *sk);
+Buffer *pcp_export_rfc_pub (PCPCTX *ptx, pcp_key_t *sk);
+
 
 
 /** Export a public key in PBP format.
@@ -177,39 +182,6 @@ Buffer *pcp_export_rfc_pub (pcp_key_t *sk);
           blob in the format described above.
  */
 Buffer *pcp_export_pbp_pub(pcp_key_t *sk);
-
-/** Export a public key in yaml format.
-    Export a public key in yaml format.
-
-    \param sk a secret key structure of type pcp_key_t. The secret keys
-            in there have to be already decrypted.
-
-    \return the function returns a Buffer object containing the binary
-            blob containing a YAML string.
-*/
-Buffer *pcp_export_yaml_pub(pcp_key_t *sk);
-
-/** Export a public key in perl code format.
-    Export a public key in perl code format.
-
-    \param sk a secret key structure of type pcp_key_t. The secret keys
-            in there have to be already decrypted.
-
-    \return the function returns a Buffer object containing the binary
-            blob containing a perl code string (a hash definition).
-*/
-Buffer *pcp_export_perl_pub(pcp_key_t *sk);
-
-/** Export a public key in C code format.
-    Export a public key in C code format.
-
-    \param sk a secret key structure of type pcp_key_t. The secret keys
-            in there have to be already decrypted.
-
-    \return the function returns a Buffer object containing the binary
-            blob containing a C code string.
-*/
-Buffer *pcp_export_c_pub(pcp_key_t *sk);
 
 /** Export secret key.
 
@@ -254,6 +226,37 @@ Buffer *pcp_export_c_pub(pcp_key_t *sk);
             blob in the format described above.
 */
 Buffer *pcp_export_secret(PCPCTX *ptx, pcp_key_t *sk, char *passphrase);
+
+#ifdef HAVE_JSON
+/** Export public key in JSON format
+
+    \param[in] sk a secret key structure of type pcp_key_t. The secret keys
+            in there have to be already decrypted.
+    \param[in] sig the keysig blob.
+
+    \return the function returns a Buffer object containing the binary
+            blob containing a JSON string.
+ */
+Buffer *pcp_export_json_pub(PCPCTX *ptx, pcp_key_t *sk, byte *sig);
+
+/** Export secret key in JSON format
+
+    \param[in] sk a secret key structure of type pcp_key_t. The secret keys
+            in there have to be already decrypted.
+    \param[in] nonce the nonce used to encrypt secret keys
+    \param[in] cipher the encrypted secret keys
+    \param[in] clen len of cipher
+
+    \return the function returns a Buffer object containing the binary
+            blob containing a JSON string.
+ */
+Buffer *pcp_export_json_secret(PCPCTX *ptx, pcp_key_t *sk, byte *nonce, byte *cipher, size_t clen);
+
+json_t *pcp_pub2jsont(pcp_key_t *sk, byte *sig);
+
+
+#endif
+
 
 pcp_ks_bundle_t *pcp_import_binpub(PCPCTX *ptx, byte *raw, size_t rawsize);
 pcp_ks_bundle_t *pcp_import_pub(PCPCTX *ptx, byte *raw, size_t rawsize); /* FIXME: deprecate */

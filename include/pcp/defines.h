@@ -163,10 +163,6 @@ typedef enum _PCP_KEY_TYPES {
 /* pubkey export formats */
 #define EXP_FORMAT_NATIVE   1
 #define EXP_FORMAT_PBP      2
-#define EXP_FORMAT_YAML     3
-#define EXP_FORMAT_C        4
-#define EXP_FORMAT_PY       5
-#define EXP_FORMAT_PERL     6
 
 
 

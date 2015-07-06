@@ -99,6 +99,16 @@ void _xorbuf(byte *iv, byte *buf, size_t xlen);
  */
 void _dump(char *n, byte *d, size_t s);
 
+
+/** return hex string of binary data
+    \param[in] bin byte array
+    \param[in] len size of byte array
+    \return Returns malloc'd hex string. Caller must free.
+*/
+char *_bin2hex(byte *bin, size_t len);
+
+
+
 #endif /*  _HAVE_PCP_UTIL_H */
 
 /**@}*/

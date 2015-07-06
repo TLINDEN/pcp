@@ -36,6 +36,9 @@ PCPCTX *ptx_new() {
   p->pcp_errset = 0;
   p->pcp_exit = 0;
   p->verbose = 0;
+#ifdef HAVE_JSON
+  p->json = 0;
+#endif
   p->pcpkey_hash = NULL;
   p->pcppubkey_hash = NULL;
   p->pcpkeysig_hash = NULL;

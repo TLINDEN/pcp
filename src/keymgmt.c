@@ -357,7 +357,7 @@ void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int 
   /* now, we're ready for the actual export */
   if(format == EXP_FORMAT_NATIVE) {
     if(is_foreign == 0) {
-      exported_pk = pcp_export_rfc_pub(sk);
+      exported_pk = pcp_export_rfc_pub(ptx, sk);
       if(exported_pk != NULL) {
 	if(armor == 1) {
 	  size_t zlen;
@@ -393,24 +393,6 @@ void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int 
     else {
       fatal(ptx, "Exporting foreign public keys in PBP format not possible\n");
       goto errpcpexpu1;
-    }
-  }
-  else if(format == EXP_FORMAT_YAML) {
-    exported_pk = pcp_export_yaml_pub(sk);
-    if(exported_pk != NULL) {
-      fprintf(out, "%s", buffer_get_str(exported_pk));
-    }
-  }
-  else if(format == EXP_FORMAT_PERL) {
-    exported_pk = pcp_export_perl_pub(sk);
-    if(exported_pk != NULL) {
-      fprintf(out, "%s", buffer_get_str(exported_pk));
-    }
-  }
-  else if(format == EXP_FORMAT_C) {
-    exported_pk = pcp_export_c_pub(sk);
-    if(exported_pk != NULL) {
-      fprintf(out, "%s", buffer_get_str(exported_pk));
     }
   }
 

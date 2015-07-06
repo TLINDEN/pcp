@@ -443,120 +443,109 @@ pcp_ks_bundle_t *pcp_import_pub_pbp(PCPCTX *ptx, Buffer *blob) {
   return NULL;
 }
 
-Buffer *pcp_export_yaml_pub(pcp_key_t *sk) {
-  Buffer *b = buffer_new_str("yamlbuf");
-  struct tm *c;
-  time_t t = time(0);
-  c = localtime(&t);
+#ifdef HAVE_JSON
 
-  buffer_add_str(b, "#\n# YAML export of public key\n");
-  buffer_add_str(b, "# Generated on: %04d-%02d-%02dT%02d:%02d:%02d\n",
-		 c->tm_year+1900, c->tm_mon+1, c->tm_mday,
-		 c->tm_hour, c->tm_min, c->tm_sec);
-  buffer_add_str(b, "---\n");
+json_t *pcp_pub2jsont(pcp_key_t *sk, byte *sig) {
+  json_t *jout;
+  char *cryptpub, *sigpub, *masterpub, *ssig;
+ 
+  char *jformat = "{sssssssisisisissssssssssss}";
 
-  buffer_add_str(b, "id:         %s\n", sk->id);
-  buffer_add_str(b, "owner:      %s\n", sk->owner);
-  buffer_add_str(b, "mail:       %s\n", sk->mail);
-  buffer_add_str(b, "ctime:      %ld\n", (long int)sk->ctime);
-  buffer_add_str(b, "version:    %08x\n", sk->version);
-  buffer_add_str(b, "serial:     %08x\n", sk->serial);
-  buffer_add_str(b, "type:       public\n");
-  buffer_add_str(b, "cryptpub:   "); buffer_add_hex(b, sk->pub, 32); buffer_add_str(b, "\n");
-  buffer_add_str(b, "sigpub:     "); buffer_add_hex(b, sk->edpub, 32); buffer_add_str(b, "\n");
-  buffer_add_str(b, "masterpub:  "); buffer_add_hex(b, sk->masterpub, 32); buffer_add_str(b, "\n");
-
-  return b;
-}
-
-Buffer *pcp_export_perl_pub(pcp_key_t *sk) {
-  Buffer *b = buffer_new_str("perlbuf");
-  struct tm *c;
-  time_t t = time(0);
-  c = localtime(&t);
-  size_t i;
-
-  buffer_add_str(b, "#\n# Perl export of public key\n");
-  buffer_add_str(b, "# Generated on: %04d-%02d-%02dT%02d:%02d:%02d\n",
-		 c->tm_year+1900, c->tm_mon+1, c->tm_mday,
-		 c->tm_hour, c->tm_min, c->tm_sec);
-  buffer_add_str(b, "# \nmy %%key = (\n");
-
-  buffer_add_str(b, "            id       => \"%s\",\n", sk->id);
-  buffer_add_str(b, "            owner    => \"%s\",\n", sk->owner);
-  buffer_add_str(b, "            mail     => '%s',\n", sk->mail); 
-  buffer_add_str(b, "            ctime    => %ld,\n", (long int)sk->ctime);
-  buffer_add_str(b, "            version  => x%08x,\n", sk->version);
-  buffer_add_str(b, "            serial   => x%08x,\n", sk->serial);
-  buffer_add_str(b, "            type     => \"public\",\n");
-
-  buffer_add_str(b, "            cryptpub => [");
-  for (i=0; i<31; ++i) {
-    buffer_add_str(b, "x%02x,", sk->pub[i]);
-    if(i % 8 == 7 && i > 0)
-      buffer_add_str(b, "\n                          ");
-  }
-  buffer_add_str(b, "x%02x],\n", sk->pub[31]);
-
-  buffer_add_str(b, "            sigpub =>    [");
-  for (i=0; i<31; ++i) {
-    buffer_add_str(b, "x%02x,", sk->edpub[i]);
-    if(i % 8 == 7 && i > 0)
-      buffer_add_str(b, "\n                          ");
-  }
-  buffer_add_str(b, "x%02x],\n", sk->edpub[31]);
   
-  buffer_add_str(b, "            masterpub => [");
-  for (i=0; i<31; ++i) {
-    buffer_add_str(b, "x%02x,", sk->masterpub[i]);
-    if(i % 8 == 7 && i > 0)
-      buffer_add_str(b, "\n                          ");
-  }
-  buffer_add_str(b, "x%02x]\n", sk->masterpub[31]);
-
-  buffer_add_str(b, ");\n");
+  cryptpub = _bin2hex(sk->pub, 32);
+  sigpub   = _bin2hex(sk->edpub, 32);
+  masterpub= _bin2hex(sk->masterpub, 32);
   
-
-  return b;
-}
-
-void pcp_export_c_pub_var(Buffer *b, char *var, byte *d, size_t len) {
-  buffer_add_str(b, "byte %s[%ld] = {\n  ", var, len);
-  size_t i;
-  for(i=0; i<len-1; ++i) {
-    buffer_add_str(b, "0x%02x, ", (unsigned int)d[i]);
-    if (i % 8 == 7) buffer_add_str(b, "\n  ");
+  if(sig != NULL) {
+    ssig     = _bin2hex(sig, crypto_sign_BYTES + crypto_generichash_BYTES_MAX);
   }
-  buffer_add_str(b, "0x%02x\n};\n", (unsigned int)d[i]);
+  else {
+    ssig = malloc(1);
+    ssig[0] = '\0';
+    jformat = "{sssssssisisisissssssssss}";
+  }
+  
+  jout = json_pack(jformat,
+		   "id", sk->id,
+		   "owner", sk->owner,
+		   "mail", sk->mail,
+		   "ctime", (int)sk->ctime,
+		   "expire", (int)sk->ctime+31536000,
+		   "version", (int)sk->version,
+		   "serial", (int)sk->serial,
+		   "type", "public",
+		   "cipher", EXP_PK_CIPHER_NAME,
+		   "cryptpub", cryptpub,
+		   "sigpub", sigpub,
+		   "masterpub", masterpub,
+		   "signature", ssig
+		   );
 
+  free(cryptpub);
+  free(sigpub);
+  free(masterpub);
+  if(sig != NULL)
+    free(ssig);
+
+  return jout;
 }
 
-Buffer *pcp_export_c_pub(pcp_key_t *sk) {
-  Buffer *b = buffer_new_str("c-buf");
-  struct tm *c;
-  time_t t = time(0);
-  c = localtime(&t);
+Buffer *pcp_export_json_secret(PCPCTX *ptx, pcp_key_t *sk, byte *nonce, byte *cipher, size_t clen) {
+  Buffer *b = buffer_new_str("jsonbuf");
+  char *jdump, *xcipher, *xnonce;
+  json_t *jout;
+  json_error_t jerror;
+  
+  assert(ptx->json);
 
-  buffer_add_str(b, "/*\n * C export of public key\n");
-  buffer_add_str(b, " * Generated on: %04d-%02d-%02dT%02d:%02d:%02d\n",
-		 c->tm_year+1900, c->tm_mon+1, c->tm_mday,
-		 c->tm_hour, c->tm_min, c->tm_sec);
-  buffer_add_str(b, " */\n");
+  jout = pcp_pub2jsont(sk, NULL);
 
-  buffer_add_str(b, "char id[] = \"%s\";\n", sk->id);
-  buffer_add_str(b, "char owner[] = \"%s\";\n", sk->owner);
-  buffer_add_str(b, "char mail[] = \"%s\";\n", sk->mail);
-  buffer_add_str(b, "uint64_t ctime = %ld;\n", sk->ctime);
-  buffer_add_str(b, "uint32_t version = 0x%08x;\n", sk->version);
-  buffer_add_str(b, "uint32_t serial = 0x%08x;\n", sk->serial);
-  buffer_add_str(b, "char[] type = \"public\";\n");
+  xcipher = _bin2hex(cipher, clen);
+  xnonce  = _bin2hex(nonce, crypto_secretbox_NONCEBYTES);
 
-  pcp_export_c_pub_var(b, "cryptpub", sk->pub, 32);
-  pcp_export_c_pub_var(b, "sigpub", sk->pub, 32);
-  pcp_export_c_pub_var(b, "masterpub", sk->pub, 32);
+  json_object_set(jout, "type", json_string("secret"));
+  json_object_set(jout, "secrets", json_string(xcipher));
+  json_object_set(jout, "nonce", json_string(xnonce));
 
+  jdump  = json_dumps(jout, JSON_INDENT(4) | JSON_PRESERVE_ORDER);
+
+  if(jdump != NULL) {
+    buffer_add_str(b, jdump);
+    free(jdump);
+  }
+  else {
+    fatal(ptx, "JSON encoding error: %s", jerror);
+  }
+  
+  json_decref(jout);
+  
   return b;
 }
+
+Buffer *pcp_export_json_pub(PCPCTX *ptx, pcp_key_t *sk, byte *sig) {
+  Buffer *b = buffer_new_str("jsonbuf");
+  char *jdump;
+  json_t *jout;
+  json_error_t jerror;
+  
+  assert(ptx->json);
+
+  jout = pcp_pub2jsont(sk, sig);
+  jdump  = json_dumps(jout, JSON_INDENT(4) | JSON_PRESERVE_ORDER);
+
+  if(jdump != NULL) {
+    buffer_add_str(b, jdump);
+    free(jdump);
+  }
+  else {
+    fatal(ptx, "JSON encoding error: %s", jerror);
+  }
+  
+  json_decref(jout);
+  
+  return b;
+}
+#endif
 
 Buffer *pcp_export_pbp_pub(pcp_key_t *sk) {
   struct tm *v, *c;
@@ -611,10 +600,11 @@ Buffer *pcp_export_pbp_pub(pcp_key_t *sk) {
 }
 
 
-Buffer *pcp_export_rfc_pub (pcp_key_t *sk) {
+Buffer *pcp_export_rfc_pub (PCPCTX *ptx, pcp_key_t *sk) {
   Buffer *out = buffer_new(320, "exportbuf");
   Buffer *raw = buffer_new(256, "keysigbuf");
 
+  
   /* add the header */
   buffer_add8(out, PCP_KEY_VERSION);
   buffer_add64be(out, sk->ctime);
@@ -710,6 +700,15 @@ Buffer *pcp_export_rfc_pub (pcp_key_t *sk) {
   /* append the signed hash */
   buffer_add(out, sig, crypto_sign_BYTES + crypto_generichash_BYTES_MAX);
 
+
+#ifdef HAVE_JSON
+  if(ptx->json) {
+    Buffer *jout = pcp_export_json_pub(ptx, sk, sig);
+    buffer_free(out);
+    out = jout;
+  }
+#endif
+  
   /* and that's it. wasn't that easy? :) */
   buffer_free(raw);
   memset(hash, 0, crypto_generichash_BYTES_MAX);
@@ -727,43 +726,65 @@ Buffer *pcp_export_secret(PCPCTX *ptx, pcp_key_t *sk, char *passphrase) {
   size_t es;
 
   Buffer *raw = buffer_new(512, "secretbuf");
-  Buffer *out = buffer_new(512, "secretciperblob");
+  Buffer *out = buffer_new(512, "secretcipherblob");
 
   buffer_add(raw, sk->mastersecret, 64);
   buffer_add(raw, sk->secret, 32);
   buffer_add(raw, sk->edsecret, 64);
 
-  buffer_add(raw, sk->masterpub, 32);
-  buffer_add(raw, sk->pub, 32);
-  buffer_add(raw, sk->edpub, 32);
+#ifdef HAVE_JSON
+  if(! ptx->json) {
+    /* only encrypt everything if exporting in native format */
+#endif
 
-  if(strlen(sk->owner) > 0) {
-    buffer_add16be(raw, strlen(sk->owner));
-    buffer_add(raw, sk->owner,  strlen(sk->owner));
+    buffer_add(raw, sk->masterpub, 32);
+    buffer_add(raw, sk->pub, 32);
+    buffer_add(raw, sk->edpub, 32);
+
+    if(strlen(sk->owner) > 0) {
+      buffer_add16be(raw, strlen(sk->owner));
+      buffer_add(raw, sk->owner,  strlen(sk->owner));
+    }
+    else
+      buffer_add16be(raw, 0);
+
+    if(strlen(sk->mail) > 0) {
+      buffer_add16be(raw, strlen(sk->mail));
+      buffer_add(raw, sk->mail, strlen(sk->mail));
+    }
+    else
+      buffer_add16be(raw, 0);
+
+    buffer_add64be(raw, sk->ctime);
+    buffer_add32be(raw, sk->version);
+    buffer_add32be(raw, sk->serial);
+
+#ifdef HAVE_JSON
   }
-  else
-    buffer_add16be(raw, 0);
-
-  if(strlen(sk->mail) > 0) {
-    buffer_add16be(raw, strlen(sk->mail));
-    buffer_add(raw, sk->mail, strlen(sk->mail));
-  }
-  else
-    buffer_add16be(raw, 0);
-
-  buffer_add64be(raw, sk->ctime);
-  buffer_add32be(raw, sk->version);
-  buffer_add32be(raw, sk->serial);
-
+#endif
+  
   nonce = ucmalloc(crypto_secretbox_NONCEBYTES);
   arc4random_buf(nonce, crypto_secretbox_NONCEBYTES);
   symkey = pcp_scrypt(ptx, passphrase, strlen(passphrase), nonce, crypto_secretbox_NONCEBYTES);
 
   es = pcp_sodium_mac(&cipher, buffer_get(raw), buffer_size(raw), nonce, symkey);
 
-  buffer_add(out, nonce, crypto_secretbox_NONCEBYTES);
-  buffer_add(out, cipher, es);
+#ifdef HAVE_JSON
+  if(ptx->json) {
+    Buffer *jout = pcp_export_json_secret(ptx, sk, nonce, cipher, es);
+    buffer_free(out);
+    out = jout;
+  }
+  else {
+#endif
 
+    buffer_add(out, nonce, crypto_secretbox_NONCEBYTES);
+    buffer_add(out, cipher, es);
+
+#ifdef HAVE_JSON
+  }
+#endif 
+  
   buffer_free(raw);
   ucfree(nonce, crypto_secretbox_NONCEBYTES);
   sfree(symkey);

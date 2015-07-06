@@ -1,4 +1,15 @@
 NEXT
+	Added JSON key export support using libjansson.
+
+	Abandoned YAML, perl and C key export support,
+	better doing one external format but doing it
+	good. Also, I had no importers for those formats
+	but I'll add a JSON importer.
+
+	Removed -y for YAML vault export as well. Maybe
+	I'll add a parameter to -p or -s so one can
+	select which key[s] to export.
+	
 	removed hand-written padding stuff and using
 	libsodiums _easy() functions for crypto now
 	instead of the raw nacl ones. instead we use

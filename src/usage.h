@@ -28,9 +28,10 @@
 "-s --export-secret        Export a secret key.\n" \
 "-p --export-public        Export a public key.\n" \
 "-K --import               Import a secret or public key.\n" \
-"-y --export-yaml          Export all keys as YAML formatted text.\n" \
 "-F --export-format <fmt>  Specify exportformat, either 'pbp' or 'pcp'.\n" \
 "                          'pcp' is the default if unspecified.\n" \
+"-j --json                 Enable JSON ex- and import of keys.\n" \
+"\n" \
 "Encryption Options:\n" \
 "-e --encrypt              Asym-Encrypt a message. If none of -i or -r\n" \
 "                          has been given, encrypt the message symetrically.\n" \
@@ -50,6 +51,5 @@
 "Arguments:\n" \
 "Extra arguments after options are treated as filenames or\n" \
 "recipients, depending on operation mode.\n" \
-"\n" \
-"\n"
+""
 #endif

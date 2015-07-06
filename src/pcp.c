@@ -106,7 +106,6 @@ int main (int argc, char **argv)  {
     { "import-key",      no_argument,       NULL,           'K' }, /* alias -K */
     { "remove-key",      no_argument,       NULL,           'R' },
     { "edit-key",        no_argument,       NULL,           'E' },    
-    { "export-yaml",     no_argument,       NULL,           'y' },
     { "export-format",   required_argument, NULL,           'F' },
 
     /*  crypto */
@@ -121,6 +120,7 @@ int main (int argc, char **argv)  {
     { "armor",           no_argument,       NULL,           'a' }, /* alias -z */
     { "textmode",        no_argument,       NULL,           'a' }, /* alias -z */
     { "z85-decode",      no_argument,       NULL,           'Z' },
+    { "json-io",         no_argument,       NULL,           'j' },
 
     /*  globals */
     { "help",            no_argument,       NULL,           'h' },
@@ -135,7 +135,7 @@ int main (int argc, char **argv)  {
     { NULL,              0,                 NULL,            0 }
   };
 
-  while ((opt = getopt_long(argc, argv, "klLV:vdehsO:i:I:pSPRtEx:DzaZr:gcymf:b1F:0KAMX:",
+  while ((opt = getopt_long(argc, argv, "klLV:vdehsO:i:I:pSPRtEx:DzaZr:gcmf:b1F:0KAMX:j",
 			    longopts, NULL)) != -1) {
   
     switch (opt)  {
@@ -210,25 +210,17 @@ int main (int argc, char **argv)  {
 	else if(strncmp(optarg, "pcp", 3) == 0) {
 	  exportformat = EXP_FORMAT_NATIVE;
 	}
-	else if(strncmp(optarg, "yaml", 3) == 0) {
-	  exportformat = EXP_FORMAT_YAML;
-	}
-	else if(strncmp(optarg, "c", 3) == 0) {
-	  exportformat = EXP_FORMAT_C;
-	}
-	else if(strncmp(optarg, "py", 3) == 0) {
-	  exportformat = EXP_FORMAT_PY;
-	}
-	else if(strncmp(optarg, "perl", 3) == 0) {
-	  exportformat = EXP_FORMAT_PERL;
-	}
-	else if(strncmp(optarg, "c", 3) == 0) {
-	  exportformat = EXP_FORMAT_C;
-	}
 	else {
 	  warn("Unknown export format specified, using native\n");
 	  exportformat = EXP_FORMAT_NATIVE;
 	}
+	break;
+      case 'j':
+#ifdef HAVE_JSON
+	ptx->json = 1;
+#else
+	fprintf(stderr, "WARN: -j set, but no JSON support compiled in. Recompile with --with-json\n");
+#endif
 	break;
       case 'g':
 	mode += PCP_MODE_SIGN;
@@ -242,10 +234,6 @@ int main (int argc, char **argv)  {
 	sigfile = ucmalloc(strlen(optarg)+1);
 	strncpy(sigfile, optarg, strlen(optarg)+1);
 	detach = 1;
-	break;
-      case 'y':
-	mode += PCP_MODE_YAML;
-	usevault = 1;
 	break;
 
       case 'V':
@@ -564,10 +552,6 @@ int main (int argc, char **argv)  {
 	else {
 	  pcpverify(altin(infile, xpf), sigfile, NULL, detach);
 	}
-	break;
-
-      case PCP_MODE_YAML:
-	pcpexport_yaml(outfile);
 	break;
 
       default:

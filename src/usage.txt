@@ -26,9 +26,10 @@ Keymanagement Options:
 -s --export-secret        Export a secret key.
 -p --export-public        Export a public key.
 -K --import               Import a secret or public key.
--y --export-yaml          Export all keys as YAML formatted text.
 -F --export-format <fmt>  Specify exportformat, either 'pbp' or 'pcp'.
                           'pcp' is the default if unspecified.
+-j --json                 Enable JSON ex- and import of keys.
+
 Encryption Options:
 -e --encrypt              Asym-Encrypt a message. If none of -i or -r
                           has been given, encrypt the message symetrically.
@@ -48,4 +49,3 @@ Encoding Options:
 Arguments:
 Extra arguments after options are treated as filenames or
 recipients, depending on operation mode.
-

@@ -30,7 +30,7 @@
 "-K --import               Import a secret or public key.\n" \
 "-F --export-format <fmt>  Specify exportformat, either 'pbp' or 'pcp'.\n" \
 "                          'pcp' is the default if unspecified.\n" \
-"-j --json                 Enable JSON ex- and import of keys.\n" \
+"-j --json                 Enable JSON output (with -t, -p and -s).\n" \
 "\n" \
 "Encryption Options:\n" \
 "-e --encrypt              Asym-Encrypt a message. If none of -i or -r\n" \

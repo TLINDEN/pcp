@@ -1,7 +1,5 @@
 JSON:
-- export secret as json
 - import pub und secret as json
-- export vault as json
 
 detach keysig generation from pub key export, so that an existing
 keysig can be verified later.
@@ -18,8 +16,6 @@ Update pod key format spec.
 
 vault checksum: add keysigs as well
 
-enable formats for secret key exports as well
-
 Add newlines to headers in define.h, so strlen() later catches the whole length.
 
 Check is_utf8 license.
@@ -33,34 +29,3 @@ c++ destructor double free mess
 
 cpptest 0 uses same Context for encryptor and decryptor,
 must be another one for the latter!
-
-after new z85 padding scheme: write z85 blocksize to output
-as well? if a reader doesn't know the blocksize it won't be
-able to decode it properly. Or no issue? Not sure yet...
-
-
-(gdb) set args  -V v1 -p -x xxx -z -i 0x8671F4264E20F179
-(gdb) r
-Starting program: /usr/home/sciplocal/D/github/pcp/src/pcp1 -V v1 -p -x xxx -z -i 0x8671F4264E20F179
-failed to decrypt the secret key (got -1, expected 32)!
-Error: Operation not permitted
-
-Program received signal SIGSEGV, Segmentation fault.
-0x000000000040f8e8 in pcphash_del (ptx=0x801017040, key=0x80107b100, type=Variable "type" is not available.
-) at keyhash.c:28
-28          HASH_DEL(ptx->pcpkey_hash, (pcp_key_t *)key);
-(gdb) bt
-#0  0x000000000040f8e8 in pcphash_del (ptx=0x801017040, key=0x80107b100, type=Variable "type" is not available.
-) at keyhash.c:28
-#1  0x000000000040fba7 in pcphash_clean (ptx=0x801017040) at keyhash.c:50
-#2  0x00000000004084ff in ptx_clean (ptx=0x801017040) at context.c:52
-#3  0x0000000000402557 in main (argc=Variable "argc" is not available.
-) at pcp.c:593
-
-
-
-
-_havenacl sometimes "no", even if old version is installed, followed by:
-
-mem.c:51: warning: implicit declaration of function 'sodium_malloc'
-mem.c:51: warning: initialization makes pointer from integer without a cast

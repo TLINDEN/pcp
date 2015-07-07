@@ -716,6 +716,9 @@ Buffer *pcp_export_rfc_pub (PCPCTX *ptx, pcp_key_t *sk) {
   memset(sig, 0, crypto_sign_BYTES + crypto_generichash_BYTES_MAX);
   free(sig);
 
+  if(out->end < 32)
+    fatal(ptx, "failed to export public key");
+
   return out;
 }
 

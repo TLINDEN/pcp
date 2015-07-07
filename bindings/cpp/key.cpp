@@ -129,7 +129,7 @@ string Key::export_secret(const string &passphrase) {
 string Key::export_public() {
   Buffer *exported_pk;
 
-  exported_pk =  pcp_export_rfc_pub(K);
+  exported_pk =  pcp_export_rfc_pub(PTX->ptx, K);
 
   if(exported_pk == NULL)
     throw pcp::exception(PTX);

@@ -107,7 +107,13 @@ void _dump(char *n, byte *d, size_t s);
 */
 char *_bin2hex(byte *bin, size_t len);
 
-
+/** convert hex string to binary date
+    \param[in] hex_str hex string
+    \param[out] byte_array output buffer (malloc'd to byte_array_max)
+    \param[in] byte_array_max max size allowed for output buffer
+    \return Returns size of output buffer
+*/
+size_t _hex2bin(const char *hex_str, unsigned char *byte_array, size_t byte_array_max);
 
 #endif /*  _HAVE_PCP_UTIL_H */
 

@@ -19,8 +19,13 @@
 #    You can contact me by mail: <tlinden AT cpan DOT org>.
 #
 
+if BUILDCPP
+  MAYCPP=docpptest
+  CPPTEST=cpptest
+endif
+
 AM_CFLAGS = -I../include/pcp -I../src -I../libpcp/scrypt/crypto
-check_PROGRAMS = invalidkeys gencheader statictest cpptest \
+check_PROGRAMS = invalidkeys gencheader statictest $(CPPTEST) \
 		 buffertest sample streamtest pipetest decodertest mangle
 
 EXTRA_DIST = Makefile.am Makefile.in *.c *.h *.sh *.pl *.py *.cfg *.cpp \
@@ -62,9 +67,11 @@ invalidkeys_LDADD = ../libpcp/.libs/libpcp1.a \
 		    ../src/keyprint.o ../src/keymgmt.o ../src/readpass.o
 invalidkeys_SOURCES = invalidkeys.c
 
+if BUILDCPP
 AM_CXXFLAGS = -I../include -I../bindings/cpp -I../libpcp/scrypt/crypto
 cpptest_LDADD = ../bindings/cpp/.libs/libpcp1++.a ../libpcp/.libs/libpcp1.a
 cpptest_SOURCES = cpptest.cpp
+endif
 
 #
 # Note: some of these unit tests run only on freebsd.
@@ -76,7 +83,7 @@ if BUILDPY
   MAYPY=pytest
 endif
 
-test: check ctest $(MAYPY)
+test: check ctest $(MAYPY) $(MAYCPP)
 
 ctest:
 	rm -f test* v* stresstest/*
@@ -85,6 +92,9 @@ ctest:
 
 pytest:
 	./unittests.pl pyunittests.cfg $(CHECK)
+
+docpptest:
+	./unittests.pl cppunittests.cfg $(CHECK)
 
 stresstest: check
 	./unittests.pl stresstests.cfg

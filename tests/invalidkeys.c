@@ -24,7 +24,7 @@ int main() {
     mkinvalid_secret(ptx, key, i);
 
   for(i=0; i<4; i++)
-    mkinvalid_public(key, i);
+    mkinvalid_public(ptx, key, i);
 
   mkinvv(ptx, "testvault-invalidheader",  0);
   mkinvv(ptx, "testvault-invalidversion",  1);
@@ -102,7 +102,7 @@ void mkinvv(PCPCTX *ptx, const char *name, int type) {
   fclose(v->fd);
 }
 
-void mkinvalid_public(pcp_key_t *k, int type) {
+void mkinvalid_public(PCPCTX *ptx, pcp_key_t *k, int type) {
   pcp_key_t *key = ucmalloc(sizeof(pcp_key_t));
   memcpy(key, k, sizeof(pcp_key_t));
   FILE *fd = NULL;
@@ -127,7 +127,7 @@ void mkinvalid_public(pcp_key_t *k, int type) {
   }
 
   if(fd != NULL) {
-    Buffer *b = pcp_export_rfc_pub(key);
+    Buffer *b = pcp_export_rfc_pub(ptx, key);
     fwrite(buffer_get(b), 1, buffer_size(b), fd);
     fclose(fd);
   }

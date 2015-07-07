@@ -11,7 +11,7 @@
 #include "vault.h"
 
 void mkinvalid_secret(PCPCTX *ptx, pcp_key_t *k, int type);
-void mkinvalid_public(pcp_key_t *k, int type);
+void mkinvalid_public(PCPCTX *ptx, pcp_key_t *k, int type);
 void mkinvv(PCPCTX *ptx, const char *name, int type);
 FILE *F(char *filename);
 

@@ -33,9 +33,10 @@ Pretty Curved Privacy - File encryption using eliptic curve cryptography.
   -s --export-secret        Export a secret key.
   -p --export-public        Export a public key.
   -K --import               Import a secret or public key.
-  -y --export-yaml          Export all keys as YAML formatted text.
   -F --export-format <fmt>  Specify exportformat, either 'pbp' or 'pcp'.
                             'pcp' is the default if unspecified.
+  -j --json                 Enable JSON output (with -t, -p and -s).
+  
   Encryption Options:
   -e --encrypt              Asym-Encrypt a message. If none of -i or -r
                             has been given, encrypt the message symetrically.
@@ -55,7 +56,6 @@ Pretty Curved Privacy - File encryption using eliptic curve cryptography.
   Arguments:
   Extra arguments after options are treated as filenames or
   recipients, depending on operation mode.
-  
 =head1 OPTIONS
  
  Usage: pcp1 [options]
@@ -120,12 +120,10 @@ Pretty Curved Privacy - File encryption using eliptic curve cryptography.
  -K --import               Import a key. pcp determines automatically
     --import-key           the key type and encodingg. Use -I to import
                            from a file.
- -y --export-yaml          Export all keys stored in your vault
-                           as YAML formatted text. Use -O to put
-                           the export into a file.
  -F --format               Export the key in a particular format.
-                           Currently supported: pcp, pbp, yaml,
-                           perl and C.
+                           Currently supported: pcp and pbp.
+ -j --json                 enable JSON output. Can be used with info
+                           output (-t) and key export (-p and -s).
  
  Encryption Options:
  -e --encrypt              Asym-Encrypt a message. Read from stdin or

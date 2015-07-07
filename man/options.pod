@@ -64,7 +64,8 @@
                            from a file.
  -F --format               Export the key in a particular format.
                            Currently supported: pcp and pbp.
- -j --json                 enable JSON ex- and import of keys.
+ -j --json                 enable JSON output. Can be used with info
+                           output (-t) and key export (-p and -s).
  
  Encryption Options:
  -e --encrypt              Asym-Encrypt a message. Read from stdin or

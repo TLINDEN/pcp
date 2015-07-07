@@ -1,3 +1,14 @@
+=begin html 
+
+<a href="https://travis-ci.org/TLINDEN/pcp"><img 
+  src="https://travis-ci.org/TLINDEN/pcp.svg?branch=master" 
+  alt="build status"/></a> 
+<a href="https://ci.appveyor.com/project/TLINDEN/pcp"><img 
+  src="https://ci.appveyor.com/api/projects/status/7e833vup5pqhse83?svg=true" 
+  alt="build status"/></a> 
+
+=end html
+
 
 =head1 DESCRIPTION
 

@@ -154,11 +154,13 @@ int _check_hash_keysig(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, pcp_keysig_t 
   
   /* everything minus version, ctime and cipher, 1st 3 fields */
   sk->size = blobstop - phead;
+
   memcpy(sk->id, p->id, 17);
 
   /* put the whole signature blob into our keysig */
   blob->offset = phead;
   sk->blob = ucmalloc(sk->size);
+
   buffer_get_chunk(blob, sk->blob, sk->size);
 
   /* verify the signature */
@@ -208,65 +210,34 @@ pcp_ks_bundle_t *pcp_import_binpub(PCPCTX *ptx, byte *raw, size_t rawsize) {
   Buffer *blob = buffer_new(512, "importblob");
   pcp_ks_bundle_t *bundle = NULL;
 
-  buffer_add(blob, raw, rawsize);
-
-  /* now, try to disassemble, if it fails, assume pbp format */
-  uint8_t version = buffer_get8(blob);
-
-  if(version == PCP_KEY_VERSION) {
-    /* ah, homerun */
-    bundle = pcp_import_pub_rfc(ptx, blob);
+#ifdef HAVE_JSON
+  if(ptx->json) {
+    bundle = pcp_import_pub_json(ptx, raw, rawsize);
   }
   else {
-    /* nope, it's probably pbp */
-    bundle = pcp_import_pub_pbp(ptx, blob);
-  }
+#endif
+   
+    buffer_add(blob, raw, rawsize);
 
+    /* now, try to disassemble, if it fails, assume pbp format */
+    uint8_t version = buffer_get8(blob);
+
+    if(version == PCP_KEY_VERSION) {
+      /* ah, homerun */
+      bundle = pcp_import_pub_rfc(ptx, blob);
+    }
+    else {
+      /* nope, it's probably pbp */
+      bundle = pcp_import_pub_pbp(ptx, blob);
+    }
+
+#ifdef HAVE_JSON
+  }
+#endif
+  
   buffer_free(blob);
   return bundle;
 
-}
-
-pcp_ks_bundle_t *pcp_import_pub(PCPCTX *ptx, byte *raw, size_t rawsize) {
-  size_t clen;
-  byte *bin = NULL;
-  char *z85 = NULL;
-
-  if(rawsize == 0) {
-    fatal(ptx, "Input file is empty!\n");
-    return NULL;
-  }
-
-  Buffer *blob = buffer_new(512, "importblob");
-
-  /* first, try to decode the input */
-  z85 = pcp_readz85string(ptx, raw, rawsize);
-
-  if(z85 != NULL)
-    bin = pcp_z85_decode(ptx, z85, &clen);
-
-  if(bin == NULL) {
-    /* treat as binary blob */
-    fatals_reset(ptx);
-    buffer_add(blob, raw, rawsize);
-  }
-  else {
-    /* use decoded */
-    buffer_add(blob, bin, clen);
-    ucfree(bin, clen);
-  }
-
-  /* now, try to disassemble, if it fails, assume pbp format */
-  uint8_t version = buffer_get8(blob);
-
-  if(version == PCP_KEY_VERSION) {
-    /* ah, homerun */
-    return pcp_import_pub_rfc(ptx, blob);
-  }
-  else {
-    /* nope, it's probably pbp */
-    return pcp_import_pub_pbp(ptx, blob);
-  }
 }
 
 pcp_ks_bundle_t *pcp_import_pub_rfc(PCPCTX *ptx, Buffer *blob) {
@@ -443,109 +414,6 @@ pcp_ks_bundle_t *pcp_import_pub_pbp(PCPCTX *ptx, Buffer *blob) {
   return NULL;
 }
 
-#ifdef HAVE_JSON
-
-json_t *pcp_pub2jsont(pcp_key_t *sk, byte *sig) {
-  json_t *jout;
-  char *cryptpub, *sigpub, *masterpub, *ssig;
- 
-  char *jformat = "{sssssssisisisissssssssssss}";
-
-  
-  cryptpub = _bin2hex(sk->pub, 32);
-  sigpub   = _bin2hex(sk->edpub, 32);
-  masterpub= _bin2hex(sk->masterpub, 32);
-  
-  if(sig != NULL) {
-    ssig     = _bin2hex(sig, crypto_sign_BYTES + crypto_generichash_BYTES_MAX);
-  }
-  else {
-    ssig = malloc(1);
-    ssig[0] = '\0';
-    jformat = "{sssssssisisisissssssssss}";
-  }
-  
-  jout = json_pack(jformat,
-		   "id", sk->id,
-		   "owner", sk->owner,
-		   "mail", sk->mail,
-		   "ctime", (int)sk->ctime,
-		   "expire", (int)sk->ctime+31536000,
-		   "version", (int)sk->version,
-		   "serial", (int)sk->serial,
-		   "type", "public",
-		   "cipher", EXP_PK_CIPHER_NAME,
-		   "cryptpub", cryptpub,
-		   "sigpub", sigpub,
-		   "masterpub", masterpub,
-		   "signature", ssig
-		   );
-
-  free(cryptpub);
-  free(sigpub);
-  free(masterpub);
-  if(sig != NULL)
-    free(ssig);
-
-  return jout;
-}
-
-Buffer *pcp_export_json_secret(PCPCTX *ptx, pcp_key_t *sk, byte *nonce, byte *cipher, size_t clen) {
-  Buffer *b = buffer_new_str("jsonbuf");
-  char *jdump, *xcipher, *xnonce;
-  json_t *jout;
-  json_error_t jerror;
-  
-  assert(ptx->json);
-
-  jout = pcp_pub2jsont(sk, NULL);
-
-  xcipher = _bin2hex(cipher, clen);
-  xnonce  = _bin2hex(nonce, crypto_secretbox_NONCEBYTES);
-
-  json_object_set(jout, "type", json_string("secret"));
-  json_object_set(jout, "secrets", json_string(xcipher));
-  json_object_set(jout, "nonce", json_string(xnonce));
-
-  jdump  = json_dumps(jout, JSON_INDENT(4) | JSON_PRESERVE_ORDER);
-
-  if(jdump != NULL) {
-    buffer_add_str(b, jdump);
-    free(jdump);
-  }
-  else {
-    fatal(ptx, "JSON encoding error: %s", jerror);
-  }
-  
-  json_decref(jout);
-  
-  return b;
-}
-
-Buffer *pcp_export_json_pub(PCPCTX *ptx, pcp_key_t *sk, byte *sig) {
-  Buffer *b = buffer_new_str("jsonbuf");
-  char *jdump;
-  json_t *jout;
-  json_error_t jerror;
-  
-  assert(ptx->json);
-
-  jout = pcp_pub2jsont(sk, sig);
-  jdump  = json_dumps(jout, JSON_INDENT(4) | JSON_PRESERVE_ORDER);
-
-  if(jdump != NULL) {
-    buffer_add_str(b, jdump);
-    free(jdump);
-  }
-  else {
-    fatal(ptx, "JSON encoding error: %s", jerror);
-  }
-  
-  json_decref(jout);
-  
-  return b;
-}
-#endif
 
 Buffer *pcp_export_pbp_pub(pcp_key_t *sk) {
   struct tm *v, *c;
@@ -603,7 +471,6 @@ Buffer *pcp_export_pbp_pub(pcp_key_t *sk) {
 Buffer *pcp_export_rfc_pub (PCPCTX *ptx, pcp_key_t *sk) {
   Buffer *out = buffer_new(320, "exportbuf");
   Buffer *raw = buffer_new(256, "keysigbuf");
-
   
   /* add the header */
   buffer_add8(out, PCP_KEY_VERSION);
@@ -700,11 +567,19 @@ Buffer *pcp_export_rfc_pub (PCPCTX *ptx, pcp_key_t *sk) {
   /* append the signed hash */
   buffer_add(out, sig, crypto_sign_BYTES + crypto_generichash_BYTES_MAX);
 
-
 #ifdef HAVE_JSON
   if(ptx->json) {
-    Buffer *jout = pcp_export_json_pub(ptx, sk, sig);
+    /* FIXME FIXME
+    buffer_dump(out);
+    buffer_info(out);
+    size_t siglen =  buffer_size(out) - 10;
+    byte *sh = ucmalloc(siglen);
+
+    buffer_extract(out, sh, 10, siglen);
+    */
+    Buffer *jout = pcp_export_json_pub(ptx, sk, NULL, 0);
     buffer_free(out);
+    
     out = jout;
   }
 #endif
@@ -933,3 +808,285 @@ pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphras
     free(clear);
   return NULL;
 }
+
+
+
+
+
+
+
+
+#ifdef HAVE_JSON
+
+json_t *pcp_pk2json(pcp_pubkey_t *pk) {
+  /* somewhat ugly, map the pub parts of a sk into
+     a fake pk so that we don't have to write pcp_sk2json()
+     for both key types. FIXME: 'd be better to have just 1
+     struct for both types... */
+  json_t *out;
+  
+  pcp_key_t *sk = malloc(sizeof(pcp_key_t));
+
+  memcpy(sk->masterpub, pk->masterpub, 32);
+  memcpy(sk->pub, pk->pub, 32);
+  memcpy(sk->edpub, pk->edpub, 32);
+  memcpy(sk->owner, pk->owner, 255);
+  memcpy(sk->mail, pk->mail, 255);
+  memcpy(sk->id, pk->id, 17);
+  sk->ctime = pk->ctime;
+  sk->version = pk->version;
+  sk->serial = pk->serial;
+  sk->type = pk->type;
+
+  out = pcp_sk2json(sk, NULL, 0);
+  ucfree(sk, sizeof(pcp_key_t));
+
+  return out;
+}
+
+json_t *pcp_sk2json(pcp_key_t *sk, byte *sig, size_t siglen) {
+  json_t *jout;
+  char *cryptpub, *sigpub, *masterpub, *ssig;
+ 
+  char *jformat = "{sssssssisisisissssssssssss}";
+
+  
+  cryptpub = _bin2hex(sk->pub, 32);
+  sigpub   = _bin2hex(sk->edpub, 32);
+  masterpub= _bin2hex(sk->masterpub, 32);
+  
+  if(sig != NULL) {
+    ssig     = _bin2hex(sig, siglen);
+  }
+  else {
+    ssig = malloc(1);
+    ssig[0] = '\0';
+    jformat = "{sssssssisisisissssssssss}";
+  }
+  
+  jout = json_pack(jformat,
+		   "id", sk->id,
+		   "owner", sk->owner,
+		   "mail", sk->mail,
+		   "ctime", (int)sk->ctime,
+		   "expire", (int)sk->ctime+31536000,
+		   "version", (int)sk->version,
+		   "serial", (int)sk->serial,
+		   "type", "public",
+		   "cipher", EXP_PK_CIPHER_NAME,
+		   "cryptpub", cryptpub,
+		   "sigpub", sigpub,
+		   "masterpub", masterpub,
+		   "signature", ssig
+		   );
+
+  free(cryptpub);
+  free(sigpub);
+  free(masterpub);
+  if(sig != NULL)
+    free(ssig);
+
+  return jout;
+}
+
+Buffer *pcp_export_json_secret(PCPCTX *ptx, pcp_key_t *sk, byte *nonce, byte *cipher, size_t clen) {
+  Buffer *b = buffer_new_str("jsonbuf");
+  char *jdump, *xcipher, *xnonce;
+  json_t *jout;
+  json_error_t jerror;
+  
+  assert(ptx->json);
+
+  jout = pcp_sk2json(sk, NULL, 0);
+
+  xcipher = _bin2hex(cipher, clen);
+  xnonce  = _bin2hex(nonce, crypto_secretbox_NONCEBYTES);
+
+  json_object_set(jout, "type", json_string("secret"));
+  json_object_set(jout, "secrets", json_string(xcipher));
+  json_object_set(jout, "nonce", json_string(xnonce));
+
+  jdump  = json_dumps(jout, JSON_INDENT(4) | JSON_PRESERVE_ORDER);
+
+  if(jdump != NULL) {
+    buffer_add_str(b, jdump);
+    free(jdump);
+  }
+  else {
+    fatal(ptx, "JSON encoding error: %s", jerror.text);
+  }
+  
+  json_decref(jout);
+  
+  return b;
+}
+
+Buffer *pcp_export_json_pub(PCPCTX *ptx, pcp_key_t *sk, byte *sig, size_t siglen) {
+  Buffer *b = buffer_new_str("jsonbuf");
+  char *jdump;
+  json_t *jout;
+  json_error_t jerror;
+  
+  assert(ptx->json);
+
+  jout = pcp_sk2json(sk, sig, siglen);
+  jdump  = json_dumps(jout, JSON_INDENT(4) | JSON_PRESERVE_ORDER);
+
+  if(jdump != NULL) {
+    buffer_add_str(b, jdump);
+    free(jdump);
+  }
+  else {
+    fatal(ptx, "JSON encoding error: %s", jerror.text);
+  }
+  
+  json_decref(jout);
+  
+  return b;
+}
+
+pcp_ks_bundle_t *pcp_import_pub_json(PCPCTX *ptx, byte *raw, size_t rawsize) {
+  pcp_ks_bundle_t *b = NULL;
+  pcp_keysig_t *s = NULL;
+  pcp_pubkey_t *p = NULL;
+  json_error_t jerror;
+  json_t *jin, *jtmp;
+  byte *blob;
+  size_t maxblob = 2048;
+  const char *stmp;
+  char *hexerr = "failed to decode hex string";
+  
+  jin = json_loadb((char *)raw, rawsize, JSON_DISABLE_EOF_CHECK, &jerror);
+  if(jin == NULL)
+    goto jerr1;
+  
+  p = ucmalloc(sizeof(pcp_pubkey_t));
+  s =  ucmalloc(sizeof(pcp_keysig_t));
+  b =  ucmalloc(sizeof(pcp_ks_bundle_t));
+  blob = ucmalloc(maxblob);
+  
+  jtmp = json_object_get(jin, "id");
+  if(jtmp == NULL)
+    goto jerr2;
+  memcpy(p->id, json_string_value(jtmp), 17);
+
+  jtmp = json_object_get(jin, "cryptpub");
+  if(jtmp == NULL)
+    goto jerr2;
+  if(_hex2bin(json_string_value(jtmp), blob, maxblob) == 32)
+    memcpy(p->pub, blob, 32);
+  else {
+    strcpy(jerror.text, hexerr);
+    goto jerr2;
+  }
+
+  jtmp = json_object_get(jin, "sigpub");
+  if(jtmp == NULL)
+    goto jerr2;
+  if(_hex2bin(json_string_value(jtmp), blob, maxblob) == 32)
+    memcpy(p->edpub, blob, 32);
+  else {
+    strcpy(jerror.text, hexerr);
+    goto jerr2;
+  }
+
+  jtmp = json_object_get(jin, "masterpub");
+  if(jtmp == NULL)
+    goto jerr2;
+  if(_hex2bin(json_string_value(jtmp), blob, maxblob) == 32)
+    memcpy(p->masterpub, blob, 32);
+  else {
+    strcpy(jerror.text, hexerr);
+    goto jerr2;
+  }
+
+  jtmp = json_object_get(jin, "owner");
+  if(jtmp == NULL)
+    goto jerr2;
+  stmp = json_string_value(jtmp);
+  if(stmp != NULL)
+    strcpy(p->owner, stmp);
+  else
+    goto jerr2;
+  
+  jtmp = json_object_get(jin, "mail");
+  if(jtmp == NULL)
+    goto jerr2;
+  stmp = json_string_value(jtmp);
+  if(stmp != NULL)
+    strcpy(p->mail, stmp);
+  else
+    goto jerr2;
+
+  jtmp = json_object_get(jin, "ctime");
+  if(jtmp == NULL)
+    goto jerr2;
+  p->ctime = (uint64_t)json_integer_value(jtmp);
+
+  jtmp = json_object_get(jin, "version");
+  if(jtmp == NULL)
+    goto jerr2;
+  p->version = (uint32_t)json_integer_value(jtmp);
+
+  jtmp = json_object_get(jin, "serial");
+  if(jtmp == NULL)
+    goto jerr2;
+  p->serial = (uint32_t)json_integer_value(jtmp);
+  
+  jtmp = json_object_get(jin, "type");
+  if(jtmp == NULL)
+    goto jerr2;
+  if(json_string_value(jtmp)[0] == 'p')
+    p->type = PCP_KEY_TYPE_PUBLIC;
+  else {
+    strcpy(jerror.text, "key type is not public");
+    goto jerr2;
+  }
+  
+  /*
+    FIXME FIXME
+  jtmp = json_object_get(jin, "signature");
+  if(jtmp == NULL)
+    goto jerr2;
+  size_t siglen = _hex2bin(json_string_value(jtmp), blob, maxblob);
+  if(siglen > 1) {
+    Buffer *btmp = buffer_new_buf("btmp", blob, siglen);
+    buffer_dump(btmp);
+    buffer_info(btmp);
+    if(_check_hash_keysig(ptx, btmp, p, s) != 0) {
+      b->p = p;
+      b->s = NULL;
+    }
+    else {
+      b->p = p;
+      b->s = s;
+    }
+    buffer_free(btmp);
+  }
+  else {
+    strcpy(jerror.text, "sigerr");
+    goto jerr2;
+  }
+  */
+  
+
+  pcp_dumppubkey(p);
+  
+  b->p = p;
+  b->s = NULL;
+  
+  return b;
+
+ jerr2:
+  free(p);
+  free(s);
+  free(b);
+  free(blob);
+  json_decref(jin);
+  
+ jerr1:
+  fatal(ptx, "JSON decoding error: %s", jerror.text);
+  fprintf(stderr,  "JSON decoding error: %s\n", jerror.text);
+  return NULL;
+}
+#endif

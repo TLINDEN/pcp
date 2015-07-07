@@ -102,6 +102,46 @@ void pcptext_key(char *keyid) {
 }
 
 void pcptext_vault(vault_t *vault) {
+#ifdef HAVE_JSON
+  
+  if(ptx->json) {
+    json_t *jout, *jkeys, *jtmp;
+    char *checksum, *jdump;
+    pcp_key_t *k;
+    pcp_pubkey_t *p;
+    
+    checksum = _bin2hex(vault->checksum, 32);
+    jout = json_pack("{sssisssisi}",
+		     "keyvaultfile", vault->filename,
+		     "version", vault->version,
+		     "checksum", checksum,
+		     "secretkeys", pcphash_count(ptx),
+		     "publickey", pcphash_countpub(ptx));
+
+    jkeys = json_array();
+    
+    pcphash_iterate(ptx, k) {
+      jtmp = pcp_sk2json(k, NULL, 0);
+      json_object_set(jtmp, "type", json_string("secret"));
+      json_array_append(jkeys, jtmp);
+    }
+
+    pcphash_iteratepub(ptx, p) {
+      jtmp = pcp_pk2json(p);
+      json_array_append(jkeys, jtmp);
+    }
+
+    json_object_set(jout, "keys", jkeys);
+    
+    jdump  = json_dumps(jout, JSON_INDENT(4) | JSON_PRESERVE_ORDER);
+    printf(jdump);
+    json_decref(jout);
+    free(jdump);
+  }
+  else {
+    
+#endif
+
   printf("    Key vault: %s\n", vault->filename);
   printf("Vault version: %08X\n", vault->version);
   printf("     Checksum: ");
@@ -116,6 +156,10 @@ void pcptext_vault(vault_t *vault) {
 
   printf("  Secret keys: %d\n", pcphash_count(ptx));
   printf("  Public keys: %d\n", pcphash_countpub(ptx) );
+  
+#ifdef HAVE_JSON
+  }
+#endif
 }
 
 void pcpkey_printlineinfo(pcp_key_t *key) {
@@ -193,71 +237,134 @@ void pcppubkey_printlineinfo(pcp_pubkey_t *key) {
 }
 
 void pcppubkey_print(pcp_pubkey_t *key, FILE* out) {
-  size_t zlen;
-  struct tm *c;
-  time_t t = (time_t)key->ctime;
-  c = localtime(&t);
-
-  fprintf(out, " Cipher: %s\n", PCP_KEY_PRIMITIVE);
-
-  fprintf(out, " Owner: %s\n", key->owner);
-  fprintf(out, " Mail: %s\n", key->mail);
-
-  fprintf(out, " Key-ID: 0x%s\n", key->id);
-  fprintf(out, " Public-Key: %s\n", pcp_z85_encode(key->pub, 32, &zlen, 1));
-
-  /* 2004-06-14T23:34:30. */
-  fprintf(out, " Creation Time: %04d-%02d-%02dT%02d:%02d:%02d\n",
-	  c->tm_year+1900, c->tm_mon+1, c->tm_mday,
-	  c->tm_hour, c->tm_min, c->tm_sec);
-
-  byte *hash = pcppubkey_getchecksum(key);
-  fprintf(out, " Checksum: ");
-
-  size_t i;
-  for ( i = 0;i <15 ;++i) fprintf(out, "%02X:",(unsigned int) hash[i]);
-  fprintf(out, "%02X", hash[15]);
-  fprintf(out, "\n ");
-  for ( i = 16;i <31 ;++i) fprintf(out, "%02X:",(unsigned int) hash[i]);
-  fprintf(out, "%02X", hash[31]);
-  fprintf(out, "\n");
-  fprintf(out, " Serial Number: 0x%08X\n", key->serial);
-  fprintf(out, " Key Version: 0x%08X\n", key->version);
-  
   char *r = pcppubkey_get_art(key);
-  fprintf(out, " Random Art ID: ");
-  size_t rlen = strlen(r);
-  for (i=0; i<rlen; ++i) {
-    if(r[i] == '\n') {
-      fprintf(out, "\n ");
-    }
-    else {
-      fprintf(out, "%c", r[i]);
-    }
+   
+#ifdef HAVE_JSON
+  if(ptx->json) {
+    json_t *jout;
+    char *jdump;
+    
+    jout = pcp_pk2json(key);
+    json_object_set(jout, "random-art-id", json_string(r));
+		    
+    jdump  = json_dumps(jout, JSON_INDENT(4) | JSON_PRESERVE_ORDER);
+    fprintf(out, jdump);
+    json_decref(jout);
+    free(jdump);
   }
-  fprintf(out, "\n");
+  else {
+    
+ #endif
+
+    size_t zlen;
+    struct tm *c;
+    time_t t = (time_t)key->ctime;
+    c = localtime(&t);
+
+    fprintf(out, " Cipher: %s\n", EXP_PK_CIPHER_NAME);
+
+    fprintf(out, " Owner: %s\n", key->owner);
+    fprintf(out, " Mail: %s\n", key->mail);
+
+    fprintf(out, " Key-ID: 0x%s\n", key->id);
+    fprintf(out, " Public-Key: %s\n", pcp_z85_encode(key->pub, 32, &zlen, 1));
+
+    /* 2004-06-14T23:34:30. */
+    fprintf(out, " Creation Time: %04d-%02d-%02dT%02d:%02d:%02d\n",
+	    c->tm_year+1900, c->tm_mon+1, c->tm_mday,
+	    c->tm_hour, c->tm_min, c->tm_sec);
+
+    byte *hash = pcppubkey_getchecksum(key);
+    fprintf(out, " Checksum: ");
+
+    size_t i;
+    for ( i = 0;i <15 ;++i) fprintf(out, "%02X:",(unsigned int) hash[i]);
+    fprintf(out, "%02X", hash[15]);
+    fprintf(out, "\n           ");
+    for ( i = 16;i <31 ;++i) fprintf(out, "%02X:",(unsigned int) hash[i]);
+    fprintf(out, "%02X", hash[31]);
+    fprintf(out, "\n");
+    fprintf(out, " Serial Number: 0x%08X\n", key->serial);
+    fprintf(out, " Key Version: 0x%08X\n", key->version);
   
-  free(hash);
+    fprintf(out, " Random Art ID: ");
+    size_t rlen = strlen(r);
+    for (i=0; i<rlen; ++i) {
+      if(r[i] == '\n') {
+	fprintf(out, "\n                ");
+      }
+      else {
+	fprintf(out, "%c", r[i]);
+      }
+    }
+    fprintf(out, "\n");
+  
+    free(hash);
+
+#ifdef HAVE_JSON
+  }
+#endif
+  
   free(r);
 }
 
 void pcpkey_print(pcp_key_t *key, FILE* out) {
-  struct tm *c;
-  time_t t = (time_t)key->ctime;
-  c = localtime(&t);
+   char *r = pcpkey_get_art(key);
+   
+#ifdef HAVE_JSON
 
-  fprintf(out, " Cipher: %s\n", PCP_KEY_PRIMITIVE);
+  if(ptx->json) {
+    json_t *jout;
+    char *jdump;
+    
+    jout = pcp_sk2json(key, NULL, 0);
+    json_object_set(jout, "type", json_string("secret"));
+    json_object_set(jout, "random-art-id", json_string(r));
+		    
+    jdump  = json_dumps(jout, JSON_INDENT(4) | JSON_PRESERVE_ORDER);
+    fprintf(out, jdump);
+    json_decref(jout);
+    free(jdump);
+  }
+  else {
+    
+ #endif
 
-  fprintf(out, " Key-ID: 0x%s\n", key->id);
+    size_t i;
+    struct tm *c;
+    time_t t = (time_t)key->ctime;
+    c = localtime(&t);
 
-  /* 2004-06-14T23:34:30. */
-  fprintf(out, " Creation Time: %04d-%02d-%02dT%02d:%02d:%02d\n",
-	  c->tm_year+1900, c->tm_mon+1, c->tm_mday,
-	  c->tm_hour, c->tm_min, c->tm_sec);
+    fprintf(out, " Cipher: %s\n", EXP_PK_CIPHER_NAME);
+    fprintf(out, " Owner: %s\n", key->owner);
+    fprintf(out, " Mail: %s\n", key->mail);
+    fprintf(out, " Key-ID: 0x%s\n", key->id);
 
-  fprintf(out, " Serial Number: 0x%08X\n", key->serial);
-  fprintf(out, " Key Version: 0x%08X\n", key->version);
-  
+    /* 2004-06-14T23:34:30. */
+    fprintf(out, " Creation Time: %04d-%02d-%02dT%02d:%02d:%02d\n",
+	    c->tm_year+1900, c->tm_mon+1, c->tm_mday,
+	    c->tm_hour, c->tm_min, c->tm_sec);
+
+    fprintf(out, " Serial Number: 0x%08X\n", key->serial);
+    fprintf(out, " Key Version: 0x%08X\n", key->version);
+
+    fprintf(out, " Random Art ID: ");
+    size_t rlen = strlen(r);
+    for (i=0; i<rlen; ++i) {
+      if(r[i] == '\n') {
+	fprintf(out, "\n                ");
+      }
+      else {
+	fprintf(out, "%c", r[i]);
+      }
+    }
+    fprintf(out, "\n");
+    
+#ifdef HAVE_JSON
+  }
+#endif
+
+  free(r);
 }
 
 void pcpkey_printshortinfo(pcp_key_t *key) {

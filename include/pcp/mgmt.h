@@ -228,7 +228,7 @@ Buffer *pcp_export_pbp_pub(pcp_key_t *sk);
 Buffer *pcp_export_secret(PCPCTX *ptx, pcp_key_t *sk, char *passphrase);
 
 #ifdef HAVE_JSON
-/** Export public key in JSON format
+/** Export public key from a secret key in JSON format
 
     \param[in] sk a secret key structure of type pcp_key_t. The secret keys
             in there have to be already decrypted.
@@ -237,7 +237,7 @@ Buffer *pcp_export_secret(PCPCTX *ptx, pcp_key_t *sk, char *passphrase);
     \return the function returns a Buffer object containing the binary
             blob containing a JSON string.
  */
-Buffer *pcp_export_json_pub(PCPCTX *ptx, pcp_key_t *sk, byte *sig);
+Buffer *pcp_export_json_pub(PCPCTX *ptx, pcp_key_t *sk, byte *sig, size_t siglen);
 
 /** Export secret key in JSON format
 
@@ -252,14 +252,30 @@ Buffer *pcp_export_json_pub(PCPCTX *ptx, pcp_key_t *sk, byte *sig);
  */
 Buffer *pcp_export_json_secret(PCPCTX *ptx, pcp_key_t *sk, byte *nonce, byte *cipher, size_t clen);
 
-json_t *pcp_pub2jsont(pcp_key_t *sk, byte *sig);
+/** Convert secret key struct into JSON struct
 
+    \param[in] sk a secret key structure of type pcp_key_t.
+    \param[in] sig the keysig blob, maybe NULL.
+
+    \return returns a json_t structure (see libjansson docs for details)
+*/
+json_t *pcp_sk2json(pcp_key_t *sk, byte *sig,size_t siglen);
+
+/** Convert public key struct into JSON struct
+
+    \param[in] pk a public key structure of type pcp_key_t.
+    \param[in] sig the keysig blob, maybe NULL.
+
+    \return returns a json_t structure (see libjansson docs for details)
+*/
+json_t *pcp_pk2json(pcp_pubkey_t *pk);
+
+pcp_ks_bundle_t *pcp_import_pub_json(PCPCTX *ptx, byte *raw, size_t rawsize);
 
 #endif
 
 
 pcp_ks_bundle_t *pcp_import_binpub(PCPCTX *ptx, byte *raw, size_t rawsize);
-pcp_ks_bundle_t *pcp_import_pub(PCPCTX *ptx, byte *raw, size_t rawsize); /* FIXME: deprecate */
 pcp_ks_bundle_t *pcp_import_pub_rfc(PCPCTX *ptx, Buffer *blob);
 pcp_ks_bundle_t *pcp_import_pub_pbp(PCPCTX *ptx, Buffer *blob);
 

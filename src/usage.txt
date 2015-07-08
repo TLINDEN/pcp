@@ -28,7 +28,7 @@ Keymanagement Options:
 -K --import               Import a secret or public key.
 -F --export-format <fmt>  Specify exportformat, either 'pbp' or 'pcp'.
                           'pcp' is the default if unspecified.
--j --json                 Enable JSON output (with -t, -p and -s).
+-j --json                 Enable JSON output (with -t, -p, -s and -K).
 
 Encryption Options:
 -e --encrypt              Asym-Encrypt a message. If none of -i or -r

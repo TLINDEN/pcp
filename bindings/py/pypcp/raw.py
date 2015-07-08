@@ -12,52 +12,52 @@ typedef unsigned int    qbyte;
 /*** ./gencffi.pl: from ../../include/pcp/plist.h:83 */
 typedef struct _plist_t plist_t;
 
-/*** ./gencffi.pl: from ../../include/pcp/structs.h:382 */
+/*** ./gencffi.pl: from ../../include/pcp/structs.h:380 */
 typedef struct _pcp_key_t pcp_key_t;
 
-/*** ./gencffi.pl: from ../../include/pcp/structs.h:382 */
+/*** ./gencffi.pl: from ../../include/pcp/structs.h:380 */
 typedef struct _pcp_pubkey_t pcp_pubkey_t;
 
-/*** ./gencffi.pl: from ../../include/pcp/structs.h:382 */
+/*** ./gencffi.pl: from ../../include/pcp/structs.h:380 */
 typedef struct _pbp_pubkey_t pbp_pubkey_t;
 
-/*** ./gencffi.pl: from ../../include/pcp/structs.h:382 */
+/*** ./gencffi.pl: from ../../include/pcp/structs.h:380 */
 typedef struct _pcp_rec_t pcp_rec_t;
 
-/*** ./gencffi.pl: from ../../include/pcp/structs.h:382 */
+/*** ./gencffi.pl: from ../../include/pcp/structs.h:380 */
 typedef struct _pcp_keysig_t pcp_keysig_t;
 
-/*** ./gencffi.pl: from ../../include/pcp/structs.h:382 */
+/*** ./gencffi.pl: from ../../include/pcp/structs.h:380 */
 typedef struct _pcp_ctx_t PCPCTX;
 
-/*** ./gencffi.pl: from ../../include/pcp/structs.h:382 */
+/*** ./gencffi.pl: from ../../include/pcp/structs.h:380 */
 typedef struct _vault_t vault_t;
 
-/*** ./gencffi.pl: from ../../include/pcp/structs.h:382 */
+/*** ./gencffi.pl: from ../../include/pcp/structs.h:380 */
 typedef struct _vault_header_t vault_header_t;
 
-/*** ./gencffi.pl: from ../../include/pcp/structs.h:382 */
+/*** ./gencffi.pl: from ../../include/pcp/structs.h:380 */
 typedef struct _vault_item_header_t vault_item_header_t;
 
-/*** ./gencffi.pl: from ../../include/pcp/structs.h:382 */
+/*** ./gencffi.pl: from ../../include/pcp/structs.h:380 */
 typedef struct _pcp_buffer Buffer;
 
-/*** ./gencffi.pl: from ../../include/pcp/structs.h:382 */
+/*** ./gencffi.pl: from ../../include/pcp/structs.h:380 */
 typedef struct _pcp_stream_t Pcpstream;
 
-/*** ./gencffi.pl: from ../../include/pcp/structs.h:382 */
+/*** ./gencffi.pl: from ../../include/pcp/structs.h:380 */
 typedef struct _pcp_rfc_pubkey_header_t rfc_pub_h;
 
-/*** ./gencffi.pl: from ../../include/pcp/structs.h:382 */
+/*** ./gencffi.pl: from ../../include/pcp/structs.h:380 */
 typedef struct _pcp_rfc_pubkey_0x21_t  rfc_pub_k;
 
-/*** ./gencffi.pl: from ../../include/pcp/structs.h:382 */
+/*** ./gencffi.pl: from ../../include/pcp/structs.h:380 */
 typedef struct _pcp_rfc_pubkey_sigheader_0x21_t rfc_pub_sig_h;
 
-/*** ./gencffi.pl: from ../../include/pcp/structs.h:382 */
+/*** ./gencffi.pl: from ../../include/pcp/structs.h:380 */
 typedef struct _pcp_rfc_pubkey_sigsub_0x21_t rfc_pub_sig_s;
 
-/*** ./gencffi.pl: from ../../include/pcp/structs.h:382 */
+/*** ./gencffi.pl: from ../../include/pcp/structs.h:380 */
 typedef struct _pcp_ks_bundle_t pcp_ks_bundle_t;
 /*** ./gencffi.pl: from ../../include/pcp/plist.h:83 */
 struct _plist_t {
@@ -66,7 +66,7 @@ struct _plist_t {
   struct _plist_t *first;
 };
 
-/*** ./gencffi.pl: from ../../include/pcp/structs.h:382 */
+/*** ./gencffi.pl: from ../../include/pcp/structs.h:380 */
 struct _pcp_key_t {
   byte masterpub[32];    /**< ED25519 master public key signing key */
   byte mastersecret[64]; /**< ED25519 master secret key signing key */
@@ -86,7 +86,7 @@ struct _pcp_key_t {
   byte hh[56];
 };
 
-/*** ./gencffi.pl: from ../../include/pcp/structs.h:382 */
+/*** ./gencffi.pl: from ../../include/pcp/structs.h:380 */
 struct _pcp_pubkey_t {
   byte masterpub[32];    /**< ED25519 master public key signing key */
   byte sigpub[32];       /**< ED25519 public signing key */
@@ -104,7 +104,7 @@ struct _pcp_pubkey_t {
   byte hh[56];
 };
 
-/*** ./gencffi.pl: from ../../include/pcp/structs.h:382 */
+/*** ./gencffi.pl: from ../../include/pcp/structs.h:380 */
 struct _pbp_pubkey_t {
   byte sigpub[32];
   byte edpub[32];
@@ -114,7 +114,7 @@ struct _pbp_pubkey_t {
   char name[1024];
 };
 
-/*** ./gencffi.pl: from ../../include/pcp/structs.h:382 */
+/*** ./gencffi.pl: from ../../include/pcp/structs.h:380 */
 struct _pcp_rec_t {
   size_t ciphersize; /**< the size of the encrypted recipient list */
   byte *cipher;      /**< contains the whole encrypted recipient list */
@@ -122,7 +122,7 @@ struct _pcp_rec_t {
   pcp_pubkey_t *pub; /**< if verification were ok, contains the public key of the signer */
 };
 
-/*** ./gencffi.pl: from ../../include/pcp/structs.h:382 */
+/*** ./gencffi.pl: from ../../include/pcp/structs.h:380 */
 struct _pcp_keysig_t {
   uint8_t type;
   uint32_t size;
@@ -132,21 +132,19 @@ struct _pcp_keysig_t {
   byte hh[56];
 };
 
-/*** ./gencffi.pl: from ../../include/pcp/structs.h:382 */
+/*** ./gencffi.pl: from ../../include/pcp/structs.h:380 */
 struct _pcp_ctx_t {
   char *pcp_err;    /**< last error message. retrieve with fatals_ifany() */
   byte pcp_errset;  /**< indicates if an error occurred. */
   int  pcp_exit;    /**< exit code for pcp commandline utility */
   int  verbose;     /**< enable verbose output */
-#ifdef HAVE_JSON
   int  json;        /**< enable json i/o */
-#endif
   pcp_key_t *pcpkey_hash;       /**< hash containing for keys */
   pcp_pubkey_t *pcppubkey_hash; /**< hash for keys. */
   pcp_keysig_t *pcpkeysig_hash; /**< hash for key sigs */
 };
 
-/*** ./gencffi.pl: from ../../include/pcp/structs.h:382 */
+/*** ./gencffi.pl: from ../../include/pcp/structs.h:380 */
 struct _vault_t {
   char *filename;    /**< The filename of the vault (full path) */
   FILE *fd;          /**< Filehandle if opened */
@@ -159,14 +157,14 @@ struct _vault_t {
   byte checksum[32]; /**< SHA256 checksum over the whole vault */
 };
 
-/*** ./gencffi.pl: from ../../include/pcp/structs.h:382 */
+/*** ./gencffi.pl: from ../../include/pcp/structs.h:380 */
 struct _vault_header_t {
   uint8_t fileid;    /**< File id, proprietary. Marks the vault as a vault */
   uint32_t version;  /**< File version */
   byte checksum[32]; /**< SHA256 checksum over the whole vault */
 };
 
-/*** ./gencffi.pl: from ../../include/pcp/structs.h:382 */
+/*** ./gencffi.pl: from ../../include/pcp/structs.h:380 */
 struct _vault_item_header_t {
   uint8_t type;       /**< Item type (secret key, public, key, keysig, \see _PCP_KEY_TYPES */
   uint32_t size;      /**< Size of the item */
@@ -174,7 +172,7 @@ struct _vault_item_header_t {
   byte checksum[32];  /**< SHA256 checksum of the item */
 };
 
-/*** ./gencffi.pl: from ../../include/pcp/structs.h:382 */
+/*** ./gencffi.pl: from ../../include/pcp/structs.h:380 */
 struct _pcp_buffer {
   char *name;        /**< just for convenience in error messages and the like, so we know which buffer cause trouble */
   uint8_t allocated; /**< marks the buffer as allocated */
@@ -186,7 +184,7 @@ struct _pcp_buffer {
   void *buf;         /**< the actual storage buffer */
 };
 
-/*** ./gencffi.pl: from ../../include/pcp/structs.h:382 */
+/*** ./gencffi.pl: from ../../include/pcp/structs.h:380 */
 struct _pcp_stream_t {
   FILE *fd;          /**< The backend FILE stream */
   Buffer *b;         /**< The backend Buffer object */
@@ -206,21 +204,21 @@ struct _pcp_stream_t {
   size_t pos;        /**< remember i/o position */
 };
 
-/*** ./gencffi.pl: from ../../include/pcp/structs.h:382 */
+/*** ./gencffi.pl: from ../../include/pcp/structs.h:380 */
 struct _pcp_rfc_pubkey_header_t {
   uint8_t version;
   uint64_t ctime;
   uint8_t cipher;
 };
 
-/*** ./gencffi.pl: from ../../include/pcp/structs.h:382 */
+/*** ./gencffi.pl: from ../../include/pcp/structs.h:380 */
 struct _pcp_rfc_pubkey_0x21_t {
   byte sig_ed25519_pub[32];
   byte ed25519_pub[32];
   byte curve25519_pub[32];
 };
 
-/*** ./gencffi.pl: from ../../include/pcp/structs.h:382 */
+/*** ./gencffi.pl: from ../../include/pcp/structs.h:380 */
 struct _pcp_rfc_pubkey_sigheader_0x21_t {
   uint8_t version;
   uint8_t type;
@@ -229,13 +227,13 @@ struct _pcp_rfc_pubkey_sigheader_0x21_t {
   uint16_t numsubs;
 };
 
-/*** ./gencffi.pl: from ../../include/pcp/structs.h:382 */
+/*** ./gencffi.pl: from ../../include/pcp/structs.h:380 */
 struct _pcp_rfc_pubkey_sigsub_0x21_t {
   uint32_t size;
   uint8_t type;
 };
 
-/*** ./gencffi.pl: from ../../include/pcp/structs.h:382 */
+/*** ./gencffi.pl: from ../../include/pcp/structs.h:380 */
 struct _pcp_ks_bundle_t {
   pcp_pubkey_t *p;
   pcp_keysig_t *s;
@@ -552,17 +550,20 @@ int pcphash_countpub(PCPCTX *ptx);
 /*** ./gencffi.pl: from ../../include/pcp/keyhash.h:153 */
 pcp_keysig_t *pcphash_keysigexists(PCPCTX *ptx, char *id);
 
-/*** ./gencffi.pl: from ../../include/pcp/keysig.h:50 */
+/*** ./gencffi.pl: from ../../include/pcp/keysig.h:52 */
 pcp_keysig_t *keysig2be(pcp_keysig_t *s);
 
-/*** ./gencffi.pl: from ../../include/pcp/keysig.h:50 */
+/*** ./gencffi.pl: from ../../include/pcp/keysig.h:52 */
 pcp_keysig_t *keysig2native(pcp_keysig_t *s);
 
-/*** ./gencffi.pl: from ../../include/pcp/keysig.h:50 */
+/*** ./gencffi.pl: from ../../include/pcp/keysig.h:52 */
 Buffer *pcp_keysig2blob(pcp_keysig_t *s);
 
-/*** ./gencffi.pl: from ../../include/pcp/keysig.h:50 */
+/*** ./gencffi.pl: from ../../include/pcp/keysig.h:52 */
 pcp_keysig_t *pcp_keysig_new(Buffer *blob);
+
+/*** ./gencffi.pl: from ../../include/pcp/keysig.h:52 */
+void pcp_dumpkeysig(pcp_keysig_t *s);
 
 /*** ./gencffi.pl: from ../../include/pcp/mem.h:58 */
 void *ucmalloc(size_t s);
@@ -608,6 +609,9 @@ json_t *pcp_pk2json(pcp_pubkey_t *pk);
 
 /*** ./gencffi.pl: from ../../include/pcp/mgmt.h:294 */
 pcp_ks_bundle_t *pcp_import_pub_json(PCPCTX *ptx, byte *raw, size_t rawsize);
+
+/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:294 */
+pcp_ks_bundle_t *pcp_import_pub(PCPCTX *ptx, byte *raw, size_t rawsize);
 
 /*** ./gencffi.pl: from ../../include/pcp/mgmt.h:294 */
 pcp_ks_bundle_t *pcp_import_binpub(PCPCTX *ptx, byte *raw, size_t rawsize);
@@ -841,11 +845,11 @@ uint8_t *zmq_z85_decode (uint8_t *dest, char *string);
 char *zmq_z85_encode (char *dest, uint8_t *data, size_t size);'''
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
-PCP_ZFILE_HEADER = "----- BEGIN Z85 ENCODED FILE -----"
+PCP_ZFILE_FOOTER = "----- END Z85 ENCODED FILE -----"
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
-PCP_ASYM_CIPHER = 5
+EXP_PK_CIPHER_NAME = "CURVE25519-ED25519-POLY1305-SALSA20"
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
@@ -853,51 +857,7 @@ EXP_SIG_SUB_SIGEXPIRE = 3
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
-EXP_SIG_CIPHER_NAME = "ED25519"
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-PCP_ASYM_CIPHER_SIG = 24
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-PCP_SIG_HEADER = "----- BEGIN ED25519 SIGNED MESSAGE -----"
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-PCP_ENFILE_HEADER = "----- BEGIN PCP ENCRYPTED FILE -----\r\n"
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-PCP_SIG_START = "----- BEGIN ED25519 SIGNATURE -----"
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-EXP_SK_FOOTER = "----- END ED25519-CURVE29915 PRIVATE KEY -----"
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-PCP_BLOCK_SIZE = 32 * 1024
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-EXP_PK_HEADER = "----- BEGIN ED25519-CURVE29915 PUBLIC KEY -----"
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-EXP_SIG_SUB_KEYEXPIRE = 9
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-PCP_ASYM_CIPHER_ANON = 6
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-PCP_ZFILE_FOOTER = "----- END Z85 ENCODED FILE -----"
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-EXP_FORMAT_NATIVE = 1
+EXP_FORMAT_PBP = 2
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
@@ -905,7 +865,7 @@ EXP_PK_CIPHER = 0x21
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
-PCP_ENCRYPT_MAC = 56
+EXP_PK_HEADER = "----- BEGIN ED25519-CURVE29915 PUBLIC KEY -----"
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
@@ -913,15 +873,15 @@ PCP_ME = "Pretty Curved Privacy"
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
-PCP_CRYPTO_ADD = (32 - 16)
+EXP_SIG_CIPHER_NAME = "ED25519"
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
-EXP_SIG_SUB_KEYFLAGS = 27
+EXP_SIG_SUB_KEYEXPIRE = 9
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
-EXP_HASH_CIPHER = 0x22
+PBP_COMPAT_SALT = "qa~t](84z<1t<1oz:ik.@IRNyhG=8q(on9}4#!/_h#a7wqK{Nt$T?W>,mt8NqYq&6U<GB1$,<$j>,rSYI2GRDd:Bcm"
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
@@ -933,31 +893,11 @@ PCP_SIGPREFIX = "\nnacl-"
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
-EXP_FORMAT_PBP = 2
+PCP_RFC_CIPHER = 0x21 
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
-EXP_PK_FOOTER = "----- END ED25519-CURVE29915 PUBLIC KEY -----"
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-EXP_PK_CIPHER_NAME = "CURVE25519-ED25519-POLY1305-SALSA20"
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-PCP_SYM_CIPHER = 23
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-PCP_ENFILE_FOOTER = "\r\n----- END PCP ENCRYPTED FILE -----\r\n"
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-EXP_SIG_CIPHER = 0x23
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-EXP_SIG_TYPE = 0x1F 
+EXP_HASH_CIPHER = 0x22
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
@@ -965,15 +905,39 @@ PCP_SIG_END = "----- END ED25519 SIGNATURE -----"
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
+PCP_ENFILE_FOOTER = "\r\n----- END PCP ENCRYPTED FILE -----\r\n"
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+EXP_SIG_TYPE = 0x1F 
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+EXP_PK_FOOTER = "----- END ED25519-CURVE29915 PUBLIC KEY -----"
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
 EXP_HASH_NAME = "BLAKE2"
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
-PCP_VAULT_ID = 14
+EXP_SIG_CIPHER = 0x23
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
-PBP_COMPAT_SALT = "qa~t](84z<1t<1oz:ik.@IRNyhG=8q(on9}4#!/_h#a7wqK{Nt$T?W>,mt8NqYq&6U<GB1$,<$j>,rSYI2GRDd:Bcm"
+PCP_ASYM_CIPHER = 5
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+PCP_ZFILE_HEADER = "----- BEGIN Z85 ENCODED FILE -----"
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+PCP_CRYPTO_ADD = (32 - 16)
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+PCP_SIG_START = "----- BEGIN ED25519 SIGNATURE -----"
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
@@ -981,8 +945,48 @@ EXP_SIG_SUB_NOTATION = 20
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
-PCP_RFC_CIPHER = 0x21 
+PCP_SIG_HEADER = "----- BEGIN ED25519 SIGNED MESSAGE -----"
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+PCP_BLOCK_SIZE = 32 * 1024
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+PCP_ENCRYPT_MAC = 56
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+PCP_ENFILE_HEADER = "----- BEGIN PCP ENCRYPTED FILE -----\r\n"
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+EXP_FORMAT_NATIVE = 1
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+PCP_VAULT_ID = 14
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+EXP_SK_FOOTER = "----- END ED25519-CURVE29915 PRIVATE KEY -----"
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+PCP_ASYM_CIPHER_ANON = 6
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+PCP_ASYM_CIPHER_SIG = 24
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+PCP_SYM_CIPHER = 23
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
 EXP_SIG_SUB_CTIME = 2
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+EXP_SIG_SUB_KEYFLAGS = 27

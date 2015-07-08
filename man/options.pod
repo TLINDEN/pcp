@@ -66,6 +66,7 @@
                            Currently supported: pcp and pbp.
  -j --json                 enable JSON output. Can be used with info
                            output (-t) and key export (-p and -s).
+                           and import (-K).
  
  Encryption Options:
  -e --encrypt              Asym-Encrypt a message. Read from stdin or

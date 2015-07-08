@@ -1,6 +1,13 @@
 NEXT
+	Changed publuc key signature storage, previously
+	I didn't add the actual signature, therefore a
+	public key could have been verified only during
+	import but never thereafter. This affects exported
+	public keys (32 byte larger) and vault storage,
+	but is backwards compatible.
+	
 	Added JSON output support using libjansson (-j),
-	supported by -t, -p and -s.
+	supported by -t, -p, -s and -K.
 
 	Abandoned YAML, perl and C key export support,
 	better doing one external format but doing it

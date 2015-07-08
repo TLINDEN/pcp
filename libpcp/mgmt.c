@@ -139,6 +139,48 @@ int _check_sigsubs(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, rfc_pub_sig_s *su
   return 1;
 }
 
+pcp_ks_bundle_t *pcp_import_pub(PCPCTX *ptx, byte *raw, size_t rawsize) {
+  size_t clen;
+  byte *bin = NULL;
+  char *z85 = NULL;
+
+  if(rawsize == 0) {
+    fatal(ptx, "Input file is empty!\n");
+    return NULL;
+  }
+
+  Buffer *blob = buffer_new(512, "importblob");
+
+  /* first, try to decode the input */
+  z85 = pcp_readz85string(ptx, raw, rawsize);
+
+  if(z85 != NULL)
+    bin = pcp_z85_decode(ptx, z85, &clen);
+
+  if(bin == NULL) {
+    /* treat as binary blob */
+    fatals_reset(ptx);
+    buffer_add(blob, raw, rawsize);
+  }
+  else {
+    /* use decoded */
+    buffer_add(blob, bin, clen);
+    ucfree(bin, clen);
+  }
+
+  /* now, try to disassemble, if it fails, assume pbp format */
+  uint8_t version = buffer_get8(blob);
+
+  if(version == PCP_KEY_VERSION) {
+    /* ah, homerun */
+    return pcp_import_pub_rfc(ptx, blob);
+  }
+  else {
+    /* nope, it's probably pbp */
+    return pcp_import_pub_pbp(ptx, blob);
+  }
+}
+
 int _check_hash_keysig(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, pcp_keysig_t *sk) {
   // read hash + sig
   size_t blobstop = blob->offset;

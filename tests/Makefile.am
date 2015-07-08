@@ -24,6 +24,10 @@ if BUILDCPP
   CPPTEST=cpptest
 endif
 
+if BUILDJSON
+  MAYJSON=jsontest
+endif
+
 AM_CFLAGS = -I../include/pcp -I../src -I../libpcp/scrypt/crypto
 check_PROGRAMS = invalidkeys gencheader statictest $(CPPTEST) \
 		 buffertest sample streamtest pipetest decodertest mangle
@@ -83,7 +87,10 @@ if BUILDPY
   MAYPY=pytest
 endif
 
-test: check ctest $(MAYPY) $(MAYCPP)
+et:
+	@echo check ctest $(MAYPY) $(MAYCPP) $(MAYJSON)
+
+test: check ctest $(MAYPY) $(MAYCPP) $(MAYJSON)
 
 ctest:
 	rm -f test* v* stresstest/*
@@ -95,6 +102,9 @@ pytest:
 
 docpptest:
 	./unittests.pl cppunittests.cfg $(CHECK)
+
+jsontest:
+	./unittests.pl jsonunittests.cfg $(CHECK)
 
 stresstest: check
 	./unittests.pl stresstests.cfg

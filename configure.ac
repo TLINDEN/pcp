@@ -232,10 +232,13 @@ AC_ARG_WITH([json],
 		  
 if test "x$search_json" = "xyes"; then
     # use pkg only
+    # FIXME: search
     _have_json="yes"
     LDFLAGS="$LDFLAGS -ljansson"
     CFLAGS="$CFLAGS -DHAVE_JSON=1"
 fi
+
+AM_CONDITIONAL([BUILDJSON], [test "x$_have_json" = "xyes"])
 
 
 # Check for some target-specific stuff

@@ -46,5 +46,7 @@ Buffer *pcp_keysig2blob(pcp_keysig_t *s);
 /* fetch a keysig from a buffer, usually loaded from vault */
 pcp_keysig_t *pcp_keysig_new(Buffer *blob);
 
+/* debug print a keysig */
+void pcp_dumpkeysig(pcp_keysig_t *s);
 
 #endif /*  _HAVE_PCP_KEYSIG_H */

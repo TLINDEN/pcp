@@ -76,3 +76,18 @@ pcp_keysig_t *pcp_keysig_new(Buffer *blob) {
 
   return sk;
 }
+
+void pcp_dumpkeysig(pcp_keysig_t *s) {
+  int i;
+
+  printf("Dumping pcp_sigkey_t raw values:\n");
+
+  printf("     type: 0x%02X\n", s->type);
+  printf("     size: %ld\n", (long int)s->size);
+
+  printf(" checksum: ");
+  for ( i = 0;i < 32;++i) printf("%02x",(unsigned int) s->checksum[i]);
+  printf("\n");
+
+  _dump("     blob:", s->blob, s->size);
+}

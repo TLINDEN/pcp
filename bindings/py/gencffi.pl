@@ -85,6 +85,23 @@ foreach my $head (@ARGV) {
 
 
 print "PCP_RAW_CODE = '''\n";
+print qq(
+typedef enum {
+    JSON_OBJECT,
+    JSON_ARRAY,
+    JSON_STRING,
+    JSON_INTEGER,
+    JSON_REAL,
+    JSON_TRUE,
+    JSON_FALSE,
+    JSON_NULL
+} json_type;
+
+typedef struct json_t {
+    json_type type;
+    size_t refcount;
+} json_t;
+);
 print join "\n", @typedefs;
 print join "\n", @structs;
 print join "\n", @code;

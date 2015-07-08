@@ -91,8 +91,15 @@ void pcptext_key(char *keyid) {
   else {
     pcp_pubkey_t *p = pcphash_pubkeyexists(ptx, keyid);
     if(p != NULL) {
-      if(debug)
+      if(debug) {
 	pcp_dumppubkey(p);
+	pcp_keysig_t *s = pcphash_keysigexists(ptx, keyid);
+	if(s != NULL) {
+	  printf("\n");
+	  pcp_dumpkeysig(s);
+	}
+	printf("\n");
+      }
       pcppubkey_print(p, stdout);
     }
     else {

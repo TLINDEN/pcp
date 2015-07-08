@@ -139,6 +139,80 @@ int _check_sigsubs(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, rfc_pub_sig_s *su
   return 1;
 }
 
+
+int _check_hash_keysig(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, pcp_keysig_t *sk) {
+  // read hash + sig
+  size_t blobstop = blob->offset; /* key header + mp,sp,cp */
+  size_t sigsize = crypto_sign_BYTES + crypto_generichash_BYTES_MAX;
+  size_t phead = (2 * sizeof(uint8_t)) + sizeof(uint64_t); /* rfc_pub_h */
+
+  byte *signature = ucmalloc(sigsize);
+  if(buffer_get_chunk(blob, signature, sigsize) == 0)
+    goto chker1;
+
+  /* fill the keysig */
+  sk->type = PCP_KEYSIG_NATIVE;
+  
+  /* everything minus version, ctime and cipher, 1st 3 fields */
+  sk->size = blobstop - phead;
+
+  memcpy(sk->id, p->id, 17);
+
+  /* put the whole signature blob into our keysig */
+  blob->offset = phead;
+  sk->blob = ucmalloc(sk->size + sigsize);
+
+  buffer_get_chunk(blob, sk->blob, sk->size);
+
+  /* verify the signature */
+  byte *verifyhash = pcp_ed_verify_key(ptx, signature, sigsize, p);
+  if(verifyhash == NULL) {
+    goto chker1;
+  }
+
+  /* re-calculate the hash */
+  crypto_generichash_state *st = ucmalloc(sizeof(crypto_generichash_state));
+  byte *hash = ucmalloc(crypto_generichash_BYTES_MAX);
+  crypto_generichash_init(st, NULL, 0, 0);
+  crypto_generichash_update(st, sk->blob, sk->size);
+  crypto_generichash_final(st, hash, crypto_generichash_BYTES_MAX);
+
+  /* compare them */
+  if(memcmp(hash, verifyhash, crypto_generichash_BYTES_MAX) != 0) {
+    fatal(ptx, "Signature verifies but signed hash doesn't match signature contents\n");
+    goto chker2;
+  }
+
+  /* calculate the checksum */
+  crypto_hash_sha256(sk->checksum, sk->blob, sk->size);
+  
+  /* we got here, so everything is good */
+  p->valid = 1;
+
+  /* append the sig */
+  memcpy(&sk->blob[sk->size], signature, sigsize);
+  sk->size += sigsize;
+  
+  ucfree(verifyhash, crypto_generichash_BYTES_MAX);
+  ucfree(hash, crypto_generichash_BYTES_MAX);
+  free(st);
+  ucfree(signature, sigsize);
+
+  return 0;
+
+ chker2:
+  ucfree(verifyhash, crypto_generichash_BYTES_MAX);
+  ucfree(hash, crypto_generichash_BYTES_MAX);
+  free(st);
+
+ chker1:
+  ucfree(signature, sigsize);
+
+  return 1;
+  
+}
+
+
 pcp_ks_bundle_t *pcp_import_pub(PCPCTX *ptx, byte *raw, size_t rawsize) {
   size_t clen;
   byte *bin = NULL;
@@ -179,73 +253,6 @@ pcp_ks_bundle_t *pcp_import_pub(PCPCTX *ptx, byte *raw, size_t rawsize) {
     /* nope, it's probably pbp */
     return pcp_import_pub_pbp(ptx, blob);
   }
-}
-
-int _check_hash_keysig(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, pcp_keysig_t *sk) {
-  // read hash + sig
-  size_t blobstop = blob->offset;
-  size_t sigsize = crypto_sign_BYTES + crypto_generichash_BYTES_MAX;
-  size_t phead = (2 * sizeof(uint8_t)) + sizeof(uint64_t); /* rfc_pub_h */
-
-  byte *signature = ucmalloc(sigsize);
-  if(buffer_get_chunk(blob, signature, sigsize) == 0)
-    goto chker1;
-
-  /* fill the keysig */
-  sk->type = PCP_KEYSIG_NATIVE;
-  
-  /* everything minus version, ctime and cipher, 1st 3 fields */
-  sk->size = blobstop - phead;
-
-  memcpy(sk->id, p->id, 17);
-
-  /* put the whole signature blob into our keysig */
-  blob->offset = phead;
-  sk->blob = ucmalloc(sk->size);
-
-  buffer_get_chunk(blob, sk->blob, sk->size);
-
-  /* verify the signature */
-  byte *verifyhash = pcp_ed_verify_key(ptx, signature, sigsize, p);
-  if(verifyhash == NULL)
-    goto chker1;
-
-  /* re-calculate the hash */
-  crypto_generichash_state *st = ucmalloc(sizeof(crypto_generichash_state));
-  byte *hash = ucmalloc(crypto_generichash_BYTES_MAX);
-  crypto_generichash_init(st, NULL, 0, 0);
-  crypto_generichash_update(st, sk->blob, sk->size);
-  crypto_generichash_final(st, hash, crypto_generichash_BYTES_MAX);
-
-  /* compare them */
-  if(memcmp(hash, verifyhash, crypto_generichash_BYTES_MAX) != 0) {
-    fatal(ptx, "Signature verifies but signed hash doesn't match signature contents\n");
-    goto chker2;
-  }
-
-  /* calculate the checksum */
-  crypto_hash_sha256(sk->checksum, sk->blob, sk->size);
-  
-  /* we got here, so everything is good */
-  p->valid = 1;
-
-  ucfree(verifyhash, crypto_generichash_BYTES_MAX);
-  ucfree(hash, crypto_generichash_BYTES_MAX);
-  free(st);
-  ucfree(signature, sigsize);
-  
-  return 0;
-
- chker2:
-  ucfree(verifyhash, crypto_generichash_BYTES_MAX);
-  ucfree(hash, crypto_generichash_BYTES_MAX);
-  free(st);
-
- chker1:
-  ucfree(signature, sigsize);
-
-  return 1;
-  
 }
 
 pcp_ks_bundle_t *pcp_import_binpub(PCPCTX *ptx, byte *raw, size_t rawsize) {
@@ -611,15 +618,12 @@ Buffer *pcp_export_rfc_pub (PCPCTX *ptx, pcp_key_t *sk) {
 
 #ifdef HAVE_JSON
   if(ptx->json) {
-    /* FIXME FIXME
-    buffer_dump(out);
-    buffer_info(out);
     size_t siglen =  buffer_size(out) - 10;
-    byte *sh = ucmalloc(siglen);
+    byte *jsig = ucmalloc(siglen);
 
-    buffer_extract(out, sh, 10, siglen);
-    */
-    Buffer *jout = pcp_export_json_pub(ptx, sk, NULL, 0);
+    buffer_extract(out, jsig, 10, siglen);
+
+    Buffer *jout = pcp_export_json_pub(ptx, sk, jsig, siglen);
     buffer_free(out);
     
     out = jout;
@@ -892,7 +896,6 @@ json_t *pcp_sk2json(pcp_key_t *sk, byte *sig, size_t siglen) {
  
   char *jformat = "{sssssssisisisissssssssssss}";
 
-  
   cryptpub = _bin2hex(sk->pub, 32);
   sigpub   = _bin2hex(sk->edpub, 32);
   masterpub= _bin2hex(sk->masterpub, 32);
@@ -1084,23 +1087,36 @@ pcp_ks_bundle_t *pcp_import_pub_json(PCPCTX *ptx, byte *raw, size_t rawsize) {
     strcpy(jerror.text, "key type is not public");
     goto jerr2;
   }
-  
+
+  b->p = p;
+  b->s = NULL;
+
   /*
-    FIXME FIXME
+    10 - header
+    96 - keys
+    n  - sigblob
+     crypto_generichash_BYTES_MAX - sig
+   */
+
   jtmp = json_object_get(jin, "signature");
   if(jtmp == NULL)
     goto jerr2;
   size_t siglen = _hex2bin(json_string_value(jtmp), blob, maxblob);
   if(siglen > 1) {
-    Buffer *btmp = buffer_new_buf("btmp", blob, siglen);
-    buffer_dump(btmp);
-    buffer_info(btmp);
+    /* we're fakin' an rfc blob here, so that _check_hash_keysig()
+       get's what it expects and we don't have to implement it twice */
+    Buffer *btmp = buffer_new(128, "btmp");
+    byte fake[10] = { 0x00 };
+    buffer_add(btmp, fake, 10);
+    buffer_add(btmp, blob, siglen);
+
+    btmp->offset = buffer_size(btmp) -
+      (crypto_sign_BYTES + crypto_generichash_BYTES_MAX); /* 32*3 keys + 10 header */
+
     if(_check_hash_keysig(ptx, btmp, p, s) != 0) {
-      b->p = p;
       b->s = NULL;
     }
     else {
-      b->p = p;
       b->s = s;
     }
     buffer_free(btmp);
@@ -1109,15 +1125,8 @@ pcp_ks_bundle_t *pcp_import_pub_json(PCPCTX *ptx, byte *raw, size_t rawsize) {
     strcpy(jerror.text, "sigerr");
     goto jerr2;
   }
-  */
-  
 
-  pcp_dumppubkey(p);
-  
-  b->p = p;
-  b->s = NULL;
-  
-  return b;
+    return b;
 
  jerr2:
   free(p);

@@ -195,9 +195,7 @@ struct _pcp_ctx_t {
   byte pcp_errset;  /**< indicates if an error occurred. */
   int  pcp_exit;    /**< exit code for pcp commandline utility */
   int  verbose;     /**< enable verbose output */
-#ifdef HAVE_JSON
   int  json;        /**< enable json i/o */
-#endif
   pcp_key_t *pcpkey_hash;       /**< hash containing for keys */
   pcp_pubkey_t *pcppubkey_hash; /**< hash for keys. */
   pcp_keysig_t *pcpkeysig_hash; /**< hash for key sigs */

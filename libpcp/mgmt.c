@@ -656,36 +656,27 @@ Buffer *pcp_export_secret(PCPCTX *ptx, pcp_key_t *sk, char *passphrase) {
   buffer_add(raw, sk->secret, 32);
   buffer_add(raw, sk->edsecret, 64);
 
-#ifdef HAVE_JSON
-  if(! ptx->json) {
-    /* only encrypt everything if exporting in native format */
-#endif
+  buffer_add(raw, sk->masterpub, 32);
+  buffer_add(raw, sk->pub, 32);
+  buffer_add(raw, sk->edpub, 32);
 
-    buffer_add(raw, sk->masterpub, 32);
-    buffer_add(raw, sk->pub, 32);
-    buffer_add(raw, sk->edpub, 32);
-
-    if(strlen(sk->owner) > 0) {
-      buffer_add16be(raw, strlen(sk->owner));
-      buffer_add(raw, sk->owner,  strlen(sk->owner));
-    }
-    else
-      buffer_add16be(raw, 0);
-
-    if(strlen(sk->mail) > 0) {
-      buffer_add16be(raw, strlen(sk->mail));
-      buffer_add(raw, sk->mail, strlen(sk->mail));
-    }
-    else
-      buffer_add16be(raw, 0);
-
-    buffer_add64be(raw, sk->ctime);
-    buffer_add32be(raw, sk->version);
-    buffer_add32be(raw, sk->serial);
-
-#ifdef HAVE_JSON
+  if(strlen(sk->owner) > 0) {
+    buffer_add16be(raw, strlen(sk->owner));
+    buffer_add(raw, sk->owner,  strlen(sk->owner));
   }
-#endif
+  else
+    buffer_add16be(raw, 0);
+  
+  if(strlen(sk->mail) > 0) {
+    buffer_add16be(raw, strlen(sk->mail));
+    buffer_add(raw, sk->mail, strlen(sk->mail));
+  }
+  else
+    buffer_add16be(raw, 0);
+  
+  buffer_add64be(raw, sk->ctime);
+  buffer_add32be(raw, sk->version);
+  buffer_add32be(raw, sk->serial);
   
   nonce = ucmalloc(crypto_secretbox_NONCEBYTES);
   arc4random_buf(nonce, crypto_secretbox_NONCEBYTES);
@@ -769,6 +760,16 @@ pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphras
   uint16_t notationlen = 0;
 
   Buffer *blob = buffer_new(512, "secretdecryptbuf");
+  
+#ifdef HAVE_JSON
+  if(ptx->json) {
+    Buffer *parsed = pcp_import_secret_json(ptx, cipher);
+    if(parsed == NULL) {
+      goto impserr1;
+    }
+    cipher = parsed; /* re-used */
+  }
+#endif
 
   if(buffer_get_chunk(cipher, nonce, crypto_secretbox_NONCEBYTES) == 0)
     goto impserr1;
@@ -954,7 +955,7 @@ Buffer *pcp_export_json_secret(PCPCTX *ptx, pcp_key_t *sk, byte *nonce, byte *ci
   jdump  = json_dumps(jout, JSON_INDENT(4) | JSON_PRESERVE_ORDER);
 
   if(jdump != NULL) {
-    buffer_add_str(b, jdump);
+    buffer_add(b, jdump, strlen(jdump));
     free(jdump);
   }
   else {
@@ -988,6 +989,57 @@ Buffer *pcp_export_json_pub(PCPCTX *ptx, pcp_key_t *sk, byte *sig, size_t siglen
   json_decref(jout);
   
   return b;
+}
+
+Buffer *pcp_import_secret_json(PCPCTX *ptx, Buffer *json) {
+  json_error_t jerror;
+  json_t *jtmp, *jin;
+  size_t maxblob = 2048;
+  size_t binlen;
+  char *hexerr = "failed to decode hex string";
+  
+  jin = json_loadb((char *)buffer_get(json), buffer_size(json), JSON_DISABLE_EOF_CHECK, &jerror);
+  if(jin == NULL)
+    goto jirr1;
+
+  byte *blob = ucmalloc(maxblob);
+  /* re-use the buffer */
+  json->end = 0;
+  json->offset = 0;
+
+  jtmp = json_object_get(jin, "nonce");
+  if(jtmp == NULL)
+    goto jirr2;
+  binlen = _hex2bin(json_string_value(jtmp), blob, maxblob);
+  if(binlen > 1)
+    buffer_add(json, blob, binlen);
+  else {
+    strcpy(jerror.text, hexerr);
+    goto jirr2;
+  }
+  
+  jtmp = json_object_get(jin, "secrets");
+  if(jtmp == NULL)
+    goto jirr2;
+  binlen = _hex2bin(json_string_value(jtmp), blob, maxblob);
+  if(binlen > 1)
+    buffer_add(json, blob, binlen);
+  else {
+    strcpy(jerror.text, hexerr);
+    goto jirr2;
+  }
+  
+  json_decref(jin);
+  ucfree(blob, maxblob);
+  return json;
+  
+ jirr2:
+  ucfree(blob, maxblob);
+  json_decref(jin);
+  
+ jirr1:
+  fatal(ptx, "JSON decoding error: %s", jerror.text);
+  return NULL;
 }
 
 pcp_ks_bundle_t *pcp_import_pub_json(PCPCTX *ptx, byte *raw, size_t rawsize) {
@@ -1137,7 +1189,6 @@ pcp_ks_bundle_t *pcp_import_pub_json(PCPCTX *ptx, byte *raw, size_t rawsize) {
   
  jerr1:
   fatal(ptx, "JSON decoding error: %s", jerror.text);
-  fprintf(stderr,  "JSON decoding error: %s\n", jerror.text);
   return NULL;
 }
 #endif

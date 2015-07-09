@@ -271,6 +271,7 @@ json_t *pcp_sk2json(pcp_key_t *sk, byte *sig,size_t siglen);
 json_t *pcp_pk2json(pcp_pubkey_t *pk);
 
 pcp_ks_bundle_t *pcp_import_pub_json(PCPCTX *ptx, byte *raw, size_t rawsize);
+Buffer *pcp_import_secret_json(PCPCTX *ptx, Buffer *json);
 
 #endif
 

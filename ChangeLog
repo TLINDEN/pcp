@@ -5,14 +5,13 @@ NEXT
 	import but never thereafter. This affects exported
 	public keys (32 byte larger) and vault storage,
 	but is backwards compatible.
-	
+
 	Added JSON output support using libjansson (-j),
 	supported by -t, -p, -s and -K.
 
 	Abandoned YAML, perl and C key export support,
 	better doing one external format but doing it
-	good. Also, I had no importers for those formats
-	but I'll add a JSON importer.
+	good. Also, I had no importers for those formats.
 
 	Removed -y for YAML vault export as well. Maybe
 	I'll add a parameter to -p or -s so one can

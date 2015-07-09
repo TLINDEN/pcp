@@ -1,5 +1,3 @@
-JSON:
-- import secret as json
 
 detach keysig generation from pub key export, so that an existing
 keysig can be verified later.

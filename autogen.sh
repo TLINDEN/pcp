@@ -51,6 +51,7 @@ Pretty Curved Privacy - File encryption using eliptic curve cryptography.
     cat man/footer.pod >> man/pcp1.pod
 
     pod2man -r "PCP `cat VERSION`" -c "USER CONTRIBUTED DOCUMENTATION" man/pcp1.pod > man/pcp1.1
+    pod2html man/pcp1.pod > man/pcp1.html
 
     # generate the top level readme
     cat man/badges man/pcp.pod man/install.pod man/footer.pod > README.pod

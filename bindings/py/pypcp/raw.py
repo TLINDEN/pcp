@@ -602,58 +602,61 @@ void ucfree(void *d, size_t len);
 /*** ./gencffi.pl: from ../../include/pcp/mem.h:58 */
 void sfree(void *d);
 
-/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:294 */
+/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:188 */
 Buffer *pcp_export_rfc_pub (PCPCTX *ptx, pcp_key_t *sk);
 
-/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:294 */
+/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:188 */
 Buffer *pcp_export_pbp_pub(pcp_key_t *sk);
 
-/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:294 */
+/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:188 */
 Buffer *pcp_export_secret(PCPCTX *ptx, pcp_key_t *sk, char *passphrase);
 
-/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:294 */
+/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:188 */
 Buffer *pcp_export_json_pub(PCPCTX *ptx, pcp_key_t *sk, byte *sig, size_t siglen);
 
-/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:294 */
+/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:188 */
 Buffer *pcp_export_json_secret(PCPCTX *ptx, pcp_key_t *sk, byte *nonce, byte *cipher, size_t clen);
 
-/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:294 */
+/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:188 */
 json_t *pcp_sk2json(pcp_key_t *sk, byte *sig,size_t siglen);
 
-/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:294 */
+/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:188 */
 json_t *pcp_pk2json(pcp_pubkey_t *pk);
 
-/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:294 */
+/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:188 */
 pcp_ks_bundle_t *pcp_import_pub_json(PCPCTX *ptx, byte *raw, size_t rawsize);
 
-/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:294 */
+/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:188 */
+Buffer *pcp_import_secret_json(PCPCTX *ptx, Buffer *json);
+
+/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:188 */
 pcp_ks_bundle_t *pcp_import_pub(PCPCTX *ptx, byte *raw, size_t rawsize);
 
-/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:294 */
+/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:188 */
 pcp_ks_bundle_t *pcp_import_binpub(PCPCTX *ptx, byte *raw, size_t rawsize);
 
-/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:294 */
+/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:188 */
 pcp_ks_bundle_t *pcp_import_pub_rfc(PCPCTX *ptx, Buffer *blob);
 
-/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:294 */
+/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:188 */
 pcp_ks_bundle_t *pcp_import_pub_pbp(PCPCTX *ptx, Buffer *blob);
 
-/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:294 */
+/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:188 */
 pcp_key_t *pcp_import_binsecret(PCPCTX *ptx, byte *raw, size_t rawsize, char *passphrase);
 
-/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:294 */
+/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:188 */
 pcp_key_t *pcp_import_secret(PCPCTX *ptx, byte *raw, size_t rawsize, char *passphrase);
 
-/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:294 */
+/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:188 */
 pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphrase);
 
-/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:294 */
+/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:188 */
 int _check_keysig_h(PCPCTX *ptx, Buffer *blob, rfc_pub_sig_h *h);
 
-/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:294 */
+/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:188 */
 int _check_hash_keysig(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, pcp_keysig_t *sk);
 
-/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:294 */
+/*** ./gencffi.pl: from ../../include/pcp/mgmt.h:188 */
 int _check_sigsubs(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, rfc_pub_sig_s *subheader);
 
 /*** ./gencffi.pl: from ../../include/pcp/pcpstream.h:291 */
@@ -861,15 +864,7 @@ uint8_t *zmq_z85_decode (uint8_t *dest, char *string);
 char *zmq_z85_encode (char *dest, uint8_t *data, size_t size);'''
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
-EXP_PK_HEADER = "----- BEGIN ED25519-CURVE29915 PUBLIC KEY -----"
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-PCP_ASYM_CIPHER_SIG = 24
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-PCP_SIG_START = "----- BEGIN ED25519 SIGNATURE -----"
+PCP_SIG_END = "----- END ED25519 SIGNATURE -----"
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
@@ -877,11 +872,11 @@ EXP_SIG_SUB_SIGEXPIRE = 3
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
-PCP_BLOCK_SIZE = 32 * 1024
+PCP_ASYM_CIPHER = 5
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
-EXP_SIG_SUB_KEYFLAGS = 27
+PCP_SIG_HEADER = "----- BEGIN ED25519 SIGNED MESSAGE -----"
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
@@ -889,31 +884,7 @@ EXP_PK_CIPHER = 0x21
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
-PCP_SYM_CIPHER = 23
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-PCP_VAULT_ID = 14
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-EXP_SIG_SUB_NOTATION = 20
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-EXP_SIG_SUB_KEYEXPIRE = 9
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-PCP_ZFILE_FOOTER = "----- END Z85 ENCODED FILE -----"
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-EXP_PK_FOOTER = "----- END ED25519-CURVE29915 PUBLIC KEY -----"
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-PCP_RFC_CIPHER = 0x21 
+EXP_SIG_CIPHER = 0x23
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
@@ -921,51 +892,7 @@ PCP_CRYPTO_ADD = (32 - 16)
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
-PCP_ME = "Pretty Curved Privacy"
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-EXP_SK_FOOTER = "----- END ED25519-CURVE29915 PRIVATE KEY -----"
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-EXP_SIG_CIPHER = 0x23
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-PCP_ASYM_CIPHER_ANON = 6
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-EXP_SIG_CIPHER_NAME = "ED25519"
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-PCP_ZFILE_HEADER = "----- BEGIN Z85 ENCODED FILE -----"
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-EXP_HASH_NAME = "BLAKE2"
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-PCP_ENFILE_FOOTER = "\r\n----- END PCP ENCRYPTED FILE -----\r\n"
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-EXP_SK_HEADER = "----- BEGIN ED25519-CURVE29915 PRIVATE KEY -----"
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-EXP_SIG_TYPE = 0x1F 
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-PCP_ASYM_CIPHER = 5
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-PCP_SIGPREFIX = "\nnacl-"
+EXP_FORMAT_NATIVE = 1
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
@@ -973,19 +900,11 @@ EXP_HASH_CIPHER = 0x22
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
-EXP_PK_CIPHER_NAME = "CURVE25519-ED25519-POLY1305-SALSA20"
+EXP_PK_FOOTER = "----- END ED25519-CURVE29915 PUBLIC KEY -----"
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
-PCP_SIG_END = "----- END ED25519 SIGNATURE -----"
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-EXP_SIG_SUB_CTIME = 2
-
-
-# ./gencffi.pl: from ../../include/pcp/defines.h:172
-EXP_FORMAT_NATIVE = 1
+PCP_ME = "Pretty Curved Privacy"
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
@@ -993,11 +912,19 @@ PCP_ENFILE_HEADER = "----- BEGIN PCP ENCRYPTED FILE -----\r\n"
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
-PBP_COMPAT_SALT = "qa~t](84z<1t<1oz:ik.@IRNyhG=8q(on9}4#!/_h#a7wqK{Nt$T?W>,mt8NqYq&6U<GB1$,<$j>,rSYI2GRDd:Bcm"
+PCP_BLOCK_SIZE = 32 * 1024
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
-PCP_ENCRYPT_MAC = 56
+PCP_SIGPREFIX = "\nnacl-"
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+PCP_ZFILE_HEADER = "----- BEGIN Z85 ENCODED FILE -----"
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+EXP_SIG_CIPHER_NAME = "ED25519"
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
@@ -1005,4 +932,80 @@ EXP_FORMAT_PBP = 2
 
 
 # ./gencffi.pl: from ../../include/pcp/defines.h:172
-PCP_SIG_HEADER = "----- BEGIN ED25519 SIGNED MESSAGE -----"
+EXP_SIG_SUB_KEYFLAGS = 27
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+EXP_SIG_SUB_KEYEXPIRE = 9
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+EXP_SIG_SUB_CTIME = 2
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+PCP_VAULT_ID = 14
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+EXP_PK_HEADER = "----- BEGIN ED25519-CURVE29915 PUBLIC KEY -----"
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+EXP_PK_CIPHER_NAME = "CURVE25519-ED25519-POLY1305-SALSA20"
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+EXP_SK_FOOTER = "----- END ED25519-CURVE29915 PRIVATE KEY -----"
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+PCP_ZFILE_FOOTER = "----- END Z85 ENCODED FILE -----"
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+EXP_SK_HEADER = "----- BEGIN ED25519-CURVE29915 PRIVATE KEY -----"
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+PCP_SYM_CIPHER = 23
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+PBP_COMPAT_SALT = "qa~t](84z<1t<1oz:ik.@IRNyhG=8q(on9}4#!/_h#a7wqK{Nt$T?W>,mt8NqYq&6U<GB1$,<$j>,rSYI2GRDd:Bcm"
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+PCP_ENFILE_FOOTER = "\r\n----- END PCP ENCRYPTED FILE -----\r\n"
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+EXP_SIG_SUB_NOTATION = 20
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+PCP_ASYM_CIPHER_ANON = 6
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+PCP_SIG_START = "----- BEGIN ED25519 SIGNATURE -----"
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+PCP_ENCRYPT_MAC = 56
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+EXP_HASH_NAME = "BLAKE2"
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+PCP_RFC_CIPHER = 0x21 
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+EXP_SIG_TYPE = 0x1F 
+
+
+# ./gencffi.pl: from ../../include/pcp/defines.h:172
+PCP_ASYM_CIPHER_SIG = 24

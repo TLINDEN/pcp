@@ -133,7 +133,7 @@
 .\" ========================================================================
 .\"
 .IX Title "PCP1 1"
-.TH PCP1 1 "2015-07-08" "PCP 0.2.6" "USER CONTRIBUTED DOCUMENTATION"
+.TH PCP1 1 "2015-07-10" "PCP 0.2.6" "USER CONTRIBUTED DOCUMENTATION"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -172,7 +172,7 @@ Pretty Curved Privacy \- File encryption using eliptic curve cryptography.
 \&  \-K \-\-import               Import a secret or public key.
 \&  \-F \-\-export\-format <fmt>  Specify exportformat, either \*(Aqpbp\*(Aq or \*(Aqpcp\*(Aq.
 \&                            \*(Aqpcp\*(Aq is the default if unspecified.
-\&  \-j \-\-json                 Enable JSON output (with \-t, \-p and \-s).
+\&  \-j \-\-json                 Enable JSON output (with \-t, \-p, \-s and \-K).
 \&  
 \&  Encryption Options:
 \&  \-e \-\-encrypt              Asym\-Encrypt a message. If none of \-i or \-r
@@ -261,6 +261,7 @@ Pretty Curved Privacy \- File encryption using eliptic curve cryptography.
 \&                           Currently supported: pcp and pbp.
 \& \-j \-\-json                 enable JSON output. Can be used with info
 \&                           output (\-t) and key export (\-p and \-s).
+\&                           and import (\-K).
 \& 
 \& Encryption Options:
 \& \-e \-\-encrypt              Asym\-Encrypt a message. Read from stdin or
@@ -495,8 +496,8 @@ Another example:
 .Sp
 As you can see, it is also possible to encrypt a message for multiple
 recipients.
-.IP "\fBAonymous public key encryption\fR" 4
-.IX Item "Aonymous public key encryption"
+.IP "\fBAnonymous public key encryption\fR" 4
+.IX Item "Anonymous public key encryption"
 In anonymous mode a random generated keypair will be used on the
 sender side. This way the recipient doesn't have to have your public
 key.
@@ -529,6 +530,8 @@ operates in self mode encryption. It will ask you for a passphrase, from which
 an encryption key will be derived using \fIscrypt()\fR.
 .Sp
 \&\s-1PCP\s0 doesn't validate the security of the passphrase.
+.Sp
+Self mode can be explicitly enforced with \fB\-m\fR.
 .SH "SIGNATURES"
 .IX Header "SIGNATURES"
 There are 3 modes for digital signatures available on pcp1:
@@ -667,7 +670,7 @@ Pcp may return one of several error codes if it encounters problems.
 Default vault file where all keys are stored.
 .SH "EXPERIMENTAL STATUS"
 .IX Header "EXPERIMENTAL STATUS"
-Currently there are a couple of problems which are currently
+Currently there are a couple of problems which are
 unsolved or in the process to be solved.
 .IP "\fBNo secure native key exchange for store-and-forward systems\fR" 4
 .IX Item "No secure native key exchange for store-and-forward systems"
@@ -682,7 +685,8 @@ to some key server because in order to encrypt a message, both
 the recipient \s-1AND\s0 the sender need to have the public key of
 each other. It would be possible to publish public keys,
 and attach the senders public key to the encrypted message, but
-I'm not sure if such an aproach would be secure enough.
+I'm not sure if such an aproach would be secure enough. Pcp
+implements this scheme though (refer to the option \-A).
 .IP "\fBCurve25519 not widely adopted\fR" 4
 .IX Item "Curve25519 not widely adopted"
 At the time of this writing the \s-1ECC\s0 algorithm Curve25519
@@ -693,8 +697,17 @@ been done the kind of exessive crypto analysis as with other
 .Sp
 While I, as the author of pcp1 totally trust D.J.Bernstein, this
 may not be the case for you.
+.IP "\fBUnreviewed yet\fR" 4
+.IX Item "Unreviewed yet"
+As with every crypto software, pcp has to undergo a couple rounds
+of peer review (analysis) in order to be considered secure, trustable
+and stable. No any such review has been undertaken on pcp yet.
 .Sp
-In short, I'd suggest not to use it on critical systems yet.
+Pcp is a mere fun project aimed at teaching myself better C coding
+and crypto. In fact I don't even trust the software myself and I
+don't use it for anything remotely serious.
+.PP
+\&\fBIn short: don \s-1NOT\s0 use this software for production purposes!\fR
 .SH "INTERNALS"
 .IX Header "INTERNALS"
 .SS "\s-1VAULT FORMAT\s0"
@@ -808,11 +821,147 @@ Generate a random seed (32 bytes).
 .IP "\(bu" 4
 Generate a Curve25519 encryption keypair from that seed.
 .PP
-So, while both secrets are stored in the sam \s-1PCP\s0 key, they
+So, while both secrets are stored in the same \s-1PCP\s0 key, they
 are otherwise unrelated. If one of them leaks, the other
 cannot be recalculated from it.
 .PP
 Take a look at the function \fB\f(BIpcp_keypairs()\fB\fR for details.
+.SS "\s-1PUBLIC KEY EXPORT FORMAT\s0"
+.IX Subsection "PUBLIC KEY EXPORT FORMAT"
+Exported public and secret keys will be written in a portable
+way. Pcp uses \s-1RFC4880\s0 export format for public keys with some
+slight modifications:
+.IP "\(bu" 4
+Key material is native to libsodium/pcp and not specified in the
+rfc for curve25519/ed25519. Therefore pcp encodes key material doing it like
+this: mp|sp|cp
+.Sp
+where
+.Sp
+.Vb 3
+\& mp = master keysigning public key (ed25519), 32 bytes
+\& sp = signing public key (ed25519), 32 bytes
+\& cp = encryption public key (curve25519), 32 bytes
+.Ve
+.IP "\(bu" 4
+The various cipher (algorithm) id's are unspecified for
+libsodium/pcp native ciphers. Therefore they are proprietary to pcp, starting at
+33 (22 is the last officially assigned one). Once
+those cipher numbers become official, they will be used instead.
+.IP "\(bu" 4
+Pcp uses 64 bit integers for timestamps everywhere (ctime, expire, etc),
+to be year 2038 safe. Note, that this is a violation of the
+\&\s-1RFC\s0 spec. However, said \s-1RFC\s0 have to be modified to fit 2038
+(and beyond) anyways. This applies for the keyfile ctime as
+well for the key sig sub fields containing time values.
+.IP "\(bu" 4
+The exported public key packet contains a signature. Pcp is
+filling out all required fields. A signature has a variable
+number of sig sub packets. Pcp uses only these types:
+.Sp
+.Vb 5
+\&  2 = Signature Creation Time     (8 byte)
+\&  3 = Signature Expiration Time   (8 byte)
+\&  9 = Key Expiration Time         (8 bytes)
+\& 20 = Notation Data               (4 byte flags, N bytes name+value)
+\& 27 = Key Flags                   (1 byte, use 0x02, 0x08 and 0x80
+.Ve
+.IP "\(bu" 4
+Pcp uses 3 notation fields:
+.RS 4
+.ie n .IP """owner"", which contains the owner name, if set" 4
+.el .IP "``owner'', which contains the owner name, if set" 4
+.IX Item "owner, which contains the owner name, if set"
+.PD 0
+.ie n .IP """mail"", which contains the emailaddress, if set" 4
+.el .IP "``mail'', which contains the emailaddress, if set" 4
+.IX Item "mail, which contains the emailaddress, if set"
+.ie n .IP """serial"", which contains the 32bit serial number" 4
+.el .IP "``serial'', which contains the 32bit serial number" 4
+.IX Item "serial, which contains the 32bit serial number"
+.RE
+.RS 4
+.RE
+.IP "\(bu" 4
+.PD
+The actual signature field consists of the blake2 hash of
+(mp|sp|cp|keysig) followed by the nacl signature. However, pcp
+does not put an extra 16 byte value of the hash, since the nacl
+signature already contains the full hash. So, an implementation
+could simply pull the fist 16 bytes of said hash to get
+the same result if desired.
+.IP "\(bu" 4
+The mp keypair will be used for signing. The recipient can
+verify the signature, since mp is included.
+.IP "\(bu" 4
+While pcp puts expiration dates for the key and the signature
+into the export as the rfc demands, it mostly ignores them (yet).
+Key expiring is not implemented in \s-1PCP\s0 yet.
+.IP "\(bu" 4
+We use big-endian always.
+.IP "\(bu" 4
+Unlike \s-1RC4880\s0 public key exports, pcp uses Z85 encoding if
+armoring have been requested by the user. Armored output has
+a header and a footer line, however they are ignored by the
+parser and are therefore optional. Newlines, if present, are
+optional as well.
+.Sp
+http://tools.ietf.org/html/rfc4880#section\-5.2.3
+.IP "\(bu" 4
+The key sig blob will be saved in the Vault unaltered during
+import, so pcp is able to verify the signature at will anytime. When exporting
+a foreign public key, pcp just puts out that key sig blob to the
+export untouched.
+.IP "\(bu" 4
+Currently \s-1PCP\s0 only supports self-signed public key exports.
+.IP "\(bu" 4
+Pcp only supports one key signature per key. However, it would be easily
+possible to support foreign keysigs as well in the future.
+.PP
+So, a full pubkey export looks like this
+.PP
+.Vb 8
+\&    version
+\&    ctime
+\&    cipher
+\&    3 x raw keys             \e
+\&    sigheader                 > calculate hash from this
+\&       sigsubs (header+data) /
+\&    hash
+\&    signature
+.Ve
+.SS "\s-1SECRET KEY EXPORT FORMAT\s0"
+.IX Subsection "SECRET KEY EXPORT FORMAT"
+Secret keys are exported in a proprietary format.
+.PP
+The exported binary blob is symmetrically encrypted using the \s-1NACL\s0
+function \fIcrypto_secret()\fR. The passphrase will be used to derive an
+encryption key using the \s-1STAR\s0 function \fIscrypt()\fR.
+.PP
+The binary data before encryption consists of:
+.PP
+.Vb 10
+\& ED25519 master signing secret
+\& Curve25519 encryption secret
+\& ED25519 signing secret
+\& ED25519 master signing public
+\& Curve25519 encryption public
+\& ED25519 signing public
+\& Optional notations, currently supported are the \*(Aqowner\*(Aq and \*(Aqmail\*(Aq attributes.
+\&  If an attribute is empty, the len field is zero.
+\&  \-# len(VAL) (2 byte uint)
+\&  \-# VAL (string without trailing zero)
+\& 8 byte creation time (epoch)
+\& 4 byte key version
+\& 4 byte serial number
+.Ve
+.PP
+The encrypted cipher will be prepended with the random nonce used
+to encrypt the data and looks after encryption as such:
+.PP
+.Vb 1
+\&  Nonce | Cipher
+.Ve
 .SS "\s-1ENCRYPTED OUTPUT FORMAT\s0"
 .IX Subsection "ENCRYPTED OUTPUT FORMAT"
 The encryption protocol used by \s-1PCP\s0 uses mostly standard
@@ -1080,6 +1229,142 @@ files and signatures \- at least their binary versions \- should be exchangable.
 this is a work in progress and might not work under all circumstances. Also there's currently
 no shared key format between pbp and pcp. However, it is possible to export and
 import pbp keys from/to pcp.
+.SH "JSON ENCODING SUPPORT"
+.IX Header "JSON ENCODING SUPPORT"
+If pcp have been compiled with \fB\-\-with\-json\fR (which requires the libjansson
+library), then it supports \s-1JSON\s0 objects as input and output with the following
+functions:
+.IP "public key export" 4
+.IX Item "public key export"
+.PD 0
+.IP "secret key export" 4
+.IX Item "secret key export"
+.IP "whole vault export" 4
+.IX Item "whole vault export"
+.IP "public key import" 4
+.IX Item "public key import"
+.IP "secret key import" 4
+.IX Item "secret key import"
+.PD
+.PP
+\&\s-1JSON\s0 support can be used either with the commandline tool \fBpcp1\fR or programmatically
+using the C, \*(C+ or Python \s-1API.\s0
+.SS "\s-1USING JSON FROM THE C API\s0"
+.IX Subsection "USING JSON FROM THE C API"
+In order to use \s-1JSON\s0 all you've got to do is to switch a context flag:
+.PP
+.Vb 2
+\& PCPCTX *ptx = ptx_new();
+\& ptx\->json = 1;
+.Ve
+.PP
+That all to it. Now any function normally used for key import and export works
+with \s-1JSON,\s0 just fill the \fBBuffer\fR object with a \s-1JSON\s0 string for imports or
+fetch the Buffer content of an export function as a string.
+.SS "\s-1USING JSON FROM THE COMMANDLINE\s0"
+.IX Subsection "USING JSON FROM THE COMMANDLINE"
+In order to use \s-1JSON\s0 on the commandline, add \fB\-j\fR. This can be used in
+conjunction with the following options:
+.IP "\fB\-p\fR" 4
+.IX Item "-p"
+Public key export.
+.IP "\fB\-s\fR" 4
+.IX Item "-s"
+Secret key export.
+.IP "\fB\-K\fR" 4
+.IX Item "-K"
+Public and secret key import.
+.IP "\fB\-t\fR" 4
+.IX Item "-t"
+Text view mode (aka inspect mode).
+.PP
+The \fB\-z\fR and \fB\-Z\fR options are ignored in \s-1JSON\s0 mode.
+.SS "\s-1JSON OBJECT STRUCTURE\s0"
+.IX Subsection "JSON OBJECT STRUCTURE"
+\fI\s-1JSON PUBLIC KEY \s0(pcp1 \-p \-j)\fR
+.IX Subsection "JSON PUBLIC KEY (pcp1 -p -j)"
+.PP
+The \s-1JSON\s0 object for a public key looks like this:
+.PP
+.Vb 10
+\& {
+\&    "id": "6BF2980419E0986A",
+\&    "owner": "tom",
+\&    "mail": "tom@local",
+\&    "ctime": 1436170865,
+\&    "expire": 1467706865,
+\&    "version": 6,
+\&    "serial": 1509801135,
+\&    "type": "public",
+\&    "cipher": "CURVE25519\-ED25519\-POLY1305\-SALSA20",
+\&    "cryptpub": "0fdf0f7269f901b7f0fba989a1fddbf576c7cc148a2e5987fdeea3523978fe01",
+\&    "sigpub": "6980b76e17170194626b49cbab1ab35369a0635f52fe1a7cf39cc5421fb5c0c2",
+\&    "masterpub": "947a49f29e9cb0e92b61e2a1dea95f8ec81a24baed78e85c1b52cc3714f5e45e",
+\&    "signature": "947a49f29e9cb0e92b61e2a1dea95f8ec81a24baed78e85c1b52cc3714f5e45[..]"
+\& }
+.Ve
+.PP
+Actually the field \fBsignature\fR contains the whole encoded public key.
+.PP
+Fields containing byte arrays are hex encoded.
+.PP
+Numbers are represented as literal integers.
+.PP
+\fI\s-1JSON SECRET KEY \s0(pcp1 \-s \-j)\fR
+.IX Subsection "JSON SECRET KEY (pcp1 -s -j)"
+.PP
+The \s-1JSON\s0 object for a public key looks like this:
+.PP
+.Vb 10
+\& {
+\&    "id": "6BF2980419E0986A",
+\&    "owner": "tom",
+\&    "mail": "tom@local",
+\&    "ctime": 1436170865,
+\&    "expire": 1467706865,
+\&    "version": 6,
+\&    "serial": 1509801135,
+\&    "type": "secret",
+\&    "cipher": "CURVE25519\-ED25519\-POLY1305\-SALSA20",
+\&    "cryptpub": "0fdf0f7269f901b7f0fba989a1fddbf576c7cc148a2e5987fdeea3523978fe01",
+\&    "sigpub": "6980b76e17170194626b49cbab1ab35369a0635f52fe1a7cf39cc5421fb5c0c2",
+\&    "masterpub": "947a49f29e9cb0e92b61e2a1dea95f8ec81a24baed78e85c1b52cc3714f5e45e",
+\&    "secrets": "ad5ce150f3cd7bffa299d4db5bf3d26ae56c3808ccba7[..]",
+\&    "nonce": "858ef9870fc8f39903cfb281d697ca29a935d2ae929fa4ea"
+\&}
+.Ve
+.PP
+As you can see that's pretty identical to a public key json object beside the
+\&\fBsecrets\fR and \fBnonce\fR fields. The \fBsecrets\fR field contains the encrypted
+secret key material. Pcp does not support exporting a secret key unencrypted.
+.PP
+The \fBnonce\fR is required for a later import and shall not be changed or
+decoupled from \fBsecrets\fR. This may change in the future.
+.PP
+\fI\s-1JSON VAULT \s0(pcp1 \-t)\fR
+.IX Subsection "JSON VAULT (pcp1 -t)"
+.PP
+The \s-1JSON\s0 object for the vault looks like this:
+.PP
+.Vb 8
+\&  {
+\&    "keyvaultfile": "/home/tom/.pcpvault",
+\&    "version": 2,
+\&    "checksum": "27b583dc2dacf5ccc874b7be3a39748d107c6b9e9f9d473f1c716a94561ef793",
+\&    "secretkeys": 1,
+\&    "publickey": 3,
+\&    "keys": []
+\& }
+.Ve
+.PP
+The field \fBkeys\fR is an array containing one or more of the already
+described key objects.
+.PP
+\fI\s-1JSON PROGRAM OUTPUT\s0\fR
+.IX Subsection "JSON PROGRAM OUTPUT"
+.PP
+Currently pcp does not support \s-1JSON\s0 program output, that is, success or
+error messages on \s-1STDERR\s0 are not encoded as json. This may change in the future.
 .SH "COPYRIGHT"
 .IX Header "COPYRIGHT"
 Copyright (c) 2013\-2015 by T.v.Dein <tom \s-1AT\s0 vondein \s-1DOT\s0 org>

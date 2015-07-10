@@ -51,7 +51,7 @@ Another example:
 As you can see, it is also possible to encrypt a message for multiple
 recipients.
 
-=item B<Aonymous public key encryption>
+=item B<Anonymous public key encryption>
 
 In anonymous mode a random generated keypair will be used on the
 sender side. This way the recipient doesn't have to have your public
@@ -82,6 +82,8 @@ operates in self mode encryption. It will ask you for a passphrase, from which
 an encryption key will be derived using scrypt().
 
 PCP doesn't validate the security of the passphrase.
+
+Self mode can be explicitly enforced with B<-m>.
 
 =back
 
@@ -236,7 +238,7 @@ Default vault file where all keys are stored.
 
 =head1 EXPERIMENTAL STATUS
 
-Currently there are a couple of problems which are currently
+Currently there are a couple of problems which are
 unsolved or in the process to be solved.
 
 =over
@@ -254,7 +256,8 @@ to some key server because in order to encrypt a message, both
 the recipient AND the sender need to have the public key of
 each other. It would be possible to publish public keys,
 and attach the senders public key to the encrypted message, but
-I'm not sure if such an aproach would be secure enough.
+I'm not sure if such an aproach would be secure enough. Pcp
+implements this scheme though (refer to the option -A).
 
 =item B<Curve25519 not widely adopted>
 
@@ -267,9 +270,19 @@ ECC algorithms.
 While I, as the author of pcp1 totally trust D.J.Bernstein, this
 may not be the case for you.
 
-In short, I'd suggest not to use it on critical systems yet.
+=item B<Unreviewed yet>
+
+As with every crypto software, pcp has to undergo a couple rounds
+of peer review (analysis) in order to be considered secure, trustable
+and stable. No any such review has been undertaken on pcp yet.
+
+Pcp is a mere fun project aimed at teaching myself better C coding
+and crypto. In fact I don't even trust the software myself and I
+don't use it for anything remotely serious.
 
 =back
+
+B<In short: don NOT use this software for production purposes!>
 
 =head1 INTERNALS
 
@@ -318,7 +331,6 @@ The key header is followed by the actual key, see below.
 =head2 SECRET KEY FORMAT
 
 A secret key is a binary structure with the following format:
-
 
  +---------------------------------------------------------+
  | Field         Size      Description                     |
@@ -390,11 +402,166 @@ Generate a Curve25519 encryption keypair from that seed.
 
 =back
 
-So, while both secrets are stored in the sam PCP key, they
+So, while both secrets are stored in the same PCP key, they
 are otherwise unrelated. If one of them leaks, the other
 cannot be recalculated from it.
 
 Take a look at the function B<pcp_keypairs()> for details.
+
+=head2 PUBLIC KEY EXPORT FORMAT
+
+Exported public and secret keys will be written in a portable
+way. Pcp uses RFC4880 export format for public keys with some
+slight modifications:
+
+
+
+=over
+
+=item
+
+Key material is native to libsodium/pcp and not specified in the
+rfc for curve25519/ed25519. Therefore pcp encodes key material doing it like
+this: mp|sp|cp
+
+where
+
+ mp = master keysigning public key (ed25519), 32 bytes
+ sp = signing public key (ed25519), 32 bytes
+ cp = encryption public key (curve25519), 32 bytes
+
+=item
+
+The various cipher (algorithm) id's are unspecified for
+libsodium/pcp native ciphers. Therefore they are proprietary to pcp, starting at
+33 (22 is the last officially assigned one). Once
+those cipher numbers become official, they will be used instead.
+
+=item
+
+Pcp uses 64 bit integers for timestamps everywhere (ctime, expire, etc),
+to be year 2038 safe. Note, that this is a violation of the
+RFC spec. However, said RFC have to be modified to fit 2038
+(and beyond) anyways. This applies for the keyfile ctime as
+well for the key sig sub fields containing time values.
+
+=item
+
+The exported public key packet contains a signature. Pcp is
+filling out all required fields. A signature has a variable
+number of sig sub packets. Pcp uses only these types:
+
+  2 = Signature Creation Time     (8 byte)
+  3 = Signature Expiration Time   (8 byte)
+  9 = Key Expiration Time         (8 bytes)
+ 20 = Notation Data               (4 byte flags, N bytes name+value)
+ 27 = Key Flags                   (1 byte, use 0x02, 0x08 and 0x80
+
+=item
+
+Pcp uses 3 notation fields:
+
+=over
+
+=item "owner", which contains the owner name, if set
+
+=item "mail", which contains the emailaddress, if set
+
+=item "serial", which contains the 32bit serial number
+
+=back
+
+=item
+
+The actual signature field consists of the blake2 hash of
+(mp|sp|cp|keysig) followed by the nacl signature. However, pcp
+does not put an extra 16 byte value of the hash, since the nacl
+signature already contains the full hash. So, an implementation
+could simply pull the fist 16 bytes of said hash to get
+the same result if desired.
+
+=item
+
+The mp keypair will be used for signing. The recipient can
+verify the signature, since mp is included.
+
+=item
+
+While pcp puts expiration dates for the key and the signature
+into the export as the rfc demands, it mostly ignores them (yet).
+Key expiring is not implemented in PCP yet.
+
+=item
+
+We use big-endian always.
+
+=item
+
+Unlike RC4880 public key exports, pcp uses Z85 encoding if
+armoring have been requested by the user. Armored output has
+a header and a footer line, however they are ignored by the
+parser and are therefore optional. Newlines, if present, are
+optional as well.
+
+http://tools.ietf.org/html/rfc4880#section-5.2.3
+
+=item
+
+The key sig blob will be saved in the Vault unaltered during
+import, so pcp is able to verify the signature at will anytime. When exporting
+a foreign public key, pcp just puts out that key sig blob to the
+export untouched.
+
+=item
+
+Currently PCP only supports self-signed public key exports.
+
+=item
+
+Pcp only supports one key signature per key. However, it would be easily
+possible to support foreign keysigs as well in the future.
+
+=back
+
+So, a full pubkey export looks like this
+
+    version
+    ctime
+    cipher
+    3 x raw keys             \
+    sigheader                 > calculate hash from this
+       sigsubs (header+data) /
+    hash
+    signature
+
+=head2 SECRET KEY EXPORT FORMAT
+
+Secret keys are exported in a proprietary format.
+
+The exported binary blob is symmetrically encrypted using the NACL
+function crypto_secret(). The passphrase will be used to derive an
+encryption key using the STAR function scrypt().
+
+The binary data before encryption consists of:
+
+ ED25519 master signing secret
+ Curve25519 encryption secret
+ ED25519 signing secret
+ ED25519 master signing public
+ Curve25519 encryption public
+ ED25519 signing public
+ Optional notations, currently supported are the 'owner' and 'mail' attributes.
+  If an attribute is empty, the len field is zero.
+  -# len(VAL) (2 byte uint)
+  -# VAL (string without trailing zero)
+ 8 byte creation time (epoch)
+ 4 byte key version
+ 4 byte serial number
+
+The encrypted cipher will be prepended with the random nonce used
+to encrypt the data and looks after encryption as such:
+
+  Nonce | Cipher
 
 =head2 ENCRYPTED OUTPUT FORMAT
 
@@ -645,3 +812,143 @@ files and signatures - at least their binary versions - should be exchangable. H
 this is a work in progress and might not work under all circumstances. Also there's currently
 no shared key format between pbp and pcp. However, it is possible to export and
 import pbp keys from/to pcp.
+
+=head1 JSON ENCODING SUPPORT
+
+If pcp have been compiled with B<--with-json> (which requires the libjansson
+library), then it supports JSON objects as input and output with the following
+functions:
+
+=over
+
+=item public key export
+
+=item secret key export
+
+=item whole vault export
+
+=item public key import
+
+=item secret key import
+
+=back
+
+JSON support can be used either with the commandline tool B<pcp1> or programmatically
+using the C, C++ or Python API.
+
+=head2 USING JSON FROM THE C API
+
+In order to use JSON all you've got to do is to switch a context flag:
+
+ PCPCTX *ptx = ptx_new();
+ ptx->json = 1;
+
+That all to it. Now any function normally used for key import and export works
+with JSON, just fill the B<Buffer> object with a JSON string for imports or
+fetch the Buffer content of an export function as a string.
+
+=head2 USING JSON FROM THE COMMANDLINE
+
+In order to use JSON on the commandline, add B<-j>. This can be used in
+conjunction with the following options:
+
+=over
+
+=item B<-p>
+
+Public key export.
+
+=item B<-s>
+
+Secret key export.
+
+=item B<-K>
+
+Public and secret key import.
+
+=item B<-t>
+
+Text view mode (aka inspect mode).
+
+=back
+
+The B<-z> and B<-Z> options are ignored in JSON mode.
+
+=head2 JSON OBJECT STRUCTURE
+
+=head3 JSON PUBLIC KEY (pcp1 -p -j)
+
+The JSON object for a public key looks like this:
+
+ {
+    "id": "6BF2980419E0986A",
+    "owner": "tom",
+    "mail": "tom@local",
+    "ctime": 1436170865,
+    "expire": 1467706865,
+    "version": 6,
+    "serial": 1509801135,
+    "type": "public",
+    "cipher": "CURVE25519-ED25519-POLY1305-SALSA20",
+    "cryptpub": "0fdf0f7269f901b7f0fba989a1fddbf576c7cc148a2e5987fdeea3523978fe01",
+    "sigpub": "6980b76e17170194626b49cbab1ab35369a0635f52fe1a7cf39cc5421fb5c0c2",
+    "masterpub": "947a49f29e9cb0e92b61e2a1dea95f8ec81a24baed78e85c1b52cc3714f5e45e",
+    "signature": "947a49f29e9cb0e92b61e2a1dea95f8ec81a24baed78e85c1b52cc3714f5e45[..]"
+ }
+
+Actually the field B<signature> contains the whole encoded public key.
+
+Fields containing byte arrays are hex encoded.
+
+Numbers are represented as literal integers.
+
+=head3 JSON SECRET KEY (pcp1 -s -j)
+
+The JSON object for a public key looks like this:
+
+ {
+    "id": "6BF2980419E0986A",
+    "owner": "tom",
+    "mail": "tom@local",
+    "ctime": 1436170865,
+    "expire": 1467706865,
+    "version": 6,
+    "serial": 1509801135,
+    "type": "secret",
+    "cipher": "CURVE25519-ED25519-POLY1305-SALSA20",
+    "cryptpub": "0fdf0f7269f901b7f0fba989a1fddbf576c7cc148a2e5987fdeea3523978fe01",
+    "sigpub": "6980b76e17170194626b49cbab1ab35369a0635f52fe1a7cf39cc5421fb5c0c2",
+    "masterpub": "947a49f29e9cb0e92b61e2a1dea95f8ec81a24baed78e85c1b52cc3714f5e45e",
+    "secrets": "ad5ce150f3cd7bffa299d4db5bf3d26ae56c3808ccba7[..]",
+    "nonce": "858ef9870fc8f39903cfb281d697ca29a935d2ae929fa4ea"
+}
+
+As you can see that's pretty identical to a public key json object beside the
+B<secrets> and B<nonce> fields. The B<secrets> field contains the encrypted
+secret key material. Pcp does not support exporting a secret key unencrypted.
+
+The B<nonce> is required for a later import and shall not be changed or
+decoupled from B<secrets>. This may change in the future.
+
+=head3 JSON VAULT (pcp1 -t)
+
+The JSON object for the vault looks like this:
+
+  {
+    "keyvaultfile": "/home/tom/.pcpvault",
+    "version": 2,
+    "checksum": "27b583dc2dacf5ccc874b7be3a39748d107c6b9e9f9d473f1c716a94561ef793",
+    "secretkeys": 1,
+    "publickey": 3,
+    "keys": []
+ }
+
+The field B<keys> is an array containing one or more of the already
+described key objects.
+
+=head3 JSON PROGRAM OUTPUT
+
+Currently pcp does not support JSON program output, that is, success or
+error messages on STDERR are not encoded as json. This may change in the future.
+
+

@@ -1,4 +1,4 @@
-NEXT
+0.3.0
 	Changed publuc key signature storage, previously
 	I didn't add the actual signature, therefore a
 	public key could have been verified only during

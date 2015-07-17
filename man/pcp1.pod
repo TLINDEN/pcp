@@ -52,6 +52,11 @@ Pretty Curved Privacy - File encryption using eliptic curve cryptography.
   
   Encoding Options:
   -z --z85-encode           Armor with Z85 encoding.
+  -Z --z85-decode           Decode Z85 encodeded input.
+  -a --armor --textmode     same as -z
+  
+  Misc Options:
+  -C --checksum             calculate a Blake2 checksum of one or more files.
   
   Arguments:
   Extra arguments after options are treated as filenames or
@@ -188,6 +193,11 @@ Pretty Curved Privacy - File encryption using eliptic curve cryptography.
  -Z --z85-decode           Decode (dearmor) something from Z85 encoding.
                            Use -I and -O respectively, otherwise it
                            uses stdin/stdout
+ 
+ Misc Options:
+ -C --checksum             Calculate a Blake2 checksum of one or more files.
+                           Use -I to specify one file or put multiple file
+                           names after -C like "pcp1 -C file1 file2 file3".
  
 
 

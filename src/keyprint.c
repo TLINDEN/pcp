@@ -255,7 +255,7 @@ void pcppubkey_print(pcp_pubkey_t *key, FILE* out) {
     json_object_set(jout, "random-art-id", json_string(r));
 		    
     jdump  = json_dumps(jout, JSON_INDENT(4) | JSON_PRESERVE_ORDER);
-    fprintf(out, jdump);
+    fprintf(out, "%s\n", jdump);
     json_decref(jout);
     free(jdump);
   }

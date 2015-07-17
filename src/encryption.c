@@ -359,3 +359,30 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
 
   return 1;
 }
+
+void pcpchecksum(char **files, int filenum) {
+  int i;
+  byte *checksum = ucmalloc(crypto_generichash_BYTES_MAX);
+  
+  for(i=0; i<filenum; i++) {
+    FILE *in;
+    if(files[i] == NULL)
+      in = stdin;
+    else {
+      if((in = fopen(files[i], "rb")) == NULL) {
+	fatal(ptx, "Could not open input file %s\n", files[i]);
+	break;
+      }
+    }
+    Pcpstream *pin = ps_new_file(in);
+    if(pcp_checksum(ptx, pin, checksum) > 0) {
+      char *hex = _bin2hex(checksum, crypto_generichash_BYTES_MAX);
+      fprintf(stdout, "BLAKE2 (%s) = %s\n", files[i], hex);
+      free(hex);
+    }
+    else
+      break;
+  }
+
+  free(checksum);
+}

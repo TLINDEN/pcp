@@ -70,7 +70,7 @@
 #define PCP_MODE_ZDECODE       0x00000962
 #define PCP_MODE_SIGN          0x00000FF6
 #define PCP_MODE_VERIFY        0x00001B25
-#define PCP_MODE_YAML          0x00002E27
+#define PCP_MODE_CHECKSUM      0x00002E27
 
 /*
 0x00001B25

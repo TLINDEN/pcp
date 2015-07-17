@@ -45,6 +45,11 @@ Signature Options:
 
 Encoding Options:
 -z --z85-encode           Armor with Z85 encoding.
+-Z --z85-decode           Decode Z85 encodeded input.
+-a --armor --textmode     same as -z
+
+Misc Options:
+-C --checksum             calculate a Blake2 checksum of one or more files.
 
 Arguments:
 Extra arguments after options are treated as filenames or

@@ -10,8 +10,6 @@ malloc() new pointers in functions only if not NULL, e.g. pcp_gennonce()
 
 check pub key count in pcp.c before calling verify signature, croak if count==0
 
-Update pod key format spec.
-
 vault checksum: add keysigs as well
 
 Add newlines to headers in define.h, so strlen() later catches the whole length.
@@ -19,11 +17,5 @@ Add newlines to headers in define.h, so strlen() later catches the whole length.
 Check is_utf8 license.
   also found in https://gd.meizo.com/_files/lpc/ext/utf8.c
 
-Symmetric decrypt mode tries to open vault
-
-pcp_find_primary_secret() makes a copy ???
-
 c++ destructor double free mess
 
-cpptest 0 uses same Context for encryptor and decryptor,
-must be another one for the latter!

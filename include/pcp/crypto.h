@@ -325,7 +325,15 @@ int pcp_sodium_verify_mac(byte **cleartext,
 
 
 
+/** Create a blake2 checksum of an input stream.
 
+    \param[in] ptx pcp context.
+    \param[in] in stream to read data from.
+    \param[out] checksum output buffer containing resulting checksum.
+  
+    \return Returns 0 on error.
+*/
+int pcp_checksum(PCPCTX *ptx, Pcpstream *in, byte *checksum);
 
 
 

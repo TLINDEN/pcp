@@ -131,4 +131,9 @@
                            Use -I and -O respectively, otherwise it
                            uses stdin/stdout
  
+ Misc Options:
+ -C --checksum             Calculate a Blake2 checksum of one or more files.
+                           Use -I to specify one file or put multiple file
+                           names after -C like "pcp1 -C file1 file2 file3".
+ 
 

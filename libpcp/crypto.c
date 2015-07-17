@@ -811,3 +811,29 @@ TODO: how to go past 64 bits:
 http://mrob.com/pub/math/int128.c.txt
 http://locklessinc.com/articles/256bit_arithmetic/
 */
+
+int pcp_checksum(PCPCTX *ptx, Pcpstream *in, byte *checksum) {
+  crypto_generichash_state *st = ucmalloc(sizeof(crypto_generichash_state));
+  byte *buf = ucmalloc(PCP_BLOCK_SIZE);
+  size_t bufsize = 0;
+  int ret = 1;
+  
+  crypto_generichash_init(st, NULL, 0, 0);
+  
+  while(!ps_end(in)) {
+    bufsize = ps_read(in, buf, PCP_BLOCK_SIZE);
+    crypto_generichash_update(st, buf, bufsize);
+  }
+  
+  crypto_generichash_final(st, checksum, crypto_generichash_BYTES_MAX);
+
+  if(ps_err(in)) {
+    ret = 0;
+    fatal(ptx, "Error while reading file!\n");
+  }
+  
+  free(st);
+  free(buf);
+
+  return ret;
+}

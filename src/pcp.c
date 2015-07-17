@@ -114,6 +114,7 @@ int main (int argc, char **argv)  {
     { "decrypt",         no_argument,       NULL,           'd' },
     { "anonymous",       no_argument,       NULL,           'A' },
     { "add-myself",      no_argument,       NULL,           'M' },
+    { "checksum",        no_argument,       NULL,           'C' },
 
     /*  encoding */
     { "z85-encode",      no_argument,       NULL,           'z' },
@@ -135,7 +136,7 @@ int main (int argc, char **argv)  {
     { NULL,              0,                 NULL,            0 }
   };
 
-  while ((opt = getopt_long(argc, argv, "klLV:vdehsO:i:I:pSPRtEx:DzaZr:gcmf:b1F:0KAMX:j",
+  while ((opt = getopt_long(argc, argv, "klLV:vdehsO:i:I:pSPRtEx:DzaZr:gcmf:b1F:0KAMX:jC",
 			    longopts, NULL)) != -1) {
   
     switch (opt)  {
@@ -230,6 +231,9 @@ int main (int argc, char **argv)  {
 	mode += PCP_MODE_VERIFY;
 	usevault = 1;
 	break;
+      case 'C':
+	mode += PCP_MODE_CHECKSUM;
+	break;	
       case 'f':
 	sigfile = ucmalloc(strlen(optarg)+1);
 	strncpy(sigfile, optarg, strlen(optarg)+1);
@@ -433,6 +437,14 @@ int main (int argc, char **argv)  {
 
   if(usevault == 1) {
     vault = pcpvault_init(ptx, vaultfile);
+    /* special case: ignore vault error in decrypt mode. sym decrypt doesn't
+       need it and asym will just fail without keys. */
+    if(vault == NULL && mode == PCP_MODE_DECRYPT) {
+      /* use an empty one */
+      vault = pcpvault_init(ptx, "/dev/null");
+      fatals_reset(ptx);
+    }
+    
     if(vault != NULL) {
       switch (mode) {
       case  PCP_MODE_KEYGEN:
@@ -595,7 +607,24 @@ int main (int argc, char **argv)  {
 	pcpvault_close(ptx, vault);
       }
       break;
-
+    case PCP_MODE_CHECKSUM:
+      if(infile == NULL) {
+	if(argc == 0) {
+	  char *list[1];
+	  list[0] = NULL;
+	  pcpchecksum(list, 1);
+	}
+	else {
+	  pcpchecksum(argv, argc);
+	}
+      }
+      else {
+	char *list[1];
+	list[0] = infile;
+	pcpchecksum(list, 1);
+      }
+      break;
+      
     default:
       /*  mode params mixed */
       fatal(ptx, "Sorry, invalid combination of commandline parameters (0x%04X)!\n", mode);

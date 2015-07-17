@@ -66,6 +66,12 @@ NEXT
 
 	added option -X (read passphrase from file).
 
+	Symmetric decryption doesn't require a vault
+	anymore.
+
+	Added -C: create a blake2 checksum of one or
+	more files.
+
 0.2.4	fixed compiler macro misplacement (github#4).
 
 	fixed invalid free (github#5).

@@ -46,7 +46,7 @@ before_install:
   #
   # python bindings runtime dependencies
   - sudo apt-get update -qq
-  - sudo apt-get install python-pip texinfo libjansson-dev libjansson4
+  - sudo apt-get install python-pip texinfo
   - git clone https://github.com/atgreen/libffi
   - cd libffi
   - ./autogen.sh
@@ -62,7 +62,7 @@ compiler:
   - clang
   - gcc
 script:
- - ./configure --enable-python-binding --with-json
+ - ./configure --enable-python-binding
  - make
  - make check
  - make test

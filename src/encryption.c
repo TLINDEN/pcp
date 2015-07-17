@@ -366,8 +366,10 @@ void pcpchecksum(char **files, int filenum) {
   
   for(i=0; i<filenum; i++) {
     FILE *in;
-    if(files[i] == NULL)
+    if(files[i] == NULL) {
       in = stdin;
+      files[i] = "stdin";
+    }
     else {
       if((in = fopen(files[i], "rb")) == NULL) {
 	fatal(ptx, "Could not open input file %s\n", files[i]);

@@ -138,6 +138,12 @@ void test3(PcpContext *ptx) {
   // signature test
   Key A = Key(ptx, "a", "alicia", "alicia@local");
   A.decrypt("a");
+
+  // travis-ci debugging, i just dont get it
+  if(A.is_encrypted()) {
+    pcp_dumpkey(A.K);
+  }
+  
   PubKey PA = A.get_public();
 
   string message = "hallo baby";

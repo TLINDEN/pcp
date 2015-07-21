@@ -132,8 +132,12 @@
                            uses stdin/stdout
  
  Misc Options:
- -C --checksum             Calculate a Blake2 checksum of one or more files.
+ -C --checksum [<key>]     Calculate a Blake2b checksum of one or more files.
+                           If <key> is provided, an authenticated hash will
+                           be calculated, otherwise a normal hash. If you don't
+                           want to generate an authenticated hash, specify
+                           -- after -C.
                            Use -I to specify one file or put multiple file
-                           names after -C like "pcp1 -C file1 file2 file3".
+                           names after -C like "pcp1 -C -- file1 file2 file3".
  
 

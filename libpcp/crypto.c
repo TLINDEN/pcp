@@ -812,13 +812,18 @@ http://mrob.com/pub/math/int128.c.txt
 http://locklessinc.com/articles/256bit_arithmetic/
 */
 
-int pcp_checksum(PCPCTX *ptx, Pcpstream *in, byte *checksum) {
+int pcp_checksum(PCPCTX *ptx, Pcpstream *in, byte *checksum, byte *key, size_t keylen) {
   crypto_generichash_state *st = ucmalloc(sizeof(crypto_generichash_state));
   byte *buf = ucmalloc(PCP_BLOCK_SIZE);
   size_t bufsize = 0;
   int ret = 1;
+
   
-  crypto_generichash_init(st, NULL, 0, 0);
+  if(key != NULL && keylen <= crypto_generichash_KEYBYTES_MAX) {
+    crypto_generichash_init(st, key, keylen, crypto_generichash_KEYBYTES_MAX);
+  }
+  else
+    crypto_generichash_init(st, NULL, 0, 0);
   
   while(!ps_end(in)) {
     bufsize = ps_read(in, buf, PCP_BLOCK_SIZE);

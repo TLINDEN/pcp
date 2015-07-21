@@ -51,7 +51,7 @@
 "-a --armor --textmode     same as -z\n" \
 "\n" \
 "Misc Options:\n" \
-"-C --checksum             calculate a Blake2 checksum of one or more files.\n" \
+"-C --checksum [<key>]     calculate a Blake2 checksum of one or more files.\n" \
 "\n" \
 "Arguments:\n" \
 "Extra arguments after options are treated as filenames or\n" \

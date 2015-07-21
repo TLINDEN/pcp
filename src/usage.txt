@@ -49,7 +49,7 @@ Encoding Options:
 -a --armor --textmode     same as -z
 
 Misc Options:
--C --checksum             calculate a Blake2 checksum of one or more files.
+-C --checksum [<key>]     calculate a Blake2 checksum of one or more files.
 
 Arguments:
 Extra arguments after options are treated as filenames or

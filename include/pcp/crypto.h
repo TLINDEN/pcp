@@ -333,7 +333,7 @@ int pcp_sodium_verify_mac(byte **cleartext,
   
     \return Returns 0 on error.
 */
-int pcp_checksum(PCPCTX *ptx, Pcpstream *in, byte *checksum);
+int pcp_checksum(PCPCTX *ptx, Pcpstream *in, byte *checksum, byte *key, size_t keylen);
 
 
 

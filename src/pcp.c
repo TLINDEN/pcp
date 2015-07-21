@@ -114,7 +114,7 @@ int main (int argc, char **argv)  {
     { "decrypt",         no_argument,       NULL,           'd' },
     { "anonymous",       no_argument,       NULL,           'A' },
     { "add-myself",      no_argument,       NULL,           'M' },
-    { "checksum",        no_argument,       NULL,           'C' },
+    { "checksum",        optional_argument, NULL,           'C' },
 
     /*  encoding */
     { "z85-encode",      no_argument,       NULL,           'z' },
@@ -136,7 +136,7 @@ int main (int argc, char **argv)  {
     { NULL,              0,                 NULL,            0 }
   };
 
-  while ((opt = getopt_long(argc, argv, "klLV:vdehsO:i:I:pSPRtEx:DzaZr:gcmf:b1F:0KAMX:jC",
+  while ((opt = getopt_long(argc, argv, "klLV:vdehsO:i:I:pSPRtEx:DzaZr:gcmf:b1F:0KAMX:jC:",
 			    longopts, NULL)) != -1) {
   
     switch (opt)  {
@@ -233,6 +233,10 @@ int main (int argc, char **argv)  {
 	break;
       case 'C':
 	mode += PCP_MODE_CHECKSUM;
+	if(strlen(optarg) > 0 && strncmp(optarg, "--", 3) > 0) {
+	  xpass = smalloc(strlen(optarg)+1);
+	  strncpy(xpass, optarg, strlen(optarg)+1);
+	}
 	break;	
       case 'f':
 	sigfile = ucmalloc(strlen(optarg)+1);
@@ -612,16 +616,16 @@ int main (int argc, char **argv)  {
 	if(argc == 0) {
 	  char *list[1];
 	  list[0] = NULL;
-	  pcpchecksum(list, 1);
+	  pcpchecksum(list, 1, xpass);
 	}
 	else {
-	  pcpchecksum(argv, argc);
+	  pcpchecksum(argv, argc, xpass);
 	}
       }
       else {
 	char *list[1];
 	list[0] = infile;
-	pcpchecksum(list, 1);
+	pcpchecksum(list, 1, xpass);
       }
       break;
       

@@ -16,6 +16,8 @@
 "-V --vault <vaultfile>    Specify an alternate vault file.\n" \
 "-O --outfile <file>       Output file. STDOUT if unspecified.\n" \
 "-I --infile <file>        Input file. STDIN if unspecified.\n" \
+"-x --xpass <passwd>       Provide password. INSECURE! Use for testing\n" \
+"                          or debugging only!\n" \
 "-X --password-file <file> Read passphrase from <file>.\n" \
 "-i --keyid <id>           Specify a key id for various operations.\n" \
 "-r --recipient <string>   Specify a recpipient, multiple allowed.\n" \
@@ -51,7 +53,8 @@
 "-a --armor --textmode     same as -z\n" \
 "\n" \
 "Misc Options:\n" \
-"-C --checksum [<key>]     calculate a Blake2 checksum of one or more files.\n" \
+"-C --checksum             calculate a Blake2 checksum of one or more files.\n" \
+"                          add -x <key> to compute an authenticated hash.\n" \
 "\n" \
 "Arguments:\n" \
 "Extra arguments after options are treated as filenames or\n" \

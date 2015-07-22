@@ -86,6 +86,8 @@
   -V --vault &lt;vaultfile&gt;    Specify an alternate vault file.
   -O --outfile &lt;file&gt;       Output file. STDOUT if unspecified.
   -I --infile &lt;file&gt;        Input file. STDIN if unspecified.
+  -x --xpass &lt;passwd&gt;       Provide password. INSECURE! Use for testing
+                            or debugging only!
   -X --password-file &lt;file&gt; Read passphrase from &lt;file&gt;.
   -i --keyid &lt;id&gt;           Specify a key id for various operations.
   -r --recipient &lt;string&gt;   Specify a recpipient, multiple allowed.
@@ -121,7 +123,8 @@
   -a --armor --textmode     same as -z
   
   Misc Options:
-  -C --checksum [&lt;key&gt;]     calculate a Blake2 checksum of one or more files.
+  -C --checksum             calculate a Blake2 checksum of one or more files.
+                            add -x &lt;key&gt; to compute an authenticated hash.
   
   Arguments:
   Extra arguments after options are treated as filenames or
@@ -137,6 +140,8 @@
                            will be used.
  -I --infile &lt;file&gt;        Input file. If not specified, stdin
                            will be used.
+ -x --xpass &lt;passwd&gt;       Provide password. B&lt;INSECURE&gt;! Use for
+                           testing or debugging only!
  -X --password-file &lt;file&gt; Read passphrase from &lt;file&gt;. If &lt;file&gt;
                            is -, read from stdin. This takes
                            precedence over other uses of stdin
@@ -154,7 +159,7 @@
     --version              Print program version.
  -D --debug                Enable debug output.
  -v --verbose              Enable verbose output.
-
+ 
  Keymanagement Options:
  -k --keygen               Generate a CURVE25519 secret key. If
                            the generated key is the first one in
@@ -260,11 +265,9 @@
                            uses stdin/stdout
  
  Misc Options:
- -C --checksum [&lt;key&gt;]     Calculate a Blake2b checksum of one or more files.
-                           If &lt;key&gt; is provided, an authenticated hash will
-                           be calculated, otherwise a normal hash. If you don&#39;t
-                           want to generate an authenticated hash, specify
-                           -- after -C.
+ -C --checksum             Calculate a Blake2b checksum of one or more files.
+                           If -x is provided, an authenticated hash will
+                           be calculated, otherwise a normal hash.
                            Use -I to specify one file or put multiple file
                            names after -C like &quot;pcp1 -C -- file1 file2 file3&quot;.
  </code></pre>

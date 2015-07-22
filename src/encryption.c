@@ -363,16 +363,10 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
 void pcpchecksum(char **files, int filenum, char *key) {
   int i;
   byte *checksum = ucmalloc(crypto_generichash_BYTES_MAX);
-  byte *keyhash = NULL;
-  size_t hashlen = 0;
+  size_t keylen = 0;
 
-  if(key != NULL) {
-    keyhash = ucmalloc(crypto_generichash_BYTES);
-    crypto_generichash(keyhash, crypto_generichash_BYTES,
-		       (byte *)key, strlen(key),
-		       NULL, crypto_generichash_BYTES);
-    hashlen = crypto_generichash_BYTES;
-  }
+  if(key != NULL)
+    keylen = strlen(key);
   
   for(i=0; i<filenum; i++) {
     FILE *in;
@@ -387,7 +381,7 @@ void pcpchecksum(char **files, int filenum, char *key) {
       }
     }
     Pcpstream *pin = ps_new_file(in);
-    if(pcp_checksum(ptx, pin, checksum, keyhash, hashlen) > 0) {
+    if(pcp_checksum(ptx, pin, checksum, (byte *)key, keylen) > 0) {
       char *hex = _bin2hex(checksum, crypto_generichash_BYTES_MAX);
       fprintf(stdout, "BLAKE2b (%s) = %s\n", files[i], hex);
       free(hex);
@@ -397,7 +391,4 @@ void pcpchecksum(char **files, int filenum, char *key) {
   }
 
   free(checksum);
-
-  if(keyhash != NULL)
-    free(keyhash);
 }

@@ -9,6 +9,8 @@
                            will be used.
  -I --infile <file>        Input file. If not specified, stdin
                            will be used.
+ -x --xpass <passwd>       Provide password. B<INSECURE>! Use for
+                           testing or debugging only!
  -X --password-file <file> Read passphrase from <file>. If <file>
                            is -, read from stdin. This takes
                            precedence over other uses of stdin
@@ -26,7 +28,7 @@
     --version              Print program version.
  -D --debug                Enable debug output.
  -v --verbose              Enable verbose output.
-
+ 
  Keymanagement Options:
  -k --keygen               Generate a CURVE25519 secret key. If
                            the generated key is the first one in
@@ -132,11 +134,9 @@
                            uses stdin/stdout
  
  Misc Options:
- -C --checksum [<key>]     Calculate a Blake2b checksum of one or more files.
-                           If <key> is provided, an authenticated hash will
-                           be calculated, otherwise a normal hash. If you don't
-                           want to generate an authenticated hash, specify
-                           -- after -C.
+ -C --checksum             Calculate a Blake2b checksum of one or more files.
+                           If -x is provided, an authenticated hash will
+                           be calculated, otherwise a normal hash.
                            Use -I to specify one file or put multiple file
                            names after -C like "pcp1 -C -- file1 file2 file3".
  

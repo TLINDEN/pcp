@@ -14,6 +14,8 @@ General Options:
 -V --vault <vaultfile>    Specify an alternate vault file.
 -O --outfile <file>       Output file. STDOUT if unspecified.
 -I --infile <file>        Input file. STDIN if unspecified.
+-x --xpass <passwd>       Provide password. INSECURE! Use for testing
+                          or debugging only!
 -X --password-file <file> Read passphrase from <file>.
 -i --keyid <id>           Specify a key id for various operations.
 -r --recipient <string>   Specify a recpipient, multiple allowed.
@@ -49,7 +51,8 @@ Encoding Options:
 -a --armor --textmode     same as -z
 
 Misc Options:
--C --checksum [<key>]     calculate a Blake2 checksum of one or more files.
+-C --checksum             calculate a Blake2 checksum of one or more files.
+                          add -x <key> to compute an authenticated hash.
 
 Arguments:
 Extra arguments after options are treated as filenames or

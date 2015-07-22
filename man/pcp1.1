@@ -133,7 +133,7 @@
 .\" ========================================================================
 .\"
 .IX Title "PCP1 1"
-.TH PCP1 1 "2015-07-21" "PCP 0.3.0" "USER CONTRIBUTED DOCUMENTATION"
+.TH PCP1 1 "2015-07-22" "PCP 0.3.0" "USER CONTRIBUTED DOCUMENTATION"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -158,6 +158,8 @@ Pretty Curved Privacy \- File encryption using eliptic curve cryptography.
 \&  \-V \-\-vault <vaultfile>    Specify an alternate vault file.
 \&  \-O \-\-outfile <file>       Output file. STDOUT if unspecified.
 \&  \-I \-\-infile <file>        Input file. STDIN if unspecified.
+\&  \-x \-\-xpass <passwd>       Provide password. INSECURE! Use for testing
+\&                            or debugging only!
 \&  \-X \-\-password\-file <file> Read passphrase from <file>.
 \&  \-i \-\-keyid <id>           Specify a key id for various operations.
 \&  \-r \-\-recipient <string>   Specify a recpipient, multiple allowed.
@@ -193,7 +195,8 @@ Pretty Curved Privacy \- File encryption using eliptic curve cryptography.
 \&  \-a \-\-armor \-\-textmode     same as \-z
 \&  
 \&  Misc Options:
-\&  \-C \-\-checksum [<key>]     calculate a Blake2 checksum of one or more files.
+\&  \-C \-\-checksum             calculate a Blake2 checksum of one or more files.
+\&                            add \-x <key> to compute an authenticated hash.
 \&  
 \&  Arguments:
 \&  Extra arguments after options are treated as filenames or
@@ -209,6 +212,8 @@ Pretty Curved Privacy \- File encryption using eliptic curve cryptography.
 \&                           will be used.
 \& \-I \-\-infile <file>        Input file. If not specified, stdin
 \&                           will be used.
+\& \-x \-\-xpass <passwd>       Provide password. B<INSECURE>! Use for
+\&                           testing or debugging only!
 \& \-X \-\-password\-file <file> Read passphrase from <file>. If <file>
 \&                           is \-, read from stdin. This takes
 \&                           precedence over other uses of stdin
@@ -226,7 +231,7 @@ Pretty Curved Privacy \- File encryption using eliptic curve cryptography.
 \&    \-\-version              Print program version.
 \& \-D \-\-debug                Enable debug output.
 \& \-v \-\-verbose              Enable verbose output.
-\&
+\& 
 \& Keymanagement Options:
 \& \-k \-\-keygen               Generate a CURVE25519 secret key. If
 \&                           the generated key is the first one in
@@ -332,11 +337,9 @@ Pretty Curved Privacy \- File encryption using eliptic curve cryptography.
 \&                           uses stdin/stdout
 \& 
 \& Misc Options:
-\& \-C \-\-checksum [<key>]     Calculate a Blake2b checksum of one or more files.
-\&                           If <key> is provided, an authenticated hash will
-\&                           be calculated, otherwise a normal hash. If you don\*(Aqt
-\&                           want to generate an authenticated hash, specify
-\&                           \-\- after \-C.
+\& \-C \-\-checksum             Calculate a Blake2b checksum of one or more files.
+\&                           If \-x is provided, an authenticated hash will
+\&                           be calculated, otherwise a normal hash.
 \&                           Use \-I to specify one file or put multiple file
 \&                           names after \-C like "pcp1 \-C \-\- file1 file2 file3".
 .Ve

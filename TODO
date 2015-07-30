@@ -19,25 +19,3 @@ Check is_utf8 license.
 
 c++ destructor double free mess
 
-Idea from encfs:
-       --extpass=program
-           Specify an external program to use for getting the user password.  When the external program
-           is spawned, the environment variable "RootDir" will be set to contain the path to the root
-           directory.  The program should print the password to standard output.
-
-           EncFS takes everything returned from the program to be the password, except for a trailing
-           newline (\n) which will be removed.
-
-           For example, specifying --extpass=/usr/lib/ssh/ssh-askpass will cause EncFS to use ssh's
-           password prompt program.
-
-           Note: EncFS reads at most 2k of data from the password program, and it removes any trailing
-           newline.  Versions before 1.4.x accepted only 64 bytes of text.
-
-       -S, --stdinpass
-           Read password from standard input, without prompting.  This may be useful for scripting encfs
-           mounts.
-
-           Note that you should make sure the filesystem and mount points exist first.  Otherwise encfs
-           will prompt for the filesystem creation options, which may interfere with your script.
-

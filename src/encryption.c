@@ -66,7 +66,7 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
 
       char *passphrase;
       if(passwd == NULL) {
-	pcp_readpass(&passphrase,
+	pcp_readpass(ptx, &passphrase,
 		     "Enter passphrase for symetric decryption", NULL, 1, NULL);
       }
       else {
@@ -99,7 +99,7 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
 	/*  encrypted, decrypt it */
 	char *passphrase;
 	if(passwd == NULL) {
-	  pcp_readpass(&passphrase,
+	  pcp_readpass(ptx, &passphrase,
 		       "Enter passphrase to decrypt your secret key", NULL, 1, NULL);
 	}
 	else {
@@ -135,6 +135,7 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
   else {
     dlen = pcp_decrypt_stream(ptx, pin, pout, NULL, symkey, verify, 0);
     sfree(symkey);
+    symkey = NULL;
   }
 
   ps_close(pin);
@@ -151,7 +152,7 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
 
  errde3:
   if(symkey != NULL)
-     free(symkey);
+     sfree(symkey);
 
   return 1;
 }
@@ -173,7 +174,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
     symmode = 1;
     char *passphrase;
     if(passwd == NULL) {
-      pcp_readpass(&passphrase,
+      pcp_readpass(ptx, &passphrase,
                    "Enter passphrase for symetric encryption", "Repeat passphrase", 1, NULL);
     }
     else {
@@ -267,7 +268,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
         /*  encrypted, decrypt it */
         char *passphrase;
 	if(passwd == NULL) {
-          pcp_readpass(&passphrase,
+          pcp_readpass(ptx, &passphrase,
 		       "Enter passphrase to decrypt your secret key", NULL, 1, NULL);
         }
 	else {

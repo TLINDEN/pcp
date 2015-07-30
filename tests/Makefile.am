@@ -28,7 +28,7 @@ if BUILDJSON
   MAYJSON=jsontest
 endif
 
-AM_CFLAGS = -I../include/pcp -I../src -I../libpcp/scrypt/crypto
+AM_CFLAGS = -I../include/pcp -I../src
 check_PROGRAMS = invalidkeys gencheader statictest $(CPPTEST) \
 		 buffertest sample streamtest pipetest decodertest mangle
 
@@ -68,7 +68,7 @@ mangle_LDADD =
 mangle_SOURCES = mangle.c
 
 invalidkeys_LDADD = ../libpcp/.libs/libpcp1.a \
-		    ../src/keyprint.o ../src/keymgmt.o ../src/readpass.o
+		    ../src/keyprint.o ../src/keymgmt.o
 invalidkeys_SOURCES = invalidkeys.c
 
 if BUILDCPP

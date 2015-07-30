@@ -2,7 +2,6 @@ PCPEXPORT = pcp.h \
             pcp/crypto.h \
             pcp/config.h \
             pcp/defines.h \
-            pcp/getpass.h \
             pcp/jenhash.h \
             pcp/key.h \
             pcp/keyhash.h \
@@ -22,7 +21,7 @@ PCPEXPORT = pcp.h \
 	    pcp/context.h \
 	    pcp/structs.h \
 	    pcp/util.h \
-	    pcp/plist.h \
+	    pcp/readpass.h \
 	    pcp/scrypt.h
 
 nobase_include_HEADERS = $(PCPEXPORT)

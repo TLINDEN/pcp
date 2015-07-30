@@ -20,14 +20,14 @@
 #
 
 
-AM_CFLAGS = -I../include/pcp -I../libpcp/scrypt/crypto
+AM_CFLAGS = -I../include/pcp
 
 EXTRA_DIST = *.h
 
 bin_PROGRAMS = pcp1
 
 pcp1_LDADD = ../libpcp/.libs/libpcp1.a
-pcp1_SOURCES = pcp.c keymgmt.c keyprint.c readpass.c \
+pcp1_SOURCES = pcp.c keymgmt.c keyprint.c \
                encryption.c z85util.c signature.c \
                compat_getopt.c
 

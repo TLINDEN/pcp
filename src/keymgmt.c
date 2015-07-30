@@ -77,7 +77,7 @@ void pcp_keygen(char *passwd) {
 
   char *passphrase;
   if(passwd == NULL) {
-    pcp_readpass(&passphrase,
+    pcp_readpass(ptx, &passphrase,
 		 "Enter passphrase for key encryption",
 		 "Enter the passphrase again", 1, NULL);
   }
@@ -230,7 +230,7 @@ void pcp_exportsecret(char *keyid, int useid, char *outfile, int armor, char *pa
       /* decrypt the secret key */
       if(passwd == NULL) {
 	char *passphrase;
-	pcp_readpass(&passphrase,
+	pcp_readpass(ptx, &passphrase,
 		     "Enter passphrase to decrypt your secret key", NULL, 1, NULL);
 	key = pcpkey_decrypt(ptx, key, passphrase);
 	if(key == NULL) {
@@ -254,7 +254,7 @@ void pcp_exportsecret(char *keyid, int useid, char *outfile, int armor, char *pa
     }
     else {
       char *passphrase;
-      pcp_readpass(&passphrase,
+      pcp_readpass(ptx, &passphrase,
                   "Enter passphrase to encrypt the exported secret key",
 		   "Repeat passphrase", 1, NULL);
       exported_sk = pcp_export_secret(ptx, key, passphrase);
@@ -344,7 +344,7 @@ void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int 
     }
     else {
       char *passphrase;
-      pcp_readpass(&passphrase,
+      pcp_readpass(ptx, &passphrase,
 		   "Enter passphrase to decrypt your secret key", NULL, 1, NULL);
       sk = pcpkey_decrypt(ptx, sk, passphrase);
       sfree(passphrase);
@@ -431,7 +431,7 @@ void pcpedit_key(char *keyid) {
   if(key != NULL) {
     if(key->secret[0] == 0) {
       char *passphrase;
-      pcp_readpass(&passphrase, "Enter passphrase to decrypt the key", NULL, 1, NULL);
+      pcp_readpass(ptx, &passphrase, "Enter passphrase to decrypt the key", NULL, 1, NULL);
       key = pcpkey_decrypt(ptx, key, passphrase);
       sfree(passphrase);
     }
@@ -482,7 +482,7 @@ void pcpedit_key(char *keyid) {
       }
 
       char *passphrase;
-      pcp_readpass(&passphrase,
+      pcp_readpass(ptx, &passphrase,
 		   "Enter new passphrase for key encryption (press enter to keep current)",
 		   "Enter the passphrase again", 1, NULL);
 
@@ -592,7 +592,7 @@ int pcp_import (vault_t *vault, FILE *in, char *passwd) {
     }
     else {
       char *passphrase;
-      pcp_readpass(&passphrase,
+      pcp_readpass(ptx, &passphrase,
 		   "Enter passphrase to decrypt the secret key file", NULL, 1, NULL);
       sk = pcp_import_secret(ptx, buf, bufsize, passphrase);
       sfree(passphrase);
@@ -617,7 +617,7 @@ int pcp_import (vault_t *vault, FILE *in, char *passwd) {
     }
     else {
       char *passphrase;
-      pcp_readpass(&passphrase,
+      pcp_readpass(ptx, &passphrase,
 		   "Enter passphrase for key encryption",
 		   "Enter the passphrase again", 1, NULL);
     

@@ -58,7 +58,7 @@ int pcpsign(char *infile, char *outfile, char *passwd, int z85, int detach) {
     /*  encrypted, decrypt it */
     char *passphrase;
     if(passwd == NULL) {
-      pcp_readpass(&passphrase,
+      pcp_readpass(ptx, &passphrase,
 		   "Enter passphrase to decrypt your secret key", NULL, 1, NULL);
     }
     else {

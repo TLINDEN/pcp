@@ -18,7 +18,7 @@
 #
 #    You can contact me by mail: <tlinden AT cpan DOT org>.
 #
-AM_CFLAGS =  -I../include/pcp -Iscrypt/util
+AM_CFLAGS =  -I../include/pcp
 
 lib_LTLIBRARIES      = libpcp1.la
 
@@ -27,7 +27,7 @@ pkgconfig_DATA = libpcp1.pc
 
 libpcp1_la_SOURCES = platform.c  mem.c version.c \
 		    context.c z85.c zmq_z85.c key.c randomart.c \
-		    vault.c jenhash.c  \
+		    vault.c jenhash.c readpass.c \
                     crypto.c ed.c keyhash.c scrypt.c \
 		    util.c buffer.c mgmt.c keysig.c pcpstream.c
 

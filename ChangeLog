@@ -4,6 +4,13 @@ NEXT
 	have in place (-x and -X). Also, I don't generate
 	an extra hash for the key anymore.
 
+	Removed libpcp/getpass.c, not used anymore.
+
+	Added --extpass (implementation from encfs, but
+	somewhat modified).
+
+	Moved src/readpass.c to libpcp/.
+	
 0.3.0
 	Changed publuc key signature storage, previously
 	I didn't add the actual signature, therefore a

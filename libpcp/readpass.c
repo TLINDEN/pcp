@@ -39,7 +39,7 @@
  * getpass / readpass / readpassphrase / etc. functions in various libraries.
  */
 int
-pcp_readpass(char ** passwd, const char * prompt,
+pcp_readpass(PCPCTX *ptx, char ** passwd, const char * prompt,
 	     const char * confirmprompt, int devtty, char *readfromfile)
 {
 	FILE * readfrom;
@@ -58,6 +58,9 @@ pcp_readpass(char ** passwd, const char * prompt,
 	 */
 	if ((devtty == 0) || ((readfrom = fopen("/dev/tty", "r")) == NULL)) {
 	  if(readfromfile != NULL) {
+	    // FIXME: check if readfromfile is executable,
+	    // if yes, call askextpass(tobewritten) and
+	    // read from the returned fd somehow
 	    if(readfromfile[0] == '-') {
 	      readfrom = stdin;
 	    }
@@ -153,4 +156,115 @@ err1:
 
 	/* Failure! */
 	return (-1);
+}
+
+
+/*****************************************************************************
+ * Author:   Valient Gough <vgough@pobox.com>
+ *
+ *****************************************************************************
+ * Copyright (c) 2004, Valient Gough
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by the
+ * Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * modified by tlinden@cpan.org (c++ => c, pcp api)
+ */
+
+int pcp_readpass_fromprog(PCPCTX *ptx, char **passwd, const char *askpass) {
+  // have a child process run the command and get the result back to us.
+  int fds[2], pid;
+  int res;
+  char passbuf[MAXPASSLEN];
+  
+  res = socketpair(PF_UNIX, SOCK_STREAM, 0, fds);
+  if (res == -1) {
+    fatal(ptx, "Internal error: socketpair() failed");
+    goto aerr1;
+  }
+
+  pid = fork();
+  if (pid == -1) {
+    fatal( ptx, "Internal error: fork() failed");
+    close(fds[0]);
+    close(fds[1]);
+    goto aerr1;
+  }
+
+  if (pid == 0) {
+    const char *argv[4];
+    argv[0] = "/bin/sh";
+    argv[1] = "-c";
+    argv[2] = askpass;
+    argv[3] = 0;
+
+    // child process.. run the command and send output to fds[0]
+    close(fds[1]);  // we don't use the other half..
+
+    // make a copy of stdout and stderr descriptors, and set an environment
+    // variable telling where to find them, in case a child wants it..
+    int stdOutCopy = dup(STDOUT_FILENO);
+    int stdErrCopy = dup(STDERR_FILENO);
+    
+    // replace STDOUT with our socket, which we'll used to receive the
+    // password..
+    dup2(fds[0], STDOUT_FILENO);
+
+    // ensure that STDOUT_FILENO and stdout/stderr are not closed on exec..
+    fcntl(STDOUT_FILENO, F_SETFD, 0);  // don't close on exec..
+    fcntl(stdOutCopy, F_SETFD, 0);
+    fcntl(stdErrCopy, F_SETFD, 0);
+
+    char tmpBuf[8];
+
+    snprintf(tmpBuf, sizeof(tmpBuf) - 1, "%i", stdOutCopy);
+    setenv("PCP_ENV_STDOUT", tmpBuf, 1);
+
+    snprintf(tmpBuf, sizeof(tmpBuf) - 1, "%i", stdErrCopy);
+    setenv("PCP_ENV_STDERR", tmpBuf, 1);
+
+    execvp(argv[0], (char *const *)argv);  // returns only on error..
+
+    fatal(ptx, "Internal error: failed to exec program");
+    goto aerr1;
+  }
+
+  close(fds[0]);
+
+  memset(passbuf, 0, MAXPASSLEN);
+  if ( recv(fds[1], passbuf, MAXPASSLEN, 0) <= 0) {
+    fatal(ptx, "Cannot read password\n");
+    goto aerr1;
+  }
+
+
+  close(fds[1]);
+
+  waitpid(pid, NULL, 0);
+
+  /* Terminate the string at the first "\r" or "\n" (if any). */
+  passbuf[strcspn(passbuf, "\r\n")] = '\0';
+
+  /* Copy the password out. */
+  char *p = smalloc(strlen(passbuf) + 1);
+  memcpy(p, passbuf, strlen(passbuf) + 1 );
+  *passwd = p;
+
+  /* Zero any stored passwords. */
+  memset(passbuf, 0, MAXPASSLEN);
+  
+  return 0;
+
+ aerr1:
+  return -1;
 }

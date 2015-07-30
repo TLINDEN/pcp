@@ -35,9 +35,14 @@
 #include <termios.h>
 #include <unistd.h>
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <fcntl.h>
+#include <sys/wait.h>
+
 #include "defines.h"
 #include "context.h"
-#include "pcp.h"
+#include "util.h"
 
 #define MAXPASSLEN 2048
 
@@ -52,6 +57,13 @@
  * ${passwd}.  The obscure name is to avoid namespace collisions due to the
  * getpass / readpass / readpassphrase / etc. functions in various libraries.
  */
-int pcp_readpass(char **, const char *, const char *, int, char *);
+int pcp_readpass(PCPCTX *ptx, char **passwd, const char *prompt,
+		 const char *confirmprompt, int devtty, char *readfromfile);
+
+/**
+   from encfs getUserKey().
+   
+*/
+int pcp_readpass_fromprog(PCPCTX *ptx, char **passwd, const char *askpass);
 
 #endif /* !_READPASS_H_ */

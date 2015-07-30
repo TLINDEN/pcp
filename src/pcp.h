@@ -85,6 +85,8 @@
 #define PCP_HELP_INTRO "This is Pretty Curved Privacy. Licensed under the GPLv3. This is\n" \
 "BETA software. Use with care. NOT intended for production use.\n"
 
+#define LONG_EXTPASS 515
+
 /* some globals */
 vault_t *vault;
 PCPCTX *ptx;

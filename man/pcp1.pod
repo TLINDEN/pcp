@@ -24,6 +24,7 @@ Pretty Curved Privacy - File encryption using eliptic curve cryptography.
   -x --xpass <passwd>       Provide password. INSECURE! Use for testing
                             or debugging only!
   -X --password-file <file> Read passphrase from <file>.
+     --extpass <program>    Use external program for password prompt.
   -i --keyid <id>           Specify a key id for various operations.
   -r --recipient <string>   Specify a recpipient, multiple allowed.
   -t --text                 Print textual representation of ojects.
@@ -81,6 +82,7 @@ Pretty Curved Privacy - File encryption using eliptic curve cryptography.
                            is -, read from stdin. This takes
                            precedence over other uses of stdin
                            elsewhere, see below for more details.
+    --extpass <program>    Use external program for password prompt.
  -i --keyid <id>           Specify a key id to import/export.
  -r --recipient <string>   Specify a recpipient, used for public
                            key export and encryption.

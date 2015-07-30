@@ -19,6 +19,7 @@
 "-x --xpass <passwd>       Provide password. INSECURE! Use for testing\n" \
 "                          or debugging only!\n" \
 "-X --password-file <file> Read passphrase from <file>.\n" \
+"   --extpass <program>    Use external program for password prompt.\n" \
 "-i --keyid <id>           Specify a key id for various operations.\n" \
 "-r --recipient <string>   Specify a recpipient, multiple allowed.\n" \
 "-t --text                 Print textual representation of ojects.\n" \

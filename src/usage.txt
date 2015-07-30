@@ -17,6 +17,7 @@ General Options:
 -x --xpass <passwd>       Provide password. INSECURE! Use for testing
                           or debugging only!
 -X --password-file <file> Read passphrase from <file>.
+   --extpass <program>    Use external program for password prompt.
 -i --keyid <id>           Specify a key id for various operations.
 -r --recipient <string>   Specify a recpipient, multiple allowed.
 -t --text                 Print textual representation of ojects.

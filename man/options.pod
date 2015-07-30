@@ -15,6 +15,7 @@
                            is -, read from stdin. This takes
                            precedence over other uses of stdin
                            elsewhere, see below for more details.
+    --extpass <program>    Use external program for password prompt.
  -i --keyid <id>           Specify a key id to import/export.
  -r --recipient <string>   Specify a recpipient, used for public
                            key export and encryption.

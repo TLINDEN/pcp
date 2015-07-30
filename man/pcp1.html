@@ -7,7 +7,7 @@
 <link rev="made" href="mailto:root@localhost" />
 </head>
 
-<body style="background-color: white">
+<body>
 
 
 
@@ -89,6 +89,7 @@
   -x --xpass &lt;passwd&gt;       Provide password. INSECURE! Use for testing
                             or debugging only!
   -X --password-file &lt;file&gt; Read passphrase from &lt;file&gt;.
+     --extpass &lt;program&gt;    Use external program for password prompt.
   -i --keyid &lt;id&gt;           Specify a key id for various operations.
   -r --recipient &lt;string&gt;   Specify a recpipient, multiple allowed.
   -t --text                 Print textual representation of ojects.
@@ -146,6 +147,7 @@
                            is -, read from stdin. This takes
                            precedence over other uses of stdin
                            elsewhere, see below for more details.
+    --extpass &lt;program&gt;    Use external program for password prompt.
  -i --keyid &lt;id&gt;           Specify a key id to import/export.
  -r --recipient &lt;string&gt;   Specify a recpipient, used for public
                            key export and encryption.

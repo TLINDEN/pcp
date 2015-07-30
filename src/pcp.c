@@ -66,6 +66,7 @@ int main (int argc, char **argv)  {
   char *xpassfile = NULL;
   char *extra = NULL;
   plist_t *recipient = NULL;
+  char *askpass = NULL;
   FILE *in;
 
   errno = 0;
@@ -93,6 +94,7 @@ int main (int argc, char **argv)  {
     { "text",            required_argument, NULL,           't' },
     { "xpass",           required_argument, NULL,           'x' },
     { "password-file",   required_argument, NULL,           'X' },
+    { "extpass",         required_argument, NULL,           LONG_EXTPASS },
     { "recipient",       required_argument, NULL,           'r' },
 
     /*  key management */
@@ -271,6 +273,10 @@ int main (int argc, char **argv)  {
 	if(strncmp(xpass, "n/a", 3) == 0)
 	  xpass[0] = '\0';
 	break;
+      case LONG_EXTPASS:
+	askpass = malloc(strlen(optarg)+1);
+	strncpy(askpass, optarg, strlen(optarg)+1);
+	break;
       case 'r':
 	p_add(&recipient, optarg);
 	userec = 1;
@@ -415,12 +421,18 @@ int main (int argc, char **argv)  {
   }
 
   if(xpassfile != NULL) {
-    pcp_readpass(&xpass, "passphrase", NULL, 0, xpassfile);
+    if(pcp_readpass(ptx, &xpass, "passphrase", NULL, 0, xpassfile) != 0)
+      goto perr1;
     if(xpassfile[0] != '-')
       xpf = 0; 
     free(xpassfile);
   }
 
+  if(askpass != NULL) {
+    if(pcp_readpass_fromprog(ptx, &xpass, askpass) != 0)
+      goto perr1;
+  }
+  
   /* check if there's some enviroment we could use */
   if(usevault == 1) {
     char *_vaultfile = getenv("PCP_VAULT");
@@ -631,7 +643,8 @@ int main (int argc, char **argv)  {
       break;  
     }
   }
-  
+
+ perr1:
   fatals_ifany(ptx);
   int e = ptx->pcp_exit;
   ptx_clean(ptx);
@@ -646,6 +659,10 @@ int main (int argc, char **argv)  {
     free(sigfile);
   if(xpass != NULL)
     sfree(xpass);
+  if(askpass != NULL)
+    free(askpass);
+  if(xpassfile != NULL)
+    free(xpassfile);
   if(recipient != NULL)
     p_clean(recipient);
   if(id != NULL)

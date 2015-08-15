@@ -1,3 +1,9 @@
+[15.Aug 14:29:22] --- [~/pcp/tests] ---
+% pcp1 -K key-alicia-pub
+Could not open input file �fz
+Error: No such file or directory
+*** Error in `pcp1': double free or corruption (top): 0x000000000208e460 ***
+Aborted
 
 detach keysig generation from pub key export, so that an existing
 keysig can be verified later.

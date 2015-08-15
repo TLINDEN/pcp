@@ -175,12 +175,9 @@ pcp_key_t *pcpkey_encrypt(PCPCTX *ptx, pcp_key_t *key, char *passphrase) {
     /*  success */
     memcpy(key->encrypted, encrypted, 176);
     ucfree(encrypted, es);
-    arc4random_buf(key->secret, 32);
-    arc4random_buf(key->edsecret, 64);
-    arc4random_buf(key->mastersecret, 64);
-    key->secret[0] = 0;
-    key->edsecret[0] = 0;
-    key->mastersecret[0] = 0;
+    memset(key->secret, 0, 32);
+    memset(key->edsecret, 0, 64);
+    memset(key->mastersecret, 0, 64);
   }
   else {
     fatal(ptx, "failed to encrypt the secret key!\n");

@@ -49,7 +49,7 @@ Buffer *pcp_keysig2blob(pcp_keysig_t *s) {
   buffer_add8(b, s->type);
   buffer_add32be(b, s->size);
   buffer_add(b, s->id, 17);
-  buffer_add(b, s->checksum, 32);
+  buffer_add(b, s->checksum, LSHA);
   buffer_add(b, s->blob, s->size);
   return b;
 }
@@ -62,17 +62,17 @@ pcp_keysig_t *pcp_keysig_new(Buffer *blob) {
   
   buffer_get_chunk(blob, sk->id, 17);
 
-  byte *checksum = ucmalloc(32);
-  buffer_get_chunk(blob, checksum, 32);
+  byte *checksum = ucmalloc(LSHA);
+  buffer_get_chunk(blob, checksum, LSHA);
   
   sk->blob = ucmalloc(size);
   buffer_get_chunk(blob, sk->blob, size);
 
   sk->size = size;
   sk->type = type;
-  memcpy(sk->checksum, checksum, 32);
+  memcpy(sk->checksum, checksum, LSHA);
 
-  ucfree(checksum, 32);
+  ucfree(checksum, LSHA);
 
   return sk;
 }
@@ -86,7 +86,7 @@ void pcp_dumpkeysig(pcp_keysig_t *s) {
   printf("     size: %ld\n", (long int)s->size);
 
   printf(" checksum: ");
-  for ( i = 0;i < 32;++i) printf("%02x",(unsigned int) s->checksum[i]);
+  for ( i = 0;i < LSHA;++i) printf("%02x",(unsigned int) s->checksum[i]);
   printf("\n");
 
   _dump("     blob:", s->blob, s->size);

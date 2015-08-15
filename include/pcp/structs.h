@@ -70,21 +70,21 @@
 
  */
 struct _pcp_key_t {
-  byte masterpub[32];    /**< ED25519 master public key signing key */
-  byte mastersecret[64]; /**< ED25519 master secret key signing key */
-  byte pub[32];          /**< Curve25519 encryption public key */
-  byte secret[32];       /**< Curve25519 encryption secret key */
-  byte edpub[32];        /**< ED25519 public signing key */
-  byte edsecret[64];     /**< ED25519 secret signing key */
-  byte nonce[24];        /**< random nonce used to encrypt secret keys */
-  byte encrypted[176];   /**< concatenated and encrypted secret keys */
-  char owner[255];       /**< the key owner, string */
-  char mail[255];        /**< mail address of the owner, string */
-  char id[17];           /**< key-id, used internally only, jenhash of public keys */
-  uint8_t type;          /**< key type: MASTER_SECRET or SECRET */
-  uint64_t ctime;        /**< creation time, epoch */
-  uint32_t version;      /**< key version */
-  uint32_t serial;       /**< serial number of the key, randomly generated */
+  byte masterpub[LEDPUB];    /**< ED25519 master public key signing key */
+  byte mastersecret[LEDSEC]; /**< ED25519 master secret key signing key */
+  byte pub[LBOXPUB];         /**< Curve25519 encryption public key */
+  byte secret[LBOXSEC];      /**< Curve25519 encryption secret key */
+  byte edpub[LEDPUB];        /**< ED25519 public signing key */
+  byte edsecret[LEDSEC];     /**< ED25519 secret signing key */
+  byte nonce[LNONCE];        /**< random nonce used to encrypt secret keys */
+  byte encrypted[LSEC];      /**< concatenated and encrypted secret keys */
+  char owner[255];           /**< the key owner, string */
+  char mail[255];            /**< mail address of the owner, string */
+  char id[17];               /**< key-id, used internally only, jenhash of public keys */
+  uint8_t type;              /**< key type: MASTER_SECRET or SECRET */
+  uint64_t ctime;            /**< creation time, epoch */
+  uint32_t version;          /**< key version */
+  uint32_t serial;           /**< serial number of the key, randomly generated */
   UT_hash_handle hh;
 };
 
@@ -99,18 +99,17 @@ typedef struct _pcp_key_t pcp_key_t;
     without the secret and nonce fields.
 */
 struct _pcp_pubkey_t {
-  byte masterpub[32];    /**< ED25519 master public key signing key */
-  byte sigpub[32];       /**< ED25519 public signing key */
-  byte pub[32];          /**< Curve25519 encryption public key */
-  byte edpub[32];        /**< ED25519 public signing key (FIXME: huh? 2 of them???) */
-  char owner[255];       /**< the key owner, string */
-  char mail[255];        /**< mail address of the owner, string */
-  char id[17];           /**< key-id, used internally only, jenhash of public keys */
-  uint8_t type;          /**< key type: MASTER_SECRET or SECRET */
-  uint64_t ctime;        /**< creation time, epoch */
-  uint32_t version;      /**< key version */
-  uint32_t serial;       /**< serial number of the key, randomly generated */
-  uint8_t valid;         /**< 1 if import signature verified, 0 if not */
+  byte masterpub[LEDPUB];    /**< ED25519 master public key signing key */
+  byte pub[LBOXPUB];         /**< Curve25519 encryption public key */
+  byte edpub[LEDPUB];        /**< ED25519 public signing key (FIXME: huh? 2 of them???) */
+  char owner[255];           /**< the key owner, string */
+  char mail[255];            /**< mail address of the owner, string */
+  char id[17];               /**< key-id, used internally only, jenhash of public keys */
+  uint8_t type;              /**< key type: MASTER_SECRET or SECRET */
+  uint64_t ctime;            /**< creation time, epoch */
+  uint32_t version;          /**< key version */
+  uint32_t serial;           /**< serial number of the key, randomly generated */
+  uint8_t valid;             /**< 1 if import signature verified, 0 if not */
   byte signature[crypto_generichash_BYTES_MAX + crypto_sign_BYTES]; /**< raw binary blob of pubkey export signature */
   UT_hash_handle hh;
 };
@@ -122,7 +121,7 @@ typedef struct _pcp_pubkey_t pcp_pubkey_t;
 /*  the PBP public key format */
 /*  keys.mp+keys.cp+keys.sp+keys.name */
 struct _pbp_pubkey_t {
-  byte sigpub[crypto_sign_PUBLICKEYBYTES];
+  byte masterpub[crypto_sign_PUBLICKEYBYTES];
   byte edpub[crypto_sign_PUBLICKEYBYTES];
   byte pub[crypto_box_PUBLICKEYBYTES];
   char iso_ctime[32];
@@ -158,7 +157,7 @@ struct _pcp_keysig_t {
   uint8_t type;
   uint32_t size;
   char id[17];
-  byte checksum[32];
+  byte checksum[LSHA];
   byte *blob;
   UT_hash_handle hh;
 };
@@ -229,7 +228,7 @@ struct _vault_t {
   time_t modified;   /**< mtime */
   mode_t mode;       /**< File mode */
   uint32_t version;  /**< Vault version */
-  byte checksum[32]; /**< SHA256 checksum over the whole vault */
+  byte checksum[LSHA]; /**< SHA256 checksum over the whole vault */
 };
 
 /** Name of the struct */
@@ -240,7 +239,7 @@ typedef struct _vault_t vault_t;
 struct _vault_header_t {
   uint8_t fileid;    /**< File id, proprietary. Marks the vault as a vault */
   uint32_t version;  /**< File version */
-  byte checksum[32]; /**< SHA256 checksum over the whole vault */
+  byte checksum[LSHA]; /**< SHA256 checksum over the whole vault */
 };
 
 /** Name of the struct */
@@ -252,7 +251,7 @@ struct _vault_item_header_t {
   uint8_t type;       /**< Item type (secret key, public, key, keysig, \see _PCP_KEY_TYPES */
   uint32_t size;      /**< Size of the item */
   uint32_t version;   /**< Version of the item */
-  byte checksum[32];  /**< SHA256 checksum of the item */
+  byte checksum[LSHA];  /**< SHA256 checksum of the item */
 };
 
 /** Name of the struct */

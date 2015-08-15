@@ -25,9 +25,9 @@
 
 int _get_pk(Buffer *blob, pcp_pubkey_t *p) {
   if(buffer_left(blob) >= 96) {
-    buffer_get_chunk(blob, p->masterpub, 32);
-    buffer_get_chunk(blob, p->edpub, 32);
-    buffer_get_chunk(blob, p->pub, 32);
+    buffer_get_chunk(blob, p->masterpub, LEDPUB);
+    buffer_get_chunk(blob, p->edpub, LEDPUB);
+    buffer_get_chunk(blob, p->pub, LBOXPUB);
     return 0;
   }
   else
@@ -41,15 +41,18 @@ int _check_keysig_h(PCPCTX *ptx, Buffer *blob, rfc_pub_sig_h *h) {
     h->numsubs = be16toh(h->numsubs);
 
     if(h->version != EXP_SIG_VERSION) {
-      fatal(ptx, "Unsupported pubkey signature version %d, expected %d\n", h->version, EXP_SIG_VERSION);
+      fatal(ptx, "Unsupported pubkey signature version %d, expected %d\n",
+	    h->version, EXP_SIG_VERSION);
       return 1;
     }
     if(h->type != EXP_SIG_TYPE) {
-      fatal(ptx, "Unsupported pubkey signature type %d, expected %d\n", h->type, EXP_SIG_TYPE);
+      fatal(ptx, "Unsupported pubkey signature type %d, expected %d\n",
+	    h->type, EXP_SIG_TYPE);
       return 1;
     }
     if(h->pkcipher != EXP_SIG_CIPHER) {
-      fatal(ptx, "Unsupported pubkey signature cipher %d, expected %d\n", h->pkcipher, EXP_SIG_CIPHER);
+      fatal(ptx, "Unsupported pubkey signature cipher %d, expected %d\n",
+	    h->pkcipher, EXP_SIG_CIPHER);
       return 1;
     }
     if(h->hashcipher != EXP_HASH_CIPHER) {
@@ -381,7 +384,7 @@ pcp_ks_bundle_t *pcp_import_pub_pbp(PCPCTX *ptx, Buffer *blob) {
   }
 
   b = ucmalloc(sizeof(pbp_pubkey_t)); /* FIXME: separate type really needed? */
-  buffer_get_chunk(blob, b->sigpub, crypto_sign_PUBLICKEYBYTES);
+  buffer_get_chunk(blob, b->masterpub, crypto_sign_PUBLICKEYBYTES);
   buffer_get_chunk(blob, b->edpub, crypto_sign_PUBLICKEYBYTES);
   buffer_get_chunk(blob, b->pub, crypto_box_PUBLICKEYBYTES);
   buffer_get_chunk(blob, date, 18);
@@ -427,9 +430,9 @@ pcp_ks_bundle_t *pcp_import_pub_pbp(PCPCTX *ptx, Buffer *blob) {
   _lc(pub->owner);
   ucfree(b, sizeof(pbp_pubkey_t));
 
-  /* edpub used for signing, might differ */
+  /* masterpub used for signing, might differ */
   tmp = ucmalloc(sizeof(pcp_pubkey_t));
-  memcpy(tmp->edpub, b->sigpub, crypto_sign_PUBLICKEYBYTES);
+  memcpy(tmp->masterpub, b->masterpub, crypto_sign_PUBLICKEYBYTES);
 
   byte *verify = pcp_ed_verify(ptx, buffer_get(blob), buffer_size(blob), tmp);
   free(tmp);
@@ -473,9 +476,9 @@ Buffer *pcp_export_pbp_pub(pcp_key_t *sk) {
   Buffer *sig = buffer_new(320, "pbsig01");
 
   /* add raw key material */
-  buffer_add(sig, sk->edpub, crypto_sign_PUBLICKEYBYTES);
-  buffer_add(sig, sk->edpub, crypto_sign_PUBLICKEYBYTES);
-  buffer_add(sig, sk->pub, crypto_box_PUBLICKEYBYTES);
+  buffer_add(sig, sk->edpub, LEDPUB);
+  buffer_add(sig, sk->masterpub, LEDPUB);
+  buffer_add(sig, sk->pub, LBOXPUB);
 
   /* add creatioin and expire time as 32byte iso time string */
   time_t t = (time_t)sk->ctime;
@@ -527,9 +530,9 @@ Buffer *pcp_export_rfc_pub (PCPCTX *ptx, pcp_key_t *sk) {
   buffer_add8(out, EXP_PK_CIPHER);
 
   /* add the keys */
-  buffer_add(raw, sk->masterpub, 32);
-  buffer_add(raw, sk->edpub, 32);
-  buffer_add(raw, sk->pub, 32);
+  buffer_add(raw, sk->masterpub, LEDPUB);
+  buffer_add(raw, sk->edpub, LEDPUB);
+  buffer_add(raw, sk->pub, LBOXPUB);
 
   /* add the sig header */
   buffer_add8(raw, EXP_SIG_VERSION);
@@ -652,13 +655,13 @@ Buffer *pcp_export_secret(PCPCTX *ptx, pcp_key_t *sk, char *passphrase) {
   Buffer *raw = buffer_new(512, "secretbuf");
   Buffer *out = buffer_new(512, "secretcipherblob");
 
-  buffer_add(raw, sk->mastersecret, 64);
-  buffer_add(raw, sk->secret, 32);
-  buffer_add(raw, sk->edsecret, 64);
+  buffer_add(raw, sk->mastersecret, LEDSEC);
+  buffer_add(raw, sk->secret, LBOXSEC);
+  buffer_add(raw, sk->edsecret, LEDSEC);
 
-  buffer_add(raw, sk->masterpub, 32);
-  buffer_add(raw, sk->pub, 32);
-  buffer_add(raw, sk->edpub, 32);
+  buffer_add(raw, sk->masterpub, LEDPUB);
+  buffer_add(raw, sk->pub, LBOXPUB);
+  buffer_add(raw, sk->edpub, LEDPUB);
 
   if(strlen(sk->owner) > 0) {
     buffer_add16be(raw, strlen(sk->owner));
@@ -678,9 +681,9 @@ Buffer *pcp_export_secret(PCPCTX *ptx, pcp_key_t *sk, char *passphrase) {
   buffer_add32be(raw, sk->version);
   buffer_add32be(raw, sk->serial);
   
-  nonce = ucmalloc(crypto_secretbox_NONCEBYTES);
-  arc4random_buf(nonce, crypto_secretbox_NONCEBYTES);
-  symkey = pcp_scrypt(ptx, passphrase, strlen(passphrase), nonce, crypto_secretbox_NONCEBYTES);
+  nonce = ucmalloc(LNONCE);
+  arc4random_buf(nonce, LNONCE);
+  symkey = pcp_scrypt(ptx, passphrase, strlen(passphrase), nonce, LNONCE);
 
   es = pcp_sodium_mac(&cipher, buffer_get(raw), buffer_size(raw), nonce, symkey);
 
@@ -693,7 +696,7 @@ Buffer *pcp_export_secret(PCPCTX *ptx, pcp_key_t *sk, char *passphrase) {
   else {
 #endif
 
-    buffer_add(out, nonce, crypto_secretbox_NONCEBYTES);
+    buffer_add(out, nonce, LNONCE);
     buffer_add(out, cipher, es);
 
 #ifdef HAVE_JSON
@@ -701,7 +704,7 @@ Buffer *pcp_export_secret(PCPCTX *ptx, pcp_key_t *sk, char *passphrase) {
 #endif 
   
   buffer_free(raw);
-  ucfree(nonce, crypto_secretbox_NONCEBYTES);
+  ucfree(nonce, LNONCE);
   sfree(symkey);
   ucfree(cipher, es);
 
@@ -752,11 +755,11 @@ pcp_key_t *pcp_import_secret(PCPCTX *ptx, byte *raw, size_t rawsize, char *passp
 
 pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphrase) {
   pcp_key_t *sk = ucmalloc(sizeof(pcp_key_t));
-  byte *nonce = ucmalloc(crypto_secretbox_NONCEBYTES);
+  byte *nonce = ucmalloc(LNONCE);
   byte *symkey = NULL;
   byte *clear = NULL;
   size_t cipherlen = 0;
-  size_t minlen = (64 * 2) + (32 * 4) + 8 + 4 + 4; /* key material and mandatory field sizes */
+  size_t minlen = (LEDSEC * 2) + (LBOXPUB * 2) + (LEDPUB * 2) + 8 + 4 + 4; /* key material and mandatory field sizes */
   uint16_t notationlen = 0;
 
   Buffer *blob = buffer_new(512, "secretdecryptbuf");
@@ -771,10 +774,10 @@ pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphras
   }
 #endif
 
-  if(buffer_get_chunk(cipher, nonce, crypto_secretbox_NONCEBYTES) == 0)
+  if(buffer_get_chunk(cipher, nonce, LNONCE) == 0)
     goto impserr1;
 
-  symkey = pcp_scrypt(ptx, passphrase, strlen(passphrase), nonce, crypto_secretbox_NONCEBYTES);
+  symkey = pcp_scrypt(ptx, passphrase, strlen(passphrase), nonce, LNONCE);
 
   cipherlen = buffer_left(cipher);
   if(cipherlen < minlen) {
@@ -796,13 +799,13 @@ pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphras
   buffer_add(blob, clear, cipherlen - PCP_CRYPTO_ADD);
 
   /* extract the raw data into the structure */
-  buffer_get_chunk(blob, sk->mastersecret, 64);
-  buffer_get_chunk(blob, sk->secret, 32);
-  buffer_get_chunk(blob, sk->edsecret, 64);
+  buffer_get_chunk(blob, sk->mastersecret, LEDSEC);
+  buffer_get_chunk(blob, sk->secret, LBOXSEC);
+  buffer_get_chunk(blob, sk->edsecret, LEDSEC);
 
-  buffer_get_chunk(blob, sk->masterpub, 32);
-  buffer_get_chunk(blob, sk->pub, 32);
-  buffer_get_chunk(blob, sk->edpub, 32);
+  buffer_get_chunk(blob, sk->masterpub, LEDPUB);
+  buffer_get_chunk(blob, sk->pub, LBOXPUB);
+  buffer_get_chunk(blob, sk->edpub, LEDPUB);
 
   notationlen = buffer_get16na(blob);
   if(notationlen > 255) {
@@ -835,7 +838,7 @@ pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphras
 
   /* ready */
   ucfree(clear, cipherlen - PCP_CRYPTO_ADD);
-  ucfree(nonce, crypto_secretbox_NONCEBYTES);
+  ucfree(nonce, LNONCE);
   buffer_free(blob);
   sfree(symkey);
   free(id);
@@ -846,7 +849,7 @@ pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphras
   ucfree(clear, cipherlen - PCP_CRYPTO_ADD);
 
  impserr1:
-  ucfree(nonce, crypto_secretbox_NONCEBYTES);
+  ucfree(nonce, LNONCE);
   ucfree(sk, sizeof(pcp_key_t));
   buffer_free(blob);
   if(symkey != NULL)
@@ -874,9 +877,9 @@ json_t *pcp_pk2json(pcp_pubkey_t *pk) {
   
   pcp_key_t *sk = malloc(sizeof(pcp_key_t));
 
-  memcpy(sk->masterpub, pk->masterpub, 32);
-  memcpy(sk->pub, pk->pub, 32);
-  memcpy(sk->edpub, pk->edpub, 32);
+  memcpy(sk->masterpub, pk->masterpub, LEDPUB);
+  memcpy(sk->pub, pk->pub, LBOXPUB);
+  memcpy(sk->edpub, pk->edpub, LEDPUB);
   memcpy(sk->owner, pk->owner, 255);
   memcpy(sk->mail, pk->mail, 255);
   memcpy(sk->id, pk->id, 17);
@@ -897,9 +900,9 @@ json_t *pcp_sk2json(pcp_key_t *sk, byte *sig, size_t siglen) {
  
   char *jformat = "{sssssssisisisissssssssssss}";
 
-  cryptpub = _bin2hex(sk->pub, 32);
-  sigpub   = _bin2hex(sk->edpub, 32);
-  masterpub= _bin2hex(sk->masterpub, 32);
+  cryptpub = _bin2hex(sk->pub, LBOXPUB);
+  sigpub   = _bin2hex(sk->edpub, LEDPUB);
+  masterpub= _bin2hex(sk->masterpub, LEDPUB);
   
   if(sig != NULL) {
     ssig     = _bin2hex(sig, siglen);
@@ -946,7 +949,7 @@ Buffer *pcp_export_json_secret(PCPCTX *ptx, pcp_key_t *sk, byte *nonce, byte *ci
   jout = pcp_sk2json(sk, NULL, 0);
 
   xcipher = _bin2hex(cipher, clen);
-  xnonce  = _bin2hex(nonce, crypto_secretbox_NONCEBYTES);
+  xnonce  = _bin2hex(nonce, LNONCE);
 
   json_object_set(jout, "type", json_string("secret"));
   json_object_set(jout, "secrets", json_string(xcipher));
@@ -1070,8 +1073,8 @@ pcp_ks_bundle_t *pcp_import_pub_json(PCPCTX *ptx, byte *raw, size_t rawsize) {
   jtmp = json_object_get(jin, "cryptpub");
   if(jtmp == NULL)
     goto jerr2;
-  if(_hex2bin(json_string_value(jtmp), blob, maxblob) == 32)
-    memcpy(p->pub, blob, 32);
+  if(_hex2bin(json_string_value(jtmp), blob, maxblob) == LBOXPUB)
+    memcpy(p->pub, blob, LBOXPUB);
   else {
     strcpy(jerror.text, hexerr);
     goto jerr2;
@@ -1080,8 +1083,8 @@ pcp_ks_bundle_t *pcp_import_pub_json(PCPCTX *ptx, byte *raw, size_t rawsize) {
   jtmp = json_object_get(jin, "sigpub");
   if(jtmp == NULL)
     goto jerr2;
-  if(_hex2bin(json_string_value(jtmp), blob, maxblob) == 32)
-    memcpy(p->edpub, blob, 32);
+  if(_hex2bin(json_string_value(jtmp), blob, maxblob) == LEDPUB)
+    memcpy(p->edpub, blob, LEDPUB);
   else {
     strcpy(jerror.text, hexerr);
     goto jerr2;
@@ -1090,8 +1093,8 @@ pcp_ks_bundle_t *pcp_import_pub_json(PCPCTX *ptx, byte *raw, size_t rawsize) {
   jtmp = json_object_get(jin, "masterpub");
   if(jtmp == NULL)
     goto jerr2;
-  if(_hex2bin(json_string_value(jtmp), blob, maxblob) == 32)
-    memcpy(p->masterpub, blob, 32);
+  if(_hex2bin(json_string_value(jtmp), blob, maxblob) == LEDPUB)
+    memcpy(p->masterpub, blob, LEDPUB);
   else {
     strcpy(jerror.text, hexerr);
     goto jerr2;

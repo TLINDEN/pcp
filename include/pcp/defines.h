@@ -57,6 +57,8 @@ typedef unsigned char   byte;           /*   Single unsigned byte = 8 bits */
 typedef unsigned short  dbyte;          /*   Double byte = 16 bits */
 typedef unsigned int    qbyte;          /*   Quad byte = 32 bits */
 
+
+
 /*  key stuff, deprecated. */
 #define PCP_ENFILE_HEADER "----- BEGIN PCP ENCRYPTED FILE -----\r\n"
 #define PCP_ENFILE_FOOTER "\r\n----- END PCP ENCRYPTED FILE -----\r\n"
@@ -102,8 +104,15 @@ typedef enum _PCP_KEY_TYPES {
 /** @}
  */
 
-/*  save typing, dammit */
-#define PCP_ENCRYPT_MAC crypto_secretbox_ZEROBYTES + crypto_secretbox_NONCEBYTES
+
+/* shortcuts for key lengths and stuff to save typing */
+#define LEDPUB  crypto_sign_PUBLICKEYBYTES
+#define LEDSEC  crypto_sign_SECRETKEYBYTES
+#define LBOXPUB crypto_box_PUBLICKEYBYTES
+#define LBOXSEC crypto_box_SECRETKEYBYTES
+#define LNONCE  crypto_secretbox_NONCEBYTES
+#define LSEC    LBOXSEC + LEDSEC + LEDSEC + crypto_secretbox_MACBYTES
+#define LSHA    32   /* sha256 hash length */
 
 /*  vault id */
 #define PCP_VAULT_ID 14

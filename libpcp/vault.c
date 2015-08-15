@@ -111,7 +111,7 @@ int pcpvault_create(PCPCTX *ptx, vault_t *vault) {
   header->version = PCP_VAULT_VERSION;
 
   vault->version = header->version;
-  memcpy(vault->checksum, header->checksum, 32);
+  memcpy(vault->checksum, header->checksum, LSHA);
 
   vh2be(header);
 
@@ -268,9 +268,9 @@ void pcpvault_update_checksum(PCPCTX *ptx, vault_t *vault) {
   vault_header_t *header = ucmalloc(sizeof(vault_header_t));
   header->fileid = PCP_VAULT_ID;
   header->version = PCP_VAULT_VERSION;
-  memcpy(header->checksum, checksum, 32);
-  memcpy(vault->checksum, checksum, 32);
-  ucfree(checksum, 32);
+  memcpy(header->checksum, checksum, LSHA);
+  memcpy(vault->checksum, checksum, LSHA);
+  ucfree(checksum, LSHA);
   
   vh2be(header);
 
@@ -292,7 +292,7 @@ byte *pcpvault_create_checksum(PCPCTX *ptx) {
   size_t datasize = ((PCP_RAW_KEYSIZE) * numskeys) +
                     ((PCP_RAW_PUBKEYSIZE) * numpkeys);
   byte *data = ucmalloc(datasize);
-  byte *checksum = ucmalloc(32);
+  byte *checksum = ucmalloc(LSHA);
 
   pcphash_iterate(ptx, k) {
     key2be(k);
@@ -315,12 +315,6 @@ byte *pcpvault_create_checksum(PCPCTX *ptx) {
   }
 
   buffer_free(blob);
-
-  /*
-  printf("PUB: %d, SEC: %d\n", PCP_RAW_PUBKEYSIZE, PCP_RAW_KEYSIZE);
-  printf("DATA (%d) (s: %d, p: %d):\n", (int)datasize, numskeys, numpkeys);
-  _dump("data", data, datasize);
-  */
 
   crypto_hash_sha256(checksum, data, datasize);
 
@@ -457,7 +451,7 @@ int pcpvault_fetchall(PCPCTX *ptx, vault_t *vault) {
     int ksize =  PCP_RAW_KEYSIGSIZE; /*  smallest possbile item */
 
     vault->version = header->version;
-    memcpy(vault->checksum, header->checksum, 32);
+    memcpy(vault->checksum, header->checksum, LSHA);
 
     for(;;) {
       readpos = ftell(vault->fd);
@@ -526,14 +520,9 @@ int pcpvault_fetchall(PCPCTX *ptx, vault_t *vault) {
   byte *checksum = NULL;
   checksum = pcpvault_create_checksum(ptx);
   
-  /*
-  _dump(" calc checksum", checksum, 32);
-  _dump("vault checksum", vault->checksum, 32);
-  */
-
   if(pcphash_count(ptx) + pcphash_countpub(ptx) > 0) {
     /*  only validate the checksum if there are keys */
-    if(memcmp(checksum, vault->checksum, 32) != 0) {
+    if(memcmp(checksum, vault->checksum, LSHA) != 0) {
       fatal(ptx, "Error: the checksum of the key vault doesn't match its contents!\n");
       goto err;
     }

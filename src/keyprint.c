@@ -117,7 +117,7 @@ void pcptext_vault(vault_t *vault) {
     pcp_key_t *k;
     pcp_pubkey_t *p;
     
-    checksum = _bin2hex(vault->checksum, 32);
+    checksum = _bin2hex(vault->checksum, LSHA);
     jout = json_pack("{sssisssisi}",
 		     "keyvaultfile", vault->filename,
 		     "version", vault->version,
@@ -184,7 +184,7 @@ void pcpkey_printlineinfo(pcp_key_t *key) {
     printf("    ");
     byte *hash = pcpkey_getchecksum(key);
     int i, y;
-    for(i=0; i<32; i+=4) {
+    for(i=0; i<LSHA; i+=4) {
       for(y=0; y<4; y++) {
 	printf("%02x", hash[i+y]);
       }
@@ -213,7 +213,7 @@ void pcppubkey_printlineinfo(pcp_pubkey_t *key) {
     printf("    ");
     byte *hash = pcppubkey_getchecksum(key);
     int i, y;
-    for(i=0; i<32; i+=4) {
+    for(i=0; i<LSHA; i+=4) {
       for(y=0; y<4; y++) {
 	printf("%02x", hash[i+y]);
       }
@@ -227,7 +227,7 @@ void pcppubkey_printlineinfo(pcp_pubkey_t *key) {
     if(sig != NULL) {
       printf("signature fingerprint:\n    ");
       byte *checksum = sig->checksum;
-      for(i=0; i<32; i+=4) {
+      for(i=0; i<LSHA; i+=4) {
 	for(y=0; y<4; y++) {
 	  printf("%02x", checksum[i+y]);
 	}
@@ -274,7 +274,7 @@ void pcppubkey_print(pcp_pubkey_t *key, FILE* out) {
     fprintf(out, " Mail: %s\n", key->mail);
 
     fprintf(out, " Key-ID: 0x%s\n", key->id);
-    fprintf(out, " Public-Key: %s\n", pcp_z85_encode(key->pub, 32, &zlen, 1));
+    fprintf(out, " Public-Key: %s\n", pcp_z85_encode(key->pub, LBOXPUB, &zlen, 1));
 
     /* 2004-06-14T23:34:30. */
     fprintf(out, " Creation Time: %04d-%02d-%02dT%02d:%02d:%02d\n",

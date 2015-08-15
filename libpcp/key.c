@@ -33,7 +33,7 @@ byte *pcp_derivekey(PCPCTX *ptx, char *passphrase, byte *nonce) {
   size_t plen = strnlen(passphrase, 255);
 
   /*  create the scrypt hash */
-  byte *scrypted = pcp_scrypt(ptx, passphrase, plen, nonce, crypto_secretbox_NONCEBYTES);
+  byte *scrypted = pcp_scrypt(ptx, passphrase, plen, nonce, LNONCE);
 
   /*  make a hash from the scrypt() result */
   crypto_hash_sha256(key, (byte*)scrypted, 64);
@@ -51,8 +51,8 @@ byte *pcp_derivekey(PCPCTX *ptx, char *passphrase, byte *nonce) {
 
 char *pcp_getkeyid(pcp_key_t *k) {
   uint32_t s, p;
-  p = jen_hash(k->pub, 32, JEN_PSALT);
-  s = jen_hash(k->edpub, 32, JEN_SSALT);
+  p = jen_hash(k->pub, LBOXPUB, JEN_PSALT);
+  s = jen_hash(k->edpub, LEDPUB, JEN_SSALT);
   char *id = ucmalloc(17);
   snprintf(id, 17, "%08X%08X", p, s);
   return id;
@@ -61,8 +61,8 @@ char *pcp_getkeyid(pcp_key_t *k) {
 /*  same as above but for imported pbp keys */
 char *pcp_getpubkeyid(pcp_pubkey_t *k) {
   uint32_t s, p;
-  p = jen_hash(k->pub, 32, JEN_PSALT);
-  s = jen_hash(k->edpub, 32, JEN_SSALT);
+  p = jen_hash(k->pub, LBOXPUB, JEN_PSALT);
+  s = jen_hash(k->edpub, LEDPUB, JEN_SSALT);
   char *id = ucmalloc(17);
   snprintf(id, 17, "%08X%08X", p, s);
   return id;
@@ -95,24 +95,24 @@ void pcp_keypairs(byte *msk, byte *mpk, byte *csk, byte *cpk, byte *esk, byte *e
 }
 
 pcp_key_t * pcpkey_new () {
-  byte *mp = ucmalloc(32);
-  byte *ms = ucmalloc(64);
-  byte *sp = ucmalloc(32);
-  byte *ss = ucmalloc(64);
-  byte *cp = ucmalloc(32);
-  byte *cs = ucmalloc(32);
+  byte *mp = ucmalloc(LEDPUB);
+  byte *ms = ucmalloc(LEDSEC);
+  byte *sp = ucmalloc(LEDPUB);
+  byte *ss = ucmalloc(LEDSEC);
+  byte *cp = ucmalloc(LBOXPUB);
+  byte *cs = ucmalloc(LBOXSEC);
 
   /* generate key material */
   pcp_keypairs(ms, mp, cs, cp, ss, sp);
 
   /*  fill in our struct */
   pcp_key_t *key = urmalloc(sizeof(pcp_key_t));
-  memcpy (key->masterpub, mp, 32);
-  memcpy (key->mastersecret, ms, 64);
-  memcpy (key->pub, cp, 32);
-  memcpy (key->secret, cs, 32);
-  memcpy (key->edpub, sp, 32);
-  memcpy (key->edsecret, ss, 64);
+  memcpy (key->masterpub, mp, LEDPUB);
+  memcpy (key->mastersecret, ms, LEDSEC);
+  memcpy (key->pub, cp, LBOXPUB);
+  memcpy (key->secret, cs, LBOXSEC);
+  memcpy (key->edpub, sp, LEDPUB);
+  memcpy (key->edsecret, ss, LEDSEC);
 
   char *id = pcp_getkeyid(key);
   memcpy (key->id, id, 17);
@@ -128,19 +128,19 @@ pcp_key_t * pcpkey_new () {
   key->mail[0] = '\0';
 
   /* clean up */
-  ucfree(ms, 64);
-  ucfree(ss, 64);
-  ucfree(mp, 32);
-  ucfree(sp, 32);
-  ucfree(cs, 32);
-  ucfree(cp, 32);
+  ucfree(ms, LEDSEC);
+  ucfree(ss, LEDSEC);
+  ucfree(mp, LEDPUB);
+  ucfree(sp, LEDPUB);
+  ucfree(cs, LBOXSEC);
+  ucfree(cp, LBOXPUB);
 
   return key;
 }
 
 byte * pcp_gennonce() {
-  byte *nonce = ucmalloc(crypto_secretbox_NONCEBYTES);
-  arc4random_buf(nonce, crypto_secretbox_NONCEBYTES);
+  byte *nonce = ucmalloc(LNONCE);
+  arc4random_buf(nonce, LNONCE);
   return nonce;
 }
 
@@ -152,8 +152,8 @@ void pcpkey_setowner(pcp_key_t *key, char *owner, char *mail) {
 pcp_key_t *pcpkey_encrypt(PCPCTX *ptx, pcp_key_t *key, char *passphrase) {
   if(key->nonce[0] == 0) {
     byte *nonce = pcp_gennonce();
-    memcpy (key->nonce, nonce, crypto_secretbox_NONCEBYTES);
-    ucfree(nonce, crypto_secretbox_NONCEBYTES);
+    memcpy (key->nonce, nonce, LNONCE);
+    ucfree(nonce, LNONCE);
   }
 
   byte *encryptkey = pcp_derivekey(ptx, passphrase, key->nonce);  
@@ -162,22 +162,22 @@ pcp_key_t *pcpkey_encrypt(PCPCTX *ptx, pcp_key_t *key, char *passphrase) {
   size_t es;
 
   Buffer *both = buffer_new(128, "keypack");
-  buffer_add(both, key->mastersecret, 64);
-  buffer_add(both, key->edsecret, 64);
-  buffer_add(both, key->secret, 32);
+  buffer_add(both, key->mastersecret, LEDSEC);
+  buffer_add(both, key->edsecret, LEDSEC);
+  buffer_add(both, key->secret, LBOXSEC);
 
   es = pcp_sodium_mac(&encrypted, buffer_get(both), buffer_size(both), key->nonce, encryptkey);
 
   buffer_free(both);
   sfree(encryptkey);
 
-  if(es == 176) { /* FIXME: calc! */
+  if(es == LSEC) {
     /*  success */
-    memcpy(key->encrypted, encrypted, 176);
+    memcpy(key->encrypted, encrypted, LSEC);
     ucfree(encrypted, es);
-    memset(key->secret, 0, 32);
-    memset(key->edsecret, 0, 64);
-    memset(key->mastersecret, 0, 64);
+    memset(key->secret, 0, LBOXSEC);
+    memset(key->edsecret, 0, LEDSEC);
+    memset(key->mastersecret, 0, LEDSEC);
   }
   else {
     fatal(ptx, "failed to encrypt the secret key!\n");
@@ -195,20 +195,20 @@ pcp_key_t *pcpkey_decrypt(PCPCTX *ptx, pcp_key_t *key, char *passphrase) {
   byte *decrypted;
   size_t es;
   
-  es = pcp_sodium_verify_mac(&decrypted, key->encrypted, 176, key->nonce, encryptkey);
+  es = pcp_sodium_verify_mac(&decrypted, key->encrypted, LSEC, key->nonce, encryptkey);
 
   sfree(encryptkey);
 
   if(es == 0) {
     /*  success */
-    memcpy(key->mastersecret, decrypted, 64);
-    memcpy(key->edsecret, decrypted + 64, 64);    
-    memcpy(key->secret, decrypted +128, 32);
-    ucfree(decrypted, 160);
+    memcpy(key->mastersecret, decrypted, LEDSEC);
+    memcpy(key->edsecret, decrypted + LEDSEC, LEDSEC);    
+    memcpy(key->secret, decrypted + LEDSEC + LEDSEC, LBOXSEC);
+    ucfree(decrypted, LEDSEC + LEDSEC + LBOXSEC);
   }
   else {
     fatal(ptx, "failed to decrypt the secret key (got %d, expected 32)!\n", es);
-    ucfree(decrypted, 160);
+    ucfree(decrypted, LEDSEC + LEDSEC + LBOXSEC);
     return NULL;
   }
 
@@ -217,9 +217,9 @@ pcp_key_t *pcpkey_decrypt(PCPCTX *ptx, pcp_key_t *key, char *passphrase) {
 
 pcp_pubkey_t *pcpkey_pub_from_secret(pcp_key_t *key) {
   pcp_pubkey_t *pub = urmalloc(sizeof (pcp_pubkey_t));
-  memcpy(pub->masterpub, key->masterpub, 32);
-  memcpy(pub->pub, key->pub, 32);
-  memcpy(pub->edpub, key->edpub, 32);
+  memcpy(pub->masterpub, key->masterpub, LEDPUB);
+  memcpy(pub->pub, key->pub, LBOXPUB);
+  memcpy(pub->edpub, key->edpub, LEDSEC);
   memcpy(pub->owner, key->owner, 255);
   memcpy(pub->mail, key->mail, 255);
   memcpy(pub->id, key->id, 17);
@@ -242,13 +242,13 @@ char *pcpkey_get_art(pcp_key_t *k) {
 
 byte *pcppubkey_getchecksum(pcp_pubkey_t *k) {
   byte *hash = ucmalloc(32);
-  crypto_hash_sha256(hash, k->pub, 32);
+  crypto_hash_sha256(hash, k->pub, LBOXPUB);
   return hash;
 }
 
 byte *pcpkey_getchecksum(pcp_key_t *k) {
   byte *hash = ucmalloc(32);
-  crypto_hash_sha256(hash, k->pub, 32);
+  crypto_hash_sha256(hash, k->pub, LBOXPUB);
   return hash;
 }
 
@@ -306,18 +306,18 @@ pcp_pubkey_t *pubkey2native(pcp_pubkey_t *k) {
 }
 
 void pcp_seckeyblob(Buffer *b, pcp_key_t *k) {
-  buffer_add(b, k->masterpub, 32);
-  buffer_add(b, k->mastersecret, 64);
+  buffer_add(b, k->masterpub, LEDPUB);
+  buffer_add(b, k->mastersecret, LEDSEC);
 
-  buffer_add(b, k->pub, 32);
-  buffer_add(b, k->secret, 32);
+  buffer_add(b, k->pub, LBOXPUB);
+  buffer_add(b, k->secret, LBOXPUB);
 
-  buffer_add(b, k->edpub, 32);
-  buffer_add(b, k->edsecret, 64);
+  buffer_add(b, k->edpub, LEDPUB);
+  buffer_add(b, k->edsecret, LEDSEC);
 
-  buffer_add(b, k->nonce, 24);
+  buffer_add(b, k->nonce, LNONCE);
 
-  buffer_add(b, k->encrypted, 176);
+  buffer_add(b, k->encrypted, LSEC);
 
   buffer_add(b, k->owner, 255);
   buffer_add(b, k->mail, 255);
@@ -330,10 +330,9 @@ void pcp_seckeyblob(Buffer *b, pcp_key_t *k) {
 }
 
 void pcp_pubkeyblob(Buffer *b, pcp_pubkey_t *k) {
-  buffer_add(b, k->masterpub, 32);
-  buffer_add(b, k->sigpub, 32);
-  buffer_add(b, k->pub, 32);
-  buffer_add(b, k->edpub, 32);
+  buffer_add(b, k->masterpub, LEDPUB);
+  buffer_add(b, k->pub, LBOXPUB);
+  buffer_add(b, k->edpub, LEDPUB);
 
   buffer_add(b, k->owner, 255);
   buffer_add(b, k->mail, 255);
@@ -462,40 +461,40 @@ int pcp_sanitycheck_key(PCPCTX *ptx, pcp_key_t *key) {
 }
 
 void pcp_dumpkey(pcp_key_t *k) {
-  int i;
+  unsigned int i;
 
   printf("Dumping pcp_key_t raw values:\n");
 
   printf("masterpub: ");
-  for ( i = 0;i < 32;++i) printf("%02x",(unsigned int) k->masterpub[i]);
+  for ( i = 0;i < LEDPUB;++i) printf("%02x",(unsigned int) k->masterpub[i]);
   printf("\n");
 
   printf("   public: ");
-  for ( i = 0;i < 32;++i) printf("%02x",(unsigned int) k->pub[i]);
+  for ( i = 0;i < LBOXPUB;++i) printf("%02x",(unsigned int) k->pub[i]);
   printf("\n");
 
   printf("    edpub: ");
-  for ( i = 0;i < 32;++i) printf("%02x",(unsigned int) k->edpub[i]);
+  for ( i = 0;i < LEDPUB;++i) printf("%02x",(unsigned int) k->edpub[i]);
   printf("\n");
 
   printf("mastersec: ");
-  for ( i = 0;i < 32;++i) printf("%02x",(unsigned int) k->mastersecret[i]);
+  for ( i = 0;i < LEDSEC;++i) printf("%02x",(unsigned int) k->mastersecret[i]);
   printf("\n");
 
   printf("   secret: ");
-  for ( i = 0;i < 32;++i) printf("%02x",(unsigned int) k->secret[i]);
+  for ( i = 0;i < LBOXPUB;++i) printf("%02x",(unsigned int) k->secret[i]);
   printf("\n");
 
   printf(" edsecret: ");
-  for ( i = 0;i < 64;++i) printf("%02x",(unsigned int) k->edsecret[i]);
+  for ( i = 0;i < LEDSEC;++i) printf("%02x",(unsigned int) k->edsecret[i]);
   printf("\n");
 
   printf("    nonce: ");
-  for ( i = 0;i < 24;++i) printf("%02x",(unsigned int) k->nonce[i]);
+  for ( i = 0;i < LNONCE;++i) printf("%02x",(unsigned int) k->nonce[i]);
   printf("\n");
 
   printf("encrypted: ");
-  for ( i = 0;i < 80;++i) printf("%02x",(unsigned int) k->encrypted[i]);
+  for ( i = 0;i < LSEC;++i) printf("%02x",(unsigned int) k->encrypted[i]);
   printf("\n");
 
   printf("    owner: %s\n", k->owner);
@@ -515,19 +514,19 @@ void pcp_dumpkey(pcp_key_t *k) {
 
 
 void pcp_dumppubkey(pcp_pubkey_t *k) {
-  int i;
+  unsigned int i;
   printf("Dumping pcp_pubkey_t raw values:\n");
 
   printf("masterpub: ");
-  for ( i = 0;i < 32;++i) printf("%02x",(unsigned int) k->masterpub[i]);
+  for ( i = 0;i < LEDPUB;++i) printf("%02x",(unsigned int) k->masterpub[i]);
   printf("\n");
 
   printf("   public: ");
-  for ( i = 0;i < 32;++i) printf("%02x",(unsigned int) k->pub[i]);
+  for ( i = 0;i < LBOXPUB;++i) printf("%02x",(unsigned int) k->pub[i]);
   printf("\n");
 
   printf("    edpub: ");
-  for ( i = 0;i < 32;++i) printf("%02x",(unsigned int) k->edpub[i]);
+  for ( i = 0;i < LEDPUB;++i) printf("%02x",(unsigned int) k->edpub[i]);
   printf("\n");
 
   printf("    owner: %s\n", k->owner);

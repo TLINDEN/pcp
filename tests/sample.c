@@ -7,7 +7,7 @@ int main() {
   Pcpstream *clear_in, *crypt_out, *clear_out;
   PCPCTX *ptx;
   char message[] = "hello world"; 
-  printf("hh: %ld\n", sizeof(UT_hash_handle));
+
   /* we always need a context */
   ptx = ptx_new();
 
@@ -72,5 +72,7 @@ int main() {
   free(bob);
   free(bobpub);
 
+
+  
   return 0;
 }

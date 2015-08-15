@@ -44,14 +44,14 @@ byte *pcp_box_encrypt(PCPCTX *ptx, pcp_key_t *secret, pcp_pubkey_t *pub,
   }
 
   /*  put nonce and cipher together */
-  byte *combined = ucmalloc(es + crypto_secretbox_NONCEBYTES);
-  memcpy(combined, nonce, crypto_secretbox_NONCEBYTES);
-  memcpy(&combined[crypto_secretbox_NONCEBYTES], cipher, es);
+  byte *combined = ucmalloc(es + LNONCE);
+  memcpy(combined, nonce, LNONCE);
+  memcpy(&combined[LNONCE], cipher, es);
 
   free(cipher);
   free(nonce);
 
-  *csize = es + crypto_secretbox_NONCEBYTES;
+  *csize = es + LNONCE;
 
   return combined;
 
@@ -71,15 +71,15 @@ byte *pcp_box_decrypt(PCPCTX *ptx, pcp_key_t *secret, pcp_pubkey_t *pub,
 
   byte *message = NULL;
 
-  byte *nonce = ucmalloc(crypto_secretbox_NONCEBYTES);
-  byte *cipheronly = ucmalloc(ciphersize - crypto_secretbox_NONCEBYTES);
+  byte *nonce = ucmalloc(LNONCE);
+  byte *cipheronly = ucmalloc(ciphersize - LNONCE);
 
-  memcpy(nonce, cipher, crypto_secretbox_NONCEBYTES);
-  memcpy(cipheronly, &cipher[crypto_secretbox_NONCEBYTES],
-	 ciphersize - crypto_secretbox_NONCEBYTES);
+  memcpy(nonce, cipher, LNONCE);
+  memcpy(cipheronly, &cipher[LNONCE],
+	 ciphersize - LNONCE);
 
-  message = ucmalloc(ciphersize - crypto_secretbox_NONCEBYTES - crypto_box_MACBYTES);
-  if(crypto_box_open_easy(message, cipheronly, ciphersize - crypto_secretbox_NONCEBYTES,
+  message = ucmalloc(ciphersize - LNONCE - crypto_box_MACBYTES);
+  if(crypto_box_open_easy(message, cipheronly, ciphersize - LNONCE,
 			  nonce, pub->pub, secret->secret) != 0) {
     fatal(ptx, "failed to decrypt message!\n");
     goto errbed;
@@ -90,7 +90,7 @@ byte *pcp_box_decrypt(PCPCTX *ptx, pcp_key_t *secret, pcp_pubkey_t *pub,
 
   /*  resulting size: */
   /*  ciphersize - crypto_secretbox_ZEROBYTES */
-  *dsize = ciphersize - crypto_secretbox_NONCEBYTES - PCP_CRYPTO_ADD;
+  *dsize = ciphersize - LNONCE - PCP_CRYPTO_ADD;
   return message;
 
  errbed:
@@ -458,15 +458,15 @@ size_t pcp_encrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, byte *
     buf_nonce = _gen_ctr_nonce(ctr++);
 
     es = pcp_sodium_mac(&buf_cipher, in_buf, cur_bufsize, buf_nonce, symkey);
-    ps_write(out, buf_nonce, crypto_secretbox_NONCEBYTES);
+    ps_write(out, buf_nonce, LNONCE);
     ps_write(out, buf_cipher, es);
 
-    out_size += crypto_secretbox_NONCEBYTES + es;
+    out_size += LNONCE + es;
 
     if(recsign != NULL)
       crypto_generichash_update(st, buf_cipher, es);
 
-    ucfree(buf_nonce, crypto_secretbox_NONCEBYTES);
+    ucfree(buf_nonce, LNONCE);
     free(buf_cipher);
   }
 
@@ -489,12 +489,12 @@ size_t pcp_encrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, byte *
     buf_nonce = pcp_gennonce();
     es = pcp_sodium_mac(&buf_cipher, signature, siglen, buf_nonce, symkey);
 
-    ps_write(out, buf_nonce, crypto_secretbox_NONCEBYTES);
+    ps_write(out, buf_nonce, LNONCE);
     ps_write(out, buf_cipher, es);
 
     free(st);
     free(hash);
-    ucfree(buf_nonce, crypto_secretbox_NONCEBYTES);
+    ucfree(buf_nonce, LNONCE);
     free(buf_cipher);
     ucfree(signature, siglen);
   }
@@ -517,12 +517,12 @@ size_t pcp_decrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *
   byte *buf_cipher;
   byte *buf_clear;
   size_t out_size, cur_bufsize, es;
-  size_t ciphersize = (PCP_BLOCK_SIZE_IN) - crypto_secretbox_NONCEBYTES;
+  size_t ciphersize = (PCP_BLOCK_SIZE_IN) - LNONCE;
   byte *in_buf = NULL;
   uint64_t ctr, pastctr;
   pastctr = 0;
  
-  buf_nonce  = ucmalloc(crypto_secretbox_NONCEBYTES);
+  buf_nonce  = ucmalloc(LNONCE);
   buf_cipher = ucmalloc(ciphersize);
   buf_clear  = ucmalloc(ciphersize);
   out_size = 0;
@@ -530,7 +530,7 @@ size_t pcp_decrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *
   byte *signature = NULL;
   byte *signature_cr = NULL;
   size_t siglen = crypto_sign_BYTES + crypto_generichash_BYTES_MAX;
-  size_t siglen_cr = siglen + PCP_CRYPTO_ADD + crypto_secretbox_NONCEBYTES;
+  size_t siglen_cr = siglen + PCP_CRYPTO_ADD + LNONCE;
   crypto_generichash_state *st = NULL;
   byte *hash = NULL;
 
@@ -556,9 +556,9 @@ size_t pcp_decrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *
       }
     }
 
-    ciphersize = cur_bufsize - crypto_secretbox_NONCEBYTES;
-    memcpy(buf_nonce, in_buf, crypto_secretbox_NONCEBYTES);
-    memcpy(buf_cipher, &in_buf[crypto_secretbox_NONCEBYTES], ciphersize);
+    ciphersize = cur_bufsize - LNONCE;
+    memcpy(buf_nonce, in_buf, LNONCE);
+    memcpy(buf_cipher, &in_buf[LNONCE], ciphersize);
 
     /* extract counter from nonce and check if it is in line with previous one
        TODO: save unordered buffers to disk and continue writing to out if
@@ -600,10 +600,10 @@ size_t pcp_decrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *
 
   if(recverify != NULL) {
     /* decrypt the signature */
-    memcpy(buf_nonce, signature_cr, crypto_secretbox_NONCEBYTES);
+    memcpy(buf_nonce, signature_cr, LNONCE);
 
-    es = pcp_sodium_verify_mac(&signature, &signature_cr[crypto_secretbox_NONCEBYTES],
-			       siglen_cr - crypto_secretbox_NONCEBYTES, buf_nonce, symkey);
+    es = pcp_sodium_verify_mac(&signature, &signature_cr[LNONCE],
+			       siglen_cr - LNONCE, buf_nonce, symkey);
     if(es == 0) {
       /* add encrypted recipient list to the hash */
       crypto_generichash_update(st, recverify->cipher, recverify->ciphersize);

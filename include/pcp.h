@@ -11,6 +11,7 @@ extern "C" {
 #include "pcp/crypto.h"
 #include "pcp/defines.h"
 #include "pcp/ed.h"
+#include "pcp/getpass.h"
 #include "pcp/jenhash.h"
 #include "pcp/key.h"
 #include "pcp/keyhash.h"

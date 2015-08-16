@@ -42,7 +42,7 @@ int main() {
   fprintf(stderr, "Alice encrypted %"FMT_SIZE_T" bytes for Bob:\n", (SIZE_T_CAST)strlen(message));
   buffer_dump(ps_buffer(crypt_out));
 
-  /* ---- encryption don, now decrypt ---- */
+  /* ---- encryption done, now decrypt ---- */
 
   /* prepare the output buffer stream */
   clear_out =  ps_new_outbuffer();
@@ -52,6 +52,8 @@ int main() {
      omitted when using a Vault. */
   pcphash_add(ptx, alicepub, alicepub->type);
 
+  buffer_info(crypt_out->b);
+  
   /* try to decrypt the message */
   if(pcp_decrypt_stream(ptx, crypt_out, clear_out, bob, NULL, 0, 0) == 0)
     fatals_ifany(ptx);
@@ -68,7 +70,6 @@ int main() {
   ptx_clean(ptx);
 
   free(alice);
-  free(alicepub);
   free(bob);
   free(bobpub);
 

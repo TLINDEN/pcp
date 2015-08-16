@@ -82,12 +82,16 @@ void pcp_keygen(char *passwd) {
 		 "Enter the passphrase again", 1, NULL);
   }
   else {
-    passphrase = ucmalloc(strlen(passwd)+1);
-    memcpy(passphrase, passwd, strlen(passwd)+1);
+    passphrase = passwd;
   }
 
-  if(strnlen(passphrase, 1024) > 0)
+  if(strnlen(passphrase, 1024) > 0) {
+    double ent = pcp_getentropy(passphrase);
+    if(ent < 3) {
+      fprintf(stderr, "WARNING: you are using a weak passphrase (entropy: %lf)\n", ent);
+    }
     key = pcpkey_encrypt(ptx, k, passphrase);
+  }
   else {
     char *yes = pcp_getstdin("WARNING: secret key will be stored unencrypted. Are you sure [yes|NO]?");
     if(strncmp(yes, "yes", 1024) == 0)
@@ -108,6 +112,11 @@ void pcp_keygen(char *passwd) {
     }
   }
 
+  if(passwd == NULL) {
+    /* if passwd is set, it'll be free'd in main() */
+    sfree(passphrase);
+  }
+  
  errkg1:
   free(mail);
   free(owner);

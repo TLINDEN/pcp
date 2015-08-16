@@ -360,6 +360,8 @@ AS_IF([test "x$enable_optimize" != "xno"], [
 
 CXXFLAGS="$CFLAGS"
 
+# FIXME: check for libm
+LIBS="$LIBS -lm"
 
 # conditionals for bindings and stuff
 

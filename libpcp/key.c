@@ -543,3 +543,38 @@ void pcp_dumppubkey(pcp_pubkey_t *k) {
 
   printf("     type: 0x%02X\n", k->type);
 }
+
+
+/*
+  via 
+  http://rosettacode.org/wiki/Entropy#C
+*/
+double pcp_getentropy(char *source) {
+  int len;
+  int *hist;
+  double H;
+  int wherechar[256];
+  int i,histlen;
+  
+  histlen = 0;
+  H = 0;
+  len = (int)strlen(source);
+  hist = (int*)calloc(len, sizeof(int));
+
+  for(i=0; i<256; i++)
+    wherechar[i] =- 1;
+  
+  for(i=0; i<len; i++){
+    if(wherechar[(int)source[i]] == -1) {
+      wherechar[(int)source[i]] = histlen;
+      histlen++;
+    }
+    hist[wherechar[(int)source[i]]]++;
+  }
+
+  for(i=0; i<histlen; i++) {
+    H -= (double)hist[i] / len * log2((double)hist[i] / len);
+  }
+  
+  return H;
+}

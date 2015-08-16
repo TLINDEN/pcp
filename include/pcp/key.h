@@ -28,6 +28,10 @@
 #include <stdio.h>
 #include <time.h>
 
+#include <math.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
 #include "defines.h"
 #include "platform.h"
 #include "mem.h"
@@ -308,6 +312,8 @@ void pcp_dumppubkey(pcp_pubkey_t *k);
     \param[in] mail Email string.
 */
 void pcpkey_setowner(pcp_key_t *key, char *owner, char *mail);
+
+double pcp_getentropy(char *source);
 
 #endif /*  _HAVE_PCP_KEYPAIR_H */
 

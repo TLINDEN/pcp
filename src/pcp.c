@@ -416,7 +416,8 @@ int main (int argc, char **argv)  {
       }
       break;
     }
-    if(useex)
+    
+    if(! useex)
       free(extra);
   }
 

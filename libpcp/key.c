@@ -562,7 +562,7 @@ double pcp_getentropy(char *source) {
   hist = (int*)calloc(len, sizeof(int));
 
   for(i=0; i<256; i++)
-    wherechar[i] =- 1;
+    wherechar[i] -= 1;
   
   for(i=0; i<len; i++){
     if(wherechar[(int)source[i]] == -1) {

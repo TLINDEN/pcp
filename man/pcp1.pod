@@ -601,6 +601,26 @@ B<In short: don NOT use this software for production purposes!>
 
 =head1 INTERNALS
 
+=head2 PASSPHRASES
+
+Passphrases are used to protect secret data at rest on various instances
+by pcp, like secret keys or symmetric encrypted data.
+
+Pcp doesn't use the passphrase directly but uses a key derivation function
+to calculate a secure key from the passphrase: libsodium's
+B<crypto_pwhash_scryptsalsa208sha256()> function.
+
+In order to properly protect secret keys, pcp measures the entropy
+of a given passphrase and warns the user about the possible weak
+passphrase. This measurement is calculated using the Claude E. Shannon
+method, where a value of 8.0 means maximum available entropy (e.g.
+truly random 256 chars in no comprehensible order) and 0.0 stands
+for the worst like passphrases like "aaa" or "x".
+
+Pcp considers passphrases with an entropy measurement of 3.32 or higher
+as acceptable. This may change in the future.
+
+
 =head2 VAULT FORMAT
 
 The vault file contains all public and secret keys. It's a portable

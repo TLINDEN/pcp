@@ -87,8 +87,12 @@ void pcp_keygen(char *passwd) {
 
   if(strnlen(passphrase, 1024) > 0) {
     double ent = pcp_getentropy(passphrase);
-    if(ent < 3) {
-      fprintf(stderr, "WARNING: you are using a weak passphrase (entropy: %lf)\n", ent);
+    if(ent < 3.32) {
+      fprintf(stderr, "WARNING: you are using a weak passphrase (entropy: %lf)!\n", ent);
+      char *yes = pcp_getstdin("Are you sure to use it [yes|NO]?");
+      if(strncmp(yes, "yes", 1024) != 0) {
+	goto errkg1;
+      }
     }
     key = pcpkey_encrypt(ptx, k, passphrase);
   }

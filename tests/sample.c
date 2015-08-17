@@ -4,7 +4,7 @@ int main() {
   Buffer *inbuf;
   pcp_key_t *alice, *bob;
   pcp_pubkey_t *alicepub, *bobpub, *pubhash;
-  Pcpstream *clear_in, *crypt_out, *clear_out;
+  Pcpstream *clear_in, *crypt_out, *clear_out, *crypt_in;
   PCPCTX *ptx;
   char message[] = "hello world"; 
 
@@ -47,15 +47,18 @@ int main() {
   /* prepare the output buffer stream */
   clear_out =  ps_new_outbuffer();
 
+  /* input buffer stream from crypto output */
+  crypt_in = ps_new_inbuffer(ps_buffer(crypt_out));
+  
   /* in order for the decryptor find the senders public key,
      we need to put it into the context hash. this step can be
      omitted when using a Vault. */
   pcphash_add(ptx, alicepub, alicepub->type);
 
-  buffer_info(crypt_out->b);
+  buffer_info(crypt_in->b);
   
   /* try to decrypt the message */
-  if(pcp_decrypt_stream(ptx, crypt_out, clear_out, bob, NULL, 0, 0) == 0)
+  if(pcp_decrypt_stream(ptx, crypt_in, clear_out, bob, NULL, 0, 0) == 0)
     fatals_ifany(ptx);
   else {
     /* and finally print out the decrypted message */
@@ -64,6 +67,7 @@ int main() {
   }
 
   ps_close(clear_in);
+  ps_close(crypt_in);
   ps_close(crypt_out);
   ps_close(clear_out);
 

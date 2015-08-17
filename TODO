@@ -1,9 +1,5 @@
 
 
-If with -k passphrase has been retrieved interactively, ask
-to proceed if low entropy.
-
-
 detach keysig generation from pub key export, so that an existing
 keysig can be verified later.
 

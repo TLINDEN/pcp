@@ -14,6 +14,10 @@ NEXT
 	Added check for weak passphrases using entropy
 	test. Used with -k.
 
+	Removed support for unencrypted secret key storage
+	so, pcp aims to be secure by default and fails
+	safely.
+
 0.3.0
 	Changed publuc key signature storage, previously
 	I didn't add the actual signature, therefore a

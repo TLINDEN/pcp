@@ -24,6 +24,9 @@
  * SUCH DAMAGE.
  */
 
+/*
+ * Modifications (c) 2013 - 2015 by T.v.Dein, same license as this file.
+ */
 
 #include "readpass.h"
 
@@ -101,6 +104,8 @@ retry:
 		goto err2;
 	}
 
+
+
 	/* Confirm the password if necessary. */
 	if (confirmprompt != NULL) {
 		if (usingtty)
@@ -119,6 +124,13 @@ retry:
 	/* Terminate the string at the first "\r" or "\n" (if any). */
 	passbuf[strcspn(passbuf, "\r\n")] = '\0';
 
+	/* enforce no empty passwords */
+	if (strnlen(passbuf, MAXPASSLEN) == 0) {
+	  fprintf(stderr,
+		  "Empty password not allowed, please try again\n");
+	  goto retry;
+	}
+	
 	/* If we changed terminal settings, reset them. */
 	if (usingtty)
 		tcsetattr(fileno(readfrom), TCSANOW, &term_old);

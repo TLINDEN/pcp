@@ -95,29 +95,27 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
 	  goto errde3;
 	}
       }
-      if(secret->secret[0] == 0) {
-	/*  encrypted, decrypt it */
-	char *passphrase;
-	if(passwd == NULL) {
-	  pcp_readpass(ptx, &passphrase,
-		       "Enter passphrase to decrypt your secret key", NULL, 1, NULL);
-	}
-	else {
-	  passphrase = smalloc(strlen(passwd)+1);
-	  memcpy(passphrase, passwd, strlen(passwd)+1);
-	}
 
-	secret = pcpkey_decrypt(ptx, secret, passphrase);
-	sfree(passphrase);
-	if(secret == NULL)
-	  goto errde3;
-
-	if(head == PCP_ASYM_CIPHER_ANON)
-	  anon = 1;
-
-	if(head == PCP_ASYM_CIPHER_SIG)
-	  verify = 1;
+      char *passphrase;
+      if(passwd == NULL) {
+	pcp_readpass(ptx, &passphrase,
+		     "Enter passphrase to decrypt your secret key", NULL, 1, NULL);
       }
+      else {
+	passphrase = smalloc(strlen(passwd)+1);
+	memcpy(passphrase, passwd, strlen(passwd)+1);
+      }
+
+      secret = pcpkey_decrypt(ptx, secret, passphrase);
+      sfree(passphrase);
+      if(secret == NULL)
+	goto errde3;
+      
+      if(head == PCP_ASYM_CIPHER_ANON)
+	anon = 1;
+
+      if(head == PCP_ASYM_CIPHER_SIG)
+	verify = 1;
     }
     else {
       fatal(ptx, "Could not determine input file type (got: %02x)\n", head);
@@ -264,22 +262,20 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
 	goto erren2;
       }
 
-      if(secret->secret[0] == 0) {
-        /*  encrypted, decrypt it */
-        char *passphrase;
-	if(passwd == NULL) {
-          pcp_readpass(ptx, &passphrase,
-		       "Enter passphrase to decrypt your secret key", NULL, 1, NULL);
-        }
-	else {
-          passphrase = smalloc(strlen(passwd)+1);
-	  memcpy(passphrase, passwd, strlen(passwd)+1);
-        }
-	secret = pcpkey_decrypt(ptx, secret, passphrase);
-	sfree(passphrase);
-	if(secret == NULL)
-	  goto erren2;
+      char *passphrase;
+      if(passwd == NULL) {
+	pcp_readpass(ptx, &passphrase,
+		     "Enter passphrase to decrypt your secret key", NULL, 1, NULL);
       }
+      else {
+	passphrase = smalloc(strlen(passwd)+1);
+	memcpy(passphrase, passwd, strlen(passwd)+1);
+      }
+      secret = pcpkey_decrypt(ptx, secret, passphrase);
+      sfree(passphrase);
+      if(secret == NULL)
+	goto erren2;
+      
     }
   }
 

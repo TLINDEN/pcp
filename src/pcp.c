@@ -270,8 +270,6 @@ int main (int argc, char **argv)  {
       case 'x':
 	xpass = smalloc(strlen(optarg)+1);
 	strncpy(xpass, optarg, strlen(optarg)+1);
-	if(strncmp(xpass, "n/a", 3) == 0)
-	  xpass[0] = '\0';
 	break;
       case LONG_EXTPASS:
 	askpass = malloc(strlen(optarg)+1);

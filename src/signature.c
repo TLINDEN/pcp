@@ -54,23 +54,20 @@ int pcpsign(char *infile, char *outfile, char *passwd, int z85, int detach) {
     }
   }
 
-  if(secret->secret[0] == 0) {
-    /*  encrypted, decrypt it */
-    char *passphrase;
-    if(passwd == NULL) {
-      pcp_readpass(ptx, &passphrase,
-		   "Enter passphrase to decrypt your secret key", NULL, 1, NULL);
-    }
-    else {
-      passphrase = smalloc(strlen(passwd)+1);
-      memcpy(passphrase, passwd, strlen(passwd)+1);
-    }
-
-    secret = pcpkey_decrypt(ptx, secret, passphrase);
-    sfree(passphrase);
-    if(secret == NULL)
-      goto errs1;
+  char *passphrase;
+  if(passwd == NULL) {
+    pcp_readpass(ptx, &passphrase,
+		 "Enter passphrase to decrypt your secret key", NULL, 1, NULL);
   }
+  else {
+    passphrase = smalloc(strlen(passwd)+1);
+    memcpy(passphrase, passwd, strlen(passwd)+1);
+  }
+
+  secret = pcpkey_decrypt(ptx, secret, passphrase);
+  sfree(passphrase);
+  if(secret == NULL)
+    goto errs1;
 
   Pcpstream *pin = ps_new_file(in);
   Pcpstream *pout = ps_new_file(out);

@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013-2015 T.Linden.
+    Copyright (C) 2013-2015 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -97,14 +97,10 @@ void pcp_keygen(char *passwd) {
     key = pcpkey_encrypt(ptx, k, passphrase);
   }
   else {
-    char *yes = pcp_getstdin("WARNING: secret key will be stored unencrypted. Are you sure [yes|NO]?");
-    if(strncmp(yes, "yes", 1024) == 0)
-      key = k;
-    else {
-      memset(key, 0, sizeof(pcp_key_t));
-      free(key);
-      goto errkg1;
-    }
+    /* No unencrypted secret key allowed anymore [19.08.2015, tom] */
+    memset(k, 0, sizeof(pcp_key_t));
+    free(k);
+    goto errkg1;
   }
 
   if(key != NULL) {
@@ -239,24 +235,21 @@ void pcp_exportsecret(char *keyid, int useid, char *outfile, int armor, char *pa
     if(debug)
       pcp_dumpkey(key);
 
-    if(key->secret[0] == 0) {
-      /* decrypt the secret key */
-      if(passwd == NULL) {
-	char *passphrase;
-	pcp_readpass(ptx, &passphrase,
-		     "Enter passphrase to decrypt your secret key", NULL, 1, NULL);
-	key = pcpkey_decrypt(ptx, key, passphrase);
-	if(key == NULL) {
-	  sfree(passphrase);
-	  goto errexpse1;
-	}
+    if(passwd == NULL) {
+      char *passphrase;
+      pcp_readpass(ptx, &passphrase,
+		   "Enter passphrase to decrypt your secret key", NULL, 1, NULL);
+      key = pcpkey_decrypt(ptx, key, passphrase);
+      if(key == NULL) {
 	sfree(passphrase);
+	goto errexpse1;
       }
-      else {
-	key = pcpkey_decrypt(ptx, key, passwd);
-	if(key == NULL) {
-	  goto errexpse1;
-	}
+      sfree(passphrase);
+    }
+    else {
+      key = pcpkey_decrypt(ptx, key, passwd);
+      if(key == NULL) {
+	goto errexpse1;
       }
     }
 

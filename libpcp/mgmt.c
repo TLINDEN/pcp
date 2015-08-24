@@ -912,15 +912,16 @@ json_t *pcp_sk2json(pcp_key_t *sk, byte *sig, size_t siglen) {
     ssig[0] = '\0';
     jformat = "{sssssssisisisissssssssss}";
   }
-  
+
+  fprintf(stderr, "serial: %lld\n", (json_int_t)sk->serial);
   jout = json_pack(jformat,
 		   "id", sk->id,
 		   "owner", sk->owner,
 		   "mail", sk->mail,
-		   "ctime", (int)sk->ctime,
-		   "expire", (int)sk->ctime+31536000,
-		   "version", (int)sk->version,
-		   "serial", (int)sk->serial,
+		   "ctime", (json_int_t)sk->ctime,
+		   "expire", (json_int_t)sk->ctime+31536000,
+		   "version", (json_int_t)sk->version,
+		   "serial", (json_int_t)sk->serial,
 		   "type", "public",
 		   "cipher", EXP_PK_CIPHER_NAME,
 		   "cryptpub", cryptpub,

@@ -45,6 +45,18 @@
 #     define htobe32(x)	(x)
 #     define be64toh(x)	(x)
 #     define htobe64(x)	(x)
+#   elif defined(__APPLE__) /* from https://gist.github.com/panzi/6856583 */
+#	include <libkern/OSByteOrder.h>
+#	define htobe16(x) OSSwapHostToBigInt16(x)
+#	define be16toh(x) OSSwapBigToHostInt16(x)
+#	define htobe32(x) OSSwapHostToBigInt32(x)
+#	define be32toh(x) OSSwapBigToHostInt32(x)
+#	define htobe64(x) OSSwapHostToBigInt64(x)
+#	define be64toh(x) OSSwapBigToHostInt64(x)
+#	define __BYTE_ORDER    BYTE_ORDER
+#	define __BIG_ENDIAN    BIG_ENDIAN
+#	define __LITTLE_ENDIAN LITTLE_ENDIAN
+#	define __PDP_ENDIAN    PDP_ENDIAN
 #   else
 #     ifdef HAVE_ARPA_INET_H
 #       include <arpa/inet.h>

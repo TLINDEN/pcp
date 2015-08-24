@@ -913,7 +913,6 @@ json_t *pcp_sk2json(pcp_key_t *sk, byte *sig, size_t siglen) {
     jformat = "{sssssssisisisissssssssss}";
   }
 
-  fprintf(stderr, "serial: %lld\n", (json_int_t)sk->serial);
   jout = json_pack(jformat,
 		   "id", sk->id,
 		   "owner", sk->owner,

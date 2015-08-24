@@ -898,7 +898,7 @@ json_t *pcp_sk2json(pcp_key_t *sk, byte *sig, size_t siglen) {
   json_t *jout;
   char *cryptpub, *sigpub, *masterpub, *ssig;
  
-  char *jformat = "{sssssssisisisissssssssssss}";
+  char *jformat = "{sssssssIsIsIsIssssssssssss}";
 
   cryptpub = _bin2hex(sk->pub, LBOXPUB);
   sigpub   = _bin2hex(sk->edpub, LEDPUB);
@@ -910,7 +910,7 @@ json_t *pcp_sk2json(pcp_key_t *sk, byte *sig, size_t siglen) {
   else {
     ssig = malloc(1);
     ssig[0] = '\0';
-    jformat = "{sssssssisisisissssssssss}";
+    jformat = "{sssssssIsIsIsIssssssssss}";
   }
 
   jout = json_pack(jformat,

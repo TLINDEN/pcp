@@ -181,7 +181,7 @@ int _check_hash_keysig(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, pcp_keysig_t 
   crypto_generichash_final(st, hash, crypto_generichash_BYTES_MAX);
 
   /* compare them */
-  if(memcmp(hash, verifyhash, crypto_generichash_BYTES_MAX) != 0) {
+  if(cst_time_memcmp(hash, verifyhash, crypto_generichash_BYTES_MAX) != 0) {
     fatal(ptx, "Signature verifies but signed hash doesn't match signature contents\n");
     goto chker2;
   }

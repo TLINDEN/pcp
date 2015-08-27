@@ -115,6 +115,14 @@ char *_bin2hex(byte *bin, size_t len);
 */
 size_t _hex2bin(const char *hex_str, unsigned char *byte_array, size_t byte_array_max);
 
+/** compare two memory regions in a constant time
+    \param[in] m1 array1
+    \param[in] m2 array2
+    \param[in] n size in bytes to compare
+    \return 0 if m1 and m2 are equal up to n
+ */
+int cst_time_memcmp(const void *m1, const void *m2, size_t n);
+
 #endif /*  _HAVE_PCP_UTIL_H */
 
 /**@}*/

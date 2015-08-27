@@ -614,7 +614,7 @@ size_t pcp_decrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *
       if(verifiedhash == NULL)
 	out_size = 0;
       else {
-	if(memcmp(verifiedhash, hash, crypto_generichash_BYTES_MAX) != 0) {
+	if(cst_time_memcmp(verifiedhash, hash, crypto_generichash_BYTES_MAX) != 0) {
 	  /*  sig verified, but the hash doesn't match */	
 	  fatal(ptx, "signed hash doesn't match actual hash of signed decrypted file content\n");
 	  out_size = 0;

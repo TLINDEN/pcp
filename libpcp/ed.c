@@ -301,7 +301,7 @@ pcp_pubkey_t *pcp_ed_verify_buffered(PCPCTX *ptx, Pcpstream *in, pcp_pubkey_t *p
   if(verifiedhash == NULL)
     goto errvb1;
 
-  if(memcmp(verifiedhash, hash, crypto_generichash_BYTES_MAX) != 0) {
+  if(cst_time_memcmp(verifiedhash, hash, crypto_generichash_BYTES_MAX) != 0) {
     /*  sig verified, but the hash doesn't */
     fatal(ptx, "signed hash doesn't match actual hash of signed file content\n");
     free(verifiedhash);
@@ -441,7 +441,7 @@ pcp_pubkey_t *pcp_ed_detachverify_buffered(PCPCTX *ptx, Pcpstream *in, Pcpstream
   if(verifiedhash == NULL)
     goto errdea4;
 
-  if(memcmp(verifiedhash, hash, crypto_generichash_BYTES_MAX) != 0) {
+  if(cst_time_memcmp(verifiedhash, hash, crypto_generichash_BYTES_MAX) != 0) {
     /*  sig verified, but the hash doesn't */
     fatal(ptx, "signed hash doesn't match actual hash of signed file content\n");
     goto errdea5;

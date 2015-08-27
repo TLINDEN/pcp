@@ -18,6 +18,10 @@ NEXT
 	so, pcp aims to be secure by default and fails
 	safely.
 
+	Using cst_time_memcpy by Christophe Meessen instead
+	of libc's memcpy: constant time memcpy is much more
+	secure than the default, especially in our context.
+
 0.3.0
 	Changed publuc key signature storage, previously
 	I didn't add the actual signature, therefore a

@@ -522,7 +522,7 @@ int pcpvault_fetchall(PCPCTX *ptx, vault_t *vault) {
   
   if(pcphash_count(ptx) + pcphash_countpub(ptx) > 0) {
     /*  only validate the checksum if there are keys */
-    if(memcmp(checksum, vault->checksum, LSHA) != 0) {
+    if(cst_time_memcmp(checksum, vault->checksum, LSHA) != 0) {
       fatal(ptx, "Error: the checksum of the key vault doesn't match its contents!\n");
       goto err;
     }

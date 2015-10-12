@@ -111,6 +111,7 @@ typedef enum _PCP_KEY_TYPES {
 #define LBOXPUB crypto_box_PUBLICKEYBYTES
 #define LBOXSEC crypto_box_SECRETKEYBYTES
 #define LNONCE  crypto_secretbox_NONCEBYTES
+#define LMAC    crypto_secretbox_MACBYTES
 #define LSEC    LBOXSEC + LEDSEC + LEDSEC + crypto_secretbox_MACBYTES
 #define LSHA    32   /* sha256 hash length */
 
@@ -128,9 +129,9 @@ typedef enum _PCP_KEY_TYPES {
 #define PCP_ASYM_CIPHER_SIG     24
 #define PCP_BLOCK_SIZE          32 * 1024
 
-#define PCP_CRYPTO_ADD          (crypto_box_ZEROBYTES - crypto_box_BOXZEROBYTES)
-#define PCP_BLOCK_SIZE_IN       (PCP_BLOCK_SIZE) + PCP_CRYPTO_ADD + crypto_secretbox_NONCEBYTES
-#define PCP_ASYM_RECIPIENT_SIZE crypto_secretbox_KEYBYTES + PCP_CRYPTO_ADD + crypto_secretbox_NONCEBYTES
+//#define PCP_CRYPTO_ADD          (crypto_box_ZEROBYTES - crypto_box_BOXZEROBYTES)
+#define PCP_BLOCK_SIZE_IN       (PCP_BLOCK_SIZE) + crypto_secretbox_MACBYTES + crypto_secretbox_NONCEBYTES
+#define PCP_ASYM_RECIPIENT_SIZE crypto_secretbox_KEYBYTES + crypto_secretbox_MACBYTES + crypto_secretbox_NONCEBYTES
 
 /* #define PCP_ASYM_ADD_SENDER_PUB */
 

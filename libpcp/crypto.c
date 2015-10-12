@@ -90,7 +90,7 @@ byte *pcp_box_decrypt(PCPCTX *ptx, pcp_key_t *secret, pcp_pubkey_t *pub,
 
   /*  resulting size: */
   /*  ciphersize - crypto_secretbox_ZEROBYTES */
-  *dsize = ciphersize - LNONCE - PCP_CRYPTO_ADD;
+  *dsize = ciphersize - LNONCE - LMAC;
   return message;
 
  errbed:
@@ -109,10 +109,10 @@ size_t pcp_sodium_mac(byte **cipher,
 		byte *nonce,
 		byte *key) {
 
-  *cipher = ucmalloc(clearsize + crypto_secretbox_MACBYTES);
+  *cipher = ucmalloc(clearsize + LMAC);
   crypto_secretbox_easy(*cipher, cleartext, clearsize, nonce, key);
 
-  return clearsize + crypto_secretbox_MACBYTES;
+  return clearsize + LMAC;
 }
 
 /* sym decr */
@@ -120,13 +120,12 @@ int pcp_sodium_verify_mac(byte **cleartext, byte* message,
 			  size_t messagesize, byte *nonce,
 			  byte *key) {
 
-  *cleartext = ucmalloc(messagesize - crypto_secretbox_MACBYTES);
   return crypto_secretbox_open_easy(*cleartext, message, messagesize, nonce, key);
 }
 
 
 size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t *s, byte *symkey, int verify, int anon) {
-  pcp_pubkey_t *cur = NULL;
+  pcp_pubkey_t *cur = NULL, *fromsec = NULL;
   byte *reccipher = NULL;
   int recmatch, self;
   uint32_t lenrec;
@@ -248,15 +247,20 @@ size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t 
       if(recmatch == 0) {
 	pcp_key_t *k;
 	pcphash_iterate(ptx, k) {
-	  cur = pcpkey_pub_from_secret(k);
+	  if(fromsec != NULL)
+	    ucfree(fromsec, sizeof(pcp_pubkey_t)); /* avoid overwrite of used mem */
+	  fromsec = pcpkey_pub_from_secret(k);
+	  
 	  byte *recipient;
-	  recipient = pcp_box_decrypt(ptx, s, cur, rec_buf, PCP_ASYM_RECIPIENT_SIZE, &rec_size);
+	  recipient = pcp_box_decrypt(ptx, s, fromsec, rec_buf, PCP_ASYM_RECIPIENT_SIZE, &rec_size);
+
 	  if(recipient != NULL && rec_size == crypto_secretbox_KEYBYTES) {
 	    /*  found a match */
 	    recmatch = 1;
 	    symkey = smalloc(crypto_secretbox_KEYBYTES);
 	    memcpy(symkey, recipient, crypto_secretbox_KEYBYTES);
 	    free(recipient);
+	    cur = fromsec;
 	    break;
 	  }
 	}
@@ -279,19 +283,23 @@ size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t 
   /*  step 5, actually decrypt the file, finally */
   if(verify) {
     pcp_rec_t *rec = pcp_rec_new(reccipher, nrec * PCP_ASYM_RECIPIENT_SIZE, NULL, cur);
-    size_t s = pcp_decrypt_stream_sym(ptx, in, out, symkey, rec);
+    nrec = pcp_decrypt_stream_sym(ptx, in, out, symkey, rec);
     pcp_rec_free(rec);
     ucfree(reccipher, lenrec * PCP_ASYM_RECIPIENT_SIZE);
-    sfree(symkey);
-    return s;
   }
   else {
-    size_t s = pcp_decrypt_stream_sym(ptx, in, out, symkey, NULL);
-    sfree(symkey);
-    return s;
+    nrec = pcp_decrypt_stream_sym(ptx, in, out, symkey, NULL);
   }
 
+  if(fromsec != NULL)
+    ucfree(fromsec, sizeof(pcp_pubkey_t));
+  
+  sfree(symkey);
+  return nrec;
+  
  errdef1:
+  if(fromsec != NULL)
+    ucfree(fromsec, sizeof(pcp_pubkey_t));
   sfree(symkey);
   return 0;
 }
@@ -530,7 +538,7 @@ size_t pcp_decrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *
   byte *signature = NULL;
   byte *signature_cr = NULL;
   size_t siglen = crypto_sign_BYTES + crypto_generichash_BYTES_MAX;
-  size_t siglen_cr = siglen + PCP_CRYPTO_ADD + LNONCE;
+  size_t siglen_cr = siglen + LMAC + LNONCE;
   crypto_generichash_state *st = NULL;
   byte *hash = NULL;
 
@@ -539,13 +547,14 @@ size_t pcp_decrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *
     hash = ucmalloc(crypto_generichash_BYTES_MAX);
     crypto_generichash_init(st, NULL, 0, 0);
     signature_cr = ucmalloc(siglen_cr);
+    signature = ucmalloc(siglen);
   }
 
 
   in_buf = ucmalloc(PCP_BLOCK_SIZE_IN);
   while(!ps_end(in)) {
     cur_bufsize = ps_read(in, in_buf, PCP_BLOCK_SIZE_IN);
-    if(cur_bufsize <= PCP_CRYPTO_ADD)
+    if(cur_bufsize <= LMAC)
       break; /*  no valid cipher block */
 
     if(recverify != NULL) {
@@ -573,10 +582,10 @@ size_t pcp_decrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *
     pastctr = ctr;
     es = pcp_sodium_verify_mac(&buf_clear, buf_cipher, ciphersize, buf_nonce, symkey);
 
-    out_size += ciphersize - PCP_CRYPTO_ADD;
+    out_size += ciphersize - LMAC;
 
     if(es == 0) {
-      ps_write(out, buf_clear, ciphersize - PCP_CRYPTO_ADD);
+      ps_write(out, buf_clear, ciphersize - LMAC);
 
       if(recverify != NULL)
 	crypto_generichash_update(st, buf_cipher, ciphersize);
@@ -596,7 +605,7 @@ size_t pcp_decrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, byte *
 
   ucfree(in_buf, PCP_BLOCK_SIZE_IN);
   ucfree(buf_cipher, ciphersize);
-  ucfree(buf_clear, ciphersize - PCP_CRYPTO_ADD);
+  ucfree(buf_clear, ciphersize - LMAC);
 
   if(recverify != NULL) {
     /* decrypt the signature */

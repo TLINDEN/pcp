@@ -788,6 +788,7 @@ pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphras
   }
 
   /* decrypt the blob */
+  clear = ucmalloc(cipherlen - LMAC);
   if(pcp_sodium_verify_mac(&clear, buffer_get_remainder(cipher),
 			   cipherlen, nonce, symkey) != 0) {
 
@@ -796,7 +797,7 @@ pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphras
   }
 
   /* prepare the extraction buffer */
-  buffer_add(blob, clear, cipherlen - PCP_CRYPTO_ADD);
+  buffer_add(blob, clear, cipherlen - LMAC);
 
   /* extract the raw data into the structure */
   buffer_get_chunk(blob, sk->mastersecret, LEDSEC);
@@ -837,7 +838,7 @@ pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphras
   sk->type = PCP_KEY_TYPE_SECRET;
 
   /* ready */
-  ucfree(clear, cipherlen - PCP_CRYPTO_ADD);
+  ucfree(clear, cipherlen - LMAC);
   ucfree(nonce, LNONCE);
   buffer_free(blob);
   sfree(symkey);
@@ -846,7 +847,7 @@ pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphras
   return sk;
 
  impserr2:
-  ucfree(clear, cipherlen - PCP_CRYPTO_ADD);
+  ucfree(clear, cipherlen - LMAC);
 
  impserr1:
   ucfree(nonce, LNONCE);

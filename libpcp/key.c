@@ -192,7 +192,7 @@ pcp_key_t *pcpkey_encrypt(PCPCTX *ptx, pcp_key_t *key, char *passphrase) {
 pcp_key_t *pcpkey_decrypt(PCPCTX *ptx, pcp_key_t *key, char *passphrase) {
   byte *encryptkey = pcp_derivekey(ptx, passphrase, key->nonce);  
 
-  byte *decrypted;
+  byte *decrypted = ucmalloc(LSEC - crypto_secretbox_MACBYTES);
   size_t es;
   
   es = pcp_sodium_verify_mac(&decrypted, key->encrypted, LSEC, key->nonce, encryptkey);

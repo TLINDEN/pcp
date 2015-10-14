@@ -707,7 +707,9 @@ uint64_t _get_nonce_ctr(byte *nonce) {
     fprintf(stderr, "invalid counter size %d!", i);
     abort();
   }
-  
+
+  fprintf(stderr, "ctr size: %d ", i);
+
   switch(i) {
   case 1:
     ctr = nonce[1];
@@ -796,12 +798,12 @@ byte *_gen_ctr_nonce(uint64_t ctr) {
     m64 = htobe64(ctr);
     memcpy(&nonce[1], &m64, 8);
   }
-  else if(ctr < m32 && ctr > m16) {
+  else if(ctr <= m32 && ctr > m16) {
     i = 4;
     m32 = htobe32(ctr);
     memcpy(&nonce[1], &m32, 4);
   }
-  else if(ctr < m16 && ctr > m8) {
+  else if(ctr <= m16 && ctr > m8) {
     i = 2;
     m16 = htobe16(ctr);
     memcpy(&nonce[1], &m16, 2);

@@ -140,10 +140,6 @@ retry:
 	if (readfrom != stdin) {
 	  fclose(readfrom);
 	}
-	else {
-	  if(readfromfile != NULL)
-	    stdin = NULL;
-	}
 
 	/* Copy the password out. */
 	char *p = smalloc(strlen(passbuf) + 1);

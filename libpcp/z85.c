@@ -212,7 +212,7 @@ char *pcp_z85_encode(byte *raw, size_t srclen, size_t *dstlen, int doblock) {
   char *padblob = NULL;
   char *z85 = NULL;
   char *z85block = NULL;
-
+  
   if(srclen %4 == 0) {
     /* no padding required */
     padded = raw;

@@ -214,7 +214,7 @@ int main (int argc, char **argv)  {
 	  exportformat = EXP_FORMAT_NATIVE;
 	}
 	else {
-	  warn("Unknown export format specified, using native\n");
+	  fprintf(stderr, "WARN: Unknown export format specified, using native\n");
 	  exportformat = EXP_FORMAT_NATIVE;
 	}
 	break;

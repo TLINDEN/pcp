@@ -2,6 +2,11 @@
 file=$1
 if type md5 > /dev/null 2>&1; then
     md5 -q $*
-else
+elif type md5sum > /dev/null 2>&1; then
     md5sum $* | awk '{print $1}'
+elif type openssl > /dev/null 2>&1; then
+    openssl md5 -r $*  | awk '{print $1}'
+else
+    echo "no MD5 tool found!"
+    exit 1
 fi

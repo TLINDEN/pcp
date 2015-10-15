@@ -173,7 +173,8 @@ size_t ps_read_cached(Pcpstream *stream, void *buf, size_t readbytes) {
   }
   else {
     // fprintf(stderr, "  fetch next\n");
-     /* request for chunk larger than what we've got in the cache */
+    /* request for chunk larger than what we've got in the cache */
+    // FIXME: use static buffer !
     Buffer *tmp = buffer_new(stream->blocksize, "Pcpreadchunktmp");
 
     if( buffer_left(stream->cache) > 0) {
@@ -257,6 +258,7 @@ size_t ps_read(Pcpstream *stream, void *buf, size_t readbytes) {
   size_t got = 0;
   if(stream->cache == NULL) {
     got = ps_read_raw(stream, buf, readbytes);
+    // fprintf(stderr, "%ld = ps_read_raw(stream, buf, readbytes); // no cache\n", got);
   }
   else if(buffer_size(stream->cache) > 0) {
     /* use cache */
@@ -281,11 +283,12 @@ size_t ps_read(Pcpstream *stream, void *buf, size_t readbytes) {
     else {
       /* read directly from source */
       got = ps_read_raw(stream, buf, readbytes);
+      // fprintf(stderr, "%ld = ps_read_raw(stream, buf, readbytes);\n", got);
     }
   }
 
   stream->pos += got;
-  // fprintf(stderr, "  ps_read(): %ld\n", got);
+  //fprintf(stderr, "  ps_read(): %ld\n", got);
   return got;
 }
 

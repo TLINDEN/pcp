@@ -45,6 +45,7 @@ int main(int argc, char **argv) {
 
   while(!ps_end(in)) {
     got = ps_read(in, buf, blocksize);
+    //fprintf(stderr, "got: %ld\n", got);
     if(got > 0)
       ps_write(out, buf, got);
   }

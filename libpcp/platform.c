@@ -32,6 +32,12 @@ void err(int eval, const char *fmt, ...) {
   }
   fprintf(stderr, ": %s\n", strerror(errno));
   va_end(ap);
+
+  /* from the FreeBSD err() manpage:
+     The err(), verr(), errc(), verrc(), errx(), and verrx() functions do not
+     return, but exit with the value of the argument eval.
+  */
+  exit(eval);
 }
 #endif
 

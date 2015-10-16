@@ -173,7 +173,6 @@ byte *pcp_z85_decode(PCPCTX *ptx, char *z85block, size_t *dstlen) {
   byte padblob[4];
  
   srclen = strlen(z85block);
-
   if(srclen == 0) {
     /* FIXME: check how this happens, pcpstream decoder call */
     *dstlen = 0;

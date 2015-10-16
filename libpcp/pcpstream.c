@@ -103,7 +103,7 @@ void ps_rewind(Pcpstream *stream, void *buf, size_t bufsize) {
 size_t ps_read_raw(Pcpstream *stream, void *buf, size_t readbytes) {
   size_t gotbytes = 0;
   size_t idx = 0;
-
+  
   if(buffer_left(stream->save) > 0) {
     /* something left from last rewind, first use this */
     if(buffer_left(stream->save) >= readbytes) {
@@ -137,6 +137,7 @@ size_t ps_read_raw(Pcpstream *stream, void *buf, size_t readbytes) {
   }
   else {
     size_t got = fread(buf+idx, 1, readbytes, stream->fd);
+
     gotbytes += got;
     if(feof(stream->fd) != 0)
       stream->eof = 1;
@@ -146,7 +147,8 @@ size_t ps_read_raw(Pcpstream *stream, void *buf, size_t readbytes) {
 
 
  rawdone:
-  //_dump("ps_read_raw", buf, gotbytes);
+  //_dump("      ps_read_raw first byte:", buf, 1);
+  //fprintf(stderr, "       ps_read_raw, gotbytes: %ld\n", gotbytes);
   return gotbytes;
 }
 
@@ -295,8 +297,8 @@ size_t ps_read(Pcpstream *stream, void *buf, size_t readbytes) {
 int ps_readline(Pcpstream *stream, Buffer *line) {
   int c = -1, max = 1;
   byte b[1];
-
-  while(c<PSMAXLINE) {
+  
+  while(c<PSMAXLINE) { //  && ps_end(stream) != 1
     //fprintf(stderr, "    ps_readline: call raw\n");
     if(ps_read_raw(stream, b, 1) < 1) {
       //fprintf(stderr, "      ps_readline: raw returned < 1\n");
@@ -307,7 +309,7 @@ int ps_readline(Pcpstream *stream, Buffer *line) {
       //fprintf(stderr, "      ps_readline: raw found CR\n");
       continue;
     }
-    else if(*b == '\n' || ps_end(stream) == 1) {
+    else if(*b == '\n') {
       //fprintf(stderr, "      ps_readline: raw found NL\n");
       c++;
       max = 0;
@@ -329,7 +331,8 @@ int ps_readline(Pcpstream *stream, Buffer *line) {
     return -1;
   }
 
-  // fprintf(stderr, "      ps_readline: raw return %d\n", c);
+  //fprintf(stderr, "      ps_readline: raw return %d, last b: <%c>\n", c, b[0]);
+  //buffer_info(line);
 
   return c;
 }
@@ -439,14 +442,16 @@ size_t ps_read_decode(Pcpstream *stream) {
     }
   }
 
-  //fprintf(stderr, "%s\n", buffer_get_str(z));
+  //buffer_info(z);
+  //buffer_dump(z);
+  //fprintf(stderr, "\n%s\n", buffer_get_str(z));
 
   /* finally, decode it and put into next */
   size_t binlen, outlen;
   byte *bin = pcp_z85_decode(ptx, buffer_get_str(z), &binlen);
   //fprintf(stderr, "ps_read_decode decoding z: %ld, got: %ld\n", buffer_size(z), binlen);
   //_dump("bin", bin, binlen);
-  //fatals_ifany();
+  fatals_ifany(ptx);
 
   if(bin == NULL) {
     /* it's not z85 encoded, so threat it as binary */

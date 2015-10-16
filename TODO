@@ -1,6 +1,4 @@
-AIX@ppc: pipetest fails. encode is correct, same # of pkts as
-	 on bsd + 1 pad. decode misses last pkt. Must be somewhere
-	 in pcpstream.c.
+pcpstream.c: use static tmp buffers, avoid alloc mem during each iteration
 
 detach keysig generation from pub key export, so that an existing
 keysig can be verified later.

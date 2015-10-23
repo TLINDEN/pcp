@@ -708,8 +708,6 @@ uint64_t _get_nonce_ctr(byte *nonce) {
     abort();
   }
 
-  fprintf(stderr, "ctr size: %d ", i);
-
   switch(i) {
   case 1:
     ctr = nonce[1];

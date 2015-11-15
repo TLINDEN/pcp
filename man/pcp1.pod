@@ -105,9 +105,7 @@ Pretty Curved Privacy - File encryption using eliptic curve cryptography.
                            been specified, don't store the generated
                            key to the vault but export it to the
                            file instead. You will be asked for
-                           an owner, mail and a passphrase. If you
-                           leave the passphrase empty, the key will
-                           be stored unencrypted.
+                           an owner, mail and a passphrase.
  -l --listkeys             List all keys currently stored in your
                            vault. Only the key id's and some info
                            about the keys will be printed, not the

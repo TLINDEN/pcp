@@ -95,8 +95,9 @@ FILES AND PIPES
     input file you cannot use -X -, and vice versa. IF you use -X - the
     passphrase will be read from standard input, which then can't be used
     further for input files elsewhere. Pcp will exit with an error in such a
-    case. =head1 INSTALLATION
+    case.
 
+INSTALLATION
     There are currently no packages available, so pcp has to be compiled
     from source. Follow these steps:
 

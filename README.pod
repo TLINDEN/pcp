@@ -113,6 +113,7 @@ specify an input file you cannot use B<-X ->, and vice versa. IF
 you use B<-X -> the passphrase will be read from standard input, which
 then can't be used further for input files elsewhere. Pcp will exit
 with an error in such a case.
+
 =head1 INSTALLATION
 
 There are currently no packages available, so B<pcp> has to be

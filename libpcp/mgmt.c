@@ -507,7 +507,6 @@ Buffer *pcp_export_pbp_pub(pcp_key_t *sk) {
 
   free(date);
   buffer_free(sig);
-  free(v);
   return out;
   
 
@@ -515,7 +514,7 @@ Buffer *pcp_export_pbp_pub(pcp_key_t *sk) {
   buffer_free(sig);
   buffer_free(out);
   free(date);
-  free(v);
+
   return NULL;
 }
 

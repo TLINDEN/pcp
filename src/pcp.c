@@ -326,8 +326,6 @@ int main (int argc, char **argv)  {
   }
 
 
-  sodium_init(); /*  FIXME: better called from the lib? */
-
 #ifndef DEBUG
 #  ifdef HAVE_SETRLIMIT
      setrlimit(RLIMIT_CORE, &(struct rlimit) {0, 0});

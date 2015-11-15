@@ -173,7 +173,6 @@ void test4() {
 }
 
 int main(int argc, char **argv) {
-  sodium_init();
   PcpContext *ptx = new PcpContext();
 
   try {

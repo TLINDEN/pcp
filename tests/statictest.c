@@ -2,7 +2,7 @@
 #include "static.h"
 
 int main() {
-  sodium_init();
+  if(sodium_init() == -1) return 1;
   unsigned char *t = ucmalloc(12);
   if(crypto_box_open_easy(t, cipher, cipher_len, nonce, public_a, secret_b) == 0) {
     if(memcmp(t, message, message_len) == 0) {

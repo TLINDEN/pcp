@@ -25,7 +25,7 @@ int main() {
   pw *have = NULL;
   unsigned char nonce[32] = {1};
 
-  sodium_init();
+  if(sodium_init() == -1) return 1;
 
   for(i=97; i<126; ++i) {
     pass[0] = i;

@@ -10,7 +10,7 @@ int main() {
   strcpy(o, "xxxx");
   strcpy(m, "xxxx");
 
-  sodium_init();
+  if(sodium_init() == -1) return 1;
   PCPCTX *ptx = ptx_new();
   pcp_key_t *k = pcpkey_new ();
 

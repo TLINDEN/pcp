@@ -12,7 +12,7 @@ void pr(char *var, unsigned char *d, size_t len) {
 }
 
 int main() {
-  sodium_init();
+  if(sodium_init() == -1) return 1;
 
   pcp_key_t *a = pcpkey_new();
   pcp_key_t *b = pcpkey_new();

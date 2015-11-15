@@ -43,7 +43,10 @@ PCPCTX *ptx_new() {
   p->pcppubkey_hash = NULL;
   p->pcpkeysig_hash = NULL;
 
-  sodium_init();
+  if(sodium_init() == -1) {
+    perror("failed to initialize libsodium");
+    exit(1);
+  }
 
   return p;
 }

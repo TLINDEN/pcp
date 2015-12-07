@@ -36,7 +36,7 @@ int main() {
 
   /* actually encrypt the message, don't sign it
      Alice is the sender, Bob is the recipient */
-  pcp_encrypt_stream(ptx, clear_in, crypt_out, alice, pubhash, 0, 0);
+  pcp_encrypt_stream(ptx, clear_in, crypt_out, alice, alice, pubhash, 0, 0);
 
   /* now, print the encrypted result */
   fprintf(stderr, "Alice encrypted %"FMT_SIZE_T" bytes for Bob:\n", (SIZE_T_CAST)strlen(message));

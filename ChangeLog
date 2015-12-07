@@ -22,6 +22,10 @@ NEXT
 	of libc's memcpy: constant time memcpy is much more
 	secure than the default, especially in our context.
 
+	Anonymous encrypted files are now signed with primary
+	secret key, so that the recipient will be able to
+	verify the signature.
+
 0.3.0
 	Changed publuc key signature storage, previously
 	I didn't add the actual signature, therefore a

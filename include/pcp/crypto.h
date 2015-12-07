@@ -183,7 +183,9 @@ byte *pcp_box_decrypt(PCPCTX *ptx, pcp_key_t *secret, pcp_pubkey_t *pub,
 
     \param[out] out Stream to write encrypted result to.
 
-    \param[in] s Secret key structure of the sender.
+    \param[in] s Secret key structure of the sender for encryption.
+
+    \param[in] s Secret key structure of the sender for signing.
 
     \param[in] p Public key hash containing a list of the recipients.
 
@@ -193,7 +195,8 @@ byte *pcp_box_decrypt(PCPCTX *ptx, pcp_key_t *secret, pcp_pubkey_t *pub,
 
     \return Returns the size of the output written to the output stream or 0 in case of errors.
 */
-size_t pcp_encrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t *s, pcp_pubkey_t *p, int signcrypt, int anon);
+size_t pcp_encrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t *s,
+			  pcp_key_t *ss, pcp_pubkey_t *p, int signcrypt, int anon);
 
 /** Symmetrically encrypt a file or a buffer stream.
 

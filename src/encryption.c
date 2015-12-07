@@ -78,7 +78,8 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
       sfree(passphrase);
       free(salt);
     }
-    else if(head == PCP_ASYM_CIPHER || head == PCP_ASYM_CIPHER_SIG || head == PCP_ASYM_CIPHER_ANON) {
+    else if(head == PCP_ASYM_CIPHER || head == PCP_ASYM_CIPHER_SIG
+	    || head == PCP_ASYM_CIPHER_ANON || head == PCP_ASYM_CIPHER_ANON_SIG) {
       /*  asymetric mode */
       if(useid) {
 	secret = pcphash_keyexists(ptx, id);
@@ -116,6 +117,11 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
 
       if(head == PCP_ASYM_CIPHER_SIG)
 	verify = 1;
+
+      if(head == PCP_ASYM_CIPHER_ANON_SIG) {
+	anon = 1;
+	verify = 1;
+      }
     }
     else {
       fatal(ptx, "Could not determine input file type (got: %02x)\n", head);
@@ -157,13 +163,15 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
 
 
 
-int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *recipient, int signcrypt, int armor, int anon) {
+int pcpencrypt(char *id, char *infile, char *outfile, char *passwd,
+	       plist_t *recipient, int signcrypt, int armor, int anon) {
   FILE *in = NULL;
   FILE *out = NULL;
   pcp_pubkey_t *pubhash = NULL; /*  FIXME: add free() */
   pcp_pubkey_t *tmp = NULL;
   pcp_pubkey_t *pub = NULL;
   pcp_key_t *secret = NULL;
+  pcp_key_t *signsecret = NULL;
   byte *symkey = NULL;
   int symmode = 0;
 
@@ -252,10 +260,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
 
   if(symmode != 1) {
   /*  we're using a random secret keypair on our side */
-    if(anon) {
-      secret = pcpkey_new();
-    }
-    else {
+    if(signcrypt || !anon) {
       secret = pcp_find_primary_secret();
       if(secret == NULL) {
         fatal(ptx, "Could not find a secret key in vault %s!\n", id, vault->filename);
@@ -275,8 +280,11 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
       sfree(passphrase);
       if(secret == NULL)
 	goto erren2;
-      
+
+      signsecret = secret;
     }
+    if(anon)
+      secret = pcpkey_new();      
   }
 
   if(infile == NULL)
@@ -312,7 +320,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *rec
     sfree(symkey);
   }
   else {
-    clen = pcp_encrypt_stream(ptx, pin, pout, secret, pubhash, signcrypt, anon);
+    clen = pcp_encrypt_stream(ptx, pin, pout, secret, signsecret, pubhash, signcrypt, anon);
   }
 
   if(armor == 1) {

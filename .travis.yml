@@ -1,35 +1,41 @@
+sudo: false
 language: c
 os:
   - linux
+
+addons:
+  apt:
+    packages:
+      - python-pip
+      - texinfo
+
+compiler:
+  - clang
+  - gcc
+ 
 before_install:
   # runtime dependency
   - git clone https://github.com/jedisct1/libsodium
   - cd libsodium
   - ./autogen.sh
-  - ./configure --prefix=/usr
+  - ./configure --prefix=$HOME/usr
   - make
-  - sudo make install
+  - make install
   - cd ..
   #
   # unittest dependencies, perl modules
   - wget http://search.cpan.org/CPAN/authors/id/T/TL/TLINDEN/Config-General-2.56.tar.gz
   - tar xvzf Config-General-2.56.tar.gz
-  - cd Config-General-2.56
-  - perl Makefile.PL && make
-  - sudo make install
-  - cd ..
+  - mkdir -p tests/lib/Config/General
+  - cp Config-General-2.56/General.pm tests/lib/Config/
+  - cp Config-General-2.56/General/*.pm tests/lib/Config/General/
   - wget http://search.cpan.org/CPAN/authors/id/C/CH/CHORNY/Tie-IxHash-1.23.tar.gz
   - tar xvzf Tie-IxHash-1.23.tar.gz
-  - cd Tie-IxHash-1.23
-  - perl Makefile.PL && make
-  - sudo make install
-  - cd ..
+  - mkdir -p tests/lib/Tie
+  - cp Tie-IxHash-1.23/Tie/IxHash.pm tests/lib/Tie/
   - wget http://search.cpan.org/CPAN/authors/id/I/IN/INGY/YAML-1.14.tar.gz
   - tar xvfz YAML-1.14.tar.gz
-  - cd YAML-1.14
-  - perl Makefile.PL && make
-  - sudo make install
-  - cd ..
+  - cp -r YAML-1.14/lib/* tests/lib/
   #
   # for debugging - just in case, uncomment this and the next if needed
   #- wget http://valgrind.org/downloads/valgrind-3.10.1.tar.bz2
@@ -45,24 +51,21 @@ before_install:
   #- sudo apt-get install libc6-dbg
   #
   # python bindings runtime dependencies
-  - sudo apt-get update -qq
-  - sudo apt-get install python-pip texinfo
-  - git clone https://github.com/atgreen/libffi
-  - cd libffi
-  - ./autogen.sh
-  - ./configure --prefix=/usr
-  - make
-  - sudo make install
-  - cd ..
-  - sudo pip install cffi
+  #- git clone https://github.com/atgreen/libffi
+  #- cd libffi
+  #- ./autogen.sh
+  #- ./configure --prefix=/usr
+  #- make
+  #- sudo make install
+  #- cd ..
+  #- sudo pip install cffi
   #
   # finally prepare autoconf stuff
   - ./autogen.sh
-compiler:
-  - clang
-  - gcc
+
 script:
- - ./configure --enable-python-binding
+ #- ./configure --enable-python-binding
+ - ./configure
  - make
  - make check
  - make test

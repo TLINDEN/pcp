@@ -29,10 +29,11 @@ before_install:
   - mkdir -p tests/lib/Config/General
   - cp Config-General-2.56/General.pm tests/lib/Config/
   - cp Config-General-2.56/General/*.pm tests/lib/Config/General/
+  #
   - wget http://search.cpan.org/CPAN/authors/id/C/CH/CHORNY/Tie-IxHash-1.23.tar.gz
   - tar xvzf Tie-IxHash-1.23.tar.gz
-  - mkdir -p tests/lib/Tie
-  - cp Tie-IxHash-1.23/Tie/IxHash.pm tests/lib/Tie/
+  - cp Tie-IxHash-1.23/lib/* tests/lib/
+  #
   - wget http://search.cpan.org/CPAN/authors/id/I/IN/INGY/YAML-1.14.tar.gz
   - tar xvfz YAML-1.14.tar.gz
   - cp -r YAML-1.14/lib/* tests/lib/
@@ -65,7 +66,7 @@ before_install:
 
 script:
  #- ./configure --enable-python-binding
- - ./configure
+ - ./configure --with-libsodium=$HOME/usr
  - make
  - make check
  - make test

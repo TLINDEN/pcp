@@ -35,6 +35,9 @@ static char *begins[] = {
 
 
 
+/* via http://stackoverflow.com/a/1031773, slightly modified,
+   licensed under CC-BY-SA, written by Christoph
+*/
 uint8_t is_utf8(const byte *bytes) {
   if( (// non-overlong 2-byte
        (0xC2 <= bytes[0] && bytes[0] <= 0xDF) &&

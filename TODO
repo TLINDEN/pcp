@@ -15,8 +15,5 @@ vault checksum: add keysigs as well
 
 Add newlines to headers in define.h, so strlen() later catches the whole length.
 
-Check is_utf8 license.
-  also found in https://gd.meizo.com/_files/lpc/ext/utf8.c
-
 c++ destructor double free mess
 

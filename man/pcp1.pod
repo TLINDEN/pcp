@@ -65,6 +65,7 @@ Pretty Curved Privacy - File encryption using eliptic curve cryptography.
   Arguments:
   Extra arguments after options are treated as filenames or
   recipients, depending on operation mode.
+
 =head1 OPTIONS
  
  Usage: pcp1 [options]

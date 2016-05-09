@@ -2,77 +2,94 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<title></title>
+<title>Privacy - File encryption using eliptic curve cryptography.</title>
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-<link rev="made" href="mailto:root@localhost" />
+<link rev="made" href="mailto:root@r4.your-server.de" />
 </head>
 
 <body style="background-color: white">
 
 
+<!-- INDEX BEGIN -->
+<div name="index">
+<p><a name="__index__"></a></p>
 
-<ul id="index">
-  <li><a href="#NAME">NAME</a></li>
-  <li><a href="#SYNOPSIS">SYNOPSIS</a></li>
-  <li><a href="#DESCRIPTION">DESCRIPTION</a></li>
-  <li><a href="#QUICKSTART">QUICKSTART</a></li>
-  <li><a href="#FILES-AND-PIPES">FILES AND PIPES</a></li>
-  <li><a href="#PCP1-KEYS">PCP1 KEYS</a></li>
-  <li><a href="#ENCRYPTION">ENCRYPTION</a></li>
-  <li><a href="#SIGNATURES">SIGNATURES</a></li>
-  <li><a href="#SIGNED-ENCRYPTION">SIGNED ENCRYPTION</a></li>
-  <li><a href="#ALTERNATIVE-COMMANDLINES">ALTERNATIVE COMMANDLINES</a></li>
-  <li><a href="#ENVIRONMENT-VARIABLES">ENVIRONMENT VARIABLES</a></li>
-  <li><a href="#EXIT-STATUS">EXIT STATUS</a></li>
-  <li><a href="#FILES">FILES</a></li>
-  <li><a href="#EXPERIMENTAL-STATUS">EXPERIMENTAL STATUS</a></li>
-  <li><a href="#INTERNALS">INTERNALS</a>
-    <ul>
-      <li><a href="#PASSPHRASES">PASSPHRASES</a></li>
-      <li><a href="#VAULT-FORMAT">VAULT FORMAT</a></li>
-      <li><a href="#SECRET-KEY-FORMAT">SECRET KEY FORMAT</a></li>
-      <li><a href="#PUBLIC-KEY-EXPORT-FORMAT">PUBLIC KEY EXPORT FORMAT</a></li>
-      <li><a href="#SECRET-KEY-EXPORT-FORMAT">SECRET KEY EXPORT FORMAT</a></li>
-      <li><a href="#ENCRYPTED-OUTPUT-FORMAT">ENCRYPTED OUTPUT FORMAT</a></li>
-      <li><a href="#SIGNATURE-FORMAT">SIGNATURE FORMAT</a></li>
-      <li><a href="#SIGNED-ENCRYPTION-FORMAT">SIGNED ENCRYPTION FORMAT</a></li>
-      <li><a href="#Z85-ENCODING">Z85 ENCODING</a>
-        <ul>
-          <li><a href="#Z85-PADDING">Z85 PADDING</a></li>
-          <li><a href="#Z85-BACKGROUND">Z85 BACKGROUND</a></li>
-        </ul>
-      </li>
-      <li><a href="#PBP-COMPATIBILITY">PBP COMPATIBILITY</a></li>
-    </ul>
-  </li>
-  <li><a href="#JSON-ENCODING-SUPPORT">JSON ENCODING SUPPORT</a>
-    <ul>
-      <li><a href="#USING-JSON-FROM-THE-C-API">USING JSON FROM THE C API</a></li>
-      <li><a href="#USING-JSON-FROM-THE-COMMANDLINE">USING JSON FROM THE COMMANDLINE</a></li>
-      <li><a href="#JSON-OBJECT-STRUCTURE">JSON OBJECT STRUCTURE</a>
-        <ul>
-          <li><a href="#JSON-PUBLIC-KEY-pcp1--p--j">JSON PUBLIC KEY (pcp1 -p -j)</a></li>
-          <li><a href="#JSON-SECRET-KEY-pcp1--s--j">JSON SECRET KEY (pcp1 -s -j)</a></li>
-          <li><a href="#JSON-VAULT-pcp1--t">JSON VAULT (pcp1 -t)</a></li>
-          <li><a href="#JSON-PROGRAM-OUTPUT">JSON PROGRAM OUTPUT</a></li>
-        </ul>
-      </li>
-    </ul>
-  </li>
-  <li><a href="#COPYRIGHT">COPYRIGHT</a></li>
-  <li><a href="#ADDITIONAL-COPYRIGHTS">ADDITIONAL COPYRIGHTS</a></li>
-  <li><a href="#AUTHORS">AUTHORS</a></li>
-  <li><a href="#LICENSE">LICENSE</a></li>
-  <li><a href="#HOME">HOME</a></li>
+<ul>
+
+	<li><a href="#name">NAME</a></li>
+	<li><a href="#synopsis">SYNOPSIS</a></li>
+	<li><a href="#options">OPTIONS</a></li>
+	<li><a href="#description">DESCRIPTION</a></li>
+	<li><a href="#quickstart">QUICKSTART</a></li>
+	<li><a href="#files_and_pipes">FILES AND PIPES</a></li>
+	<li><a href="#pcp1_keys">PCP1 KEYS</a></li>
+	<li><a href="#encryption">ENCRYPTION</a></li>
+	<li><a href="#signatures">SIGNATURES</a></li>
+	<li><a href="#signed_encryption">SIGNED ENCRYPTION</a></li>
+	<li><a href="#alternative_commandlines">ALTERNATIVE COMMANDLINES</a></li>
+	<li><a href="#environment_variables">ENVIRONMENT VARIABLES</a></li>
+	<li><a href="#exit_status">EXIT STATUS</a></li>
+	<li><a href="#files">FILES</a></li>
+	<li><a href="#experimental_status">EXPERIMENTAL STATUS</a></li>
+	<li><a href="#internals">INTERNALS</a></li>
+	<ul>
+
+		<li><a href="#passphrases">PASSPHRASES</a></li>
+		<li><a href="#vault_format">VAULT FORMAT</a></li>
+		<li><a href="#secret_key_format">SECRET KEY FORMAT</a></li>
+		<li><a href="#public_key_export_format">PUBLIC KEY EXPORT FORMAT</a></li>
+		<li><a href="#secret_key_export_format">SECRET KEY EXPORT FORMAT</a></li>
+		<li><a href="#encrypted_output_format">ENCRYPTED OUTPUT FORMAT</a></li>
+		<li><a href="#signature_format">SIGNATURE FORMAT</a></li>
+		<li><a href="#signed_encryption_format">SIGNED ENCRYPTION FORMAT</a></li>
+		<li><a href="#z85_encoding">Z85 ENCODING</a></li>
+		<ul>
+
+			<li><a href="#z85_padding">Z85 PADDING</a></li>
+			<li><a href="#z85_background">Z85 BACKGROUND</a></li>
+		</ul>
+
+		<li><a href="#pbp_compatibility">PBP COMPATIBILITY</a></li>
+	</ul>
+
+	<li><a href="#json_encoding_support">JSON ENCODING SUPPORT</a></li>
+	<ul>
+
+		<li><a href="#using_json_from_the_c_api">USING JSON FROM THE C API</a></li>
+		<li><a href="#using_json_from_the_commandline">USING JSON FROM THE COMMANDLINE</a></li>
+		<li><a href="#json_object_structure">JSON OBJECT STRUCTURE</a></li>
+		<ul>
+
+			<li><a href="#json_public_key__pcp1__p__j_">JSON PUBLIC KEY (pcp1 -p -j)</a></li>
+			<li><a href="#json_secret_key__pcp1__s__j_">JSON SECRET KEY (pcp1 -s -j)</a></li>
+			<li><a href="#json_vault__pcp1__t_">JSON VAULT (pcp1 -t)</a></li>
+			<li><a href="#json_program_output">JSON PROGRAM OUTPUT</a></li>
+		</ul>
+
+	</ul>
+
+	<li><a href="#copyright">COPYRIGHT</a></li>
+	<li><a href="#additional_copyrights">ADDITIONAL COPYRIGHTS</a></li>
+	<li><a href="#authors">AUTHORS</a></li>
+	<li><a href="#license">LICENSE</a></li>
+	<li><a href="#home">HOME</a></li>
 </ul>
 
-<h1 id="NAME">NAME</h1>
+<hr name="index" />
+</div>
+<!-- INDEX END -->
 
+<p>
+</p>
+<h1><a name="name">NAME</a></h1>
 <p>Pretty Curved Privacy - File encryption using eliptic curve cryptography.</p>
-
-<h1 id="SYNOPSIS">SYNOPSIS</h1>
-
-<pre><code>  Usage: pcp1 [ --help          | --version ]
+<p>
+</p>
+<hr />
+<h1><a name="synopsis">SYNOPSIS</a></h1>
+<pre>
+  
+  Usage: pcp1 [ --help          | --version ]
               [ --keygen        | --listkeys      | --remove-key | --edit-key ]
               [ --export-public | --export-secret | --import ]
               [ --encrypt       | --decrypt       ]
@@ -102,8 +119,8 @@
   -s --export-secret        Export a secret key.
   -p --export-public        Export a public key.
   -K --import               Import a secret or public key.
-  -F --export-format &lt;fmt&gt;  Specify exportformat, either &#39;pbp&#39; or &#39;pcp&#39;.
-                            &#39;pcp&#39; is the default if unspecified.
+  -F --export-format &lt;fmt&gt;  Specify exportformat, either 'pbp' or 'pcp'.
+                            'pcp' is the default if unspecified.
   -j --json                 Enable JSON output (with -t, -p, -s and -K).
   
   Encryption Options:
@@ -130,11 +147,16 @@
   
   Arguments:
   Extra arguments after options are treated as filenames or
-  recipients, depending on operation mode.
-=head1 OPTIONS
- 
- Usage: pcp1 [options]
- 
+  recipients, depending on operation mode.</pre>
+<p>
+</p>
+<hr />
+<h1><a name="options">OPTIONS</a></h1>
+<pre>
+
+ Usage: pcp1 [options]</pre>
+<pre>
+
  General Options:
  -V --vault &lt;vaultfile&gt;    Specify an alternate vault file.
                            The deault vault is ~/.pcpvault.
@@ -161,19 +183,20 @@
  -h --help                 Print this help message.
     --version              Print program version.
  -D --debug                Enable debug output.
- -v --verbose              Enable verbose output.
- 
+ -v --verbose              Enable verbose output.</pre>
+<pre>
+
  Keymanagement Options:
  -k --keygen               Generate a CURVE25519 secret key. If
                            the generated key is the first one in
                            your vault, it will become the primary
                            secret key. If an output file (-O) has
-                           been specified, don&#39;t store the generated
+                           been specified, don't store the generated
                            key to the vault but export it to the
                            file instead. You will be asked for
                            an owner, mail and a passphrase.
  -l --listkeys             List all keys currently stored in your
-                           vault. Only the key id&#39;s and some info
+                           vault. Only the key id's and some info
                            about the keys will be printed, not the
                            actual keys.
  -L --listkeys-verbose     Display a more verbose key listing
@@ -200,8 +223,9 @@
                            Currently supported: pcp and pbp.
  -j --json                 enable JSON output. Can be used with info
                            output (-t) and key export (-p and -s).
-                           and import (-K).
- 
+                           and import (-K).</pre>
+<pre>
+
  Encryption Options:
  -e --encrypt              Asym-Encrypt a message. Read from stdin or
                            specified via -I. Output will be written
@@ -218,7 +242,7 @@
                            Add -z to ascii armor the output using Z85.
  -A --anonymous            Use anonymous sender key pair instead of
                            your own primary key pair. In this mode the
-                           recipient doesn&#39;t need to have your public
+                           recipient doesn't need to have your public
                            key.
  -m --encrypt-sym          Sym-Encrypt a message. Specify -I and/or
                            -O for input/output file. You will be asked
@@ -233,13 +257,14 @@
                            The primary secret key will be used for
                            decryption, if there is no primary and
                            just one secret key in the vault, this
-                           one will be used. Otherwise you&#39;ll have
+                           one will be used. Otherwise you'll have
                            to specify the keyid (-i) of the key.
                            You need to have the public key of the
                            sender installed in your vault.
                            If the input is self-encrypted (symetrically)
-                           a passphrase will be requested.
- 
+                           a passphrase will be requested.</pre>
+<pre>
+
  Signature Options:
  -g --sign                 Create a signature of file specified with
                            -I (or from stdin) using your primary
@@ -249,12 +274,13 @@
                            the file specified with -I (or stdin).
                            The public key required for this must
                            exist in your vault file.
- -f --sigfile &lt;file&gt;       Write a detached signature file, which doesn&#39;t
+ -f --sigfile &lt;file&gt;       Write a detached signature file, which doesn't
                            contain the original content. Output will be
                            z85 encoded always. To verify, you need to
                            specify the original file to be verified
-                           against using -I as well (plus -f &lt;sigfile&gt;).
- 
+                           against using -I as well (plus -f &lt;sigfile&gt;).</pre>
+<pre>
+
  Encoding Options:
  -z --z85-encode           Encode (armor) something to Z85 encoding.
  -a --armor                If used with encryption or singing operation
@@ -263,347 +289,398 @@
                            uses stdin/stdout.
  -Z --z85-decode           Decode (dearmor) something from Z85 encoding.
                            Use -I and -O respectively, otherwise it
-                           uses stdin/stdout
- 
+                           uses stdin/stdout</pre>
+<pre>
+
  Misc Options:
  -C --checksum             Calculate a Blake2b checksum of one or more files.
                            If -x is provided, an authenticated hash will
                            be calculated, otherwise a normal hash.
                            Use -I to specify one file or put multiple file
-                           names after -C like &quot;pcp1 -C -- file1 file2 file3&quot;.
- </code></pre>
-
-<h1 id="DESCRIPTION">DESCRIPTION</h1>
-
-<p><b>Pretty Curved Privacy</b> (pcp1) is a commandline utility which can be used to encrypt files. <b>pcp1</b> uses eliptc curve cryptography for encryption (CURVE25519 by Dan J. Bernstein). While CURVE25519 is no worldwide accepted standard it hasn&#39;t been compromised by the NSA - which might be better, depending on your point of view.</p>
-
-<p><b>Caution</b>: since CURVE25519 is no accepted standard, <b>pcp1</b> has to be considered as experimental software. In fact, I wrote it just to learn about the curve and see how it works.</p>
-
-<p>Beside some differences it works like <b>GNUPG</b>. So, if you already know how to use gpg, you&#39;ll feel almost home.</p>
-
-<h1 id="QUICKSTART">QUICKSTART</h1>
-
-<p>Lets say, Alicia and Bobby want to exchange encrypted messages. Here&#39;s what the&#39;ve got to do.</p>
-
+                           names after -C like &quot;pcp1 -C -- file1 file2 file3&quot;.</pre>
+<p>
+</p>
+<hr />
+<h1><a name="description">DESCRIPTION</a></h1>
+<p><strong>Pretty Curved Privacy</strong> (pcp1) is a commandline utility which can
+be used to encrypt files. <strong>pcp1</strong> uses eliptc curve cryptography
+for encryption (CURVE25519 by Dan J. Bernstein). While CURVE25519
+is no worldwide accepted standard it hasn't been compromised by
+the NSA - which might be better, depending on your point of view.</p>
+<p><strong>Caution</strong>: since CURVE25519 is no accepted standard, <strong>pcp1</strong> has
+to be considered as experimental software. In fact, I wrote it just
+to learn about the curve and see how it works.</p>
+<p>Beside some differences it works like <strong>GNUPG</strong>. So, if you already
+know how to use gpg, you'll feel almost home.</p>
+<p>
+</p>
+<hr />
+<h1><a name="quickstart">QUICKSTART</a></h1>
+<p>Lets say, Alicia and Bobby want to exchange encrypted messages.
+Here's what the've got to do.</p>
 <p>First, both have create a secret key:</p>
-
-<pre><code> Alicia                             Bobby
- pcp1 -k                            pcp1 -k</code></pre>
-
-<p>After entering their name, email address and a passphrase to protect the key, it will be stored in their <b>vault file</b> (by default ~/.pcpvault).</p>
-
-<p>Now, both of them have to export the public key, which has to be imported by the other one. With <b>pcp</b> you can export the public part of your primary key, but the better solution is to export a derived public key especially for the recipient:</p>
-
-<pre><code> Alicia                             Bobby
- pcp1 -p -r Bobby -O alicia.pub     pcp1 -p -r Alicia -O bobby.pub</code></pre>
-
-<p>They&#39;ve to exchange the public key somehow (which is not my problem at the moment, use ssh, encrypted mail, whatever). Once exchanged, they have to import it:</p>
-
-<pre><code> Alicia                             Bobby
- pcp1 -K -I bobby.pub               pcp1 -K -I alicia.pub</code></pre>
-
+<pre>
+ Alicia                             Bobby
+ pcp1 -k                            pcp1 -k</pre>
+<p>After entering their name, email address and a passphrase to protect
+the key, it will be stored in their <strong>vault file</strong> (by default ~/.pcpvault).</p>
+<p>Now, both of them have to export the public key, which has to be
+imported by the other one. With <strong>pcp</strong> you can export the public
+part of your primary key, but the better solution is to export
+a derived public key especially for the recipient:</p>
+<pre>
+ Alicia                             Bobby
+ pcp1 -p -r Bobby -O alicia.pub     pcp1 -p -r Alicia -O bobby.pub</pre>
+<p>They've to exchange the public key somehow (which is not my
+problem at the moment, use ssh, encrypted mail, whatever). Once exchanged,
+they have to import it:</p>
+<pre>
+ Alicia                             Bobby
+ pcp1 -K -I bobby.pub               pcp1 -K -I alicia.pub</pre>
 <p>They will see a response as this when done:</p>
-
-<pre><code> key 0x29A323A2C295D391 added to .pcpvault.</code></pre>
-
-<p>Now, Alicia finally writes the secret message, encrypts it and sends it to Bobby, who in turn decrypts it:</p>
-
-<pre><code> Alicia                             Bobby
+<pre>
+ key 0x29A323A2C295D391 added to .pcpvault.</pre>
+<p>Now, Alicia finally writes the secret message, encrypts it and
+sends it to Bobby, who in turn decrypts it:</p>
+<pre>
+ Alicia                             Bobby
  echo &quot;Love you, honey&quot; &gt; letter
  pcp1 -e -r Bobby -I letter -O letter.asc
- cat letter.asc | mail bobby@foo.bar
-
-                                    pcp1 -d -I letter.asc | less</code></pre>
-
-<p>And that&#39;s it.</p>
-
-<p>Please note the big difference to <b>GPG</b> though: both Alicia AND Bobby have to enter the passphrase for their secret key! That&#39;s the way CURVE25519 works: you encrypt a message using your secret key and the recipients public key and the recipient does the opposite, he uses his secret key and your public key to actually decrypt the message.</p>
-
-<p>Oh - and if you&#39;re wondering why I named them Alicia and Bobby: I was just sick of Alice and Bob. We&#39;re running NSA-free, so we&#39;re using other sample names as well.</p>
-
-<h1 id="FILES-AND-PIPES">FILES AND PIPES</h1>
-
-<p>Pcp behaves like any other unix tool. If not otherwise specified it will read input from standard input (STDIN) and print output to standard output (STDOUT). For instance:</p>
-
-<pre><code> pcp1 -e -O output</code></pre>
-
-<p>will read the text to be encrypted from standard input, because <b>-I</b> has not been specified. It works the same with <b>-O</b>:</p>
-
-<pre><code> pcp1 -e -I myfile</code></pre>
-
+ cat letter.asc | mail bobby@foo.bar</pre>
+<pre>
+                                    pcp1 -d -I letter.asc | less</pre>
+<p>And that's it.</p>
+<p>Please note the big difference to <strong>GPG</strong> though: both Alicia
+AND Bobby have to enter the passphrase for their secret key!
+That's the way CURVE25519 works: you encrypt a message using
+your secret key and the recipients public key and the recipient
+does the opposite, he uses his secret key and your public key
+to actually decrypt the message.</p>
+<p>Oh - and if you're wondering why I named them Alicia and Bobby:
+I was just sick of Alice and Bob. We're running NSA-free, so we're
+using other sample names as well.</p>
+<p>
+</p>
+<hr />
+<h1><a name="files_and_pipes">FILES AND PIPES</a></h1>
+<p>Pcp behaves like any other unix tool. If not otherwise specified
+it will read input from standard input (STDIN) and print output
+to standard output (STDOUT). For instance:</p>
+<pre>
+ pcp1 -e -O output</pre>
+<p>will read the text to be encrypted from standard input, because <strong>-I</strong>
+has not been specified. It works the same with <strong>-O</strong>:</p>
+<pre>
+ pcp1 -e -I myfile</pre>
 <p>In this case the encrypted result will be written to standard output.</p>
-
-<p>Therefore it is possible to use pcp within pipes. Another more realistic example:</p>
-
-<pre><code> ssh remote cat file | pcp1 -ez | mailx -s &#39;as requested&#39; bob@somewhere</code></pre>
-
-<p>here we encrypt a file symmetrically without downloading it from a remote ssh server and sending the encrypted result via email to someone.</p>
-
-<p>The behavior is the same with any other functionality where files are involved like importing or exporting keys. However, there&#39;s one exception: If the option <b>-X</b> (<b>--password-file</b>) has been used and is set to <b>-</b>, then this will take precedence over any other possible use of standard input. So if you want to encrypt something and don&#39;t specify an input file you cannot use <b>-X -</b>, and vice versa. IF you use <b>-X -</b> the passphrase will be read from standard input, which then can&#39;t be used further for input files elsewhere. Pcp will exit with an error in such a case.</p>
-
-<h1 id="PCP1-KEYS">PCP1 KEYS</h1>
-
-<p><b>pcp1</b> keys are stored in a binary file, called <b>the vault</b>. It&#39;s by default located in <b>~/.pcpvault</b> but you can of course specify another location using the <b>-V</b> option.</p>
-
-<p>There are two kinds of keys: secret and public keys. In reality a secret key always includes its public key. Both types of keys can be exported to files and transfered to other people who can then import them. You should usually only do this with public keys though.</p>
-
-<p>There is a primary secret key which will always used for operations when no keyid has been specified. However, you may have as many secret keys in your vault as you like.</p>
-
-<p>Each key can be identified using its <b>keyid</b> which looks like this:</p>
-
-<pre><code> 0xD49119E85266509F</code></pre>
-
-<p>A public key exported from a secret key will have the same keyid as the secret key.</p>
-
-<p>If you just want to know details about a key or the vault, use the <b>-t</b> option.</p>
-
-<h1 id="ENCRYPTION">ENCRYPTION</h1>
-
+<p>Therefore it is possible to use pcp within pipes. Another more
+realistic example:</p>
+<pre>
+ ssh remote cat file | pcp1 -ez | mailx -s 'as requested' bob@somewhere</pre>
+<p>here we encrypt a file symmetrically without downloading it from a
+remote ssh server and sending the encrypted result via email to
+someone.</p>
+<p>The behavior is the same with any other functionality where files are involved
+like importing or exporting keys. However, there's one exception:
+If the option <strong>-X</strong> (<strong>--password-file</strong>) has been used and is set
+to <strong>-</strong>, then this will take precedence over any other possible use
+of standard input. So if you want to encrypt something and don't 
+specify an input file you cannot use <strong>-X -</strong>, and vice versa. IF
+you use <strong>-X -</strong> the passphrase will be read from standard input, which
+then can't be used further for input files elsewhere. Pcp will exit
+with an error in such a case.</p>
+<p>
+</p>
+<hr />
+<h1><a name="pcp1_keys">PCP1 KEYS</a></h1>
+<p><strong>pcp1</strong> keys are stored in a binary file, called <strong>the vault</strong>.
+It's by default located in <strong>~/.pcpvault</strong> but you can of course
+specify another location using the <strong>-V</strong> option.</p>
+<p>There are two kinds of keys: secret and public keys. In reality
+a secret key always includes its public key. Both types of keys
+can be exported to files and transfered to other people who can
+then import them. You should usually only do this with public keys
+though.</p>
+<p>There is a primary secret key which will always used for operations
+when no keyid has been specified. However, you may have as many
+secret keys in your vault as you like.</p>
+<p>Each key can be identified using its <strong>keyid</strong> which looks like this:</p>
+<pre>
+ 0xD49119E85266509F</pre>
+<p>A public key exported from a secret key will have the same keyid
+as the secret key.</p>
+<p>If you just want to know details about a key or the vault, use the
+<strong>-t</strong> option.</p>
+<p>
+</p>
+<hr />
+<h1><a name="encryption">ENCRYPTION</a></h1>
 <p>There are 3 modes of encryption available in pcp1:</p>
-
 <dl>
+<dt><strong><a name="standard_public_key_encryption" class="item"><strong>Standard public key encryption</strong></a></strong></dt>
 
-<dt id="Standard-public-key-encryption"><b>Standard public key encryption</b></dt>
 <dd>
-
-<p>In this mode, which is the default, a public key as specified with <b>-i</b> or <b>-r</b> and your primary secret key will be used for encryption.</p>
-
+<p>In this mode, which is the default, a public key as specified
+with <strong>-i</strong> or <strong>-r</strong> and your primary secret key will be used
+for encryption.</p>
 <p>Example command:</p>
-
-<pre><code> pcp1 -e -i 0x2BD734B15CE2722D -I message.txt -O message.asc</code></pre>
-
-<p>Here we didn&#39;t specify a recipient. Therefore the public key given with -i will be used directly.</p>
-
+<pre>
+ pcp1 -e -i 0x2BD734B15CE2722D -I message.txt -O message.asc</pre>
+<p>Here we didn't specify a recipient. Therefore the public
+key given with -i will be used directly.</p>
 <p>Another example:</p>
-
-<pre><code> pcp1 -e -r Bobby -r McCoy -I message.txt -O message.asc</code></pre>
-
-<p>As you can see, it is also possible to encrypt a message for multiple recipients.</p>
-
+<pre>
+ pcp1 -e -r Bobby -r McCoy -I message.txt -O message.asc</pre>
+<p>As you can see, it is also possible to encrypt a message for multiple
+recipients.</p>
 </dd>
-<dt id="Anonymous-public-key-encryption"><b>Anonymous public key encryption</b></dt>
+<dt><strong><a name="anonymous_public_key_encryption" class="item"><strong>Anonymous public key encryption</strong></a></strong></dt>
+
 <dd>
-
-<p>In anonymous mode a random generated keypair will be used on the sender side. This way the recipient doesn&#39;t have to have your public key.</p>
-
+<p>In anonymous mode a random generated keypair will be used on the
+sender side. This way the recipient doesn't have to have your public
+key.</p>
 <p>Example command:</p>
-
-<pre><code> pcp1 -r -r Bobby -A -I message.txt -O message.asc</code></pre>
-
-<p>The public key part of the generated key pair will be included in the output, which potentiall lessens security. Use with care and avoid this mode when possible.</p>
-
+<pre>
+ pcp1 -r -r Bobby -A -I message.txt -O message.asc</pre>
+<p>The public key part of the generated key pair will be included in
+the output, which potentiall lessens security. Use with care and
+avoid this mode when possible.</p>
 </dd>
-<dt id="Self-encryption-mode"><b>Self encryption mode</b></dt>
+<dt><strong><a name="self_encryption_mode" class="item"><strong>Self encryption mode</strong></a></strong></dt>
+
 <dd>
-
-<p>You can also encrypt a file symetrically. No public key material will be used in this mode.</p>
-
-<p>While this works, the security of it totally depends on the strength of the passphrase used for encryption.</p>
-
+<p>You can also encrypt a file symetrically. No public key material
+will be used in this mode.</p>
+<p>While this works, the security of it totally depends on the
+strength of the passphrase used for encryption.</p>
 <p>Example command:</p>
-
-<pre><code> pcp1 -e -I message.txt -O cipher.z85</code></pre>
-
-<p>As you can see we didn&#39;t specify any recipients (-i or -r) and therefore pcp1 operates in self mode encryption. It will ask you for a passphrase, from which an encryption key will be derived using scrypt().</p>
-
-<p>PCP doesn&#39;t validate the security of the passphrase.</p>
-
-<p>Self mode can be explicitly enforced with <b>-m</b>.</p>
-
+<pre>
+ pcp1 -e -I message.txt -O cipher.z85</pre>
+<p>As you can see we didn't specify any recipients (-i or -r) and therefore pcp1
+operates in self mode encryption. It will ask you for a passphrase, from which
+an encryption key will be derived using <code>scrypt()</code>.</p>
+<p>PCP doesn't validate the security of the passphrase.</p>
+<p>Self mode can be explicitly enforced with <strong>-m</strong>.</p>
 </dd>
 </dl>
-
-<h1 id="SIGNATURES">SIGNATURES</h1>
-
+<p>
+</p>
+<hr />
+<h1><a name="signatures">SIGNATURES</a></h1>
 <p>There are 3 modes for digital signatures available on pcp1:</p>
-
 <dl>
+<dt><strong><a name="standard_nacl_binary_signatures" class="item"><strong>Standard NACL binary signatures</strong></a></strong></dt>
 
-<dt id="Standard-NACL-binary-signatures"><b>Standard NACL binary signatures</b></dt>
 <dd>
-
-<p>In this mode, which is the default, an ED25519 signature will be calculated from a BLAKE2 hash of the input file content. Both the original file content plus the signature will be written to the output file.</p>
-
+<p>In this mode, which is the default, an ED25519 signature will
+be calculated from a BLAKE2 hash of the input file content. Both
+the original file content plus the signature will be written to
+the output file.</p>
 <p>Example:</p>
-
-<pre><code> pcp1 -g -I message.txt -O message.asc -g</code></pre>
-
-<p>You will be asked for the passphrase to access your primary secret key. The output file will be a binary file.</p>
-
+<pre>
+ pcp1 -g -I message.txt -O message.asc -g</pre>
+<p>You will be asked for the passphrase to access your primary
+secret key. The output file will be a binary file.</p>
 </dd>
-<dt id="Armored-NACL-signatures"><b>Armored NACL signatures</b></dt>
+<dt><strong><a name="armored_nacl_signatures" class="item"><strong>Armored NACL signatures</strong></a></strong></dt>
+
 <dd>
-
-<p>While this mode does the very same calculations, the output slightly differs. The output file will be marked as a signature file, the signature itself will be appended with its own headers and Z85 encoded.</p>
-
+<p>While this mode does the very same calculations, the output
+slightly differs. The output file will be marked as a signature
+file, the signature itself will be appended with its own headers
+and Z85 encoded.</p>
 <p>Example:</p>
-
-<pre><code> pcp1 -g -I message.txt -O message.asc -g -z</code></pre>
-
-<p>You will be asked for the passphrase to access your primary secret key. The output file will be a text file.</p>
-
+<pre>
+ pcp1 -g -I message.txt -O message.asc -g -z</pre>
+<p>You will be asked for the passphrase to access your primary
+secret key. The output file will be a text file.</p>
 </dd>
-<dt id="Detached-NACL-signatures"><b>Detached NACL signatures</b></dt>
+<dt><strong><a name="detached_nacl_signatures" class="item"><strong>Detached NACL signatures</strong></a></strong></dt>
+
 <dd>
-
-<p>In some cases you will need to have the signature separated from the original input file, e.g. to sign download files. You can generate detached signatures for such purposes. Still, the signature will be calculated the same way as in standard signatures but put out into a separate file. A detached signature file will always be Z85 encoded.</p>
-
+<p>In some cases you will need to have the signature separated
+from the original input file, e.g. to sign download files. You
+can generate detached signatures for such purposes. Still, the
+signature will be calculated the same way as in standard signatures
+but put out into a separate file. A detached signature file will always
+be Z85 encoded.</p>
 <p>Example:</p>
-
-<pre><code> pcp1 -g -I message.txt -O -g --sigfile message.sig</code></pre>
-
+<pre>
+ pcp1 -g -I message.txt -O -g --sigfile message.sig</pre>
 <p>Verification by recipient:</p>
-
-<pre><code> pcp -c -f message.sig -I message.txt</code></pre>
-
+<pre>
+ pcp -c -f message.sig -I message.txt</pre>
 </dd>
 </dl>
-
-<h1 id="SIGNED-ENCRYPTION">SIGNED ENCRYPTION</h1>
-
-<p>Beside pure encryption and signatures pcp1 also supports signed encryption. In this mode an input file will be encrypted and a signature of the encrypted content and encrypted recipients with your primary secret key will be appended.</p>
-
+<p>
+</p>
+<hr />
+<h1><a name="signed_encryption">SIGNED ENCRYPTION</a></h1>
+<p>Beside pure encryption and signatures pcp1 also supports signed
+encryption. In this mode an input file will be encrypted and a
+signature of the encrypted content and encrypted recipients with your primary
+secret key will be appended.</p>
 <p>The signature is encrypted as well.</p>
-
 <p>Example:</p>
-
-<pre><code> pcp1 -e -g -r Bobby -I README.txt -O README.asc</code></pre>
-
-<p>Please note the additional <b>-g</b> parameter. The recipient can decrypt and verify the so created data like this:</p>
-
-<pre><code> pcp1 -d -I README.asc -o README.txt</code></pre>
-
-<p>If decryption works, the output file will be written. If signature verification fails you will be informed, but the decrypted output will be left untouched. It is up to you how to react on an invalid signature.</p>
-
-<h1 id="ALTERNATIVE-COMMANDLINES">ALTERNATIVE COMMANDLINES</h1>
-
-<p>You can save typing if you supply additional arguments to pcp after commandline options. Such arguments are treated as filenames or recipients, depending what options you already specified.</p>
-
+<pre>
+ pcp1 -e -g -r Bobby -I README.txt -O README.asc</pre>
+<p>Please note the additional <strong>-g</strong> parameter. The recipient can
+decrypt and verify the so created data like this:</p>
+<pre>
+ pcp1 -d -I README.asc -o README.txt</pre>
+<p>If decryption works, the output file will be written. If signature
+verification fails you will be informed, but the decrypted
+output will be left untouched. It is up to you how to react
+on an invalid signature.</p>
+<p>
+</p>
+<hr />
+<h1><a name="alternative_commandlines">ALTERNATIVE COMMANDLINES</a></h1>
+<p>You can save typing if you supply additional arguments to
+pcp after commandline options. Such arguments are treated
+as filenames or recipients, depending what options you already
+specified.</p>
 <p>Here is a list of commandlines and their possible alternatives:</p>
-
-<pre><code> ORIGINAL                    ALTERNATIVE               DESCRIPTION
-
- pcp -e -I message -r Bob    pcp -e -r Bob message     use &#39;message&#39; as inputfile.
-                             pcp -e -I message Bob     use &#39;Bob&#39; as recipient,
-                                                       multiple recipients supported.
-
- pcp -d -I crypted           pcp -d crypted            use &#39;crypted&#39; as inputfile.
-
- pcp -g -I message           pcp -g message            use &#39;message&#39; as inputfile.
-
- pcp -g -I msg -O sig        pcp -g -I msg sig         use &#39;sig&#39; as outputfile.
-
- pcp -p -O key.pcp           pcp -p key.pcp            use &#39;key.pcp&#39; as outputfile.
-
- pcp -p -O key.pcp -r Bob    pcp -p -O key.pcp Bob     use &#39;Bob&#39; as recipient.
-
- pcp -s -O key.pcp           pcp -s key.pcp            use &#39;key.pcp&#39; as outputfile.
-
- pcp -s -O key.pcp -r Bob    pcp -s -O key.pcp Bob     use &#39;Bob&#39; as recipient.
-
- pcp -K -I alice.pcp         pcp -K alice.pcp          use &#39;alice.pcp&#39; as keyfile.</code></pre>
-
-<h1 id="ENVIRONMENT-VARIABLES">ENVIRONMENT VARIABLES</h1>
-
+<pre>
+ ORIGINAL                    ALTERNATIVE               DESCRIPTION</pre>
+<pre>
+ pcp -e -I message -r Bob    pcp -e -r Bob message     use 'message' as inputfile.
+                             pcp -e -I message Bob     use 'Bob' as recipient,
+                                                       multiple recipients supported.</pre>
+<pre>
+ pcp -d -I crypted           pcp -d crypted            use 'crypted' as inputfile.</pre>
+<pre>
+ pcp -g -I message           pcp -g message            use 'message' as inputfile.</pre>
+<pre>
+ pcp -g -I msg -O sig        pcp -g -I msg sig         use 'sig' as outputfile.</pre>
+<pre>
+ pcp -p -O key.pcp           pcp -p key.pcp            use 'key.pcp' as outputfile.</pre>
+<pre>
+ pcp -p -O key.pcp -r Bob    pcp -p -O key.pcp Bob     use 'Bob' as recipient.</pre>
+<pre>
+ pcp -s -O key.pcp           pcp -s key.pcp            use 'key.pcp' as outputfile.</pre>
+<pre>
+ pcp -s -O key.pcp -r Bob    pcp -s -O key.pcp Bob     use 'Bob' as recipient.</pre>
+<pre>
+ pcp -K -I alice.pcp         pcp -K alice.pcp          use 'alice.pcp' as keyfile.</pre>
+<p>
+</p>
+<hr />
+<h1><a name="environment_variables">ENVIRONMENT VARIABLES</a></h1>
 <p>pcp respects the following environment variables:</p>
-
 <dl>
+<dt><strong><a name="pcp_vault" class="item"><strong>PCP_VAULT</strong></a></strong></dt>
 
-<dt id="PCP_VAULT"><b>PCP_VAULT</b></dt>
 <dd>
-
-<p>Use an alternative vaultfile. The default is <b>~/.pcpvault</b> and can be overridden with the <b>-V</b> commandline option. If PCP_VAULT is set, this one will be used instead.</p>
-
+<p>Use an alternative vaultfile. The default is <strong>~/.pcpvault</strong> and
+can be overridden with the <strong>-V</strong> commandline option. If PCP_VAULT
+is set, this one will be used instead.</p>
 </dd>
-<dt id="PCP_DEBUG"><b>PCP_DEBUG</b></dt>
+<dt><strong><a name="pcp_debug" class="item"><strong>PCP_DEBUG</strong></a></strong></dt>
+
 <dd>
-
-<p>Enable debugging output, where supported. Same as <b>-D</b>.</p>
-
+<p>Enable debugging output, where supported. Same as <strong>-D</strong>.</p>
 </dd>
 </dl>
-
-<h1 id="EXIT-STATUS">EXIT STATUS</h1>
-
+<p>
+</p>
+<hr />
+<h1><a name="exit_status">EXIT STATUS</a></h1>
 <p>Pcp may return one of several error codes if it encounters problems.</p>
+<ol>
+<li><strong><a name="no_problems_occurred" class="item">No problems occurred.</a></strong>
 
+</li>
+<li><strong><a name="generic_error_code" class="item">Generic error code.</a></strong>
+
+</li>
+</ol>
+<p>
+</p>
+<hr />
+<h1><a name="files">FILES</a></h1>
 <dl>
+<dt><strong><a name="pcpvault" class="item"><strong>~/.pcpvault</strong></a></strong></dt>
 
-<dt id="No-problems-occurred">0 No problems occurred.</dt>
 <dd>
-
-</dd>
-<dt id="Generic-error-code">1 Generic error code.</dt>
-<dd>
-
-</dd>
-</dl>
-
-<h1 id="FILES">FILES</h1>
-
-<dl>
-
-<dt id="pcpvault"><b>~/.pcpvault</b></dt>
-<dd>
-
 <p>Default vault file where all keys are stored.</p>
-
 </dd>
 </dl>
-
-<h1 id="EXPERIMENTAL-STATUS">EXPERIMENTAL STATUS</h1>
-
-<p>Currently there are a couple of problems which are unsolved or in the process to be solved.</p>
-
+<p>
+</p>
+<hr />
+<h1><a name="experimental_status">EXPERIMENTAL STATUS</a></h1>
+<p>Currently there are a couple of problems which are
+unsolved or in the process to be solved.</p>
 <dl>
+<dt><strong><a name="no_secure_native_key_exchange_for_store_and_forward_systems" class="item"><strong>No secure native key exchange for store-and-forward systems</strong></a></strong></dt>
 
-<dt id="No-secure-native-key-exchange-for-store-and-forward-systems"><b>No secure native key exchange for store-and-forward systems</b></dt>
 <dd>
-
-<p>Pretty Curved Privacy is a store-and-forward system, it works on files and can&#39;t use any cool key exchange protocols therefore. For example there would be <b>CurveCP</b> which guarantees a secure key exchange. But CurveCP cannot be used offline.</p>
-
-<p>Users have to find other means to exchange keys. That&#39;s a pity since with Curve25519 you can&#39;t just publish your public key to some key server because in order to encrypt a message, both the recipient AND the sender need to have the public key of each other. It would be possible to publish public keys, and attach the senders public key to the encrypted message, but I&#39;m not sure if such an aproach would be secure enough. Pcp implements this scheme though (refer to the option -A).</p>
-
+<p>Pretty Curved Privacy is a store-and-forward system, it works
+on files and can't use any cool key exchange protocols therefore.
+For example there would be <strong>CurveCP</strong> which guarantees a
+secure key exchange. But CurveCP cannot be used offline.</p>
+<p>Users have to find other means to exchange keys. That's a pity
+since with Curve25519 you can't just publish your public key
+to some key server because in order to encrypt a message, both
+the recipient AND the sender need to have the public key of
+each other. It would be possible to publish public keys,
+and attach the senders public key to the encrypted message, but
+I'm not sure if such an aproach would be secure enough. Pcp
+implements this scheme though (refer to the option -A).</p>
 </dd>
-<dt id="Curve25519-not-widely-adopted"><b>Curve25519 not widely adopted</b></dt>
+<dt><strong><a name="curve25519_not_widely_adopted" class="item"><strong>Curve25519 not widely adopted</strong></a></strong></dt>
+
 <dd>
-
-<p>At the time of this writing the ECC algorithm Curve25519 is only rarely used, in most cases by experimental software (such as Pretty Curved Privacy). As far as I know there haven&#39;t been done the kind of exessive crypto analysis as with other ECC algorithms.</p>
-
-<p>While I, as the author of pcp1 totally trust D.J.Bernstein, this may not be the case for you.</p>
-
+<p>At the time of this writing the ECC algorithm Curve25519
+is only rarely used, in most cases by experimental software
+(such as Pretty Curved Privacy). As far as I know there haven't
+been done the kind of exessive crypto analysis as with other
+ECC algorithms.</p>
+<p>While I, as the author of pcp1 totally trust D.J.Bernstein, this
+may not be the case for you.</p>
 </dd>
-<dt id="Unreviewed-yet"><b>Unreviewed yet</b></dt>
+<dt><strong><a name="unreviewed_yet" class="item"><strong>Unreviewed yet</strong></a></strong></dt>
+
 <dd>
-
-<p>As with every crypto software, pcp has to undergo a couple rounds of peer review (analysis) in order to be considered secure, trustable and stable. No any such review has been undertaken on pcp yet.</p>
-
-<p>Pcp is a mere fun project aimed at teaching myself better C coding and crypto. In fact I don&#39;t even trust the software myself and I don&#39;t use it for anything remotely serious.</p>
-
+<p>As with every crypto software, pcp has to undergo a couple rounds
+of peer review (analysis) in order to be considered secure, trustable
+and stable. No any such review has been undertaken on pcp yet.</p>
+<p>Pcp is a mere fun project aimed at teaching myself better C coding
+and crypto. In fact I don't even trust the software myself and I
+don't use it for anything remotely serious.</p>
 </dd>
 </dl>
-
-<p><b>In short: don NOT use this software for production purposes!</b></p>
-
-<h1 id="INTERNALS">INTERNALS</h1>
-
-<h2 id="PASSPHRASES">PASSPHRASES</h2>
-
-<p>Passphrases are used to protect secret data at rest on various instances by pcp, like secret keys or symmetric encrypted data.</p>
-
-<p>Pcp doesn&#39;t use the passphrase directly but uses a key derivation function to calculate a secure key from the passphrase: libsodium&#39;s <b>crypto_pwhash_scryptsalsa208sha256()</b> function.</p>
-
-<p>In order to properly protect secret keys, pcp measures the entropy of a given passphrase and warns the user about the possible weak passphrase. This measurement is calculated using the Claude E. Shannon method, where a value of 8.0 means maximum available entropy (e.g. truly random 256 chars in no comprehensible order) and 0.0 stands for the worst like passphrases like &quot;aaa&quot; or &quot;x&quot;.</p>
-
-<p>Pcp considers passphrases with an entropy measurement of 3.32 or higher as acceptable. This may change in the future.</p>
-
-<h2 id="VAULT-FORMAT">VAULT FORMAT</h2>
-
-<p>The vault file contains all public and secret keys. It&#39;s a portable binary file.</p>
-
+<p><strong>In short: don NOT use this software for production purposes!</strong></p>
+<p>
+</p>
+<hr />
+<h1><a name="internals">INTERNALS</a></h1>
+<p>
+</p>
+<h2><a name="passphrases">PASSPHRASES</a></h2>
+<p>Passphrases are used to protect secret data at rest on various instances
+by pcp, like secret keys or symmetric encrypted data.</p>
+<p>Pcp doesn't use the passphrase directly but uses a key derivation function
+to calculate a secure key from the passphrase: libsodium's
+<strong>crypto_pwhash_scryptsalsa208sha256()</strong> function.</p>
+<p>In order to properly protect secret keys, pcp measures the entropy
+of a given passphrase and warns the user about the possible weak
+passphrase. This measurement is calculated using the Claude E. Shannon
+method, where a value of 8.0 means maximum available entropy (e.g.
+truly random 256 chars in no comprehensible order) and 0.0 stands
+for the worst like passphrases like &quot;aaa&quot; or &quot;x&quot;.</p>
+<p>Pcp considers passphrases with an entropy measurement of 3.32 or higher
+as acceptable. This may change in the future.</p>
+<p>
+</p>
+<h2><a name="vault_format">VAULT FORMAT</a></h2>
+<p>The vault file contains all public and secret keys. It's a portable
+binary file.</p>
 <p>The file starts with a header:</p>
-
-<pre><code> +-------------------------------------------+
+<pre>
+ +-------------------------------------------+
  | Field        Size   Description           |
  +-------------------------------------------+
  | File ID    |    1 | Vault Identifier 0xC4 |
@@ -611,13 +688,12 @@
  | Version    |    4 | Big endian, version   |
  +-------------------------------------------+
  | Checksum   |   32 | SHA256 Checksum       |
- +-------------------------------------------+</code></pre>
-
+ +-------------------------------------------+</pre>
 <p>The checksum is a checksum of all keys.</p>
-
-<p>The header is followed by the keys. Each key is preceded by a key header which looks like this:</p>
-
-<pre><code> +--------------------------------------------+
+<p>The header is followed by the keys. Each key is preceded by a
+key header which looks like this:</p>
+<pre>
+ +--------------------------------------------+
  | Field        Size   Description            |
  +--------------------------------------------+
  | Type       |    1 | Key type (S,P,M)       |
@@ -627,21 +703,19 @@
  | Version    |    4 | Big endian, keyversion |
  +--------------------------------------------+
  | Checksum   |   32 | SHA256 Key Checksum    |
- +--------------------------------------------+</code></pre>
-
+ +--------------------------------------------+</pre>
 <p>Type can be one of:</p>
-
-<pre><code> PCP_KEY_TYPE_MAINSECRET 0x01
+<pre>
+ PCP_KEY_TYPE_MAINSECRET 0x01
  PCP_KEY_TYPE_SECRET     0x02
- PCP_KEY_TYPE_PUBLIC     0x03</code></pre>
-
+ PCP_KEY_TYPE_PUBLIC     0x03</pre>
 <p>The key header is followed by the actual key, see below.</p>
-
-<h2 id="SECRET-KEY-FORMAT">SECRET KEY FORMAT</h2>
-
+<p>
+</p>
+<h2><a name="secret_key_format">SECRET KEY FORMAT</a></h2>
 <p>A secret key is a binary structure with the following format:</p>
-
-<pre><code> +---------------------------------------------------------+
+<pre>
+ +---------------------------------------------------------+
  | Field         Size      Description                     |
  +-------------+--------+----------------------------------+
  | Public      |     32 | Curve25519 Public Key Part       |
@@ -669,205 +743,215 @@
  | Serial      |      4 | Serial Number                    |
  +-------------|--------|----------------------------------+
  | Type        |      1 | Key Type                         |
- +-------------+--------+----------------------------------+</code></pre>
-
+ +-------------+--------+----------------------------------+</pre>
 <p>Some notes:</p>
-
-<p>The secret key fields will be filled with random data if the key is encrypted. The first byte of it will be set to 0 in that case.</p>
-
-<p>The key id is a computed JEN Hash of the secret and public key concatenated, put into hex, as a string.</p>
-
-<p>The key version is a static value, currently 0x2. If the key format changes in the future, this version number will be increased to distinguish old from new keys.</p>
-
-<p>Exported keys will be encoded in Z85 encoding. When such an exported key is imported, only the actual Z85 encoded data will be used. Header lines and lines starting with whitespace will be ignored. They are only there for convenience.</p>
-
+<p>The secret key fields will be filled with random data if the
+key is encrypted. The first byte of it will be set to 0 in that
+case.</p>
+<p>The key id is a computed JEN Hash of the secret and public
+key concatenated, put into hex, as a string.</p>
+<p>The key version is a static value, currently 0x2. If the key
+format changes in the future, this version number will be
+increased to distinguish old from new keys.</p>
+<p>Exported keys will be encoded in Z85 encoding. When such an
+exported key is imported, only the actual Z85 encoded data
+will be used. Header lines and lines starting with whitespace
+will be ignored. They are only there for convenience.</p>
 <p>Key generation works like this:</p>
-
 <ul>
-
-<li><p>Generate a random seed (32 bytes).</p>
-
+<li>
+<p>Generate a random seed (32 bytes).</p>
 </li>
-<li><p>Generate a ED25519 sigining keypair from that seed.</p>
-
+<li>
+<p>Generate a ED25519 sigining keypair from that seed.</p>
 </li>
-<li><p>Generate a random seed (32 bytes).</p>
-
+<li>
+<p>Generate a random seed (32 bytes).</p>
 </li>
-<li><p>Generate a Curve25519 encryption keypair from that seed.</p>
-
+<li>
+<p>Generate a Curve25519 encryption keypair from that seed.</p>
 </li>
 </ul>
-
-<p>So, while both secrets are stored in the same PCP key, they are otherwise unrelated. If one of them leaks, the other cannot be recalculated from it.</p>
-
-<p>Take a look at the function <b>pcp_keypairs()</b> for details.</p>
-
-<h2 id="PUBLIC-KEY-EXPORT-FORMAT">PUBLIC KEY EXPORT FORMAT</h2>
-
-<p>Exported public and secret keys will be written in a portable way. Pcp uses RFC4880 export format for public keys with some slight modifications:</p>
-
-<ul>
-
-<li><p>Key material is native to libsodium/pcp and not specified in the rfc for curve25519/ed25519. Therefore pcp encodes key material doing it like this: mp|sp|cp</p>
-
+<p>So, while both secrets are stored in the same PCP key, they
+are otherwise unrelated. If one of them leaks, the other
+cannot be recalculated from it.</p>
+<p>Take a look at the function <strong>pcp_keypairs()</strong> for details.</p>
+<p>
+</p>
+<h2><a name="public_key_export_format">PUBLIC KEY EXPORT FORMAT</a></h2>
+<p>Exported public and secret keys will be written in a portable
+way. Pcp uses <a href="http://www.ietf.org/rfc/rfc4880.txt" class="rfc">RFC4880</a> export format for public keys with some
+slight modifications:</p>
+<dl>
+<dt>
+<dd>
+<p>Key material is native to libsodium/pcp and not specified in the
+rfc for curve25519/ed25519. Therefore pcp encodes key material doing it like
+this: mp|sp|cp</p>
 <p>where</p>
-
-<pre><code> mp = master keysigning public key (ed25519), 32 bytes
+<pre>
+ mp = master keysigning public key (ed25519), 32 bytes
  sp = signing public key (ed25519), 32 bytes
- cp = encryption public key (curve25519), 32 bytes</code></pre>
-
-</li>
-<li><p>The various cipher (algorithm) id&#39;s are unspecified for libsodium/pcp native ciphers. Therefore they are proprietary to pcp, starting at 33 (22 is the last officially assigned one). Once those cipher numbers become official, they will be used instead.</p>
-
-</li>
-<li><p>Pcp uses 64 bit integers for timestamps everywhere (ctime, expire, etc), to be year 2038 safe. Note, that this is a violation of the RFC spec. However, said RFC have to be modified to fit 2038 (and beyond) anyways. This applies for the keyfile ctime as well for the key sig sub fields containing time values.</p>
-
-</li>
-<li><p>The exported public key packet contains a signature. Pcp is filling out all required fields. A signature has a variable number of sig sub packets. Pcp uses only these types:</p>
-
-<pre><code>  2 = Signature Creation Time     (8 byte)
+ cp = encryption public key (curve25519), 32 bytes</pre>
+</dd>
+<dt>
+<dd>
+<p>The various cipher (algorithm) id's are unspecified for
+libsodium/pcp native ciphers. Therefore they are proprietary to pcp, starting at
+33 (22 is the last officially assigned one). Once
+those cipher numbers become official, they will be used instead.</p>
+</dd>
+<dt>
+<dd>
+<p>Pcp uses 64 bit integers for timestamps everywhere (ctime, expire, etc),
+to be year 2038 safe. Note, that this is a violation of the
+RFC spec. However, said RFC have to be modified to fit 2038
+(and beyond) anyways. This applies for the keyfile ctime as
+well for the key sig sub fields containing time values.</p>
+</dd>
+<dt>
+<dd>
+<p>The exported public key packet contains a signature. Pcp is
+filling out all required fields. A signature has a variable
+number of sig sub packets. Pcp uses only these types:</p>
+<pre>
+  2 = Signature Creation Time     (8 byte)
   3 = Signature Expiration Time   (8 byte)
   9 = Key Expiration Time         (8 bytes)
  20 = Notation Data               (4 byte flags, N bytes name+value)
- 27 = Key Flags                   (1 byte, use 0x02, 0x08 and 0x80</code></pre>
-
-</li>
-<li><p>Pcp uses 3 notation fields:</p>
-
+ 27 = Key Flags                   (1 byte, use 0x02, 0x08 and 0x80</pre>
+</dd>
+<dt>
+<dd>
+<p>Pcp uses 3 notation fields:</p>
 <dl>
+<dt><strong><a name="owner_which_contains_the_owner_name_if_set" class="item">&quot;owner&quot;, which contains the owner name, if set</a></strong></dt>
 
-<dt id="owner-which-contains-the-owner-name-if-set">&quot;owner&quot;, which contains the owner name, if set</dt>
-<dd>
+<dt><strong><a name="mail_which_contains_the_emailaddress_if_set" class="item">&quot;mail&quot;, which contains the emailaddress, if set</a></strong></dt>
 
+<dt><strong><a name="serial_which_contains_the_32bit_serial_number" class="item">&quot;serial&quot;, which contains the 32bit serial number</a></strong></dt>
+
+</dl>
 </dd>
-<dt id="mail-which-contains-the-emailaddress-if-set">&quot;mail&quot;, which contains the emailaddress, if set</dt>
+<dt>
 <dd>
-
+<p>The actual signature field consists of the blake2 hash of
+(mp|sp|cp|keysig) followed by the nacl signature. However, pcp
+does not put an extra 16 byte value of the hash, since the nacl
+signature already contains the full hash. So, an implementation
+could simply pull the fist 16 bytes of said hash to get
+the same result if desired.</p>
 </dd>
-<dt id="serial-which-contains-the-32bit-serial-number">&quot;serial&quot;, which contains the 32bit serial number</dt>
+<dt>
 <dd>
-
+<p>The mp keypair will be used for signing. The recipient can
+verify the signature, since mp is included.</p>
+</dd>
+<dt>
+<dd>
+<p>While pcp puts expiration dates for the key and the signature
+into the export as the rfc demands, it mostly ignores them (yet).
+Key expiring is not implemented in PCP yet.</p>
+</dd>
+<dt>
+<dd>
+<p>We use big-endian always.</p>
+</dd>
+<dt>
+<dd>
+<p>Unlike RC4880 public key exports, pcp uses Z85 encoding if
+armoring have been requested by the user. Armored output has
+a header and a footer line, however they are ignored by the
+parser and are therefore optional. Newlines, if present, are
+optional as well.</p>
+<p><a href="http://tools.ietf.org/html/rfc4880#section-5.2.3">http://tools.ietf.org/html/rfc4880#section-5.2.3</a></p>
+</dd>
+<dt>
+<dd>
+<p>The key sig blob will be saved in the Vault unaltered during
+import, so pcp is able to verify the signature at will anytime. When exporting
+a foreign public key, pcp just puts out that key sig blob to the
+export untouched.</p>
+</dd>
+<dt>
+<dd>
+<p>Currently PCP only supports self-signed public key exports.</p>
+</dd>
+<dt>
+<dd>
+<p>Pcp only supports one key signature per key. However, it would be easily
+possible to support foreign keysigs as well in the future.</p>
 </dd>
 </dl>
-
-</li>
-<li><p>The actual signature field consists of the blake2 hash of (mp|sp|cp|keysig) followed by the nacl signature. However, pcp does not put an extra 16 byte value of the hash, since the nacl signature already contains the full hash. So, an implementation could simply pull the fist 16 bytes of said hash to get the same result if desired.</p>
-
-</li>
-<li><p>The mp keypair will be used for signing. The recipient can verify the signature, since mp is included.</p>
-
-</li>
-<li><p>While pcp puts expiration dates for the key and the signature into the export as the rfc demands, it mostly ignores them (yet). Key expiring is not implemented in PCP yet.</p>
-
-</li>
-<li><p>We use big-endian always.</p>
-
-</li>
-<li><p>Unlike RC4880 public key exports, pcp uses Z85 encoding if armoring have been requested by the user. Armored output has a header and a footer line, however they are ignored by the parser and are therefore optional. Newlines, if present, are optional as well.</p>
-
-<p>http://tools.ietf.org/html/rfc4880#section-5.2.3</p>
-
-</li>
-<li><p>The key sig blob will be saved in the Vault unaltered during import, so pcp is able to verify the signature at will anytime. When exporting a foreign public key, pcp just puts out that key sig blob to the export untouched.</p>
-
-</li>
-<li><p>Currently PCP only supports self-signed public key exports.</p>
-
-</li>
-<li><p>Pcp only supports one key signature per key. However, it would be easily possible to support foreign keysigs as well in the future.</p>
-
-</li>
-</ul>
-
 <p>So, a full pubkey export looks like this</p>
-
-<pre><code>    version
+<pre>
+    version
     ctime
     cipher
     3 x raw keys             \
     sigheader                 &gt; calculate hash from this
        sigsubs (header+data) /
     hash
-    signature</code></pre>
-
-<h2 id="SECRET-KEY-EXPORT-FORMAT">SECRET KEY EXPORT FORMAT</h2>
-
+    signature</pre>
+<p>
+</p>
+<h2><a name="secret_key_export_format">SECRET KEY EXPORT FORMAT</a></h2>
 <p>Secret keys are exported in a proprietary format.</p>
-
-<p>The exported binary blob is symmetrically encrypted using the NACL function crypto_secret(). The passphrase will be used to derive an encryption key using the STAR function scrypt().</p>
-
+<p>The exported binary blob is symmetrically encrypted using the NACL
+function <code>crypto_secret()</code>. The passphrase will be used to derive an
+encryption key using the STAR function <code>scrypt()</code>.</p>
 <p>The binary data before encryption consists of:</p>
-
-<pre><code> ED25519 master signing secret
+<pre>
+ ED25519 master signing secret
  Curve25519 encryption secret
  ED25519 signing secret
  ED25519 master signing public
  Curve25519 encryption public
  ED25519 signing public
- Optional notations, currently supported are the &#39;owner&#39; and &#39;mail&#39; attributes.
+ Optional notations, currently supported are the 'owner' and 'mail' attributes.
   If an attribute is empty, the len field is zero.
   -# len(VAL) (2 byte uint)
   -# VAL (string without trailing zero)
  8 byte creation time (epoch)
  4 byte key version
- 4 byte serial number</code></pre>
+ 4 byte serial number</pre>
+<p>The encrypted cipher will be prepended with the random nonce used
+to encrypt the data and looks after encryption as such:</p>
+<pre>
+  Nonce | Cipher</pre>
+<p>
+</p>
+<h2><a name="encrypted_output_format">ENCRYPTED OUTPUT FORMAT</a></h2>
+<p>The encryption protocol used by PCP uses mostly standard
+libsodium facilities with the exception that PCP uses counter
+mode (CTR-Mode) for stream encryption.</p>
+<pre>
+ Detailed description:</pre>
+<dl>
+<dt><strong><a name="generate_a_random_ephemeral_32_byte_key_s" class="item">generate a random ephemeral 32 byte key <strong>S</strong></a></strong></dt>
 
-<p>The encrypted cipher will be prepended with the random nonce used to encrypt the data and looks after encryption as such:</p>
+<dt><strong><a name="nonce" class="item">encrypt it asymetrically for each recipient using a unique nonce (<strong>R</strong>)</a></strong></dt>
 
-<pre><code>  Nonce | Cipher</code></pre>
-
-<h2 id="ENCRYPTED-OUTPUT-FORMAT">ENCRYPTED OUTPUT FORMAT</h2>
-
-<p>The encryption protocol used by PCP uses mostly standard libsodium facilities with the exception that PCP uses counter mode (CTR-Mode) for stream encryption.</p>
-
-<pre><code> Detailed description:</code></pre>
+<dt><strong><a name="encrypt_the_input_file_32k_blockwise_using_the_ephemeral_key" class="item">encrypt the input file 32k blockwise using the ephemeral key</a></strong></dt>
 
 <dl>
+<dt><strong><a name="for_each_input_block_with_a_size_of_32k_bytes" class="item">for each input block with a size of 32k bytes:</a></strong></dt>
 
-<dt id="generate-a-random-ephemeral-32-byte-key-S">generate a random ephemeral 32 byte key <b>S</b></dt>
-<dd>
+<dt><strong><a name="generate_a_random_nonce_n" class="item">generate a random nonce <strong>N</strong></a></strong></dt>
 
-</dd>
-<dt id="encrypt-it-asymetrically-for-each-recipient-using-a-unique-nonce-R">encrypt it asymetrically for each recipient using a unique nonce (<b>R</b>)</dt>
-<dd>
+<dt><strong><a name="put_the_current_counter_size_into_the_first_byte_of_the_nonce" class="item">put the current counter size into the first byte of the nonce</a></strong></dt>
 
-</dd>
-<dt id="encrypt-the-input-file-32k-blockwise-using-the-ephemeral-key">encrypt the input file 32k blockwise using the ephemeral key</dt>
-<dd>
+<dt><strong><a name="counter" class="item">put the current counter (starting with 1) into the following byte(s), if larger than 1 byte, in big endian mode</a></strong></dt>
 
-<dl>
+<dt><strong><a name="crypto_secretbox" class="item">encrypt the 32k block using <strong>crypto_secretbox()</strong> with the nonce <strong>N</strong> and the ephemeral key <strong>S</strong></a></strong></dt>
 
-<dt id="for-each-input-block-with-a-size-of-32k-bytes">for each input block with a size of 32k bytes:</dt>
-<dd>
-
-</dd>
-<dt id="generate-a-random-nonce-N">generate a random nonce <b>N</b></dt>
-<dd>
-
-</dd>
-<dt id="put-the-current-counter-size-into-the-first-byte-of-the-nonce">put the current counter size into the first byte of the nonce</dt>
-<dd>
-
-</dd>
-<dt id="put-the-current-counter-starting-with-1-into-the-following-byte-s-if-larger-than-1-byte-in-big-endian-mode">put the current counter (starting with 1) into the following byte(s), if larger than 1 byte, in big endian mode</dt>
-<dd>
-
-</dd>
-<dt id="encrypt-the-32k-block-using-crypto_secretbox-with-the-nonce-N-and-the-ephemeral-key-S">encrypt the 32k block using <b>crypto_secretbox()</b> with the nonce <b>N</b> and the ephemeral key <b>S</b></dt>
-<dd>
-
+</dl>
 </dd>
 </dl>
-
-</dd>
-</dl>
-
 <p>Symetric encryption works the very same without the recipient stuff.</p>
-
 <p>Formal format description, asymetric encrypted files:</p>
-
-<pre><code> +-----------------------------------------------------------+
+<pre>
+ +-----------------------------------------------------------+
  | Field         Size      Description                       |
  +-------------+--------+------------------------------------+
  | Type        |      1 | Filetype, 5=ASYM, 23=SYM, 6=ANON   |
@@ -879,41 +963,45 @@
  | Recipients *|   R*72 | C(recipient)|C(recipient)... (*)   |
  +-------------|--------|------------------------------------+
  | Encrypted   |      ~ | The actual encrypted data          |
- +-------------|--------|------------------------------------+</code></pre>
-
+ +-------------|--------|------------------------------------+</pre>
 <p>*) not included when doing symetric encryption.</p>
-
 <p>Recipient field format:</p>
-
-<pre><code> +---------------------------------------------------------+
+<pre>
+ +---------------------------------------------------------+
  | Field         Size      Description                     |
  +-------------+--------+----------------------------------+
  | Nonce       |     24 | Random Nonce, one per R          |
  +-------------|--------|----------------------------------+
  | Cipher      |     48 | S encrypted with PK or R         |
- +-------------|--------|----------------------------------+</code></pre>
-
-<p>R is generated using <b>crypto_box()</b> with the senders secret key, the recipients public key and a random nonce.</p>
-
+ +-------------|--------|----------------------------------+</pre>
+<p>R is generated using <strong>crypto_box()</strong> with the senders
+secret key, the recipients public key and a random nonce.</p>
 <p>Pseudocode:</p>
-
-<pre><code> R = foreach P: N | crypto_box(S, N, P, SK)
+<pre>
+ R = foreach P: N | crypto_box(S, N, P, SK)
  L = len(R)
  T = 5
  write (T | L | R)
- foreach I: write (N | crypto_secret_box(I, N, S))</code></pre>
-
-<p>where P is the public key of a recipient, SK is the senders secret key, R is the recipient list, L is the number of recipients, T is the filetype header, I is a block of input with a size of 32k, N is a nonce (new per block) and S the symmetric key.</p>
-
-<p>If using anonymous encryption, the sender generates a ephemeral key pair, uses the secret part of it to generate R. The public part will be included with the output (right after the file type. In this mode a recipient is not required to have the public key of the sender.</p>
-
-<p>The encrypted output maybe Z85 encoded. In this case the Z85 encoding will be done blockwise with blocks of 16k bytes. The decoded content inside will be as described above.</p>
-
-<h2 id="SIGNATURE-FORMAT">SIGNATURE FORMAT</h2>
-
-<p>There are different signature formats. Standard binary NACL signatures have the following format:</p>
-
-<pre><code> +---------------------------------------------------------+
+ foreach I: write (N | crypto_secret_box(I, N, S))</pre>
+<p>where P is the public key of a recipient, SK is the senders
+secret key, R is the recipient list, L is the number of recipients,
+T is the filetype header, I is a block of input with a size
+of 32k, N is a nonce (new per block) and S the symmetric key.</p>
+<p>If using anonymous encryption, the sender generates a ephemeral
+key pair, uses the secret part of it to generate R. The public
+part will be included with the output (right after the file type.
+In this mode a recipient is not required to have the public key
+of the sender.</p>
+<p>The encrypted output maybe Z85 encoded. In this case the Z85
+encoding will be done blockwise with blocks of 16k bytes. The
+decoded content inside will be as described above.</p>
+<p>
+</p>
+<h2><a name="signature_format">SIGNATURE FORMAT</a></h2>
+<p>There are different signature formats. Standard binary NACL
+signatures have the following format:</p>
+<pre>
+ +---------------------------------------------------------+
  | Field         Size      Description                     |
  +-------------+--------+----------------------------------+
  | Content     |      ~ | Original file content            |
@@ -923,20 +1011,19 @@
  | Hash        |     64 | BLAKE2 hash of the content       |
  +-------------|--------|----------------------------------+
  | Signature   |     64 | ED25519 signature of BLAKE2 Hash |
- +-------------|--------|----------------------------------+</code></pre>
-
-<p>The actual signature is not a signature over the whole content of an input file but of a BLAKE2 hash of the content.</p>
-
+ +-------------|--------|----------------------------------+</pre>
+<p>The actual signature is not a signature over the whole content
+of an input file but of a BLAKE2 hash of the content.</p>
 <p>Pseudo code:</p>
-
-<pre><code> H = crypto_generichash(C)
- C | O | H | crypto_sign(H, S)</code></pre>
-
-<p>where C is the message (content), H is the blake2 hash, O is the offset separator and S is the secret signing key of the sender.</p>
-
+<pre>
+ H = crypto_generichash(C)
+ C | O | H | crypto_sign(H, S)</pre>
+<p>where C is the message (content), H is the blake2 hash,
+O is the offset separator and S is the secret signing key
+of the sender.</p>
 <p>Armored signatures have the following format:</p>
-
-<pre><code> ----- BEGIN ED25519 SIGNED MESSAGE -----
+<pre>
+ ----- BEGIN ED25519 SIGNED MESSAGE -----
  Hash: Blake2
  
  MESSAGE
@@ -947,19 +1034,25 @@
  195j%-^/G[cVo4dSk7hU@D&gt;NT-1rBJ]VbJ678H4I!%@-)bzi&gt;zOba5$KSgz7b@R]A0!kL$m
  MTQ-1DW(e1mma(&lt;jH=QGA(VudgAMXaKF5AGo65Zx7-5fuMZt&amp;:6IL:n2N{KMto*KQ$:J+]d
  dp1{3}Ju*M&amp;+Vk7=:a=J0}B
- ------ END ED25519 SIGNATURE ------</code></pre>
-
-<p>The Z85 encoded signature at the end contains the same signature contents as the binary signature outlined above (hash+sig).</p>
-
-<h2 id="SIGNED-ENCRYPTION-FORMAT">SIGNED ENCRYPTION FORMAT</h2>
-
-<p>Signed encrypted files are in binary form only. The first part is the standard encrypted file as described in <b>ENCRYPTED OUTPUT FORMAT</b> followed by the binary encrypted signature described in <b>SIGNATURE FORMAT</b> without the offset separator.</p>
-
-<p>However, not only the hash of the file content will be signed but the recipient list described in <b>ENCRYPTED OUTPUT FORMAT</b> as well. A valid recipient is therefore not able to re-encrypt the decrypted message, append the original signature and send it to other recipients. The signature would not match since the recipient list differs and so recipients know that the signature is forged.</p>
-
+ ------ END ED25519 SIGNATURE ------</pre>
+<p>The Z85 encoded signature at the end contains the same signature
+contents as the binary signature outlined above (hash+sig).</p>
+<p>
+</p>
+<h2><a name="signed_encryption_format">SIGNED ENCRYPTION FORMAT</a></h2>
+<p>Signed encrypted files are in binary form only. The first part is
+the standard encrypted file as described in <strong>ENCRYPTED OUTPUT FORMAT</strong>
+followed by the binary encrypted signature described in <strong>SIGNATURE FORMAT</strong>
+without the offset separator.</p>
+<p>However, not only the hash of the file content will be signed but the
+recipient list described in <strong>ENCRYPTED OUTPUT FORMAT</strong> as well. A
+valid recipient is therefore not able to re-encrypt the decrypted
+message, append the original signature and send it to other recipients.
+The signature would not match since the recipient list differs and
+so recipients know that the signature is forged.</p>
 <p>Formal file description of sign+encrypt format:</p>
-
-<pre><code> +---------------------------------------------------------+
+<pre>
+ +---------------------------------------------------------+
  | Field         Size      Description                     |
  +-------------+--------+----------------------------------+
  | Type        |      1 | Filetype, 5=ASYM, 23=SYM         |
@@ -971,148 +1064,146 @@
  | Encrypted   |      ~ | The actual encrypted data        |
  +-------------|--------|----------------------------------+
  | Signature   |      ~ | Encrypted signature(*)           |
- +-------------|--------|----------------------------------+</code></pre>
-
-<p>As usual the encrypted signature consists of a nonce and the actual cipher, which is computed symmetrically (see above) from the following clear signature.</p>
-
+ +-------------|--------|----------------------------------+</pre>
+<p>As usual the encrypted signature consists of a nonce and the
+actual cipher, which is computed symmetrically (see above)
+from the following clear signature.</p>
 <p>Before encryption the signature format is:</p>
-
-<pre><code> +---------------------------------------------------------+
+<pre>
+ +---------------------------------------------------------+
  | Field         Size      Description                     |
  +-------------+--------+----------------------------------+
  | Hash        |     64 | BLAKE2 hash of content+R (*)     |
  +-------------|--------|----------------------------------+
  | Signature   |     64 | ED25519 signature of BLAKE2 Hash |
- +-------------|--------|----------------------------------+</code></pre>
-
-<p>where R is: C(recipient)|C(recipient)... (see <b>ENCRYPTED OUTPUT FORMAT</b>).</p>
-
+ +-------------|--------|----------------------------------+</pre>
+<p>where R is: C(recipient)|C(recipient)... (see <strong>ENCRYPTED OUTPUT FORMAT</strong>).</p>
 <p>Pseudocode:</p>
-
-<pre><code> N | crypto_secret_box( crypto_sign( crypto_generichash( M + R, SK ) ), N, S)</code></pre>
-
-<p>where N is the nonce, M the message, R the recipient list, SK is the senders secret signing key and S the symmetric key.</p>
-
-<h2 id="Z85-ENCODING">Z85 ENCODING</h2>
-
-<p><b>pcp1</b> uses Z85 to encode binary data (if requested with -z) such as encrypted data, exported keys or armored signatures.</p>
-
-<p>Encoded data is always enclosed by a header and a footer and may have any number of comments. Example:</p>
-
-<pre><code> ----- PCP ENCRYPTED FILE -----
+<pre>
+ N | crypto_secret_box( crypto_sign( crypto_generichash( M + R, SK ) ), N, S)</pre>
+<p>where N is the nonce, M the message, R the recipient list, SK is the senders
+secret signing key and S the symmetric key.</p>
+<p>
+</p>
+<h2><a name="z85_encoding">Z85 ENCODING</a></h2>
+<p><strong>pcp1</strong> uses Z85 to encode binary data (if requested with -z) such
+as encrypted data, exported keys or armored signatures.</p>
+<p>Encoded data is always enclosed by a header and a footer and may have any number
+of comments. Example:</p>
+<pre>
+ ----- PCP ENCRYPTED FILE -----
  Version: PCP 0.2.1
  246ge]+yn={&lt;I&amp;&amp;Z%(pm[09lc5[dx4TZALi/6cjVe)Kx5S}7&gt;}]Xi3*N3Xx34Y^0rz:r.5j
  v#6Sh/m3XKwy?VlA+h8ks]9:kVj{D[fd7]NA]T-(ne+xo!W5X5-gIUWqM
- ----- END PCP ENCRYPTED FILE -----</code></pre>
-
-<p>However, the parser tries to be as tolerant as possible. It also accepts Z85 encoded data without headers or without newlines, empty lines or lines containing a space are ignored as well as comments. Empty comments are not allowed.</p>
-
-<h3 id="Z85-PADDING">Z85 PADDING</h3>
-
-<p>PCP uses a custom padding scheme. Z85 input data size must be a multiple of 4. To fulfill this requirement, PCP padds the input with zeros as neccessary. To tell the decoder if padding took place and how much zeros have been added, PCP adds another 4 bytes after each Z85 encoded block, from the last one which contains the number of zeros used for padding, even if the input hasn&#39;t been padded.</p>
-
-<h3 id="Z85-BACKGROUND">Z85 BACKGROUND</h3>
-
-<p>The Z85 encoding format is described here: <b>http://rfc.zeromq.org/spec:32</b>. It&#39;s part of ZeroMQ (<b>http://zeromq.org</b>). Z85 is based on ASCII85 with a couple of modifications (portability, readability etc).</p>
-
-<p>To fulfil the requirements of the ZeroMQ Z85 functions, <b>pcp1</b> does some additional preparations of raw input before actually doing the encoding, since the input for zmq_z85_encode() must be divisible by 4. Therefore we pad the input with zeroes and remove them after decoding.</p>
-
-<p><b>Trying to use another tool to decode an Z85 encoded string produced by z85, might not work therefore, unless the tool takes the padding scheme outlined above into account</b>.</p>
-
-<p>Z85 encoding and decoding can be used separately as well to work with files. Examples:</p>
-
+ ----- END PCP ENCRYPTED FILE -----</pre>
+<p>However, the parser tries to be as tolerant as possible. It also accepts
+Z85 encoded data without headers or without newlines, empty lines or lines
+containing a space are ignored as well as comments. Empty comments are not
+allowed.</p>
+<p>
+</p>
+<h3><a name="z85_padding">Z85 PADDING</a></h3>
+<p>PCP uses a custom padding scheme. Z85 input data size must be a multiple
+of 4. To fulfill this requirement, PCP padds the input with zeros as
+neccessary. To tell the decoder if padding took place and how much zeros
+have been added, PCP adds another 4 bytes after each Z85 encoded block,
+from the last one which contains the number of zeros used for padding,
+even if the input hasn't been padded.</p>
+<p>
+</p>
+<h3><a name="z85_background">Z85 BACKGROUND</a></h3>
+<p>The Z85 encoding format is described here: <strong><a href="http://rfc.zeromq.org/spec:32">http://rfc.zeromq.org/spec:32</a></strong>.
+It's part of ZeroMQ (<strong><a href="http://zeromq.org">http://zeromq.org</a></strong>). Z85 is based on ASCII85 with
+a couple of modifications (portability, readability etc).</p>
+<p>To fulfil the requirements of the ZeroMQ Z85 functions, <strong>pcp1</strong>
+does some additional preparations of raw input before actually doing the 
+encoding, since the input for zmq_z85_encode() must be divisible by 4. Therefore
+we pad the input with zeroes and remove them after decoding.</p>
+<p><strong>Trying to use another tool to decode an Z85 encoded string produced
+by z85, might not work therefore, unless the tool takes the padding scheme
+outlined above into account</strong>.</p>
+<p>Z85 encoding and decoding can be used separately as well to work with
+files. Examples:</p>
 <p>Encode some file to Z85 encoding:</p>
-
 <p>pcp1 -z -I file -O file.z85</p>
-
 <p>Reverse the process:</p>
-
 <p>pcp1 -Z -I file.z85 -O file</p>
-
-<h2 id="PBP-COMPATIBILITY">PBP COMPATIBILITY</h2>
-
-<p>PCP tries to be fully compatible with PBP (https://github.com/stef/pbp). Encrypted files and signatures - at least their binary versions - should be exchangable. However, this is a work in progress and might not work under all circumstances. Also there&#39;s currently no shared key format between pbp and pcp. However, it is possible to export and import pbp keys from/to pcp.</p>
-
-<h1 id="JSON-ENCODING-SUPPORT">JSON ENCODING SUPPORT</h1>
-
-<p>If pcp have been compiled with <b>--with-json</b> (which requires the libjansson library), then it supports JSON objects as input and output with the following functions:</p>
-
+<p>
+</p>
+<h2><a name="pbp_compatibility">PBP COMPATIBILITY</a></h2>
+<p>PCP tries to be fully compatible with PBP (https://github.com/stef/pbp). Encrypted
+files and signatures - at least their binary versions - should be exchangable. However,
+this is a work in progress and might not work under all circumstances. Also there's currently
+no shared key format between pbp and pcp. However, it is possible to export and
+import pbp keys from/to pcp.</p>
+<p>
+</p>
+<hr />
+<h1><a name="json_encoding_support">JSON ENCODING SUPPORT</a></h1>
+<p>If pcp have been compiled with <strong>--with-json</strong> (which requires the libjansson
+library), then it supports JSON objects as input and output with the following
+functions:</p>
 <dl>
+<dt><strong><a name="public_key_export" class="item">public key export</a></strong></dt>
 
-<dt id="public-key-export">public key export</dt>
-<dd>
+<dt><strong><a name="secret_key_export" class="item">secret key export</a></strong></dt>
 
-</dd>
-<dt id="secret-key-export">secret key export</dt>
-<dd>
+<dt><strong><a name="whole_vault_export" class="item">whole vault export</a></strong></dt>
 
-</dd>
-<dt id="whole-vault-export">whole vault export</dt>
-<dd>
+<dt><strong><a name="public_key_import" class="item">public key import</a></strong></dt>
 
-</dd>
-<dt id="public-key-import">public key import</dt>
-<dd>
+<dt><strong><a name="secret_key_import" class="item">secret key import</a></strong></dt>
 
-</dd>
-<dt id="secret-key-import">secret key import</dt>
-<dd>
-
-</dd>
 </dl>
-
-<p>JSON support can be used either with the commandline tool <b>pcp1</b> or programmatically using the C, C++ or Python API.</p>
-
-<h2 id="USING-JSON-FROM-THE-C-API">USING JSON FROM THE C API</h2>
-
-<p>In order to use JSON all you&#39;ve got to do is to switch a context flag:</p>
-
-<pre><code> PCPCTX *ptx = ptx_new();
- ptx-&gt;json = 1;</code></pre>
-
-<p>That all to it. Now any function normally used for key import and export works with JSON, just fill the <b>Buffer</b> object with a JSON string for imports or fetch the Buffer content of an export function as a string.</p>
-
-<h2 id="USING-JSON-FROM-THE-COMMANDLINE">USING JSON FROM THE COMMANDLINE</h2>
-
-<p>In order to use JSON on the commandline, add <b>-j</b>. This can be used in conjunction with the following options:</p>
-
+<p>JSON support can be used either with the commandline tool <strong>pcp1</strong> or programmatically
+using the C, C++ or Python API.</p>
+<p>
+</p>
+<h2><a name="using_json_from_the_c_api">USING JSON FROM THE C API</a></h2>
+<p>In order to use JSON all you've got to do is to switch a context flag:</p>
+<pre>
+ PCPCTX *ptx = ptx_new();
+ ptx-&gt;json = 1;</pre>
+<p>That all to it. Now any function normally used for key import and export works
+with JSON, just fill the <strong>Buffer</strong> object with a JSON string for imports or
+fetch the Buffer content of an export function as a string.</p>
+<p>
+</p>
+<h2><a name="using_json_from_the_commandline">USING JSON FROM THE COMMANDLINE</a></h2>
+<p>In order to use JSON on the commandline, add <strong>-j</strong>. This can be used in
+conjunction with the following options:</p>
 <dl>
+<dt><strong><a name="p" class="item"><strong>-p</strong></a></strong></dt>
 
-<dt id="p"><b>-p</b></dt>
 <dd>
-
 <p>Public key export.</p>
-
 </dd>
-<dt id="s"><b>-s</b></dt>
-<dd>
+<dt><strong><a name="s" class="item"><strong>-s</strong></a></strong></dt>
 
+<dd>
 <p>Secret key export.</p>
-
 </dd>
-<dt id="K"><b>-K</b></dt>
-<dd>
+<dt><strong><a name="k" class="item"><strong>-K</strong></a></strong></dt>
 
+<dd>
 <p>Public and secret key import.</p>
-
 </dd>
-<dt id="t"><b>-t</b></dt>
+<dt><strong><a name="t" class="item"><strong>-t</strong></a></strong></dt>
+
 <dd>
-
 <p>Text view mode (aka inspect mode).</p>
-
 </dd>
 </dl>
-
-<p>The <b>-z</b> and <b>-Z</b> options are ignored in JSON mode.</p>
-
-<h2 id="JSON-OBJECT-STRUCTURE">JSON OBJECT STRUCTURE</h2>
-
-<h3 id="JSON-PUBLIC-KEY-pcp1--p--j">JSON PUBLIC KEY (pcp1 -p -j)</h3>
-
+<p>The <strong>-z</strong> and <strong>-Z</strong> options are ignored in JSON mode.</p>
+<p>
+</p>
+<h2><a name="json_object_structure">JSON OBJECT STRUCTURE</a></h2>
+<p>
+</p>
+<h3><a name="json_public_key__pcp1__p__j_">JSON PUBLIC KEY (pcp1 -p -j)</a></h3>
 <p>The JSON object for a public key looks like this:</p>
-
-<pre><code> {
+<pre>
+ {
     &quot;id&quot;: &quot;6BF2980419E0986A&quot;,
     &quot;owner&quot;: &quot;tom&quot;,
     &quot;mail&quot;: &quot;tom@local&quot;,
@@ -1126,19 +1217,16 @@
     &quot;sigpub&quot;: &quot;6980b76e17170194626b49cbab1ab35369a0635f52fe1a7cf39cc5421fb5c0c2&quot;,
     &quot;masterpub&quot;: &quot;947a49f29e9cb0e92b61e2a1dea95f8ec81a24baed78e85c1b52cc3714f5e45e&quot;,
     &quot;signature&quot;: &quot;947a49f29e9cb0e92b61e2a1dea95f8ec81a24baed78e85c1b52cc3714f5e45[..]&quot;
- }</code></pre>
-
-<p>Actually the field <b>signature</b> contains the whole encoded public key.</p>
-
+ }</pre>
+<p>Actually the field <strong>signature</strong> contains the whole encoded public key.</p>
 <p>Fields containing byte arrays are hex encoded.</p>
-
 <p>Numbers are represented as literal integers.</p>
-
-<h3 id="JSON-SECRET-KEY-pcp1--s--j">JSON SECRET KEY (pcp1 -s -j)</h3>
-
+<p>
+</p>
+<h3><a name="json_secret_key__pcp1__s__j_">JSON SECRET KEY (pcp1 -s -j)</a></h3>
 <p>The JSON object for a public key looks like this:</p>
-
-<pre><code> {
+<pre>
+ {
     &quot;id&quot;: &quot;6BF2980419E0986A&quot;,
     &quot;owner&quot;: &quot;tom&quot;,
     &quot;mail&quot;: &quot;tom@local&quot;,
@@ -1153,94 +1241,99 @@
     &quot;masterpub&quot;: &quot;947a49f29e9cb0e92b61e2a1dea95f8ec81a24baed78e85c1b52cc3714f5e45e&quot;,
     &quot;secrets&quot;: &quot;ad5ce150f3cd7bffa299d4db5bf3d26ae56c3808ccba7[..]&quot;,
     &quot;nonce&quot;: &quot;858ef9870fc8f39903cfb281d697ca29a935d2ae929fa4ea&quot;
-}</code></pre>
-
-<p>As you can see that&#39;s pretty identical to a public key json object beside the <b>secrets</b> and <b>nonce</b> fields. The <b>secrets</b> field contains the encrypted secret key material. Pcp does not support exporting a secret key unencrypted.</p>
-
-<p>The <b>nonce</b> is required for a later import and shall not be changed or decoupled from <b>secrets</b>. This may change in the future.</p>
-
-<h3 id="JSON-VAULT-pcp1--t">JSON VAULT (pcp1 -t)</h3>
-
+}</pre>
+<p>As you can see that's pretty identical to a public key json object beside the
+<strong>secrets</strong> and <strong>nonce</strong> fields. The <strong>secrets</strong> field contains the encrypted
+secret key material. Pcp does not support exporting a secret key unencrypted.</p>
+<p>The <strong>nonce</strong> is required for a later import and shall not be changed or
+decoupled from <strong>secrets</strong>. This may change in the future.</p>
+<p>
+</p>
+<h3><a name="json_vault__pcp1__t_">JSON VAULT (pcp1 -t)</a></h3>
 <p>The JSON object for the vault looks like this:</p>
-
-<pre><code>  {
+<pre>
+  {
     &quot;keyvaultfile&quot;: &quot;/home/tom/.pcpvault&quot;,
     &quot;version&quot;: 2,
     &quot;checksum&quot;: &quot;27b583dc2dacf5ccc874b7be3a39748d107c6b9e9f9d473f1c716a94561ef793&quot;,
     &quot;secretkeys&quot;: 1,
     &quot;publickey&quot;: 3,
     &quot;keys&quot;: []
- }</code></pre>
-
-<p>The field <b>keys</b> is an array containing one or more of the already described key objects.</p>
-
-<h3 id="JSON-PROGRAM-OUTPUT">JSON PROGRAM OUTPUT</h3>
-
-<p>Currently pcp does not support JSON program output, that is, success or error messages on STDERR are not encoded as json. This may change in the future.</p>
-
-<h1 id="COPYRIGHT">COPYRIGHT</h1>
-
+ }</pre>
+<p>The field <strong>keys</strong> is an array containing one or more of the already
+described key objects.</p>
+<p>
+</p>
+<h3><a name="json_program_output">JSON PROGRAM OUTPUT</a></h3>
+<p>Currently pcp does not support JSON program output, that is, success or
+error messages on STDERR are not encoded as json. This may change in the future.</p>
+<p>
+</p>
+<hr />
+<h1><a name="copyright">COPYRIGHT</a></h1>
 <p>Copyright (c) 2013-2015 by T.v.Dein &lt;tom AT vondein DOT org&gt;</p>
-
-<h1 id="ADDITIONAL-COPYRIGHTS">ADDITIONAL COPYRIGHTS</h1>
-
+<p>
+</p>
+<hr />
+<h1><a name="additional_copyrights">ADDITIONAL COPYRIGHTS</a></h1>
 <dl>
+<dt><strong><a name="zeromq_z85_encoding_routine" class="item"><strong>ZeroMQ Z85 encoding routine</strong></a></strong></dt>
 
-<dt id="ZeroMQ-Z85-encoding-routine"><b>ZeroMQ Z85 encoding routine</b></dt>
 <dd>
-
-<pre><code> Copyright (c) 2007-2013 iMatix Corporation
+<pre>
+ Copyright (c) 2007-2013 iMatix Corporation
  Copyright (c) 2009-2011 250bpm s.r.o.
  Copyright (c) 2010-2011 Miru Limited
  Copyright (c) 2011 VMware, Inc.
- Copyright (c) 2012 Spotify AB</code></pre>
-
+ Copyright (c) 2012 Spotify AB</pre>
 </dd>
-<dt id="Tarsnap-readpass-helpers"><b>Tarsnap readpass helpers</b></dt>
+<dt><strong><a name="tarsnap_readpass_helpers" class="item"><strong>Tarsnap readpass helpers</strong></a></strong></dt>
+
 <dd>
-
-<pre><code> Copyright 2009 Colin Percival</code></pre>
-
+<pre>
+ Copyright 2009 Colin Percival</pre>
 </dd>
-<dt id="jen_hash-hash-algorithm"><b>jen_hash() hash algorithm</b></dt>
+<dt><strong><a name="jen_hash" class="item"><strong>jen_hash() hash algorithm</strong></a></strong></dt>
+
 <dd>
-
-<pre><code> Bob Jenkins, Public Domain.</code></pre>
-
+<pre>
+ Bob Jenkins, Public Domain.</pre>
 </dd>
-<dt id="UTHASH-hashing-macros"><b>UTHASH hashing macros</b></dt>
+<dt><strong><a name="uthash_hashing_macros" class="item"><strong>UTHASH hashing macros</strong></a></strong></dt>
+
 <dd>
-
-<pre><code> Copyright (c) 2003-2013, Troy D. Hanson</code></pre>
-
+<pre>
+ Copyright (c) 2003-2013, Troy D. Hanson</pre>
 </dd>
-<dt id="Random-art-image-from-OpenSSH-keygen"><b>Random art image from OpenSSH keygen</b></dt>
+<dt><strong><a name="random_art_image_from_openssh_keygen" class="item"><strong>Random art image from OpenSSH keygen</strong></a></strong></dt>
+
 <dd>
-
-<pre><code> Copyright (c) 2000, 2001 Markus Friedl.  All rights reserved.
-
- Comitted by Alexander von Gernler in rev 1.7.</code></pre>
-
+<pre>
+ Copyright (c) 2000, 2001 Markus Friedl.  All rights reserved.</pre>
+<pre>
+ Comitted by Alexander von Gernler in rev 1.7.</pre>
 </dd>
 </dl>
-
-<p>Every incorporated source code is opensource and licensed under the <b>GPL</b> as well.</p>
-
-<h1 id="AUTHORS">AUTHORS</h1>
-
-<p><i>T.v.Dein &lt;tom AT vondein DOT org</i>&gt;</p>
-
-<h1 id="LICENSE">LICENSE</h1>
-
-<p>Licensed under the GNU GENERAL PUBLIC LICENSE version 3.</p>
-
-<h1 id="HOME">HOME</h1>
-
-<p>The homepage of Pretty Curved Privacy can be found on http://www.daemon.de/PrettyCurvedPrivacy. The source is on Github: https://github.com/TLINDEN/pcp</p>
-
+<p>Every incorporated source code is opensource and licensed
+under the <strong>GPL</strong> as well.</p>
+<p>
+</p>
+<hr />
+<h1><a name="authors">AUTHORS</a></h1>
+<p><em>T.v.Dein &lt;tom AT vondein DOT org</em>&gt;</p>
+<p>
+</p>
+<hr />
+<h1><a name="license">LICENSE</a></h1>
+<p>Licensed under the  GNU GENERAL PUBLIC LICENSE version 3.</p>
+<p>
+</p>
+<hr />
+<h1><a name="home">HOME</a></h1>
+<p>The homepage of Pretty Curved Privacy can be found on
+<a href="http://www.daemon.de/PrettyCurvedPrivacy.">http://www.daemon.de/PrettyCurvedPrivacy.</a> The source is
+on Github: <a href="https://github.com/TLINDEN/pcp">https://github.com/TLINDEN/pcp</a></p>
 
 </body>
 
 </html>
-
-

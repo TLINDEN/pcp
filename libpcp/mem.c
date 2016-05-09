@@ -83,7 +83,7 @@ void *ucrealloc(void *d, size_t oldlen, size_t newlen) {
   byte *value = realloc (d, newlen);
 
   if (value == NULL) {
-    err(errno, "Cannot reallocate %ld bytes of memory", newlen);
+    err(errno, "Cannot reallocate %"FMT_SIZE_T" bytes of memory", (SIZE_T_CAST)newlen);
     exit(-1);
   }
 

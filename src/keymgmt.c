@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013-2015 T.v.Dein.
+    Copyright (C) 2013-2016 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -78,8 +78,8 @@ void pcp_keygen(char *passwd) {
   char *passphrase;
   if(passwd == NULL) {
     pcp_readpass(ptx, &passphrase,
-		 "Enter passphrase for key encryption",
-		 "Enter the passphrase again", 1, NULL);
+                 "Enter passphrase for key encryption",
+                 "Enter the passphrase again", 1, NULL);
   }
   else {
     passphrase = passwd;
@@ -91,7 +91,7 @@ void pcp_keygen(char *passwd) {
       fprintf(stderr, "WARNING: you are using a weak passphrase (entropy: %lf)!\n", ent);
       char *yes = pcp_getstdin("Are you sure to use it [yes|NO]?");
       if(strncmp(yes, "yes", 1024) != 0) {
-	goto errkg1;
+        goto errkg1;
       }
     }
     key = pcpkey_encrypt(ptx, k, passphrase);
@@ -167,7 +167,7 @@ char *pcp_normalize_id(char *keyid) {
     if(keyid[0] == '0' && keyid[1] == 'x' && len == 18) {
       int i;
       for(i=0; i<16; ++i) {
-	id[i] = keyid[i+2];
+        id[i] = keyid[i+2];
       }
       id[16] = 0;
     }
@@ -238,18 +238,18 @@ void pcp_exportsecret(char *keyid, int useid, char *outfile, int armor, char *pa
     if(passwd == NULL) {
       char *passphrase;
       pcp_readpass(ptx, &passphrase,
-		   "Enter passphrase to decrypt your secret key", NULL, 1, NULL);
+                   "Enter passphrase to decrypt your secret key", NULL, 1, NULL);
       key = pcpkey_decrypt(ptx, key, passphrase);
       if(key == NULL) {
-	sfree(passphrase);
-	goto errexpse1;
+        sfree(passphrase);
+        goto errexpse1;
       }
       sfree(passphrase);
     }
     else {
       key = pcpkey_decrypt(ptx, key, passwd);
       if(key == NULL) {
-	goto errexpse1;
+        goto errexpse1;
       }
     }
 
@@ -262,20 +262,20 @@ void pcp_exportsecret(char *keyid, int useid, char *outfile, int armor, char *pa
       char *passphrase;
       pcp_readpass(ptx, &passphrase,
                   "Enter passphrase to encrypt the exported secret key",
-		   "Repeat passphrase", 1, NULL);
+                   "Repeat passphrase", 1, NULL);
       exported_sk = pcp_export_secret(ptx, key, passphrase);
       sfree(passphrase);
     }
 
     if(exported_sk != NULL) {
       if(armor == 1) {
-	size_t zlen;
-	char *z85 = pcp_z85_encode(buffer_get(exported_sk), buffer_size(exported_sk), &zlen, 1);
-	fprintf(out, "%s\r\n%s\r\n%s\r\n", EXP_SK_HEADER, z85, EXP_SK_FOOTER);
-	free(z85);
+        size_t zlen;
+        char *z85 = pcp_z85_encode(buffer_get(exported_sk), buffer_size(exported_sk), &zlen, 1);
+        fprintf(out, "%s\r\n%s\r\n%s\r\n", EXP_SK_HEADER, z85, EXP_SK_FOOTER);
+        free(z85);
       }
       else {
-	fwrite(buffer_get(exported_sk), 1, buffer_size(exported_sk), out);
+        fwrite(buffer_get(exported_sk), 1, buffer_size(exported_sk), out);
       }
       buffer_free(exported_sk);
       fprintf(stderr, "secret key exported.\n");
@@ -318,13 +318,13 @@ void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int 
       /* ok, so, then look for a secret key with that id */
       sk = pcphash_keyexists(ptx, keyid);
       if(sk == NULL) {
-	fatal(ptx, "Could not find a key with id 0x%s in vault %s!\n",
-		keyid, vault->filename);
-	goto errpcpexpu1;
+        fatal(ptx, "Could not find a key with id 0x%s in vault %s!\n",
+              keyid, vault->filename);
+        goto errpcpexpu1;
       }
       else {
-	/* ok, so it's our own key */
-	is_foreign = 0;
+        /* ok, so it's our own key */
+        is_foreign = 0;
       }
     }
     else {
@@ -351,7 +351,7 @@ void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int 
     else {
       char *passphrase;
       pcp_readpass(ptx, &passphrase,
-		   "Enter passphrase to decrypt your secret key", NULL, 1, NULL);
+                   "Enter passphrase to decrypt your secret key", NULL, 1, NULL);
       sk = pcpkey_decrypt(ptx, sk, passphrase);
       sfree(passphrase);
     }
@@ -365,16 +365,16 @@ void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int 
     if(is_foreign == 0) {
       exported_pk = pcp_export_rfc_pub(ptx, sk);
       if(exported_pk != NULL) {
-	if(armor == 1) {
-	  size_t zlen;
-	  char *z85 = pcp_z85_encode(buffer_get(exported_pk), buffer_size(exported_pk), &zlen, 1);
-	  fprintf(out, "%s\r\n%s\r\n%s\r\n", EXP_PK_HEADER, z85, EXP_PK_FOOTER);
-	  free(z85);
-	}
-	else
-	  fwrite(buffer_get(exported_pk), 1, buffer_size(exported_pk), out);
-	buffer_free(exported_pk);
-	fprintf(stderr, "public key exported.\n");
+        if(armor == 1) {
+          size_t zlen;
+          char *z85 = pcp_z85_encode(buffer_get(exported_pk), buffer_size(exported_pk), &zlen, 1);
+          fprintf(out, "%s\r\n%s\r\n%s\r\n", EXP_PK_HEADER, z85, EXP_PK_FOOTER);
+          free(z85);
+        }
+        else
+          fwrite(buffer_get(exported_pk), 1, buffer_size(exported_pk), out);
+        buffer_free(exported_pk);
+        fprintf(stderr, "public key exported.\n");
       }
     }
     else {
@@ -387,13 +387,13 @@ void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int 
     if(is_foreign == 0) {
       exported_pk = pcp_export_pbp_pub(sk);
       if(exported_pk != NULL) {
-	/* PBP format requires armoring always */
-	size_t zlen;
-	char *z85pbp = pcp_z85_encode(buffer_get(exported_pk), buffer_size(exported_pk), &zlen, 1);
-	fprintf(out, "%s", z85pbp);
-	free(z85pbp);
-	buffer_free(exported_pk);
-	fprintf(stderr, "public key exported in PBP format.\n");
+        /* PBP format requires armoring always */
+        size_t zlen;
+        char *z85pbp = pcp_z85_encode(buffer_get(exported_pk), buffer_size(exported_pk), &zlen, 1);
+        fprintf(out, "%s", z85pbp);
+        free(z85pbp);
+        buffer_free(exported_pk);
+        fprintf(stderr, "public key exported in PBP format.\n");
       }
     }
     else {
@@ -446,63 +446,63 @@ void pcpedit_key(char *keyid) {
       fprintf(stderr, "Current owner: %s\n", key->owner);
       char *owner =  pcp_getstdin("  enter new name or press enter to keep current");
       if(strlen(owner) > 0)
-	memcpy(key->owner, owner, strlen(owner) + 1);
+        memcpy(key->owner, owner, strlen(owner) + 1);
 
       fprintf(stderr, "Current mail: %s\n", key->mail);
       char *mail =  pcp_getstdin("  enter new email or press enter to keep current");
       if(strlen(mail) > 0)
-	memcpy(key->mail, mail, strlen(mail) + 1);
+        memcpy(key->mail, mail, strlen(mail) + 1);
 
       free(owner);
       free(mail);
 
       if(key->type != PCP_KEY_TYPE_MAINSECRET) {
-	pcp_key_t *other = NULL;
-	uint8_t haveprimary = 0;
-	pcphash_iterate(ptx, other) {
-	  if(other->type == PCP_KEY_TYPE_MAINSECRET) {
-	    haveprimary = 1;
-	    break;
-	  }
-	}
+        pcp_key_t *other = NULL;
+        uint8_t haveprimary = 0;
+        pcphash_iterate(ptx, other) {
+          if(other->type == PCP_KEY_TYPE_MAINSECRET) {
+            haveprimary = 1;
+            break;
+          }
+        }
 
-	char *yes = NULL;
+        char *yes = NULL;
         if(! haveprimary) {
-	  fprintf(stderr, "There is currently no primary secret in your vault,\n");
-	  yes = pcp_getstdin("want to make this one the primary [yes|NO]?");
-	}
-	else {
-	  fprintf(stderr, "The key %s is currently the primary secret,\n", other->id);
-	  yes = pcp_getstdin("want to make this one the primary instead [yes|NO]?");
-	}
+          fprintf(stderr, "There is currently no primary secret in your vault,\n");
+          yes = pcp_getstdin("want to make this one the primary [yes|NO]?");
+        }
+        else {
+          fprintf(stderr, "The key %s is currently the primary secret,\n", other->id);
+          yes = pcp_getstdin("want to make this one the primary instead [yes|NO]?");
+        }
 
-	if(strncmp(yes, "yes", 1024) == 0) {
-	    key->type = PCP_KEY_TYPE_MAINSECRET;
-	    if(haveprimary) {
-	      fprintf(stderr, "other type: %d\n", other->type);
-	      other->type = PCP_KEY_TYPE_SECRET;
-	      fprintf(stderr, "  new type: %d\n", other->type);
-	    }
-	}
-	free(yes);
+        if(strncmp(yes, "yes", 1024) == 0) {
+          key->type = PCP_KEY_TYPE_MAINSECRET;
+          if(haveprimary) {
+            fprintf(stderr, "other type: %d\n", other->type);
+            other->type = PCP_KEY_TYPE_SECRET;
+            fprintf(stderr, "  new type: %d\n", other->type);
+          }
+        }
+        free(yes);
       }
 
       char *passphrase;
       pcp_readpass(ptx, &passphrase,
-		   "Enter new passphrase for key encryption (press enter to keep current)",
-		   "Enter the passphrase again", 1, NULL);
+                   "Enter new passphrase for key encryption (press enter to keep current)",
+                   "Enter the passphrase again", 1, NULL);
 
       if(strnlen(passphrase, 1024) > 0) {
-	key = pcpkey_encrypt(ptx, key, passphrase);
-	sfree(passphrase);
+        key = pcpkey_encrypt(ptx, key, passphrase);
+        sfree(passphrase);
       }
 
       if(key != NULL) {
-	if(debug)
-	  pcp_dumpkey(key);
+        if(debug)
+          pcp_dumpkey(key);
 
-	vault->unsafed = 1; /*  will be safed automatically */
-	fprintf(stderr, "Key %s changed.\n", key->id);
+        vault->unsafed = 1; /*  will be safed automatically */
+        fprintf(stderr, "Key %s changed.\n", key->id);
       }
     }
   }
@@ -564,26 +564,26 @@ int pcp_import (vault_t *vault, FILE *in, char *passwd) {
       fatals_ifany(ptx);
       char *yes = pcp_getstdin("WARNING: signature doesn't verify, import anyway [yes|NO]?");
       if(strncmp(yes, "yes", 1024) != 0) {
-	free(yes);
-	goto errimp2;
+        free(yes);
+        goto errimp2;
       }
       free(yes);
     }
 
     if(pcp_sanitycheck_pub(ptx, pub) == 0) {
       if(pcpvault_addkey(ptx, vault, (void *)pub,  PCP_KEY_TYPE_PUBLIC) == 0) {
-	fprintf(stderr, "key 0x%s added to %s.\n", pub->id, vault->filename);
-	/* avoid double free */
-	success = 0;
+        fprintf(stderr, "key 0x%s added to %s.\n", pub->id, vault->filename);
+        /* avoid double free */
+        success = 0;
       }
       else
-	goto errimp2;
+        goto errimp2;
       
       if(keysig != NULL) {
-	if(pcpvault_addkey(ptx, vault, keysig, keysig->type) != 0) {
-	  /* FIXME: remove pubkey if storing the keysig failed */
-	  goto errimp2;
-	}
+        if(pcpvault_addkey(ptx, vault, keysig, keysig->type) != 0) {
+          /* FIXME: remove pubkey if storing the keysig failed */
+          goto errimp2;
+        }
       }
     }
     else
@@ -599,7 +599,7 @@ int pcp_import (vault_t *vault, FILE *in, char *passwd) {
     else {
       char *passphrase;
       pcp_readpass(ptx, &passphrase,
-		   "Enter passphrase to decrypt the secret key file", NULL, 1, NULL);
+                   "Enter passphrase to decrypt the secret key file", NULL, 1, NULL);
       sk = pcp_import_secret(ptx, buf, bufsize, passphrase);
       sfree(passphrase);
     }
@@ -624,33 +624,33 @@ int pcp_import (vault_t *vault, FILE *in, char *passwd) {
     else {
       char *passphrase;
       pcp_readpass(ptx, &passphrase,
-		   "Enter passphrase for key encryption",
-		   "Enter the passphrase again", 1, NULL);
+                   "Enter passphrase for key encryption",
+                   "Enter the passphrase again", 1, NULL);
     
       if(strnlen(passphrase, 1024) > 0) {
-	/* encrypt the key */
-	sk = pcpkey_encrypt(ptx, sk, passphrase);
-	sfree(passphrase);
+        /* encrypt the key */
+        sk = pcpkey_encrypt(ptx, sk, passphrase);
+        sfree(passphrase);
       }
       else {
-	/* ask for confirmation if we shall store it in the clear */
-	char *yes = pcp_getstdin(
-		 "WARNING: secret key will be stored unencrypted. Are you sure [yes|NO]?");
-	if(strncmp(yes, "yes", 1024) != 0) {
-	  free(yes);
-	  goto errimp1;
-	}
-	free(yes);
+        /* ask for confirmation if we shall store it in the clear */
+        char *yes = pcp_getstdin(
+                                 "WARNING: secret key will be stored unencrypted. Are you sure [yes|NO]?");
+        if(strncmp(yes, "yes", 1024) != 0) {
+          free(yes);
+          goto errimp1;
+        }
+        free(yes);
       }
     }
 
     if(sk != NULL) {
       /* store it to the vault if we got it til here */
       if(pcp_sanitycheck_key(ptx, sk) == 0) {
-	if(pcp_storekey(sk) == 0) {
-	  pcpkey_printshortinfo(sk); 
-	  success = 0;
-	}
+        if(pcp_storekey(sk) == 0) {
+          pcpkey_printshortinfo(sk); 
+          success = 0;
+        }
       }
     }
   }

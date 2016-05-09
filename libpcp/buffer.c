@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013-2014 T.v.Dein.
+    Copyright (C) 2013-2016 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -62,7 +62,7 @@ void buffer_free(Buffer *b) {
     if(b->allocated == 1) {
       /* free the underlying data pointer only if we allocated it */
       if(b->end > 0) {
-	buffer_clear(b);
+        buffer_clear(b);
       }
       free(b->buf);
       b->allocated = 0;
@@ -132,7 +132,7 @@ byte *buffer_get(Buffer *b) {
 size_t buffer_get_chunk(Buffer *b, void *buf, size_t len) {
   if(len > b->end - b->offset) {
     final("[buffer %s] attempt to read %ld bytes data from buffer with %ld bytes left at offset %ld\n",
-	  b->name, len, b->end - b->offset, b->offset);
+          b->name, len, b->end - b->offset, b->offset);
   }
   else if(len == 0) {
     /* FIXME: check how this happens */
@@ -148,7 +148,7 @@ size_t buffer_get_chunk(Buffer *b, void *buf, size_t len) {
 size_t buffer_fwd_offset(Buffer *b, size_t fwdby) {
   if(fwdby  > b->end - b->offset) {
     final("[buffer %s] attempt to set offset %ld bytes forward data from buffer with %ld bytes left at offset %ld\n",
-	  b->name, fwdby, b->end - b->offset, b->offset);
+          b->name, fwdby, b->end - b->offset, b->offset);
   }
   else if(fwdby == 0) {
     return 0;
@@ -161,7 +161,7 @@ size_t buffer_fwd_offset(Buffer *b, size_t fwdby) {
 size_t buffer_get_chunk_tobuf(Buffer *b, Buffer *dst, size_t len) {
   if(len > b->end - b->offset) {
     final("[buffer %s] attempt to read %ld bytes data from buffer with %ld bytes left at offset %ld\n",
-	  b->name, len, b->end - b->offset, b->offset);
+          b->name, len, b->end - b->offset, b->offset);
   }
   else if(len == 0) {
     /* FIXME: check how this happens */

@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013-2014 T.v.Dein.
+    Copyright (C) 2013-2016 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -54,8 +54,8 @@ uint8_t is_utf8(const byte *bytes) {
        ) ||
       (// straight 3-byte
        ((0xE1 <= bytes[0] && bytes[0] <= 0xEC) ||
-	bytes[0] == 0xEE ||
-	bytes[0] == 0xEF) &&
+        bytes[0] == 0xEE ||
+        bytes[0] == 0xEF) &&
        (0x80 <= bytes[1] && bytes[1] <= 0xBF) &&
        (0x80 <= bytes[2] && bytes[2] <= 0xBF)
        ) ||
@@ -107,25 +107,25 @@ size_t _buffer_is_binary(byte *buf, size_t len) {
       /* check for utf8 */
       wide[0] = buf[pos];
       for(i=1; i<3; i++) {
-	/* check for 2, 3 or 4 byte utf8 char */
-	if(pos+i < len) {
-	  /* only if there's enough space of course */
-	  wide[i] = buf[pos+i];
-	  if(is_utf8(wide) > 1) {
-	    pos += i; /* jump over the utf we already found */
-	    utf = 1;
-	    break;
-	  }
-	}
-	else 
-	  break;
+        /* check for 2, 3 or 4 byte utf8 char */
+        if(pos+i < len) {
+          /* only if there's enough space of course */
+          wide[i] = buf[pos+i];
+          if(is_utf8(wide) > 1) {
+            pos += i; /* jump over the utf we already found */
+            utf = 1;
+            break;
+          }
+        }
+        else 
+          break;
       }
       memset(wide, 0, 4);
 
       if(utf == 1) {
-	/* it's a utf8 char, continue checking, reset wide */
-	utf = 0;
-	continue;
+        /* it's a utf8 char, continue checking, reset wide */
+        utf = 0;
+        continue;
       }
       break; /* if we reach this, then it's binary and not utf8, stop checking */
     }
@@ -256,12 +256,12 @@ char *pcp_z85_encode(byte *raw, size_t srclen, size_t *dstlen, int doblock) {
     
     while(*z != '\0') {
       if(pos >= 71) {
-	*B++ = '\r';
-	*B++ = '\n';
-	pos = 1;
+        *B++ = '\r';
+        *B++ = '\n';
+        pos = 1;
       }
       else {
-	pos++;
+        pos++;
       }
       *B++ = *z++;
     }
@@ -331,27 +331,27 @@ char *pcp_readz85string(PCPCTX *ptx, unsigned char *input, size_t bufsize) {
     else if(input[i] == '\n') {
       /* a line is complete */
       if(z85_isbegin(line) && begin == 0) {
-	/* a begin header, reset whatever we've got so far in z buffer */
-	begin = 1;
-	buffer_clear(line);
-	buffer_clear(z);
-	continue;
+        /* a begin header, reset whatever we've got so far in z buffer */
+        begin = 1;
+        buffer_clear(line);
+        buffer_clear(z);
+        continue;
       }
       else if(z85_isend(line)){
-	/* an end header */
-	buffer_clear(line);
-	end = 1;
-	break;
+        /* an end header */
+        buffer_clear(line);
+        end = 1;
+        break;
       }
       else if(z85_isempty(line) || z85_iscomment(line)) {
-	/* a comment */
-	buffer_clear(line);
-	continue;
+        /* a comment */
+        buffer_clear(line);
+        continue;
       }
       else {
-	/* regular z85 encoded content */
-	buffer_add_buf(z, line);
-	buffer_clear(line);
+        /* regular z85 encoded content */
+        buffer_add_buf(z, line);
+        buffer_clear(line);
       }
     }
     else {
@@ -469,7 +469,7 @@ int z85_isbegin(Buffer *buf) {
     blen = strlen(begin);
     if(blen <= len)
       if(_findoffset(line+buf->offset, len, (char *)begin, blen) >= 0)
-	isb = i; /* i = ENUM ZBEGINS */
+        isb = i; /* i = ENUM ZBEGINS */
   }
 
   free(line);

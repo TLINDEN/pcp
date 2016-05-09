@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013-2014 T.v.Dein.
+    Copyright (C) 2013-2016 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -367,13 +367,13 @@ int pcp_sanitycheck_pub(PCPCTX *ptx, pcp_pubkey_t *key) {
 
   if(key->type != PCP_KEY_TYPE_PUBLIC) {
     fatal(ptx, "Pubkey sanity check: key type is not PUBLIC (expected: %02x, got: %02x)!\n",
-	  PCP_KEY_TYPE_PUBLIC, key->type);
+          PCP_KEY_TYPE_PUBLIC, key->type);
     return 1;
   }
 
   if(key->version != PCP_KEY_VERSION) {
     fatal(ptx, "Pubkey sanity check: unknown key version (expected: %08X, got: %08X)!\n",
-	  PCP_KEY_VERSION, key->version);
+          PCP_KEY_VERSION, key->version);
     return 1;
   }
   
@@ -418,13 +418,13 @@ int pcp_sanitycheck_key(PCPCTX *ptx, pcp_key_t *key) {
 
   if(key->type != PCP_KEY_TYPE_SECRET && key->type != PCP_KEY_TYPE_MAINSECRET) {
     fatal(ptx, "Secretkey sanity check: key type is not SECRET (expected: %02x, got: %02x)!\n",
-	  PCP_KEY_TYPE_SECRET, key->type);
+          PCP_KEY_TYPE_SECRET, key->type);
     return 1;
   }
 
   if(key->version != PCP_KEY_VERSION) {
     fatal(ptx, "Secretkey sanity check: unknown key version (expected: %08X, got: %08X)!\n",
-	  PCP_KEY_VERSION, key->version);
+          PCP_KEY_VERSION, key->version);
     return 1;
   }
   

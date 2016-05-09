@@ -43,127 +43,127 @@
  */
 int
 pcp_readpass(PCPCTX *ptx, char ** passwd, const char * prompt,
-	     const char * confirmprompt, int devtty, char *readfromfile)
+             const char * confirmprompt, int devtty, char *readfromfile)
 {
-	FILE * readfrom;
-	char passbuf[MAXPASSLEN];
-	char confpassbuf[MAXPASSLEN];
-	struct termios term, term_old;
-	int usingtty;
+  FILE * readfrom;
+  char passbuf[MAXPASSLEN];
+  char confpassbuf[MAXPASSLEN];
+  struct termios term, term_old;
+  int usingtty;
 
-	/*
-	 * If devtty != 0, try to open /dev/tty; if that fails, or if devtty
-	 * is zero, we'll read the password from stdin instead.
-	 *
-	 * Added by tlinden: however, if readfromfile is defined, we'll
-	 * read the password from there, but if it is '-' we'll use stdin
-	 * as well.
-	 */
-	if ((devtty == 0) || ((readfrom = fopen("/dev/tty", "r")) == NULL)) {
-	  if(readfromfile != NULL) {
-	    // FIXME: check if readfromfile is executable,
-	    // if yes, call askextpass(tobewritten) and
-	    // read from the returned fd somehow
-	    if(readfromfile[0] == '-') {
-	      readfrom = stdin;
-	    }
-	    else {
-	      if((readfrom = fopen(readfromfile, "r")) == NULL) {
-		fatal(ptx, "Could not open password file '%s'\n", readfromfile);
-		goto err1;
-	      }
-	    }
-	  }
-	  else {
-	    readfrom = stdin;
-	  }
-	}
+  /*
+   * If devtty != 0, try to open /dev/tty; if that fails, or if devtty
+   * is zero, we'll read the password from stdin instead.
+   *
+   * Added by tlinden: however, if readfromfile is defined, we'll
+   * read the password from there, but if it is '-' we'll use stdin
+   * as well.
+   */
+  if ((devtty == 0) || ((readfrom = fopen("/dev/tty", "r")) == NULL)) {
+    if(readfromfile != NULL) {
+      // FIXME: check if readfromfile is executable,
+      // if yes, call askextpass(tobewritten) and
+      // read from the returned fd somehow
+      if(readfromfile[0] == '-') {
+        readfrom = stdin;
+      }
+      else {
+        if((readfrom = fopen(readfromfile, "r")) == NULL) {
+          fatal(ptx, "Could not open password file '%s'\n", readfromfile);
+          goto err1;
+        }
+      }
+    }
+    else {
+      readfrom = stdin;
+    }
+  }
 
-	/* If we're reading from a terminal, try to disable echo. */
-	if ((usingtty = isatty(fileno(readfrom))) != 0) {
-		if (tcgetattr(fileno(readfrom), &term_old)) {
-			fatal(ptx, "Cannot read terminal settings\n");
-			goto err1;
-		}
-		memcpy(&term, &term_old, sizeof(struct termios));
-		term.c_lflag = (term.c_lflag & ~ECHO) | ECHONL;
-		if (tcsetattr(fileno(readfrom), TCSANOW, &term)) {
-			fatal(ptx, "Cannot set terminal settings\n");
-			goto err1;
-		}
-	}
+  /* If we're reading from a terminal, try to disable echo. */
+  if ((usingtty = isatty(fileno(readfrom))) != 0) {
+    if (tcgetattr(fileno(readfrom), &term_old)) {
+      fatal(ptx, "Cannot read terminal settings\n");
+      goto err1;
+    }
+    memcpy(&term, &term_old, sizeof(struct termios));
+    term.c_lflag = (term.c_lflag & ~ECHO) | ECHONL;
+    if (tcsetattr(fileno(readfrom), TCSANOW, &term)) {
+      fatal(ptx, "Cannot set terminal settings\n");
+      goto err1;
+    }
+  }
 
 retry:
-	/* If we have a terminal, prompt the user to enter the password. */
-	if (usingtty)
-		fprintf(stderr, "%s: ", prompt);
+  /* If we have a terminal, prompt the user to enter the password. */
+  if (usingtty)
+    fprintf(stderr, "%s: ", prompt);
+  
+  /* Read the password. */
+  if (fgets(passbuf, MAXPASSLEN, readfrom) == NULL) {
+    fatal(ptx, "Cannot read password\n");
+    goto err2;
+  }
 
-	/* Read the password. */
-	if (fgets(passbuf, MAXPASSLEN, readfrom) == NULL) {
-		fatal(ptx, "Cannot read password\n");
-		goto err2;
-	}
 
 
+  /* Confirm the password if necessary. */
+  if (confirmprompt != NULL) {
+    if (usingtty)
+      fprintf(stderr, "%s: ", confirmprompt);
+    if (fgets(confpassbuf, MAXPASSLEN, readfrom) == NULL) {
+      fatal(ptx, "Cannot read password\n");
+      goto err2;
+    }
+    if (strcmp(passbuf, confpassbuf)) {
+      fprintf(stderr,
+              "Passwords mismatch, please try again\n");
+      goto retry;
+    }
+  }
 
-	/* Confirm the password if necessary. */
-	if (confirmprompt != NULL) {
-		if (usingtty)
-			fprintf(stderr, "%s: ", confirmprompt);
-		if (fgets(confpassbuf, MAXPASSLEN, readfrom) == NULL) {
-			fatal(ptx, "Cannot read password\n");
-			goto err2;
-		}
-		if (strcmp(passbuf, confpassbuf)) {
-			fprintf(stderr,
-			    "Passwords mismatch, please try again\n");
-			goto retry;
-		}
-	}
+  /* Terminate the string at the first "\r" or "\n" (if any). */
+  passbuf[strcspn(passbuf, "\r\n")] = '\0';
 
-	/* Terminate the string at the first "\r" or "\n" (if any). */
-	passbuf[strcspn(passbuf, "\r\n")] = '\0';
+  /* enforce no empty passwords */
+  if (strnlen(passbuf, MAXPASSLEN) == 0) {
+    fprintf(stderr,
+            "Empty password not allowed, please try again\n");
+    goto retry;
+  }
+  
+  /* If we changed terminal settings, reset them. */
+  if (usingtty)
+    tcsetattr(fileno(readfrom), TCSANOW, &term_old);
+  
+  /* Close /dev/tty if we opened it.
+     if readfromfile is defined and set to -, disable stdin */
+  if (readfrom != stdin) {
+    fclose(readfrom);
+  }
+  
+  /* Copy the password out. */
+  char *p = smalloc(strlen(passbuf) + 1);
+  memcpy(p, passbuf, strlen(passbuf) + 1 );
+  *passwd = p;
 
-	/* enforce no empty passwords */
-	if (strnlen(passbuf, MAXPASSLEN) == 0) {
-	  fprintf(stderr,
-		  "Empty password not allowed, please try again\n");
-	  goto retry;
-	}
-	
-	/* If we changed terminal settings, reset them. */
-	if (usingtty)
-		tcsetattr(fileno(readfrom), TCSANOW, &term_old);
+  /* Zero any stored passwords. */
+  memset(passbuf, 0, MAXPASSLEN);
+  memset(confpassbuf, 0, MAXPASSLEN);
 
-	/* Close /dev/tty if we opened it.
-	   if readfromfile is defined and set to -, disable stdin */
-	if (readfrom != stdin) {
-	  fclose(readfrom);
-	}
-
-	/* Copy the password out. */
-	char *p = smalloc(strlen(passbuf) + 1);
-	memcpy(p, passbuf, strlen(passbuf) + 1 );
-	*passwd = p;
-
-	/* Zero any stored passwords. */
-	memset(passbuf, 0, MAXPASSLEN);
-	memset(confpassbuf, 0, MAXPASSLEN);
-
-	/* Success! */
-	return (0);
+  /* Success! */
+  return (0);
 
 err2:
-	/* Reset terminal settings if necessary. */
-	if (usingtty)
-		tcsetattr(fileno(readfrom), TCSAFLUSH, &term_old);
+  /* Reset terminal settings if necessary. */
+  if (usingtty)
+    tcsetattr(fileno(readfrom), TCSAFLUSH, &term_old);
 err1:
-	/* Close /dev/tty if we opened it. */
-	if (readfrom != stdin)
-		fclose(readfrom);
+  /* Close /dev/tty if we opened it. */
+  if (readfrom != stdin)
+    fclose(readfrom);
 
-	/* Failure! */
-	return (-1);
+  /* Failure! */
+  return (-1);
 }
 
 

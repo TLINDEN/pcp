@@ -9,14 +9,14 @@ unsigned jen_hash ( unsigned char *k, unsigned length, unsigned initval ) {
   
   while ( len >= 12 ) {
     a += ( k[0] + ( (unsigned)k[1] << 8 ) 
-	   + ( (unsigned)k[2] << 16 )
-	   + ( (unsigned)k[3] << 24 ) );
+           + ( (unsigned)k[2] << 16 )
+           + ( (unsigned)k[3] << 24 ) );
     b += ( k[4] + ( (unsigned)k[5] << 8 ) 
-	   + ( (unsigned)k[6] << 16 )
-         + ( (unsigned)k[7] << 24 ) );
+           + ( (unsigned)k[6] << 16 )
+           + ( (unsigned)k[7] << 24 ) );
     c += ( k[8] + ( (unsigned)k[9] << 8 ) 
-	   + ( (unsigned)k[10] << 16 )
-	   + ( (unsigned)k[11] << 24 ) );
+           + ( (unsigned)k[10] << 16 )
+           + ( (unsigned)k[11] << 24 ) );
     
     jen_mix ( a, b, c );
     

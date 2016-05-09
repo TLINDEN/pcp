@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013-2015 T.Linden.
+    Copyright (C) 2013-2016 T.Linden.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -54,7 +54,7 @@
     Also, don't free() the keyhash or the temporary key pointer
     yourself. Use pcphash_clean() instead when done.
 */
-#define pcphash_iterate(ptx, key)		\
+#define pcphash_iterate(ptx, key) \
   pcp_key_t *__k = NULL; \
   HASH_ITER(hh, ptx->pcpkey_hash, key, __k)
 
@@ -73,7 +73,7 @@
     Also, don't free() the keyhash or the temporary key pointer
     yourself. Use pcphash_clean() instead when done.
 */
-#define pcphash_iteratepub(ptx, key)		\
+#define pcphash_iteratepub(ptx, key) \
   pcp_pubkey_t *__p = NULL; \
   HASH_ITER(hh, ptx->pcppubkey_hash, key, __p)
 
@@ -142,7 +142,7 @@ int pcphash_countpub(PCPCTX *ptx);
 
 
 
-#define pcphash_iteratekeysig(ptx, key)		\
+#define pcphash_iteratekeysig(ptx, key) \
   pcp_keysig_t *__s = NULL; \
   HASH_ITER(hh, ptx->pcpkeysig_hash, key, __s)
 

@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013-2014 T.v.Dein.
+    Copyright (C) 2013-2016 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -39,24 +39,24 @@
 #   endif
 # else /*  no sys/endian.h */
 #   ifdef __CPU_IS_BIG_ENDIAN
-#     define be16toh(x)	(x)
-#     define htobe16(x)	(x)
-#     define be32toh(x)	(x)
-#     define htobe32(x)	(x)
-#     define be64toh(x)	(x)
-#     define htobe64(x)	(x)
+#     define be16toh(x) (x)
+#     define htobe16(x) (x)
+#     define be32toh(x) (x)
+#     define htobe32(x) (x)
+#     define be64toh(x) (x)
+#     define htobe64(x) (x)
 #   elif defined(__APPLE__) /* from https://gist.github.com/panzi/6856583 */
-#	include <libkern/OSByteOrder.h>
-#	define htobe16(x) OSSwapHostToBigInt16(x)
-#	define be16toh(x) OSSwapBigToHostInt16(x)
-#	define htobe32(x) OSSwapHostToBigInt32(x)
-#	define be32toh(x) OSSwapBigToHostInt32(x)
-#	define htobe64(x) OSSwapHostToBigInt64(x)
-#	define be64toh(x) OSSwapBigToHostInt64(x)
-#	define __BYTE_ORDER    BYTE_ORDER
-#	define __BIG_ENDIAN    BIG_ENDIAN
-#	define __LITTLE_ENDIAN LITTLE_ENDIAN
-#	define __PDP_ENDIAN    PDP_ENDIAN
+#   include <libkern/OSByteOrder.h>
+#    define htobe16(x) OSSwapHostToBigInt16(x)
+#    define be16toh(x) OSSwapBigToHostInt16(x)
+#    define htobe32(x) OSSwapHostToBigInt32(x)
+#    define be32toh(x) OSSwapBigToHostInt32(x)
+#    define htobe64(x) OSSwapHostToBigInt64(x)
+#    define be64toh(x) OSSwapBigToHostInt64(x)
+#    define __BYTE_ORDER    BYTE_ORDER
+#    define __BIG_ENDIAN    BIG_ENDIAN
+#    define __LITTLE_ENDIAN LITTLE_ENDIAN
+#    define __PDP_ENDIAN    PDP_ENDIAN
 #   else
 #     ifdef HAVE_ARPA_INET_H
 #       include <arpa/inet.h>
@@ -67,12 +67,12 @@
 #         error Need either netinet/in.h or arpa/inet.h for ntohl() and htonl()
 #       endif
 #     endif
-#     define be16toh(x)	((uint16_t)ntohl((uint16_t)(x)))
-#     define htobe16(x)	((uint16_t)htonl((uint16_t)(x)))
-#     define be32toh(x)	((uint32_t)ntohl((uint32_t)(x)))
-#     define htobe32(x)	((uint32_t)htonl((uint32_t)(x)))
-#     define be64toh(x)	((uint64_t)ntohl((uint64_t)(x)))
-#     define htobe64(x)	((uint64_t)htonl((uint64_t)(x)))
+#     define be16toh(x) ((uint16_t)ntohl((uint16_t)(x)))
+#     define htobe16(x) ((uint16_t)htonl((uint16_t)(x)))
+#     define be32toh(x) ((uint32_t)ntohl((uint32_t)(x)))
+#     define htobe32(x) ((uint32_t)htonl((uint32_t)(x)))
+#     define be64toh(x) ((uint64_t)ntohl((uint64_t)(x)))
+#     define htobe64(x) ((uint64_t)htonl((uint64_t)(x)))
 #   endif
 #  endif /*  HAVE_SYS_ENDIAN_H */
 #endif /*  HAVE_ENDIAN_H */

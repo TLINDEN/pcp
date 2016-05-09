@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013 T.Linden.
+    Copyright (C) 2013-2016 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -92,13 +92,13 @@ void pcptext_key(char *keyid) {
     pcp_pubkey_t *p = pcphash_pubkeyexists(ptx, keyid);
     if(p != NULL) {
       if(debug) {
-	pcp_dumppubkey(p);
-	pcp_keysig_t *s = pcphash_keysigexists(ptx, keyid);
-	if(s != NULL) {
-	  printf("\n");
-	  pcp_dumpkeysig(s);
-	}
-	printf("\n");
+        pcp_dumppubkey(p);
+        pcp_keysig_t *s = pcphash_keysigexists(ptx, keyid);
+        if(s != NULL) {
+          printf("\n");
+          pcp_dumpkeysig(s);
+        }
+        printf("\n");
       }
       pcppubkey_print(p, stdout);
     }
@@ -119,11 +119,11 @@ void pcptext_vault(vault_t *vault) {
     
     checksum = _bin2hex(vault->checksum, LSHA);
     jout = json_pack("{sssisssisi}",
-		     "keyvaultfile", vault->filename,
-		     "version", vault->version,
-		     "checksum", checksum,
-		     "secretkeys", pcphash_count(ptx),
-		     "publickey", pcphash_countpub(ptx));
+                     "keyvaultfile" , vault->filename,
+                     "version"      , vault->version,
+                     "checksum"     , checksum,
+                     "secretkeys"   , pcphash_count(ptx),
+                     "publickey"    , pcphash_countpub(ptx));
 
     jkeys = json_array();
     
@@ -174,11 +174,11 @@ void pcpkey_printlineinfo(pcp_key_t *key) {
   time_t t = (time_t)key->ctime;
   c = localtime(&t);
   printf("0x%s   %s   %04d-%02d-%02dT%02d:%02d:%02d  %s <%s>\n",
-	 key->id,
-	 (key->type ==  PCP_KEY_TYPE_MAINSECRET) ? "primary secret" : "secret        ",  
-	 c->tm_year+1900, c->tm_mon+1, c->tm_mday,
-	 c->tm_hour, c->tm_min, c->tm_sec,
-	 key->owner, key->mail);
+         key->id,
+         (key->type ==  PCP_KEY_TYPE_MAINSECRET) ? "primary secret" : "secret        ",  
+         c->tm_year+1900, c->tm_mon+1, c->tm_mday,
+         c->tm_hour, c->tm_min, c->tm_sec,
+         key->owner, key->mail);
 
   if(ptx->verbose) {
     printf("    ");
@@ -186,14 +186,14 @@ void pcpkey_printlineinfo(pcp_key_t *key) {
     int i, y;
     for(i=0; i<LSHA; i+=4) {
       for(y=0; y<4; y++) {
-	printf("%02x", hash[i+y]);
+        printf("%02x", hash[i+y]);
       }
       printf(" ");
     }
     free(hash);
     printf("\n    encrypted: %s, serial: %08x, version: %d\n",
-	   (key->secret[0] == '\0') ? "yes" : " no",
-	   key->serial, (int)key->version);
+           (key->secret[0] == '\0') ? "yes" : " no",
+           key->serial, (int)key->version);
     printf("\n");
   }
 }
@@ -203,11 +203,11 @@ void pcppubkey_printlineinfo(pcp_pubkey_t *key) {
   time_t t = (time_t)key->ctime;
   c = localtime(&t);
   printf("0x%s   %s   %04d-%02d-%02dT%02d:%02d:%02d  %s <%s>\n",
-	 key->id,
-	 (key->valid == 1) ? "valid public  " : "public        ",  
-	 c->tm_year+1900, c->tm_mon+1, c->tm_mday,
-	 c->tm_hour, c->tm_min, c->tm_sec,
-	 key->owner, key->mail);
+         key->id,
+         (key->valid == 1) ? "valid public  " : "public        ",  
+         c->tm_year+1900, c->tm_mon+1, c->tm_mday,
+         c->tm_hour, c->tm_min, c->tm_sec,
+         key->owner, key->mail);
 
   if(ptx->verbose) {
     printf("    ");
@@ -215,23 +215,23 @@ void pcppubkey_printlineinfo(pcp_pubkey_t *key) {
     int i, y;
     for(i=0; i<LSHA; i+=4) {
       for(y=0; y<4; y++) {
-	printf("%02x", hash[i+y]);
+        printf("%02x", hash[i+y]);
       }
       printf(" ");
     }
     free(hash);
     printf("\n    signed: %s, serial: %08x, version: %d, ",
-	   (key->valid == 1) ? "yes" : " no",
-	   key->serial, (int)key->version);
+           (key->valid == 1) ? "yes" : " no",
+           key->serial, (int)key->version);
     pcp_keysig_t *sig = pcphash_keysigexists(ptx, key->id);
     if(sig != NULL) {
       printf("signature fingerprint:\n    ");
       byte *checksum = sig->checksum;
       for(i=0; i<LSHA; i+=4) {
-	for(y=0; y<4; y++) {
-	  printf("%02x", checksum[i+y]);
-	}
-	printf(" ");
+        for(y=0; y<4; y++) {
+          printf("%02x", checksum[i+y]);
+        }
+        printf(" ");
       }
       printf("\n");
     }
@@ -253,7 +253,7 @@ void pcppubkey_print(pcp_pubkey_t *key, FILE* out) {
     
     jout = pcp_pk2json(key);
     json_object_set(jout, "random-art-id", json_string(r));
-		    
+    
     jdump  = json_dumps(jout, JSON_INDENT(4) | JSON_PRESERVE_ORDER);
     fprintf(out, "%s\n", jdump);
     json_decref(jout);
@@ -278,8 +278,8 @@ void pcppubkey_print(pcp_pubkey_t *key, FILE* out) {
 
     /* 2004-06-14T23:34:30. */
     fprintf(out, " Creation Time: %04d-%02d-%02dT%02d:%02d:%02d\n",
-	    c->tm_year+1900, c->tm_mon+1, c->tm_mday,
-	    c->tm_hour, c->tm_min, c->tm_sec);
+            c->tm_year+1900, c->tm_mon+1, c->tm_mday,
+            c->tm_hour, c->tm_min, c->tm_sec);
 
     byte *hash = pcppubkey_getchecksum(key);
     fprintf(out, " Checksum: ");
@@ -298,10 +298,10 @@ void pcppubkey_print(pcp_pubkey_t *key, FILE* out) {
     size_t rlen = strlen(r);
     for (i=0; i<rlen; ++i) {
       if(r[i] == '\n') {
-	fprintf(out, "\n                ");
+        fprintf(out, "\n                ");
       }
       else {
-	fprintf(out, "%c", r[i]);
+        fprintf(out, "%c", r[i]);
       }
     }
     fprintf(out, "\n");
@@ -327,7 +327,7 @@ void pcpkey_print(pcp_key_t *key, FILE* out) {
     jout = pcp_sk2json(key, NULL, 0);
     json_object_set(jout, "type", json_string("secret"));
     json_object_set(jout, "random-art-id", json_string(r));
-		    
+
     jdump  = json_dumps(jout, JSON_INDENT(4) | JSON_PRESERVE_ORDER);
     fprintf(out, "%s\n", jdump);
     json_decref(jout);
@@ -349,8 +349,8 @@ void pcpkey_print(pcp_key_t *key, FILE* out) {
 
     /* 2004-06-14T23:34:30. */
     fprintf(out, " Creation Time: %04d-%02d-%02dT%02d:%02d:%02d\n",
-	    c->tm_year+1900, c->tm_mon+1, c->tm_mday,
-	    c->tm_hour, c->tm_min, c->tm_sec);
+            c->tm_year+1900, c->tm_mon+1, c->tm_mday,
+            c->tm_hour, c->tm_min, c->tm_sec);
 
     fprintf(out, " Serial Number: 0x%08X\n", key->serial);
     fprintf(out, " Key Version: 0x%08X\n", key->version);
@@ -359,10 +359,10 @@ void pcpkey_print(pcp_key_t *key, FILE* out) {
     size_t rlen = strlen(r);
     for (i=0; i<rlen; ++i) {
       if(r[i] == '\n') {
-	fprintf(out, "\n                ");
+        fprintf(out, "\n                ");
       }
       else {
-	fprintf(out, "%c", r[i]);
+        fprintf(out, "%c", r[i]);
       }
     }
     fprintf(out, "\n");

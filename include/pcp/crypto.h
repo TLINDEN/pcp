@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013-2015 T.Linden.
+    Copyright (C) 2013-2016 T.Linden.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -141,7 +141,7 @@
 */
 byte *pcp_box_encrypt(PCPCTX *ptx, pcp_key_t *secret, pcp_pubkey_t *pub,
                                byte *message, size_t messagesize,
-			       size_t *csize);
+                      size_t *csize);
 
 /** Asymmetrically decrypt a message.
 
@@ -167,7 +167,7 @@ byte *pcp_box_encrypt(PCPCTX *ptx, pcp_key_t *secret, pcp_pubkey_t *pub,
 */
 byte *pcp_box_decrypt(PCPCTX *ptx, pcp_key_t *secret, pcp_pubkey_t *pub,
                                byte *cipher, size_t ciphersize,
-			       size_t *dsize);
+                      size_t *dsize);
 
 
 /** Asymmetrically encrypt a file or a buffer stream.
@@ -196,7 +196,7 @@ byte *pcp_box_decrypt(PCPCTX *ptx, pcp_key_t *secret, pcp_pubkey_t *pub,
     \return Returns the size of the output written to the output stream or 0 in case of errors.
 */
 size_t pcp_encrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t *s,
-			  pcp_key_t *ss, pcp_pubkey_t *p, int signcrypt, int anon);
+                          pcp_key_t *ss, pcp_pubkey_t *p, int signcrypt, int anon);
 
 /** Symmetrically encrypt a file or a buffer stream.
 

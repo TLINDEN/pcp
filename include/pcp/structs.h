@@ -311,6 +311,7 @@ struct _pcp_stream_t {
   Buffer *cache;     /**< The caching Buffer object (for look ahead read) */
   Buffer *next;      /**< The caching Next-Buffer object (for look ahead read) */
   Buffer *save;      /**< Temporary buffer to backup overflow data */
+  byte    *xb;       /**< Temporary byte buffer for reading/writing data */
   uint8_t is_buffer; /**< Set to 1 if the backend is a Buffer */
   uint8_t eof;       /**< Set to 1 if EOF reached */
   uint8_t err;       /**< Set to 1 if an error occured */

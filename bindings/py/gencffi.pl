@@ -2,28 +2,28 @@
 use Data::Dumper;
 
 my %sobytes = (
-	       'crypto_box_NONCEBYTES' => 24,
-	       'crypto_box_PUBLICKEYBYTES' => 32,
-	       'crypto_box_SECRETKEYBYTES' => 32,
-	       'crypto_box_ZEROBYTES' => 32,
-	       'crypto_box_BOXZEROBYTES' => 16,
-	       'crypto_box_MACBYTES' => 16,
-	       'crypto_secretbox_KEYBYTES' => 32,
-	       'crypto_secretbox_NONCEBYTES' => 24,
-	       'crypto_secretbox_ZEROBYTES' => 32,
-	       'crypto_secretbox_BOXZEROBYTES' => 16,
-	       'crypto_secretbox_MACBYTES' => 16,
-	       'crypto_sign_PUBLICKEYBYTES' => 32,
-	       'crypto_sign_SECRETKEYBYTES' => 64,
-	       'crypto_sign_SEEDBYTES' => 32,
-	       'crypto_sign_BYTES' => 64,
-	       'crypto_stream_KEYBYTES' => 32,
-	       'crypto_stream_NONCEBYTES' => 24,
-	       'crypto_generichash_BYTES' => 32,
-	       'crypto_scalarmult_curve25519_BYTES' => 32,
-	       'crypto_scalarmult_BYTES' => 32,
-	       'crypto_generichash_BYTES_MAX' => 64,
-	      );
+               'crypto_box_NONCEBYTES' => 24,
+               'crypto_box_PUBLICKEYBYTES' => 32,
+               'crypto_box_SECRETKEYBYTES' => 32,
+               'crypto_box_ZEROBYTES' => 32,
+               'crypto_box_BOXZEROBYTES' => 16,
+               'crypto_box_MACBYTES' => 16,
+               'crypto_secretbox_KEYBYTES' => 32,
+               'crypto_secretbox_NONCEBYTES' => 24,
+               'crypto_secretbox_ZEROBYTES' => 32,
+               'crypto_secretbox_BOXZEROBYTES' => 16,
+               'crypto_secretbox_MACBYTES' => 16,
+               'crypto_sign_PUBLICKEYBYTES' => 32,
+               'crypto_sign_SECRETKEYBYTES' => 64,
+               'crypto_sign_SEEDBYTES' => 32,
+               'crypto_sign_BYTES' => 64,
+               'crypto_stream_KEYBYTES' => 32,
+               'crypto_stream_NONCEBYTES' => 24,
+               'crypto_generichash_BYTES' => 32,
+               'crypto_scalarmult_curve25519_BYTES' => 32,
+               'crypto_scalarmult_BYTES' => 32,
+               'crypto_generichash_BYTES_MAX' => 64,
+              );
 
 my @ignore = qw(uthash.h);
 
@@ -87,19 +87,19 @@ foreach my $head (@ARGV) {
 print "PCP_RAW_CODE = '''\n";
 print qq(
 typedef enum {
-    JSON_OBJECT,
-    JSON_ARRAY,
-    JSON_STRING,
-    JSON_INTEGER,
-    JSON_REAL,
-    JSON_TRUE,
-    JSON_FALSE,
-    JSON_NULL
+JSON_OBJECT,
+JSON_ARRAY,
+JSON_STRING,
+JSON_INTEGER,
+JSON_REAL,
+JSON_TRUE,
+JSON_FALSE,
+JSON_NULL
 } json_type;
 
 typedef struct json_t {
-    json_type type;
-    size_t refcount;
+json_type type;
+size_t refcount;
 } json_t;
 );
 print join "\n", @typedefs;

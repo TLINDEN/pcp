@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013-2015 T.Linden.
+    Copyright (C) 2013-2016 T.Linden.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ void usage(int error) {
 
 void version() {
   fprintf(stderr, "pcp version %d.%d.%d, use --help to learn how to use.\n",
-	  PCP_VERSION_MAJOR, PCP_VERSION_MINOR, PCP_VERSION_PATCH);
+          PCP_VERSION_MAJOR, PCP_VERSION_MINOR, PCP_VERSION_PATCH);
   exit(0);
 }
 
@@ -139,163 +139,162 @@ int main (int argc, char **argv)  {
   };
 
   while ((opt = getopt_long(argc, argv, "klLV:vdehsO:i:I:pSPRtEx:DzaZr:gcmf:b1F:0KAMX:jC",
-			    longopts, NULL)) != -1) {
+                            longopts, NULL)) != -1) {
   
     switch (opt)  {
       case 0:
-	switch(lo) {
-	case 's':
-	  printf("sign\n");
-	  break;
-	}
-	break;
+        switch(lo) {
+        case 's':
+          printf("sign\n");
+          break;
+        }
+        break;
 
       case 'k':
         mode += PCP_MODE_KEYGEN;
-	usevault = 1;
+        usevault = 1;
         break;
       case  'L':
         ptx->verbose = 1; /* no break by purpose, turn on -l */
       case 'l':
-	mode += PCP_MODE_LISTKEYS;
-	usevault = 1;
-	break;
+        mode += PCP_MODE_LISTKEYS;
+        usevault = 1;
+        break;
 
       case 's':
-	mode += PCP_MODE_EXPORT_SECRET;
-	usevault = 1;
-	break;
+        mode += PCP_MODE_EXPORT_SECRET;
+        usevault = 1;
+        break;
       case 'p':
-	mode += PCP_MODE_EXPORT_PUBLIC;
-	usevault = 1;
-	break;
+        mode += PCP_MODE_EXPORT_PUBLIC;
+        usevault = 1;
+        break;
       case 'K':
-	mode += PCP_MODE_IMPORT;
-	usevault = 1;
-	break;
+        mode += PCP_MODE_IMPORT;
+        usevault = 1;
+        break;
       case 'R':
-	mode += PCP_MODE_DELETE_KEY;
-	usevault = 1;
-	break;
+        mode += PCP_MODE_DELETE_KEY;
+        usevault = 1;
+        break;
       case 't':
-	mode += PCP_MODE_TEXT;
-	usevault = 0;
-	break;
+        mode += PCP_MODE_TEXT;
+        usevault = 0;
+        break;
       case 'E':
-	mode += PCP_MODE_EDIT;
-	usevault = 1;
-	break;
+        mode += PCP_MODE_EDIT;
+        usevault = 1;
+        break;
       case 'e':
-	mode += PCP_MODE_ENCRYPT;
-	usevault = 1;
-	break;
+        mode += PCP_MODE_ENCRYPT;
+        usevault = 1;
+        break;
       case 'm':
-	mode += PCP_MODE_ENCRYPT_ME;
-	break;
+        mode += PCP_MODE_ENCRYPT_ME;
+        break;
       case 'd':
-	mode += PCP_MODE_DECRYPT;
-	usevault = 1;
-	break;
+        mode += PCP_MODE_DECRYPT;
+        usevault = 1;
+        break;
       case 'z':
       case 'a':
-	armor = 1;
-	break;
+        armor = 1;
+        break;
       case 'Z':
-	armor = 2;
-	break;
+        armor = 2;
+        break;
       case 'A':
-	anon = 1;
-	break;
+        anon = 1;
+        break;
       case 'F':
-	if(strncmp(optarg, "pbp", 3) == 0) {
-	  exportformat = EXP_FORMAT_PBP;
-	}
-	else if(strncmp(optarg, "pcp", 3) == 0) {
-	  exportformat = EXP_FORMAT_NATIVE;
-	}
-	else {
-	  fprintf(stderr, "WARN: Unknown export format specified, using native\n");
-	  exportformat = EXP_FORMAT_NATIVE;
-	}
-	break;
+        if(strncmp(optarg, "pbp", 3) == 0) {
+          exportformat = EXP_FORMAT_PBP;
+        }
+        else if(strncmp(optarg, "pcp", 3) == 0) {
+          exportformat = EXP_FORMAT_NATIVE;
+        }
+        else {
+          fprintf(stderr, "WARN: Unknown export format specified, using native\n");
+          exportformat = EXP_FORMAT_NATIVE;
+        }
+        break;
       case 'j':
 #ifdef HAVE_JSON
-	ptx->json = 1;
+        ptx->json = 1;
 #else
-	fprintf(stderr, "WARN: -j set, but no JSON support compiled in. Recompile with --with-json\n");
+        fprintf(stderr, "WARN: -j set, but no JSON support compiled in. Recompile with --with-json\n");
 #endif
-	break;
+        break;
       case 'g':
-	mode += PCP_MODE_SIGN;
-	usevault = 1;
-	break;
+        mode += PCP_MODE_SIGN;
+        usevault = 1;
+        break;
       case 'c':
-	mode += PCP_MODE_VERIFY;
-	usevault = 1;
-	break;
+        mode += PCP_MODE_VERIFY;
+        usevault = 1;
+        break;
       case 'C':
-	mode += PCP_MODE_CHECKSUM;
-	break;	
+        mode += PCP_MODE_CHECKSUM;
+        break;
       case 'f':
-	sigfile = ucmalloc(strlen(optarg)+1);
-	strncpy(sigfile, optarg, strlen(optarg)+1);
-	detach = 1;
-	break;
+        sigfile = ucmalloc(strlen(optarg)+1);
+        strncpy(sigfile, optarg, strlen(optarg)+1);
+        detach = 1;
+        break;
 
       case 'V':
-	strncpy(vaultfile, optarg, 1024);
-	break;
+        strncpy(vaultfile, optarg, 1024);
+        break;
       case 'O':
-	if(strncmp(optarg, "-", 2) > 0) {
-	  outfile = ucmalloc(strlen(optarg)+1);
-	  strncpy(outfile, optarg, strlen(optarg)+1);
-	}
-	break;
+        if(strncmp(optarg, "-", 2) > 0) {
+          outfile = ucmalloc(strlen(optarg)+1);
+          strncpy(outfile, optarg, strlen(optarg)+1);
+        }
+        break;
       case 'I':
-	if(strncmp(optarg, "-", 2) > 0) {
-	  infile = ucmalloc(strlen(optarg)+1);
-	  strncpy(infile, optarg, strlen(optarg)+1);
-	}
-	break;
+        if(strncmp(optarg, "-", 2) > 0) {
+          infile = ucmalloc(strlen(optarg)+1);
+          strncpy(infile, optarg, strlen(optarg)+1);
+        }
+        break;
       case 'X':
-	xpassfile = ucmalloc(strlen(optarg)+1);
-	strncpy(xpassfile, optarg, strlen(optarg)+1);
-	xpf = 1;
-	break;
+        xpassfile = ucmalloc(strlen(optarg)+1);
+        strncpy(xpassfile, optarg, strlen(optarg)+1);
+        xpf = 1;
+        break;
       case 'i':
-	keyid = ucmalloc(19);
-	strncpy(keyid, optarg, 19);
-	useid = 1;
-	break;
+        keyid = ucmalloc(19);
+        strncpy(keyid, optarg, 19);
+        useid = 1;
+        break;
       case 'x':
-	xpass = smalloc(strlen(optarg)+1);
-	strncpy(xpass, optarg, strlen(optarg)+1);
-	break;
+        xpass = smalloc(strlen(optarg)+1);
+        strncpy(xpass, optarg, strlen(optarg)+1);
+        break;
       case LONG_EXTPASS:
-	askpass = malloc(strlen(optarg)+1);
-	strncpy(askpass, optarg, strlen(optarg)+1);
-	break;
+        askpass = malloc(strlen(optarg)+1);
+        strncpy(askpass, optarg, strlen(optarg)+1);
+        break;
       case 'r':
-	p_add(&recipient, optarg);
-	userec = 1;
-	break;
+        p_add(&recipient, optarg);
+        userec = 1;
+        break;
       case 'M':
-	p_add_me(&recipient);
-	userec = 1;
-	break;
-
+        p_add_me(&recipient);
+        userec = 1;
+        break;
       case 'D':
-	debug = 1;
-	break;
+        debug = 1;
+        break;
       case '0':
-	version();
+        version();
       case 'v':
-	ptx->verbose = 1;
-	break;
+        ptx->verbose = 1;
+        break;
       case 'h':
-	usage(0);
+        usage(0);
       default:
-	usage(1);
+        usage(1);
     }
   }
 
@@ -350,65 +349,65 @@ int main (int argc, char **argv)  {
     switch (mode) {
     case PCP_MODE_DECRYPT:
       if(infile == NULL) {
-	infile = extra;
-	useex = 1;
+        infile = extra;
+        useex = 1;
       }
       break;
 
     case PCP_MODE_ENCRYPT:
       if(infile == NULL) {
-	infile = extra;
-	useex = 1;
+        infile = extra;
+        useex = 1;
       }
       else if(userec == 0 && useid == 0) {
-	userec = 1;
-	int i;
-	for (i=0; i<argc; i++) {
-	  p_add(&recipient, argv[i]);
-	}
+        userec = 1;
+        int i;
+        for (i=0; i<argc; i++) {
+          p_add(&recipient, argv[i]);
+        }
       }
       break;
 
     case PCP_MODE_IMPORT: 
       if(infile == NULL) {
-	infile = extra;
-	useex = 1;
+        infile = extra;
+        useex = 1;
       }
       break;
 
     case PCP_MODE_EXPORT_SECRET:
     case PCP_MODE_EXPORT_PUBLIC:
       if(outfile == NULL) {
-	outfile = extra;
-	useex = 1;
+        outfile = extra;
+        useex = 1;
       }
       else if(useid == 0 && userec == 0) {
-	p_add(&recipient, extra);
-	useex = 1;
-	userec = 1;
+        p_add(&recipient, extra);
+        useex = 1;
+        userec = 1;
       }
       break;
 
     case PCP_MODE_VERIFY:
       if(infile == NULL) {
-	infile = extra;
-	useex = 1;
+        infile = extra;
+        useex = 1;
       }
       else if (useid == 0) {
-	id = extra;
-	useid = 1;
-	useex = 1;
+        id = extra;
+        useid = 1;
+        useex = 1;
       }
       break;
 
     case PCP_MODE_SIGN:
       if(infile == NULL) {
-	infile = extra;
-	useex = 1;
+        infile = extra;
+        useex = 1;
       }
       else if(outfile == NULL && detach == 0) {
-	outfile = extra;
-	useex = 1;
+        outfile = extra;
+        useex = 1;
       }
       break;
     }
@@ -457,128 +456,128 @@ int main (int argc, char **argv)  {
     if(vault != NULL) {
       switch (mode) {
       case  PCP_MODE_KEYGEN:
-	pcp_keygen(xpass);
-	break;
+        pcp_keygen(xpass);
+        break;
 
       case PCP_MODE_LISTKEYS:
-	pcp_listkeys();
-	break;
+        pcp_listkeys();
+        break;
 
       case PCP_MODE_EXPORT_SECRET:
-	if(useid) {
-	  id = pcp_normalize_id(keyid);
-	  if(id != NULL) {
-	    pcp_exportsecret(id, useid, outfile, armor, xpass);
-	  }
-	}
-	else {
-	  pcp_exportsecret(NULL, useid, outfile, armor, xpass);
-	}
-	break;
+        if(useid) {
+          id = pcp_normalize_id(keyid);
+          if(id != NULL) {
+            pcp_exportsecret(id, useid, outfile, armor, xpass);
+          }
+        }
+        else {
+          pcp_exportsecret(NULL, useid, outfile, armor, xpass);
+        }
+        break;
 
       case PCP_MODE_EXPORT_PUBLIC:
-	if(useid) {
-	  id = pcp_normalize_id(keyid);
-	  if(id == NULL)
-	    break;
-	}
-	pcp_exportpublic(id, xpass, outfile, exportformat, armor);
-	break;
+        if(useid) {
+          id = pcp_normalize_id(keyid);
+          if(id == NULL)
+            break;
+        }
+        pcp_exportpublic(id, xpass, outfile, exportformat, armor);
+        break;
 
       case PCP_MODE_IMPORT:
-	if(infile == NULL) {
-	  altin(NULL, xpf);
-	  in = stdin;
-	}
-	else {
-	  if((in = fopen(infile, "rb")) == NULL) {
-	    fatal(ptx, "Could not open input file %s\n", infile);
-	    break;
-	  }
-	}
-	pcp_import(vault, in, xpass);
-	break;
+        if(infile == NULL) {
+          altin(NULL, xpf);
+          in = stdin;
+        }
+        else {
+          if((in = fopen(infile, "rb")) == NULL) {
+            fatal(ptx, "Could not open input file %s\n", infile);
+            break;
+          }
+        }
+        pcp_import(vault, in, xpass);
+        break;
 
       case PCP_MODE_DELETE_KEY:
-	if(useid) {
-	  id = pcp_normalize_id(keyid);
-	  if(id != NULL) {
-	    pcpdelete_key(id);
-	  }
-	}
-	else {
-	  fatal(ptx, "You need to specify a key id (--keyid)!\n");
-	}
-	break;
+        if(useid) {
+          id = pcp_normalize_id(keyid);
+          if(id != NULL) {
+            pcpdelete_key(id);
+          }
+        }
+        else {
+          fatal(ptx, "You need to specify a key id (--keyid)!\n");
+        }
+        break;
 
       case PCP_MODE_EDIT:
-	if(useid) {
-	  id = pcp_normalize_id(keyid);
-	  if(id != NULL) {
-	    pcpedit_key(id);
-	  }
-	}
-	else {
-	  fatal(ptx, "You need to specify a key id (--keyid)!\n");
-	}
-	break;
+        if(useid) {
+          id = pcp_normalize_id(keyid);
+          if(id != NULL) {
+            pcpedit_key(id);
+          }
+        }
+        else {
+          fatal(ptx, "You need to specify a key id (--keyid)!\n");
+        }
+        break;
 
       case PCP_MODE_ENCRYPT:
-	if(useid == 1 && userec == 0) {
-	  /*  one dst, FIXME: make id a list as well */
-	  id = pcp_normalize_id(keyid);
-	  pcpencrypt(id, altin(infile, xpf), outfile, xpass, NULL, signcrypt, armor, anon);
-	}
-	else if(useid == 0 && userec == 1) {
-	  /*  multiple dst */
-	  pcpencrypt(NULL, altin(infile, xpf), outfile, xpass, recipient, signcrypt, armor, anon);
-	}
-	else {
-	  /*  -i and -r specified */
-	  fatal(ptx, "You can't specify both -i and -r, use either -i or -r!\n");
-	}
+        if(useid == 1 && userec == 0) {
+          /*  one dst, FIXME: make id a list as well */
+          id = pcp_normalize_id(keyid);
+          pcpencrypt(id, altin(infile, xpf), outfile, xpass, NULL, signcrypt, armor, anon);
+        }
+        else if(useid == 0 && userec == 1) {
+          /*  multiple dst */
+          pcpencrypt(NULL, altin(infile, xpf), outfile, xpass, recipient, signcrypt, armor, anon);
+        }
+        else {
+          /*  -i and -r specified */
+          fatal(ptx, "You can't specify both -i and -r, use either -i or -r!\n");
+        }
 
-	break;
+        break;
 
       case PCP_MODE_DECRYPT:
-	if(useid) {
-	  id = pcp_normalize_id(keyid);
-	  if(id != NULL) {
-	    pcpdecrypt(id, useid, altin(infile, xpf), outfile, xpass, signcrypt);
-	  }
-	}
-	else {
-	  pcpdecrypt(NULL, useid, altin(infile, xpf), outfile, xpass, signcrypt);
-	}
-	break;	
+        if(useid) {
+          id = pcp_normalize_id(keyid);
+          if(id != NULL) {
+            pcpdecrypt(id, useid, altin(infile, xpf), outfile, xpass, signcrypt);
+          }
+        }
+        else {
+          pcpdecrypt(NULL, useid, altin(infile, xpf), outfile, xpass, signcrypt);
+        }
+        break;
 
       case PCP_MODE_SIGN:
-	if(detach) {
-	  if(outfile != NULL && sigfile != NULL)
-	    fatal(ptx, "You can't both specify -O and -f, use -O for std signatures and -f for detached ones\n");
-	  else
-	    pcpsign(altin(infile, xpf), sigfile, xpass, armor, detach);
-	}
-	else
-	  pcpsign(altin(infile, xpf), outfile, xpass, armor, detach);
-	break;
+        if(detach) {
+          if(outfile != NULL && sigfile != NULL)
+            fatal(ptx, "You can't both specify -O and -f, use -O for std signatures and -f for detached ones\n");
+          else
+            pcpsign(altin(infile, xpf), sigfile, xpass, armor, detach);
+        }
+        else
+          pcpsign(altin(infile, xpf), outfile, xpass, armor, detach);
+        break;
 
       case PCP_MODE_VERIFY:
-	if(useid) {
-	  id = pcp_normalize_id(keyid);
-	  if(id != NULL) {
-	    pcpverify(altin(infile, xpf), sigfile, id, detach);
-	  }
-	}
-	else {
-	  pcpverify(altin(infile, xpf), sigfile, NULL, detach);
-	}
-	break;
+        if(useid) {
+          id = pcp_normalize_id(keyid);
+          if(id != NULL) {
+            pcpverify(altin(infile, xpf), sigfile, id, detach);
+          }
+        }
+        else {
+          pcpverify(altin(infile, xpf), sigfile, NULL, detach);
+        }
+        break;
 
       default:
- 	/*   */
-	goto ELSEMODE;
-	break;
+        /*   */
+        goto ELSEMODE;
+        break;
       }
       pcpvault_close(ptx, vault);
     }
@@ -600,37 +599,37 @@ int main (int argc, char **argv)  {
 
     case PCP_MODE_TEXT:
       if(infile != NULL) {
-	pcptext_infile(infile);
+        pcptext_infile(infile);
       }
       else {
-	vault = pcpvault_init(ptx, vaultfile);
-	if(! useid && infile == NULL) {
-	  pcptext_vault(vault);
-	}
-	else {
-	  id = pcp_normalize_id(keyid);
-	  if(id != NULL) {
-	    pcptext_key(id);
-	  }
-	}
-	pcpvault_close(ptx, vault);
+        vault = pcpvault_init(ptx, vaultfile);
+        if(! useid && infile == NULL) {
+          pcptext_vault(vault);
+        }
+        else {
+          id = pcp_normalize_id(keyid);
+          if(id != NULL) {
+            pcptext_key(id);
+          }
+        }
+        pcpvault_close(ptx, vault);
       }
       break;
     case PCP_MODE_CHECKSUM:
       if(infile == NULL) {
-	if(argc == 0) {
-	  char *list[1];
-	  list[0] = NULL;
-	  pcpchecksum(list, 1, xpass);
-	}
-	else {
-	  pcpchecksum(argv, argc, xpass);
-	}
+        if(argc == 0) {
+          char *list[1];
+          list[0] = NULL;
+          pcpchecksum(list, 1, xpass);
+        }
+        else {
+          pcpchecksum(argv, argc, xpass);
+        }
       }
       else {
-	char *list[1];
-	list[0] = infile;
-	pcpchecksum(list, 1, xpass);
+        char *list[1];
+        list[0] = infile;
+        pcpchecksum(list, 1, xpass);
       }
       break;
       

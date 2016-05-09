@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013 T.Linden.
+    Copyright (C) 2013-2016 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -212,11 +212,11 @@ pcp_pubkey_t *pcp_ed_verify_buffered(PCPCTX *ptx, Pcpstream *in, pcp_pubkey_t *p
       cur_bufsize = offset;
       gotsig = 1;
       if(z85) {
-	cur_bufsize -= 1;
-	memcpy(z85encoded, &in_full[offset], zlen);
+        cur_bufsize -= 1;
+        memcpy(z85encoded, &in_full[offset], zlen);
       }
       else
-	memcpy(sighash, &in_full[offset + strlen(binsigstart)], mlen);
+        memcpy(sighash, &in_full[offset + strlen(binsigstart)], mlen);
     }
     else if(full_bufsize - offset == siglen) {
       /*  sig fits within the 2nd half */
@@ -225,11 +225,11 @@ pcp_pubkey_t *pcp_ed_verify_buffered(PCPCTX *ptx, Pcpstream *in, pcp_pubkey_t *p
       next_bufsize -= siglen;
       gotsig = 1;
       if(z85) {
-	cur_bufsize -= 1;
-	memcpy(z85encoded, &in_full[full_bufsize - siglen], siglen);
+        cur_bufsize -= 1;
+        memcpy(z85encoded, &in_full[full_bufsize - siglen], siglen);
       }
       else
-	memcpy(sighash, &in_full[full_bufsize - mlen], mlen);
+        memcpy(sighash, &in_full[full_bufsize - mlen], mlen);
     }
     else
       offset = 0;
@@ -276,7 +276,7 @@ pcp_pubkey_t *pcp_ed_verify_buffered(PCPCTX *ptx, Pcpstream *in, pcp_pubkey_t *p
     pcphash_iteratepub(ptx, p) {
       verifiedhash = pcp_ed_verify(ptx, sighash, mlen, p);
       if(verifiedhash != NULL)
-	break;
+        break;
     }
 
         /* no pubkey found yet, try our own */
@@ -284,13 +284,13 @@ pcp_pubkey_t *pcp_ed_verify_buffered(PCPCTX *ptx, Pcpstream *in, pcp_pubkey_t *p
     pcp_pubkey_t *pub;
     pcphash_iterate(ptx, k) {
       if(k->type == PCP_KEY_TYPE_MAINSECRET) {
-	pub = pcpkey_pub_from_secret(k);
-	verifiedhash = pcp_ed_verify(ptx, sighash, mlen, pub);
-	if(verifiedhash != NULL) {
-	  /* good, self-signed */
-	  p = pub;
-	  break;
-	}
+        pub = pcpkey_pub_from_secret(k);
+        verifiedhash = pcp_ed_verify(ptx, sighash, mlen, pub);
+        if(verifiedhash != NULL) {
+          /* good, self-signed */
+          p = pub;
+          break;
+        }
       }
     }
   }
@@ -341,7 +341,7 @@ size_t pcp_ed_detachsign_buffered(Pcpstream *in, Pcpstream *out, pcp_key_t *s) {
   size_t mlen = + crypto_sign_BYTES + crypto_generichash_BYTES_MAX;
 
   ps_print(out, "%s\r\nVersion: PCP v%d.%d.%d\r\n",
-	  PCP_SIG_START, PCP_VERSION_MAJOR, PCP_VERSION_MINOR, PCP_VERSION_PATCH);
+           PCP_SIG_START, PCP_VERSION_MAJOR, PCP_VERSION_MINOR, PCP_VERSION_PATCH);
   size_t zlen;
   char *z85encoded = pcp_z85_encode((byte*)signature, mlen, &zlen, 1);
   ps_print(out, "%s\r\n%s\r\n", z85encoded, PCP_SIG_END);
@@ -416,7 +416,7 @@ pcp_pubkey_t *pcp_ed_detachverify_buffered(PCPCTX *ptx, Pcpstream *in, Pcpstream
     pcphash_iteratepub(ptx, p) {
       verifiedhash = pcp_ed_verify(ptx, sighash, mlen, p);
       if(verifiedhash != NULL)
-	break;
+        break;
     }
 
     /* no pubkey found yet, try our own */
@@ -424,13 +424,13 @@ pcp_pubkey_t *pcp_ed_detachverify_buffered(PCPCTX *ptx, Pcpstream *in, Pcpstream
     pcp_pubkey_t *pub;
     pcphash_iterate(ptx, k) {
       if(k->type == PCP_KEY_TYPE_MAINSECRET) {
-	pub = pcpkey_pub_from_secret(k);
-	verifiedhash = pcp_ed_verify(ptx, sighash, mlen, pub);
-	if(verifiedhash != NULL) {
-	  /* good, self-signed */
-	  p = pub;
-	  break;
-	}
+        pub = pcpkey_pub_from_secret(k);
+        verifiedhash = pcp_ed_verify(ptx, sighash, mlen, pub);
+        if(verifiedhash != NULL) {
+          /* good, self-signed */
+          p = pub;
+          break;
+        }
       }
     }
   }

@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013 T.Linden.
+    Copyright (C) 2013-2016 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -29,15 +29,15 @@ vault_t *pcpvault_init(PCPCTX *ptx, char *filename) {
   if(vault != NULL) {
     if(vault->isnew == 1) {
       if(pcpvault_create(ptx, vault) != 0) {
-	pcpvault_close(ptx, vault);
-	return NULL;
+        pcpvault_close(ptx, vault);
+        return NULL;
       }
     }
     else {
       if(pcpvault_fetchall(ptx, vault) != 0) {
-	errno = 0; /*  weird, something sets it to ENOENT and it's not me */
-	pcpvault_close(ptx, vault);
-	return NULL;
+        errno = 0; /*  weird, something sets it to ENOENT and it's not me */
+        pcpvault_close(ptx, vault);
+        return NULL;
       }
     }
   }
@@ -57,7 +57,7 @@ vault_t *pcpvault_new(PCPCTX *ptx, char *filename, int is_tmp) {
       b = arc4random();
       snprintf(vault->filename, 1024, "%s-%08x%08x", filename, a, b);
        if (stat (vault->filename, &stat_buf) != 0)
-	 break;
+         break;
     }
     unlink(vault->filename);
     vault->size = 0;
@@ -226,25 +226,25 @@ int pcpvault_writeall(PCPCTX *ptx, vault_t *vault) {
       pcp_key_t *k = NULL;
       Buffer *blob = buffer_new(PCP_RAW_PUBKEYSIZE, "bs");
       pcphash_iterate(ptx, k) {
-	pcp_seckeyblob(blob, k);
-	if(pcpvault_additem(ptx, tmp, buffer_get(blob), PCP_RAW_KEYSIZE, PCP_KEY_TYPE_SECRET) != 0) {
-	  buffer_free(blob);
-	  goto errwa;
-	}
-	buffer_clear(blob);
+        pcp_seckeyblob(blob, k);
+        if(pcpvault_additem(ptx, tmp, buffer_get(blob), PCP_RAW_KEYSIZE, PCP_KEY_TYPE_SECRET) != 0) {
+          buffer_free(blob);
+          goto errwa;
+        }
+        buffer_clear(blob);
       }
       pcp_pubkey_t *p = NULL;
       pcphash_iteratepub(ptx, p) {
-	pcp_pubkeyblob(blob, p);
-	if(pcpvault_additem(ptx, tmp, buffer_get(blob), PCP_RAW_PUBKEYSIZE, PCP_KEY_TYPE_PUBLIC) != 0) {
-	  buffer_free(blob);
-	  goto errwa;
-	}
-	buffer_clear(blob);
+        pcp_pubkeyblob(blob, p);
+        if(pcpvault_additem(ptx, tmp, buffer_get(blob), PCP_RAW_PUBKEYSIZE, PCP_KEY_TYPE_PUBLIC) != 0) {
+          buffer_free(blob);
+          goto errwa;
+        }
+        buffer_clear(blob);
       }
       pcpvault_update_checksum(ptx, tmp);
       if(pcpvault_copy(ptx, tmp, vault) == 0) {
-	pcpvault_unlink(tmp);
+        pcpvault_unlink(tmp);
       }
       pcpvault_free(tmp);
       buffer_free(blob);
@@ -337,7 +337,7 @@ int pcpvault_copy(PCPCTX *ptx, vault_t *tmp, vault_t *vault) {
   vault->fd = freopen(vault->filename, "wb+", vault->fd);
   if(fwrite(in, tmpsize, 1, vault->fd) != 1) {
     fatal(ptx, "Failed to copy %s to %s (write) [keeping %s]\n",
-	  tmp->filename, vault->filename, tmp->filename);
+          tmp->filename, vault->filename, tmp->filename);
     ucfree(in, tmpsize);
     return 1;
   }
@@ -345,7 +345,7 @@ int pcpvault_copy(PCPCTX *ptx, vault_t *tmp, vault_t *vault) {
 
   if(fflush(vault->fd) != 0) {
     fatal(ptx, "Failed to copy %s to %s (flush) [keeping %s]\n",
-	  tmp->filename, vault->filename, tmp->filename);
+          tmp->filename, vault->filename, tmp->filename);
     return 1;
   }
 
@@ -372,7 +372,7 @@ int pcpvault_close(PCPCTX *ptx, vault_t *vault) {
   if(vault != NULL) {
     if(vault->fd) {
       if(vault->unsafed == 1) {
-	pcpvault_writeall(ptx, vault);
+        pcpvault_writeall(ptx, vault);
       }
       fclose(vault->fd);
     }
@@ -437,7 +437,7 @@ int pcpvault_fetchall(PCPCTX *ptx, vault_t *vault) {
   got = fread(header, 1, sizeof(vault_header_t), vault->fd);
   if(got < sizeof(vault_header_t)) {
     fatal(ptx, "empty or invalid vault header size (got %ld, expected %ld)\n",
-	  got,  sizeof(vault_header_t)); 
+          got,  sizeof(vault_header_t)); 
     goto err;
   }
   vh2native(header);
@@ -456,59 +456,59 @@ int pcpvault_fetchall(PCPCTX *ptx, vault_t *vault) {
     for(;;) {
       readpos = ftell(vault->fd);
       if(vault->size - readpos >= sizeof(vault_item_header_t)) {
-	/*  an item header follows */
-	got = fread(item, sizeof(vault_item_header_t), 1, vault->fd);
-	ih2native(item);
+        /*  an item header follows */
+        got = fread(item, sizeof(vault_item_header_t), 1, vault->fd);
+        ih2native(item);
 
-	if(item->size > 0) {
-	  /*  item is valid */
-	  readpos = ftell(vault->fd);
-	  bytesleft = vault->size - readpos;
-	  if(bytesleft >= ksize) {
-	    /*  a key follows */
-	    if(item->type == PCP_KEY_TYPE_MAINSECRET ||
-	       item->type == PCP_KEY_TYPE_SECRET) {
-	      /*  read a secret key */
-	      key = ucmalloc(sizeof(pcp_key_t));
-	      got = fread(key, PCP_RAW_KEYSIZE, 1, vault->fd);
-	      key2native(key);
-	      pcphash_add(ptx, (void *)key, item->type);
-	    }
-	    else if(item->type == PCP_KEY_TYPE_PUBLIC) {
-	      /*  read a public key */
-	      pubkey = ucmalloc(sizeof(pcp_pubkey_t));
-	      got = fread(pubkey, PCP_RAW_PUBKEYSIZE, 1, vault->fd);
-	      pubkey2native(pubkey);
-	      pcphash_add(ptx, (void *)pubkey, item->type);
-	    }
-	    else if(item->type == PCP_KEYSIG_NATIVE || item->type == PCP_KEYSIG_PBP) {
-	      Buffer *rawks = buffer_new(256, "keysig");
-	      buffer_fd_read(rawks, vault->fd, item->size);
-	      pcp_keysig_t *s = pcp_keysig_new(rawks);
-	      pcphash_add(ptx, (void *)s, item->type);
-	      buffer_free(rawks);
-	    }
-	    else {
-	      fatal(ptx, "Failed to read vault - invalid key type: %02X! at %d\n",
-		    item->type, readpos);
-	      goto err;
-	    }
-	  }
-	  else {
-	    fatal(ptx, "Failed to read vault - that's no pcp key at %d (size %ld)!\n",
-		  readpos, bytesleft);
-	    goto err;
-	  }
-	}
-	else {
-	  fatal(ptx, "Failed to read vault - invalid key item header size at %d!\n",
-		readpos);
-	  goto err;
-	}
+        if(item->size > 0) {
+          /*  item is valid */
+          readpos = ftell(vault->fd);
+          bytesleft = vault->size - readpos;
+          if(bytesleft >= ksize) {
+            /*  a key follows */
+            if(item->type == PCP_KEY_TYPE_MAINSECRET ||
+               item->type == PCP_KEY_TYPE_SECRET) {
+              /*  read a secret key */
+              key = ucmalloc(sizeof(pcp_key_t));
+              got = fread(key, PCP_RAW_KEYSIZE, 1, vault->fd);
+              key2native(key);
+              pcphash_add(ptx, (void *)key, item->type);
+            }
+            else if(item->type == PCP_KEY_TYPE_PUBLIC) {
+              /*  read a public key */
+              pubkey = ucmalloc(sizeof(pcp_pubkey_t));
+              got = fread(pubkey, PCP_RAW_PUBKEYSIZE, 1, vault->fd);
+              pubkey2native(pubkey);
+              pcphash_add(ptx, (void *)pubkey, item->type);
+            }
+            else if(item->type == PCP_KEYSIG_NATIVE || item->type == PCP_KEYSIG_PBP) {
+              Buffer *rawks = buffer_new(256, "keysig");
+              buffer_fd_read(rawks, vault->fd, item->size);
+              pcp_keysig_t *s = pcp_keysig_new(rawks);
+              pcphash_add(ptx, (void *)s, item->type);
+              buffer_free(rawks);
+            }
+            else {
+              fatal(ptx, "Failed to read vault - invalid key type: %02X! at %d\n",
+                    item->type, readpos);
+              goto err;
+            }
+          }
+          else {
+            fatal(ptx, "Failed to read vault - that's no pcp key at %d (size %ld)!\n",
+                  readpos, bytesleft);
+            goto err;
+          }
+        }
+        else {
+          fatal(ptx, "Failed to read vault - invalid key item header size at %d!\n",
+                readpos);
+          goto err;
+        }
       }
       else {
-	/*  no more items */
-	break;
+        /*  no more items */
+        break;
       }
     }
   }

@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013 T.Linden.
+    Copyright (C) 2013-2016 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -41,12 +41,12 @@ namespace pcp {
       std::string msg;
       PCPCTX *ptx = P->ptx;
       if(ptx->pcp_errset == 1) {
-	msg = ptx->pcp_err;
+        msg = ptx->pcp_err;
       }
       if(errno) {
-	msg += std::string("\nError: ")
-	    + std::string(strerror(errno))
-	    + std::string("\n");
+        msg += std::string("\nError: ")
+          + std::string(strerror(errno))
+          + std::string("\n");
       }
       return msg;
     }

@@ -118,22 +118,22 @@ int main(int argc, char **argv) {
     back = pcp_z85_decode(ptx, raw, &zlen);
     if(back == NULL) {
       if(mode > 3) {
-	/* expected fail */
-	ret = TRUE;
+        /* expected fail */
+        ret = TRUE;
       }
       else {
-	/* expected ok */
-	ret = FALSE;
+        /* expected ok */
+        ret = FALSE;
       }
     }
     else {
       if(mode > 3) {
-	/* expected fail */
-	ret = FALSE;
+        /* expected fail */
+        ret = FALSE;
       }
       else {
-	/* expected ok */
-	ret = TRUE;
+        /* expected ok */
+        ret = TRUE;
       }
     }
   }
@@ -143,7 +143,7 @@ int main(int argc, char **argv) {
     if(mode <= 3 && memcmp(back, clear, 256) != 0) {
       ret = FALSE;
       if(ptx->pcp_errset == 0) {
-	fatal(ptx, "decoded content doesn't match\n");
+        fatal(ptx, "decoded content doesn't match\n");
       }
     }
   }

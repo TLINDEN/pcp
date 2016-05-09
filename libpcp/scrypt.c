@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013 T.Linden.
+    Copyright (C) 2013-2016 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -30,8 +30,8 @@ byte* pcp_scrypt(PCPCTX *ptx, char *passwd, size_t passwdlen, byte *nonce, size_
                    nonce, noncelen, NULL, 0);
 
   int status = crypto_pwhash_scryptsalsa208sha256(dk, 64, passwd, passwdlen, salt,
-						  crypto_pwhash_scryptsalsa208sha256_OPSLIMIT_INTERACTIVE,
-						  crypto_pwhash_scryptsalsa208sha256_MEMLIMIT_INTERACTIVE);
+                                                  crypto_pwhash_scryptsalsa208sha256_OPSLIMIT_INTERACTIVE,
+                                                  crypto_pwhash_scryptsalsa208sha256_MEMLIMIT_INTERACTIVE);
 
   ucfree(salt, crypto_pwhash_scryptsalsa208sha256_SALTBYTES);
   if (status == 0) {

@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013 T.Linden.
+    Copyright (C) 2013-2016 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -53,8 +53,8 @@ Key::Key(PcpContext *P, const string& passphrase) {
 }
 
 Key::Key(PcpContext *P, const string& passphrase,
-	 const string& owner,
-	 const string& mail) {
+         const string& owner,
+         const string& mail) {
   stored = false;
   pcp_key_t *_K = pcpkey_new();
   K = pcpkey_encrypt(P->ptx, _K, (char *)passphrase.c_str());

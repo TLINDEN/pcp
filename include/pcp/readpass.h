@@ -58,7 +58,7 @@
  * getpass / readpass / readpassphrase / etc. functions in various libraries.
  */
 int pcp_readpass(PCPCTX *ptx, char **passwd, const char *prompt,
-		 const char *confirmprompt, int devtty, char *readfromfile);
+                 const char *confirmprompt, int devtty, char *readfromfile);
 
 /**
    from encfs getUserKey().

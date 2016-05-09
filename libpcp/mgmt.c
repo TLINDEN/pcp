@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013-2014 T.v.Dein.
+    Copyright (C) 2013-2016 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -42,17 +42,17 @@ int _check_keysig_h(PCPCTX *ptx, Buffer *blob, rfc_pub_sig_h *h) {
 
     if(h->version != EXP_SIG_VERSION) {
       fatal(ptx, "Unsupported pubkey signature version %d, expected %d\n",
-	    h->version, EXP_SIG_VERSION);
+            h->version, EXP_SIG_VERSION);
       return 1;
     }
     if(h->type != EXP_SIG_TYPE) {
       fatal(ptx, "Unsupported pubkey signature type %d, expected %d\n",
-	    h->type, EXP_SIG_TYPE);
+            h->type, EXP_SIG_TYPE);
       return 1;
     }
     if(h->pkcipher != EXP_SIG_CIPHER) {
       fatal(ptx, "Unsupported pubkey signature cipher %d, expected %d\n",
-	    h->pkcipher, EXP_SIG_CIPHER);
+            h->pkcipher, EXP_SIG_CIPHER);
       return 1;
     }
     if(h->hashcipher != EXP_HASH_CIPHER) {
@@ -61,7 +61,7 @@ int _check_keysig_h(PCPCTX *ptx, Buffer *blob, rfc_pub_sig_h *h) {
     }
     if(h->numsubs > 0 && buffer_left(blob) < sizeof(rfc_pub_sig_s) * h->numsubs) {
       fatal(ptx, "Signature size specification invalid (sig: %ld, bytes left: %ld, numsubs: %ld\n",
-	    sizeof(rfc_pub_sig_s) * h->numsubs, buffer_left(blob), h->numsubs);
+            sizeof(rfc_pub_sig_s) * h->numsubs, buffer_left(blob), h->numsubs);
       return 1;
     }
     return 0;
@@ -107,14 +107,14 @@ int _check_sigsubs(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, rfc_pub_sig_s *su
 
     if(strncmp(notation, "owner", 5) == 0) {
       if(buffer_get_chunk(blob, p->owner, vsize) == 0) {
-	fatal(ptx, "Invalid 'owner' notation, expected %ld bytes, but got 0\n", vsize);
-	goto sgcerr;
+        fatal(ptx, "Invalid 'owner' notation, expected %ld bytes, but got 0\n", vsize);
+        goto sgcerr;
       }
     }
     else if(strncmp(notation, "mail", 4) == 0) {
       if(buffer_get_chunk(blob, p->mail, vsize) == 0) {
-	fatal(ptx, "Invalid 'mail' notation, expected %ld bytes, but got 0\n", vsize);
-	goto sgcerr;
+        fatal(ptx, "Invalid 'mail' notation, expected %ld bytes, but got 0\n", vsize);
+        goto sgcerr;
       }
     }
     else if(strncmp(notation, "serial", 6) == 0) {
@@ -487,10 +487,10 @@ Buffer *pcp_export_pbp_pub(pcp_key_t *sk) {
   v = localtime(&vt);
   date = ucmalloc(65);
   sprintf(date, "%04d-%02d-%02dT%02d:%02d:%02d.000000      %04d-%02d-%02dT%02d:%02d:%02d.000000      ",
-	  c->tm_year+1900-1, c->tm_mon+1, c->tm_mday, // wtf? why -1?
-	  c->tm_hour, c->tm_min, c->tm_sec,
-	  v->tm_year+1900-1, v->tm_mon+1, v->tm_mday,
-	  v->tm_hour, v->tm_min, v->tm_sec);
+          c->tm_year+1900-1, c->tm_mon+1, c->tm_mday, // wtf? why -1?
+          c->tm_hour, c->tm_min, c->tm_sec,
+          v->tm_year+1900-1, v->tm_mon+1, v->tm_mday,
+          v->tm_hour, v->tm_min, v->tm_sec);
   buffer_add(sig, date, 64);
 
   /* add owner */
@@ -781,15 +781,15 @@ pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphras
   cipherlen = buffer_left(cipher);
   if(cipherlen < minlen) {
     fatal(ptx, "failed to decrypt the secret key file:\n"
-	  "expected encrypted secret key size %ld is less than minimum len %ld\n",
-	  cipherlen, minlen);
+          "expected encrypted secret key size %ld is less than minimum len %ld\n",
+          cipherlen, minlen);
     goto impserr1;
   }
 
   /* decrypt the blob */
   clear = ucmalloc(cipherlen - LMAC);
   if(pcp_sodium_verify_mac(&clear, buffer_get_remainder(cipher),
-			   cipherlen, nonce, symkey) != 0) {
+                           cipherlen, nonce, symkey) != 0) {
 
     fatal(ptx, "failed to decrypt the secret key file\n");
     goto impserr1;
@@ -914,20 +914,20 @@ json_t *pcp_sk2json(pcp_key_t *sk, byte *sig, size_t siglen) {
   }
 
   jout = json_pack(jformat,
-		   "id", sk->id,
-		   "owner", sk->owner,
-		   "mail", sk->mail,
-		   "ctime", (json_int_t)sk->ctime,
-		   "expire", (json_int_t)sk->ctime+31536000,
-		   "version", (json_int_t)sk->version,
-		   "serial", (json_int_t)sk->serial,
-		   "type", "public",
-		   "cipher", EXP_PK_CIPHER_NAME,
-		   "cryptpub", cryptpub,
-		   "sigpub", sigpub,
-		   "masterpub", masterpub,
-		   "signature", ssig
-		   );
+                   "id"        , sk->id,
+                   "owner"     , sk->owner,
+                   "mail"      , sk->mail,
+                   "ctime"     , (json_int_t)sk->ctime,
+                   "expire"    , (json_int_t)sk->ctime+31536000,
+                   "version"   , (json_int_t)sk->version,
+                   "serial"    , (json_int_t)sk->serial,
+                   "type"      , "public",
+                   "cipher"    , EXP_PK_CIPHER_NAME,
+                   "cryptpub"  , cryptpub,
+                   "sigpub"    , sigpub,
+                   "masterpub" , masterpub,
+                   "signature" , ssig
+                   );
 
   free(cryptpub);
   free(sigpub);

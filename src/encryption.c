@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013-2015 T.v.Dein.
+    Copyright (C) 2013-2016 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -66,12 +66,12 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
 
       char *passphrase;
       if(passwd == NULL) {
-	pcp_readpass(ptx, &passphrase,
-		     "Enter passphrase for symetric decryption", NULL, 1, NULL);
+        pcp_readpass(ptx, &passphrase,
+                     "Enter passphrase for symetric decryption", NULL, 1, NULL);
       }
       else {
-	passphrase = smalloc(strlen(passwd)+1);
-	memcpy(passphrase, passwd, strlen(passwd) + 1);
+        passphrase = smalloc(strlen(passwd)+1);
+        memcpy(passphrase, passwd, strlen(passwd) + 1);
       }
 
       symkey = pcp_scrypt(ptx, passphrase, strlen(passphrase), salt, 90);
@@ -79,48 +79,48 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
       free(salt);
     }
     else if(head == PCP_ASYM_CIPHER || head == PCP_ASYM_CIPHER_SIG
-	    || head == PCP_ASYM_CIPHER_ANON || head == PCP_ASYM_CIPHER_ANON_SIG) {
+            || head == PCP_ASYM_CIPHER_ANON || head == PCP_ASYM_CIPHER_ANON_SIG) {
       /*  asymetric mode */
       if(useid) {
-	secret = pcphash_keyexists(ptx, id);
-	if(secret == NULL) {
-	  fatal(ptx, "Could not find a secret key with id 0x%s in vault %s!\n",
-		id, vault->filename);
-	  goto errde3;
-	}
+        secret = pcphash_keyexists(ptx, id);
+        if(secret == NULL) {
+          fatal(ptx, "Could not find a secret key with id 0x%s in vault %s!\n",
+                id, vault->filename);
+          goto errde3;
+        }
       }
       else {
-	secret = pcp_find_primary_secret();
-	if(secret == NULL) {
-	  fatal(ptx, "Could not find a secret key in vault %s!\n", id, vault->filename);
-	  goto errde3;
-	}
+        secret = pcp_find_primary_secret();
+        if(secret == NULL) {
+          fatal(ptx, "Could not find a secret key in vault %s!\n", id, vault->filename);
+          goto errde3;
+        }
       }
 
       char *passphrase;
       if(passwd == NULL) {
-	pcp_readpass(ptx, &passphrase,
-		     "Enter passphrase to decrypt your secret key", NULL, 1, NULL);
+        pcp_readpass(ptx, &passphrase,
+                     "Enter passphrase to decrypt your secret key", NULL, 1, NULL);
       }
       else {
-	passphrase = smalloc(strlen(passwd)+1);
-	memcpy(passphrase, passwd, strlen(passwd)+1);
+        passphrase = smalloc(strlen(passwd)+1);
+        memcpy(passphrase, passwd, strlen(passwd)+1);
       }
 
       secret = pcpkey_decrypt(ptx, secret, passphrase);
       sfree(passphrase);
       if(secret == NULL)
-	goto errde3;
+        goto errde3;
       
       if(head == PCP_ASYM_CIPHER_ANON)
-	anon = 1;
+        anon = 1;
 
       if(head == PCP_ASYM_CIPHER_SIG)
-	verify = 1;
+        verify = 1;
 
       if(head == PCP_ASYM_CIPHER_ANON_SIG) {
-	anon = 1;
-	verify = 1;
+        anon = 1;
+        verify = 1;
       }
     }
     else {
@@ -164,7 +164,7 @@ int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, i
 
 
 int pcpencrypt(char *id, char *infile, char *outfile, char *passwd,
-	       plist_t *recipient, int signcrypt, int armor, int anon) {
+               plist_t *recipient, int signcrypt, int armor, int anon) {
   FILE *in = NULL;
   FILE *out = NULL;
   pcp_pubkey_t *pubhash = NULL; /*  FIXME: add free() */
@@ -201,15 +201,15 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd,
       /*  self-encryption: look if its a secret one */
       pcp_key_t *s = pcphash_keyexists(ptx, id);
       if(s != NULL) {
-	tmp = pcpkey_pub_from_secret(s);
-	pub = ucmalloc(sizeof(pcp_pubkey_t));
-	memcpy(pub, tmp, sizeof(pcp_pubkey_t));
-	HASH_ADD_STR( pubhash, id, pub);
+        tmp = pcpkey_pub_from_secret(s);
+        pub = ucmalloc(sizeof(pcp_pubkey_t));
+        memcpy(pub, tmp, sizeof(pcp_pubkey_t));
+        HASH_ADD_STR( pubhash, id, pub);
       }
       else {
-	fatal(ptx, "Could not find a public key with id 0x%s in vault %s!\n",
-	      id, vault->filename);
-	goto erren3;
+        fatal(ptx, "Could not find a public key with id 0x%s in vault %s!\n",
+              id, vault->filename);
+        goto erren3;
       }
     }
     else {
@@ -227,15 +227,15 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd,
     pcphash_iteratepub(ptx, tmp) {
       rec = recipient->first;
       while (rec != NULL) {
-	_lc(rec->value);
-	if(strnstr(tmp->mail, rec->value, 255) != NULL 
-	   || strnstr(tmp->owner, rec->value, 255) != NULL) {
-	  pub = ucmalloc(sizeof(pcp_pubkey_t));
-	  memcpy(pub, tmp, sizeof(pcp_pubkey_t));
-	  HASH_ADD_STR( pubhash, id, pub);
-	  /* fprintf(stderr, "  => found a matching key %s\n", tmp->id); */
-	}
-	rec = rec->next;
+        _lc(rec->value);
+        if(strnstr(tmp->mail, rec->value, 255) != NULL 
+           || strnstr(tmp->owner, rec->value, 255) != NULL) {
+          pub = ucmalloc(sizeof(pcp_pubkey_t));
+          memcpy(pub, tmp, sizeof(pcp_pubkey_t));
+          HASH_ADD_STR( pubhash, id, pub);
+          /* fprintf(stderr, "  => found a matching key %s\n", tmp->id); */
+        }
+        rec = rec->next;
       }
     }
 
@@ -243,10 +243,10 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd,
     rec = recipient->first;
     while (rec != NULL) {
       if(strnstr("__self__", rec->value, 13) != NULL) {
-	pcp_key_t *s = pcp_find_primary_secret();
-	pcp_pubkey_t *p = pcpkey_pub_from_secret(s);
-	HASH_ADD_STR( pubhash, id, p);
-	break;
+        pcp_key_t *s = pcp_find_primary_secret();
+        pcp_pubkey_t *p = pcpkey_pub_from_secret(s);
+        HASH_ADD_STR( pubhash, id, p);
+        break;
       }
       rec = rec->next;
     }
@@ -264,22 +264,22 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd,
       secret = pcp_find_primary_secret();
       if(secret == NULL) {
         fatal(ptx, "Could not find a secret key in vault %s!\n", id, vault->filename);
-	goto erren2;
+        goto erren2;
       }
 
       char *passphrase;
       if(passwd == NULL) {
-	pcp_readpass(ptx, &passphrase,
-		     "Enter passphrase to decrypt your secret key", NULL, 1, NULL);
+        pcp_readpass(ptx, &passphrase,
+                     "Enter passphrase to decrypt your secret key", NULL, 1, NULL);
       }
       else {
-	passphrase = smalloc(strlen(passwd)+1);
-	memcpy(passphrase, passwd, strlen(passwd)+1);
+        passphrase = smalloc(strlen(passwd)+1);
+        memcpy(passphrase, passwd, strlen(passwd)+1);
       }
       secret = pcpkey_decrypt(ptx, secret, passphrase);
       sfree(passphrase);
       if(secret == NULL)
-	goto erren2;
+        goto erren2;
 
       signsecret = secret;
     }
@@ -341,7 +341,7 @@ int pcpencrypt(char *id, char *infile, char *outfile, char *passwd,
       fprintf(stderr, "Encrypted %"FMT_SIZE_T" bytes for:\n", (SIZE_T_CAST)clen);
       pcp_pubkey_t *cur, *t;
       HASH_ITER(hh, pubhash, cur, t) {
-	fprintf(stderr, "  0x%s - %s <%s>\n", cur->id, cur->owner, cur->mail);
+        fprintf(stderr, "  0x%s - %s <%s>\n", cur->id, cur->owner, cur->mail);
       }
     }
     if(signcrypt)
@@ -381,8 +381,8 @@ void pcpchecksum(char **files, int filenum, char *key) {
     }
     else {
       if((in = fopen(files[i], "rb")) == NULL) {
-	fatal(ptx, "Could not open input file %s\n", files[i]);
-	break;
+        fatal(ptx, "Could not open input file %s\n", files[i]);
+        break;
       }
     }
     Pcpstream *pin = ps_new_file(in);

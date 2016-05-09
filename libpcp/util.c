@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013 T. von Dein.
+    Copyright (C) 2013-2016 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -69,7 +69,7 @@ void _dump(char *n, byte *d, size_t s) {
     if(i % 36 == 35 && i > 0) {
       fprintf(stderr, "\n");
       for(c=0; c<l; ++c)
-	fprintf(stderr, " ");
+        fprintf(stderr, " ");
     }
   }
   fprintf(stderr, "\n");

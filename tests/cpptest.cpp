@@ -65,10 +65,10 @@ void test0() {
       DECRYPTED = _openrd("testcppdecrypted", CA);
       char *got = (char *)ucmalloc(10);
       if(fread(got, 1, 6, DECRYPTED) < 6) {
-	throw pcp::exception(CA, "read error, could not read decrypted content");
+        throw pcp::exception(CA, "read error, could not read decrypted content");
       }
       if(strncmp(got, "HALLO", 5) != 0) {
-	throw pcp::exception(CA);
+        throw pcp::exception(CA);
       }
       free(got);
     }

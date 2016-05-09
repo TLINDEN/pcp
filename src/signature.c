@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013-2015 T.Linden.
+    Copyright (C) 2013-2016 T.Linden.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -57,7 +57,7 @@ int pcpsign(char *infile, char *outfile, char *passwd, int z85, int detach) {
   char *passphrase;
   if(passwd == NULL) {
     pcp_readpass(ptx, &passphrase,
-		 "Enter passphrase to decrypt your secret key", NULL, 1, NULL);
+                 "Enter passphrase to decrypt your secret key", NULL, 1, NULL);
   }
   else {
     passphrase = smalloc(strlen(passwd)+1);

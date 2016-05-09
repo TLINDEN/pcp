@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013-2015 T.v.Dein.
+    Copyright (C) 2013-2016 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -109,12 +109,12 @@ size_t ps_read_raw(Pcpstream *stream, void *buf, size_t readbytes) {
     if(buffer_left(stream->save) >= readbytes) {
       gotbytes = buffer_get_chunk(stream->save, buf, readbytes);
       if(buffer_left(stream->save) == 0)
-	  buffer_clear(stream->save);
+        buffer_clear(stream->save);
       goto rawdone;
     }
     else {
       /* fetch the remainder of the save buffer, remember how much
-	 to fetch from source next */
+         to fetch from source next */
       idx = buffer_get_chunk(stream->save, buf, buffer_left(stream->save));
       buffer_clear(stream->save);
       readbytes -= idx;
@@ -159,10 +159,10 @@ size_t ps_read_raw(Pcpstream *stream, void *buf, size_t readbytes) {
 size_t ps_read_cached(Pcpstream *stream, void *buf, size_t readbytes) {
   /*
   fprintf(stderr, "%ld <= %ld && %ld <= %ld\n",
-	  readbytes, buffer_left(stream->cache), readbytes, stream->blocksize) ;
+  readbytes, buffer_left(stream->cache), readbytes, stream->blocksize) ;
 
   fprintf(stderr, "%d == 1 && %ld >= %ld\n",
-	  ps_end(stream), readbytes, buffer_left(stream->cache));
+  ps_end(stream), readbytes, buffer_left(stream->cache));
   */
   if(readbytes <= buffer_left(stream->cache) && readbytes <= stream->blocksize) {
     /* enough left in current cache */
@@ -194,35 +194,35 @@ size_t ps_read_cached(Pcpstream *stream, void *buf, size_t readbytes) {
       /* not enough cached, fetch the next chunk */
       // fprintf(stderr, "  fetch next read_next\n");
       if(ps_read_next(stream) == 0)
-	break;
+        break;
       // fprintf(stderr, "  fetch next read_continue\n");
 
       /* need to fetch more? */
       left = readbytes - (buffer_size(tmp) + buffer_size(stream->next));
 
       if(left < 0) {
-	/* no more to fetch, in fact there's more than we need */
-	/* determine overlapping bytes */
-	size_t overlap = readbytes - buffer_size(tmp);
+        /* no more to fetch, in fact there's more than we need */
+        /* determine overlapping bytes */
+        size_t overlap = readbytes - buffer_size(tmp);
 
-	/* avoid overflow */
-	if(overlap > buffer_size(stream->next))
-	  overlap = buffer_size(stream->next);
+        /* avoid overflow */
+        if(overlap > buffer_size(stream->next))
+          overlap = buffer_size(stream->next);
 
-	/* add the overlap from next to tmp */
-	buffer_get_chunk_tobuf(stream->next, tmp, overlap);
+        /* add the overlap from next to tmp */
+        buffer_get_chunk_tobuf(stream->next, tmp, overlap);
 
-	/* move the rest of stream->next into cache */
-	buffer_clear(stream->cache);
-	buffer_get_chunk_tobuf(stream->next, stream->cache, buffer_left(stream->next)); 
-	buffer_clear(stream->next);
+        /* move the rest of stream->next into cache */
+        buffer_clear(stream->cache);
+        buffer_get_chunk_tobuf(stream->next, stream->cache, buffer_left(stream->next)); 
+        buffer_clear(stream->next);
       }
       else {
-	/* we've got precisely what we need, no need to calculate any overlap
-	   OR there's more to fetch, we don't have enough stuff yet,
-	   put next into tmp, reset next and loop again - same behavior */
-	buffer_add_buf(tmp, stream->next);
-	buffer_clear(stream->next);
+        /* we've got precisely what we need, no need to calculate any overlap
+           OR there's more to fetch, we don't have enough stuff yet,
+           put next into tmp, reset next and loop again - same behavior */
+        buffer_add_buf(tmp, stream->next);
+        buffer_clear(stream->next);
       }
     }
 
@@ -278,7 +278,7 @@ size_t ps_read(Pcpstream *stream, void *buf, size_t readbytes) {
     }
     else if(stream->armor == 1) {
       /* z85 encoding has already been determined, therefore the cache
-	 is now filled, use it then */
+         is now filled, use it then */
       got = ps_read_cached(stream, buf, readbytes);
       // fprintf(stderr, "%ld = ps_read_cached(stream, buf, readbytes);\n", got);
     }
@@ -395,49 +395,49 @@ size_t ps_read_decode(Pcpstream *stream) {
     while(buffer_size(z) <  stream->blocksize) {
       buffer_clear(line);
       if(ps_readline(stream, line) >= 0) {
-	//fprintf(stderr, "got: <%s>\n", buffer_get_str(line));	
-	if(z85_isbegin(line) && stream->have_begin == 0) {
-	  /* begin header encountered */
-	  stream->have_begin = 1; /* otherwise ignore it */
-	  continue;
-	}
-	else if(z85_isend(line)) {
-	  /* end header encountered */
-	  break;
-	}
-	else if(z85_isempty(line)) {
-	  /* ignore empty lines */
-	  continue;
-	}
-	else {
-	  /* regular z85 encoded content */
-	  // fprintf(stderr, "regular\n");
-	  // fprintf(stderr, "       %ld + %ld > %ld\n", buffer_size(z), buffer_size(line), stream->blocksize);
-	  if(buffer_size(z) + buffer_size(line) > stream->blocksize) {
-	    /* we've got more than needed.
-	       put what we need into z and the remainder
-	       into the save buffer for further reading. */
-	    /* fprintf(stderr, "overflow %ld + %ld > %ld\n",
-		    buffer_size(z), buffer_size(line), stream->blocksize);
-	    */
-	    buffer_get_chunk_tobuf(line, z, stream->blocksize - buffer_size(z));
-	    buffer_get_chunk_tobuf(line, stream->save, buffer_left(line));
-	    if(!ps_left(stream)) {
-	      /* only add the newline if there's no more to follow */
-	      buffer_add8(stream->save, '\n');
-	    }
-	    break;
-	  }
-	  else {
-	    /* not enough yet, store it and go on */
-	    buffer_add_buf(z, line);
-	  }
-	}
+        //fprintf(stderr, "got: <%s>\n", buffer_get_str(line));
+        if(z85_isbegin(line) && stream->have_begin == 0) {
+          /* begin header encountered */
+          stream->have_begin = 1; /* otherwise ignore it */
+          continue;
+        }
+        else if(z85_isend(line)) {
+          /* end header encountered */
+          break;
+        }
+        else if(z85_isempty(line)) {
+          /* ignore empty lines */
+          continue;
+        }
+        else {
+          /* regular z85 encoded content */
+          // fprintf(stderr, "regular\n");
+          // fprintf(stderr, "       %ld + %ld > %ld\n", buffer_size(z), buffer_size(line), stream->blocksize);
+          if(buffer_size(z) + buffer_size(line) > stream->blocksize) {
+            /* we've got more than needed.
+               put what we need into z and the remainder
+               into the save buffer for further reading. */
+            /* fprintf(stderr, "overflow %ld + %ld > %ld\n",
+               buffer_size(z), buffer_size(line), stream->blocksize);
+            */
+            buffer_get_chunk_tobuf(line, z, stream->blocksize - buffer_size(z));
+            buffer_get_chunk_tobuf(line, stream->save, buffer_left(line));
+            if(!ps_left(stream)) {
+              /* only add the newline if there's no more to follow */
+              buffer_add8(stream->save, '\n');
+            }
+            break;
+          }
+          else {
+            /* not enough yet, store it and go on */
+            buffer_add_buf(z, line);
+          }
+        }
       }
       else {
-	// fprintf(stderr, "      ps_read_next readline returned 0\n");
-	/* eof or err */
-	break;
+        // fprintf(stderr, "      ps_read_next readline returned 0\n");
+        /* eof or err */
+        break;
       }
     }
   }
@@ -503,15 +503,15 @@ size_t ps_write(Pcpstream *stream, void *buf, size_t writebytes) {
       buffer_add_buf(tmp, stream->cache);
 
       while (buffer_left(tmp) > stream->blocksize) {
-	/* iterate over tmp blockwise, encode each block, write it out until there's a rest */
-	buffer_clear(stream->cache);
-	buffer_get_chunk_tobuf(tmp, stream->cache, stream->blocksize);
-	ps_write_encode(stream, z);
+        /* iterate over tmp blockwise, encode each block, write it out until there's a rest */
+        buffer_clear(stream->cache);
+        buffer_get_chunk_tobuf(tmp, stream->cache, stream->blocksize);
+        ps_write_encode(stream, z);
       }
 
       /* now, z contains a couple of z85 encoded blocks, tmp contains the
-	 remainder of the write buffer, store the rest in the cache and
-	 go on as nothing did happen */
+         remainder of the write buffer, store the rest in the cache and
+         go on as nothing did happen */
       buffer_clear(stream->cache);
       buffer_add(stream->cache, buffer_get_remainder(tmp), buffer_left(tmp));
       buffer_free(tmp);
@@ -523,14 +523,14 @@ size_t ps_write(Pcpstream *stream, void *buf, size_t writebytes) {
       void *aside = NULL;
       size_t overlap = (buffer_size(stream->cache) + writebytes) - stream->blocksize;
       if(overlap > 0) {
-	/* yes, store the overlap, put the left part into the cache */
-	aside = ucmalloc(overlap);
-	memcpy(aside, buf + (writebytes - overlap), overlap); /* FIXME: check if this works */
-	buffer_add(stream->cache, buf, writebytes - overlap);
+        /* yes, store the overlap, put the left part into the cache */
+        aside = ucmalloc(overlap);
+        memcpy(aside, buf + (writebytes - overlap), overlap); /* FIXME: check if this works */
+        buffer_add(stream->cache, buf, writebytes - overlap);
       }
       else {
-	/* cache+buf == blocksize */
-	buffer_add(stream->cache, buf, writebytes);
+        /* cache+buf == blocksize */
+        buffer_add(stream->cache, buf, writebytes);
       }
 
       /* encode the cache into z */
@@ -538,10 +538,10 @@ size_t ps_write(Pcpstream *stream, void *buf, size_t writebytes) {
 
       buffer_clear(stream->cache);
       if(aside != NULL) {
-	/* there is an overlapping rest, put it into the cache
-	   the caller needs to call ps_finish() to put it out */
-	buffer_add(stream->cache, aside, overlap);
-	free(aside);
+        /* there is an overlapping rest, put it into the cache
+           the caller needs to call ps_finish() to put it out */
+        buffer_add(stream->cache, aside, overlap);
+        free(aside);
       }
     }
   }
@@ -645,7 +645,7 @@ void ps_close(Pcpstream *stream) {
   if(stream->cache != NULL) {
     if(stream->is_output == 1) {
       if(buffer_left(stream->cache) != 0)
-	buffer_info(stream->cache);
+        buffer_info(stream->cache);
       assert(buffer_left(stream->cache) == 0); /* there's something left in the cache, call ps_finish() */
     }
     buffer_free(stream->cache);

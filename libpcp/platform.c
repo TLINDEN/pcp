@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013-2014 T.v.Dein.
+    Copyright (C) 2013-2016 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -54,9 +54,9 @@ int vasprintf(char **ret, const char *format, va_list args) {
     if (buffer != NULL) {
       count = vsnprintf(buffer, count + 1, format, copy);
       if (count < 0)
-	free(buffer);
+        free(buffer);
       else
-	*ret = buffer;
+        *ret = buffer;
     }
   }
   va_end(copy);  /*  Each va_start() or va_copy() needs a va_end() */
@@ -92,11 +92,11 @@ strnstr(const char *s, const char *find, size_t slen)
     len = strlen(find);
     do {
       do {
-	if (slen-- < 1 || (sc = *s++) == '\0')
-	  return (NULL);
+        if (slen-- < 1 || (sc = *s++) == '\0')
+          return (NULL);
       } while (sc != c);
       if (len > slen)
-	return (NULL);
+        return (NULL);
     } while (strncmp(s, find, len) != 0);
     s--;
   }

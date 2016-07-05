@@ -9,7 +9,7 @@ make LDFLAGS="-all-static -s"
 A passphrase like Ahc<e3% is not really secure. First
 it's difficult to memorize, second it's easy for a computer
 to compute. The better aproach is to use a passphrase 
-you can easily momorize and which is hard for a computer
+you can easily memorize and which is hard for a computer
 to compute (i.e. to guess) like: Phantom orchestra boredom popcorn.
 
 Read [1] to learn more.

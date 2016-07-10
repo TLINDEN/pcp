@@ -72,9 +72,12 @@ fi
 
 if test "$mode" = "config"; then
   mkdir -p ./config
+
+  lt=libtoolize
+  case `uname` in Darwin*) lt=glibtoolize;; esac
   
-  if ! command -v libtoolize >/dev/null 2>&1; then
-      echo "could not find libtool." 1>&2
+  if ! command -v $lt >/dev/null 2>&1 ; then
+      echo "could not find $lt." 1>&2
       exit 1
   fi
   

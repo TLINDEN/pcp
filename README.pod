@@ -13,29 +13,29 @@
 =head1 DESCRIPTION
 
 B<Pretty Curved Privacy> (pcp1) is a commandline utility which can
-be used to encrypt files. B<pcp1> uses eliptc curve cryptography
+be used to encrypt files. B<pcp1> uses elliptic curve cryptography
 for encryption (CURVE25519 by Dan J. Bernstein). While CURVE25519
-is no worldwide accepted standard it hasn't been compromised by
+is not a worldwide accepted standard it hasn't been compromised by
 the NSA - which might be better, depending on your point of view.
 
-B<Caution>: since CURVE25519 is no accepted standard, B<pcp1> has
-to be considered as experimental software. In fact, I wrote it just
+B<Caution>: since CURVE25519 is not an accepted standard, B<pcp1> has
+to be considered experimental software. In fact, I wrote it just
 to learn about the curve and see how it works.
 
 Beside some differences it works like B<GNUPG>. So, if you already
-know how to use gpg, you'll feel almost home.
+know how to use gpg, you'll feel almost at home.
 
 =head1 QUICKSTART
 
 Lets say, Alicia and Bobby want to exchange encrypted messages.
-Here's what the've got to do.
+Here's what they need to do.
 
-First, both have create a secret key:
+First, both have to create a secret key:
 
  Alicia                             Bobby
  pcp1 -k                            pcp1 -k
 
-After entering their name, email address and a passphrase to protect
+After entering their name, email address, and a passphrase to protect
 the key, it will be stored in their B<vault file> (by default ~/.pcpvault).
 
 Now, both of them have to export the public key, which has to be
@@ -46,18 +46,18 @@ a derived public key especially for the recipient:
  Alicia                             Bobby
  pcp1 -p -r Bobby -O alicia.pub     pcp1 -p -r Alicia -O bobby.pub
 
-They've to exchange the public key somehow (which is not my
-problem at the moment, use ssh, encrypted mail, whatever). Once exchanged,
+They've got to exchange the public key somehow (which is not my
+problem at the moment, use ssh, encrypted mail, etc). Once exchanged,
 they have to import it:
 
  Alicia                             Bobby
  pcp1 -K -I bobby.pub               pcp1 -K -I alicia.pub
 
-They will see a response as this when done:
+They will see a response when this is done:
 
  key 0x29A323A2C295D391 added to .pcpvault.
 
-Now, Alicia finally writes the secret message, encrypts it and
+Now, Alicia finally writes the secret message, encrypts it, and
 sends it to Bobby, who in turn decrypts it:
 
  Alicia                             Bobby
@@ -100,7 +100,7 @@ realistic example:
 
  ssh remote cat file | pcp1 -ez | mailx -s 'as requested' bob@somewhere
 
-here we encrypt a file symmetrically without downloading it from a
+Here we encrypt a file symmetrically without downloading it from a
 remote ssh server and sending the encrypted result via email to
 someone.
 

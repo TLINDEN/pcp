@@ -30,12 +30,12 @@ know how to use gpg, you'll feel almost at home.
 Lets say, Alicia and Bobby want to exchange encrypted messages.
 Here's what they need to do.
 
-First, both have create a secret key:
+First, both have to create a secret key:
 
  Alicia                             Bobby
  pcp1 -k                            pcp1 -k
 
-After entering their name, email address and a passphrase to protect
+After entering their name, email address, and a passphrase to protect
 the key, it will be stored in their B<vault file> (by default ~/.pcpvault).
 
 Now, both of them have to export the public key, which has to be
@@ -53,7 +53,7 @@ they have to import it:
  Alicia                             Bobby
  pcp1 -K -I bobby.pub               pcp1 -K -I alicia.pub
 
-They will see a response as this when done:
+They will see a response when this is done:
 
  key 0x29A323A2C295D391 added to .pcpvault.
 

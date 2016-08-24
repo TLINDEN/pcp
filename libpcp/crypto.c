@@ -22,7 +22,7 @@
 
 #include "crypto.h"
 
-
+extern int debug;
 
 
 /* asym encr */
@@ -199,6 +199,10 @@ size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t 
     goto errdef1;
   }
   lenrec = be32toh(lenrec);
+
+  if (debug) {
+    fprintf(stderr, "DEBUG: input is encrypted for %ld recipients\n", (long int)lenrec);
+  }
 
   if(verify) {
     reccipher = ucmalloc(lenrec * PCP_ASYM_RECIPIENT_SIZE);

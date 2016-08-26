@@ -175,6 +175,10 @@ size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t 
     }
   }
 
+  if(ptx->verbose) {
+    fprintf(stderr, "crypto.c: header <= self: %d, anon: %d, verify:%d\n",
+            self, anon, verify);
+  }
   
   if(self) {
     /*  just decrypt symetrically and go outa here */
@@ -189,6 +193,12 @@ size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t 
       fatal(ptx, "Error: input file doesn't contain senders public key\n");
       goto errdef1;
     }
+
+    if(ptx->verbose) {
+      fprintf(stderr, "crypto.c: <= sender anon pub key:\n");
+      pcp_dumppubkey(senderpub);
+    }
+
   }
 
   /*  step 3, check len recipients */
@@ -200,14 +210,12 @@ size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t 
   lenrec = be32toh(lenrec);
 
   if (ptx->verbose) {
-    fprintf(stderr, "DEBUG: input is encrypted for %ld recipients\n", (long int)lenrec);
+    fprintf(stderr, "crypto.c: input is encrypted for %ld recipients\n", (long int)lenrec);
   }
 
   if(verify) {
     reccipher = ucmalloc(lenrec * PCP_ASYM_RECIPIENT_SIZE);
   }
-
-
 
   /*  step 4, fetch recipient list and try to decrypt it for us */
   rec_buf = ucmalloc(PCP_ASYM_RECIPIENT_SIZE);
@@ -221,6 +229,10 @@ size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t 
     }
     recmatch = 0;
 
+    if(ptx->verbose) {
+      fprintf(stderr, "crypto.c: <= rec_cipher:\n");
+      _dump("crypto.c: encrypted rec cipher", rec_buf, cur_bufsize);
+    }
     if(anon) {
       /* anonymous sender */
       byte *recipient;
@@ -236,6 +248,11 @@ size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t 
           memcpy(reccipher, rec_buf, PCP_ASYM_RECIPIENT_SIZE);
         }
         nrec++; /* otherwise missing */
+
+        if(ptx->verbose) {
+          _dump("crypto.c: got anon symkey", symkey, crypto_secretbox_KEYBYTES);
+        }
+
         break;
       }
       free(recipient);
@@ -250,8 +267,14 @@ size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t 
           recmatch = 1;
           symkey = smalloc(crypto_secretbox_KEYBYTES);
           memcpy(symkey, recipient, crypto_secretbox_KEYBYTES);
-
           free(recipient);
+
+          if(ptx->verbose) {
+            fprintf(stderr, "crypto.c: matching pub key:\n");
+            pcp_dumppubkey(cur);
+            _dump("crypto.c: got recipient symkey", symkey, crypto_secretbox_KEYBYTES);
+          }
+
           break;
         }
         free(recipient);
@@ -275,6 +298,10 @@ size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t 
             memcpy(symkey, recipient, crypto_secretbox_KEYBYTES);
             free(recipient);
             cur = fromsec;
+
+            if(ptx->verbose) {
+              _dump("crypto.c: got my own sec symkey", symkey, crypto_secretbox_KEYBYTES);
+            }
             break;
           }
         }
@@ -340,11 +367,19 @@ size_t pcp_encrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, pcp_key_t 
   /*  A, generate sym key */
   symkey = srmalloc(crypto_secretbox_KEYBYTES);
 
+  if(ptx->verbose) {
+    _dump("crypto.c: new symkey", symkey, crypto_secretbox_KEYBYTES);
+  }
+  
   /*  B, encrypt it asymetrically for each recipient */
   recipient_count = HASH_COUNT(p);
   rec_size = PCP_ASYM_RECIPIENT_SIZE;
   recipients_cipher = ucmalloc(rec_size * recipient_count);
   nrec = 0;
+
+  if(ptx->verbose) {
+    fprintf(stderr, "crypto.c: async recipients: %d\n", recipient_count);
+  }
 
   HASH_ITER(hh, p, cur, t) {
     byte *rec_cipher;
@@ -356,6 +391,12 @@ size_t pcp_encrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, pcp_key_t 
       goto errec1;
     }
 
+    if(ptx->verbose) {
+      fprintf(stderr, "crypto.c: recipient pub key:\n");
+      pcp_dumppubkey(cur);
+      _dump("crypto.c: encrypted rec cipher", rec_cipher, rec_size);
+    }
+
     /* put it into the recipient list, already includes the nonce */
     memcpy(&recipients_cipher[nrec * rec_size], rec_cipher, rec_size);    
     nrec++;
@@ -363,6 +404,11 @@ size_t pcp_encrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, pcp_key_t 
   }
 
   /*  step 1, file header */
+  if(ptx->verbose) {
+    fprintf(stderr, "crypto.c: header => anon: %d, verify:%d\n",
+            anon, sign);
+  }
+
   if(sign && anon)
     head[0] = PCP_ASYM_CIPHER_ANON_SIG;
   else if(sign)  
@@ -383,6 +429,11 @@ size_t pcp_encrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, pcp_key_t 
     ps_write(out, secret->pub, crypto_box_PUBLICKEYBYTES);
     if(ps_err(out) != 0)
       goto errec1;
+
+    if(ptx->verbose) {
+      fprintf(stderr, "crypto.c: => anon pub key:\n");
+      _dump("crypto.c: => anon pub key", secret->pub, 32);
+    }
   }
 
   /*  step 3, len recipients, big endian */
@@ -394,7 +445,6 @@ size_t pcp_encrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, pcp_key_t 
 
   /*  step 4, recipient list */
   ps_write(out, recipients_cipher, rec_size * recipient_count);
-  /* fprintf(stderr, "D: recipients - %ld * %d\n",  rec_size, recipient_count); */
   if(ps_err(out) != 0)
     goto errec1;
 
@@ -460,10 +510,12 @@ size_t pcp_encrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, byte *
   if(havehead == 0) {
     head[0] = PCP_SYM_CIPHER;
     es = ps_write(out, head, 1);
-    /* es = fwrite(head, 1, 1, out); */
     if(ps_err(out) != 0) {
       fatal(ptx, "Failed to write encrypted output!\n");
       return 0;
+    }
+    if(ptx->verbose) {
+      fprintf(stderr, "crypto.c: => header: self: 1\n");
     }
   }
 
@@ -499,11 +551,11 @@ size_t pcp_encrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, byte *
   if(recsign != NULL) {
     /* add encrypted recipient list to the hash */
     crypto_generichash_update(st, recsign->cipher, recsign->ciphersize);
-    crypto_generichash_final(st, hash, crypto_generichash_BYTES_MAX);
+    crypto_generichash_final(st, hash, LHASH);
 
     /* generate the actual signature */
-    byte *signature = pcp_ed_sign(hash, crypto_generichash_BYTES_MAX, recsign->secret);
-    size_t siglen = crypto_sign_BYTES + crypto_generichash_BYTES_MAX;
+    byte *signature = pcp_ed_sign(hash, LHASH, recsign->secret);
+    size_t siglen = LSIG + LHASH;
 
     /* encrypt it as well */
     buf_nonce = pcp_gennonce();
@@ -512,13 +564,19 @@ size_t pcp_encrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, byte *
     ps_write(out, buf_nonce, LNONCE);
     ps_write(out, buf_cipher, es);
 
+    if(ptx->verbose) {
+      _dump("crypto.c: =>     sig", signature, siglen);
+      _dump("crypto.c: =>   nonce", buf_nonce, LNONCE);
+      _dump("crypto.c: => enc sig", buf_cipher, es);
+    }
+    
     free(st);
     free(hash);
     ucfree(buf_nonce, LNONCE);
     free(buf_cipher);
     ucfree(signature, siglen);
   }
-
+  
   ucfree(in_buf, PCP_BLOCK_SIZE);
 
   return out_size;
@@ -656,6 +714,12 @@ size_t pcp_decrypt_stream_sym(PCPCTX *ptx, Pcpstream *in, Pcpstream* out,
           out_size = 0;
         }
         free(verifiedhash);
+      }
+
+      if(ptx->verbose) {
+        _dump("crypto.c: <=     sig", signature, siglen);
+        _dump("crypto.c: <=   nonce", buf_nonce, LNONCE);
+        _dump("crypto.c: <= enc sig", &signature_cr[LNONCE], siglen_cr - LNONCE);
       }
     }
     else {

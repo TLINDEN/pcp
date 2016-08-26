@@ -26,6 +26,9 @@ NEXT
 	secret key, so that the recipient will be able to
 	verify the signature.
 
+	Added -v support for -d and -e.
+
+
 0.3.0
 	Changed publuc key signature storage, previously
 	I didn't add the actual signature, therefore a

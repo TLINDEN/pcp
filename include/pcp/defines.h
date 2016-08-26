@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013-2014 T.v.Dein.
+    Copyright (C) 2013-2016 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -114,6 +114,8 @@ typedef enum _PCP_KEY_TYPES {
 #define LMAC    crypto_secretbox_MACBYTES
 #define LSEC    LBOXSEC + LEDSEC + LEDSEC + crypto_secretbox_MACBYTES
 #define LSHA    32   /* sha256 hash length */
+#define LHASH   crypto_generichash_BYTES_MAX
+#define LSIG    crypto_sign_BYTES
 
 /*  vault id */
 #define PCP_VAULT_ID 14

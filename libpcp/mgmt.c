@@ -392,18 +392,23 @@ pcp_ks_bundle_t *pcp_import_pub_pbp(PCPCTX *ptx, Buffer *blob) {
   date[19] = '\0';
   struct tm c;
   c.tm_isdst = -1;
-  if(sscanf(date, "%4d-%2d-%2dT%2d:%2d:%2d", &c.tm_year, &c.tm_mon, &c.tm_mday, &c.tm_hour, &c.tm_min, &c.tm_sec)) {
+  int tmok = sscanf(date, "%4d-%2d-%2dT%2d:%2d:%2d",
+            &c.tm_year, &c.tm_mon, &c.tm_mday, &c.tm_hour, &c.tm_min, &c.tm_sec);
+  
+  if(tmok <= 0 || c.tm_hour >= 24 || c.tm_mon >= 59 || c.tm_sec >= 59) {
+    /* check returned tm values, which will look like this when input
+       was no string: 30867--12305-0 4229688:8:21790784
+       or: sscanf failed altogether.
+    */
     fatal(ptx, "Failed to parse creation time in PBP public key file\n");
     free(date);
     ucfree(b, sizeof(pbp_pubkey_t));
     goto errimp2;
   }
+
   c.tm_mon -= 1;
   c.tm_year -= 1900;
   
-  buffer_fwd_offset(blob, 46);
-  memcpy(b->name, buffer_get(blob), buffer_left(blob));
-
   /*  parse the name */
   parts = strtok (b->name, "<>");
   pnum = 0;

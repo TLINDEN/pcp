@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2014 T.v.Dein.
+    Copyright (C) 2014-2016 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -38,6 +38,11 @@
 #  ifndef _GNU_SOURCE
 #    define _GNU_SOURCE 1
 #  endif
+#
+#  ifndef __USE_XOPEN
+#    define __USE_XOPEN 1
+#  endif
+#
 #else
 #  define _BSD_SOURCE 1
 #endif

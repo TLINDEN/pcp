@@ -391,12 +391,15 @@ pcp_ks_bundle_t *pcp_import_pub_pbp(PCPCTX *ptx, Buffer *blob) {
 
   date[19] = '\0';
   struct tm c;
-  if(strptime(date, "%Y-%m-%dT%H:%M:%S", &c) == NULL) {
+  c.tm_isdst = -1;
+  if(sscanf(date, "%4d-%2d-%2dT%2d:%2d:%2d", &c.tm_year, &c.tm_mon, &c.tm_mday, &c.tm_hour, &c.tm_min, &c.tm_sec)) {
     fatal(ptx, "Failed to parse creation time in PBP public key file\n");
     free(date);
     ucfree(b, sizeof(pbp_pubkey_t));
     goto errimp2;
   }
+  c.tm_mon -= 1;
+  c.tm_year -= 1900;
   
   buffer_fwd_offset(blob, 46);
   memcpy(b->name, buffer_get(blob), buffer_left(blob));

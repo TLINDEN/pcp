@@ -2,11 +2,13 @@ PCPEXPORT = pcp.h \
             pcp/crypto.h \
             pcp/config.h \
             pcp/defines.h \
+            pcp/getpass.h \
             pcp/jenhash.h \
             pcp/key.h \
             pcp/keyhash.h \
             pcp/mem.h \
             pcp/platform.h \
+            pcp/plist.h \
             pcp/randomart.h \
             pcp/uthash.h \
             pcp/vault.h \

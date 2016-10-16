@@ -55,27 +55,27 @@ char *zmq_z85_encode (char *dest, uint8_t *data, size_t size)
   if (size % 4 != 0)
     return NULL; /*  !assert */
 
-    unsigned int char_nbr = 0;
-    unsigned int byte_nbr = 0;
-    uint32_t value = 0;
-    while (byte_nbr < size) {
-        /*   Accumulate value in base 256 (binary) */
-        value = value * 256 + data [byte_nbr++];
-        if (byte_nbr % 4 == 0) {
-            /*   Output value in base 85 */
-            unsigned int divisor = 85 * 85 * 85 * 85;
-            while (divisor) {
-                dest [char_nbr++] = encoder [value / divisor % 85];
-                divisor /= 85;
-            }
-            value = 0;
-        }
+  unsigned int char_nbr = 0;
+  unsigned int byte_nbr = 0;
+  uint32_t value = 0;
+  while (byte_nbr < size) {
+    /*   Accumulate value in base 256 (binary) */
+    value = value * 256 + data [byte_nbr++];
+    if (byte_nbr % 4 == 0) {
+      /*   Output value in base 85 */
+      unsigned int divisor = 85 * 85 * 85 * 85;
+      while (divisor) {
+        dest [char_nbr++] = encoder [value / divisor % 85];
+        divisor /= 85;
+      }
+      value = 0;
     }
-    if (char_nbr != size * 5 / 4)
-      return NULL; /*  !assert */
+  }
+  if (char_nbr != size * 5 / 4)
+    return NULL; /*  !assert */
 
-    dest [char_nbr] = 0;
-    return dest;
+  dest [char_nbr] = 0;
+  return dest;
 }
 
     

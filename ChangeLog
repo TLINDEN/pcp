@@ -1,4 +1,4 @@
-NEXT
+0.4.0
 	Changed -C again: doesnt support a key argument
 	anymore, instead I use the facilities I already
 	have in place (-x and -X). Also, I don't generate
@@ -27,6 +27,8 @@ NEXT
 	verify the signature.
 
 	Added -v support for -d and -e.
+
+	Removed endian conversion stuff. see util.c for details.
 
 
 0.3.0

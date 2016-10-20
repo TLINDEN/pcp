@@ -1,3 +1,5 @@
+keysig to vault: use sig2blog and blog2sig, just like we do with keys
+
 pcpstream.c: use static tmp buffers, avoid alloc mem during each iteration
 
 detach keysig generation from pub key export, so that an existing

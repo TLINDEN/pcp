@@ -120,6 +120,74 @@ size_t _hex2bin(const char *hex_str, unsigned char *byte_array, size_t byte_arra
     return byte_array_size;
 }
 
+
+
+/*
+ * Convert byte arrays from big endian  to numbers and vice versa.  Do
+ * not  take  care   about  host  endianess.  In   Rob  Pikes'  words:
+ * https://commandcenter.blogspot.de/2012/04/byte-order-fallacy.html
+ *
+ * With this, we  remove all calls to byte swap  functions like b64toh
+ * and the  likes. They are problematic  and I really hated  the ifdef
+ * mess in platform.h anyway.
+ */
+
+uint64_t _wireto64(byte *data) {
+  uint64_t i =
+    ((uint64_t)data[7]<<0)  |
+    ((uint64_t)data[6]<<8)  |
+    ((uint64_t)data[5]<<16) |
+    ((uint64_t)data[4]<<24) |
+    ((uint64_t)data[3]<<32) |
+    ((uint64_t)data[2]<<40) |
+    ((uint64_t)data[1]<<48) |
+    ((uint64_t)data[0]<<56);
+  return i;
+}
+
+uint32_t _wireto32(byte *data) {
+  uint32_t i =
+    ((uint32_t)data[3]<<0)  |
+    ((uint32_t)data[2]<<8)  |
+    ((uint32_t)data[1]<<16) |
+    ((uint32_t)data[0]<<24);
+  return i;
+}
+
+uint16_t _wireto16(byte *data) {
+  uint16_t i =
+    ((uint16_t)data[1]<<0) |
+    ((uint16_t)data[0]<<8);
+  return i;
+}
+
+void _64towire(uint64_t i, byte *data) {
+  data[0] = (i >> 56) & 0xFF;
+  data[1] = (i >> 48) & 0xFF;
+  data[2] = (i >> 40) & 0xFF;
+  data[3] = (i >> 32) & 0xFF;
+  data[4] = (i >> 24) & 0xFF;
+  data[5] = (i >> 16) & 0xFF;
+  data[6] = (i >>  8) & 0xFF;
+  data[7] =  i        & 0xFF;
+}
+
+void _32towire(uint32_t i, byte *data) {
+  data[0] = (i >> 24) & 0xFF;
+  data[1] = (i >> 16) & 0xFF;
+  data[2] = (i >>  8) & 0xFF;
+  data[3] =  i        & 0xFF;
+}
+
+void _16towire(uint16_t i, byte *data) {
+  data[0] = (i >>  8) & 0xFF;
+  data[1] =  i        & 0xFF;
+}
+
+
+
+
+
 /* via https://github.com/chmike/cst_time_memcmp
 
 Licensed as:

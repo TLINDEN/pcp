@@ -202,12 +202,13 @@ size_t pcp_decrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream* out, pcp_key_t 
   }
 
   /*  step 3, check len recipients */
-  cur_bufsize = ps_read(in, &lenrec, 4); /* fread(&lenrec, 1, 4, in); */
+  byte li[4];
+  cur_bufsize = ps_read(in, li, 4); /* fread(&lenrec, 1, 4, in); */
   if(cur_bufsize != 4 && !ps_end(in) && !ps_err(in)) {
     fatal(ptx, "Error: input file doesn't contain recipient count\n");
     goto errdef1;
   }
-  lenrec = be32toh(lenrec);
+  lenrec = _wireto32(li);
 
   if (ptx->verbose) {
     fprintf(stderr, "crypto.c: input is encrypted for %ld recipients\n", (long int)lenrec);
@@ -353,10 +354,10 @@ size_t pcp_encrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, pcp_key_t 
   pcp_pubkey_t *cur, *t;
   size_t es;
   int nrec;
-  uint32_t lenrec;
   size_t rec_size, out_size;
   byte head[1];
-
+  byte bo[4];
+  
   /*
       6[1]|temp_keypair.pubkey|len(recipients)[4]|(recipients...)|(secretboxes...)
     where recipients is a concatenated list of
@@ -437,9 +438,9 @@ size_t pcp_encrypt_stream(PCPCTX *ptx, Pcpstream *in, Pcpstream *out, pcp_key_t 
   }
 
   /*  step 3, len recipients, big endian */
-  lenrec = recipient_count;
-  lenrec = htobe32(lenrec);
-  ps_write(out, &lenrec, 4);
+  
+  _32towire(recipient_count, bo);
+  ps_write(out, bo, 4);
   if(ps_err(out) != 0)
     goto errec1;
 
@@ -789,8 +790,6 @@ void pcp_rec_free(pcp_rec_t *r) {
 uint64_t _get_nonce_ctr(byte *nonce) {
   uint64_t ctr = 0;
   uint8_t    i = nonce[0];
-  uint16_t m16 = 0;
-  uint32_t m32 = 0;
 
   if(i > 16) {
     /* counter bigger than max allowed by protocol, could lead to overflow, therefore die hard here */
@@ -803,16 +802,13 @@ uint64_t _get_nonce_ctr(byte *nonce) {
     ctr = nonce[1];
     break;
   case 2:
-    memcpy(&m16, &nonce[1], 2);
-    ctr = be16toh(m16);
+    ctr = _wireto16(&nonce[1]);  
     break;
   case 4:
-    memcpy(&m32, &nonce[1], 4);
-    ctr = be32toh(m32);
+    ctr = _wireto32(&nonce[1]);    
     break;
   case 8:
-    memcpy(&ctr, &nonce[1], 8);
-    ctr = be64toh(ctr);
+    ctr = _wireto64(&nonce[1]);  
     break;
   }
   
@@ -876,25 +872,21 @@ byte *_gen_ctr_nonce(uint64_t ctr) {
   uint8_t  m8  = -1;
   uint16_t m16 = -1;
   uint32_t m32 = -1;
-  uint64_t m64 = -1;
   uint8_t    i = 1;
   
   byte *nonce = pcp_gennonce();
 
   if(ctr > m32) {
     i = 8;
-    m64 = htobe64(ctr);
-    memcpy(&nonce[1], &m64, 8);
+    _64towire(ctr, &nonce[1]);
   }
   else if(ctr <= m32 && ctr > m16) {
     i = 4;
-    m32 = htobe32(ctr);
-    memcpy(&nonce[1], &m32, 4);
+    _32towire(ctr, &nonce[1]);
   }
   else if(ctr <= m16 && ctr > m8) {
     i = 2;
-    m16 = htobe16(ctr);
-    memcpy(&nonce[1], &m16, 2);
+    _16towire(ctr, &nonce[1]);
   }
   else {
     i = 1;

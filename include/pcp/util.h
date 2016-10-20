@@ -123,6 +123,19 @@ size_t _hex2bin(const char *hex_str, unsigned char *byte_array, size_t byte_arra
  */
 int cst_time_memcmp(const void *m1, const void *m2, size_t n);
 
+
+
+// be32toh
+uint64_t _wireto64(byte *data);
+uint32_t _wireto32(byte *data);
+uint16_t _wireto16(byte *data);
+
+// htobe32
+void _64towire(uint64_t i, byte *data);
+void _32towire(uint32_t i, byte *data);
+void _16towire(uint16_t i, byte *data);
+
+
 #endif /*  _HAVE_PCP_UTIL_H */
 
 /**@}*/

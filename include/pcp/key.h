@@ -271,6 +271,10 @@ void pcp_seckeyblob(Buffer *b, pcp_key_t *k);
 void pcp_pubkeyblob(Buffer *b, pcp_pubkey_t *k);
 Buffer *pcp_keyblob(void *k, int type); /*  allocates blob */
 
+/* reads key from blob */
+pcp_key_t *pcp_blob2key(Buffer *b); /* allocates key */
+pcp_pubkey_t *pcp_blob2pubkey(Buffer *b);
+
 /** Make a sanity check of the given public key structure.
 
     \param[in] ptx pcp context.

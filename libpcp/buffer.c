@@ -221,30 +221,27 @@ uint64_t buffer_get64(Buffer *b) {
 }
 
 uint16_t buffer_get16na(Buffer *b) {
-  uint16_t i;
-  if(buffer_get_chunk(b, &i, 2) > 0) {
-    i = be16toh(i);
-    return i;
+  uint8_t bin[2];
+  if(buffer_get_chunk(b, bin, 2) > 0) {
+    return _wireto16(bin);
   }
   else
     return 0;
 }
 
 uint32_t buffer_get32na(Buffer *b) {
-  uint32_t i;
-  if(buffer_get_chunk(b, &i, 4) > 0) {
-    i = be32toh(i);
-    return i;
+  uint8_t bin[4];
+  if(buffer_get_chunk(b, bin, 4) > 0) {
+    return _wireto32(bin);
   }
   else
     return 0;
 }
 
 uint64_t buffer_get64na(Buffer *b) {
-  uint64_t i;
-  if(buffer_get_chunk(b, &i, 8) > 0) {
-    i = be64toh(i);
-    return i;
+  uint8_t bin[8];
+  if(buffer_get_chunk(b, bin, 8) > 0) {
+    return _wireto64(bin);
   }
   else
     return 0;
@@ -362,19 +359,19 @@ void buffer_add64(Buffer *b, uint64_t v) {
 }
 
 void buffer_add16be(Buffer *b, uint16_t v) {
-  uint16_t e = v;
-  e = htobe16(e);
-  buffer_add(b, &e, 2);
+  uint8_t bin[2];
+  _16towire(v, bin);
+  buffer_add(b, bin, 2);
 }
 
 void buffer_add32be(Buffer *b, uint32_t v) {
-  uint32_t e = v;
-  e = htobe32(e);
-  buffer_add(b, &e, 4);
+  uint8_t bin[4];
+  _32towire(v, bin);  
+  buffer_add(b, bin, 4);
 }
 
 void buffer_add64be(Buffer *b, uint64_t v) {
-  uint64_t e = v;
-  e = htobe64(e);
-  buffer_add(b, &e, 8);
+  uint8_t bin[8];
+  _64towire(v, bin);
+  buffer_add(b, bin, 8);
 }

@@ -58,8 +58,8 @@ AC_CANONICAL_HOST
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS(errno.h err.h stdlib.h string.h unistd.h stdio.h getopt.h\
-                 limits.h stddef.h stdint.h sys/types.h sys/stat.h endian.h \
-                 sys/endian.h termios.h arpa/inet.h netinet/in.h wctype.h)
+                 limits.h stddef.h stdint.h sys/types.h sys/stat.h \
+                 termios.h arpa/inet.h netinet/in.h wctype.h)
 
 AC_TYPE_SIZE_T
 
@@ -93,39 +93,6 @@ AC_CHECK_FUNCS( \
     getopt_long \
     vasprintf
 )
-
-AC_MSG_CHECKING([for be32toh])
-AC_TRY_LINK([
-#include "libpcp/pcp/config.h"
-#ifdef HAVE_ENDIAN_H
-#include <endian.h>
-#endif
-#ifdef HAVE_SYS_ENDIAN_H
-#include <sys/endian.h>
-#endif
-], [
-        (void)be32toh(0);
-], [AC_MSG_RESULT([no])], [
-        AC_DEFINE(HAVE_BE32TOH,, Define if be32toh() is available)
-        AC_MSG_RESULT([yes])
-])
-
-AC_MSG_CHECKING([for htobe32])
-AC_TRY_LINK([
-#include "libpcp/pcp/config.h"
-#ifdef HAVE_ENDIAN_H
-#include <endian.h>
-#endif
-#ifdef HAVE_SYS_ENDIAN_H
-#include <sys/endian.h>
-#endif
-], [
-        (void)htobe32(0);
-], [AC_MSG_RESULT([no])], [
-        AC_DEFINE(HAVE_HTOBE32,, Define if htobe32() is available)
-        AC_MSG_RESULT([yes])
-])
-
 
 cross_compile="no"
 AC_MSG_CHECKING([compiler and flags for sanity])
@@ -309,27 +276,6 @@ AC_LANG_PROGRAM([[
 )
 fi
 
-if test "$cross_compile" = "no"; then
-# check endianess
-# program returns 0 on little and 1 on big endian systems
-AC_MSG_CHECKING([are we on a big endian system])
-AC_RUN_IFELSE([
-AC_LANG_PROGRAM([[]],[[long one= 1; exit(!(*((char *)(&one)))); ]])],
-    [
-	AC_MSG_RESULT([no])
-	bigendian="no"
-    ],
-    [
-	AC_MSG_RESULT([yes])
-	bigendian="yes"
-    ]
-)
-fi
-
-if test "x$bigendian" = "xyes"; then
-    CFLAGS="$CFLAGS -D__CPU_IS_BIG_ENDIAN=1"
-fi
-
 # prepare FLAGS
 CFLAGS="$CFLAGS -Werror -Wextra -Wall"
 
@@ -410,28 +356,28 @@ AC_CONFIG_FILES([Makefile include/Makefile libpcp/Makefile src/Makefile man/Make
 AC_OUTPUT
 
 AC_MSG_RESULT([
-    Build configured for $PACKAGE $VERSION:
-        CC:                     ${CC}
-        CFLAGS:                 ${CFLAGS}
-        CXX:                    ${CXX}
-        CXXFLAGS:               ${CXXFLAGS}
-        LDFLAGS:                ${LDFLAGS}
-        LIBS:                   ${LIBS}
-	debug:                  ${enable_debug}
-	optimize:               ${enable_optimize}
-	
-        prefix:                 ${prefix}
-        libdir:                 ${libdir}
-        includedir:             ${includedir}
-
-	target platform:        ${host}
-        big endian cpu:         ${bigendian}
-	cross compile:          ${cross_compile}
-
-	build python binding:   ${python}
-	build c++ binding:      ${enable_cpp_binding}
-
-	json support            ${_have_json}
-    Type 'make' to build, 'make install' to install.
-    To execute unit tests, type 'make test'.
+  Build configured for $PACKAGE $VERSION:
+    CC:                   ${CC}       
+    CFLAGS:               ${CFLAGS}     
+    CXX:                  ${CXX}      
+    CXXFLAGS:             ${CXXFLAGS}    
+    LDFLAGS:              ${LDFLAGS}    
+    LIBS:                 ${LIBS}      
+    DEBUG:                ${enable_debug}    
+    optimize:             ${enable_optimize}  
+                         
+    prefix:               ${prefix}     
+    libdir:               ${libdir}     
+    includedir:           ${includedir}   
+                         
+    target platform:      ${host}        
+    cross compile:        ${cross_compile}   
+                         
+    build python binding: ${python}       
+    build c++ binding:    ${enable_cpp_binding} 
+                         
+    json support:         ${_have_json}
+    
+  Type 'make' to build, 'make install' to install.
+  To execute unit tests, type 'make test'.
 ])

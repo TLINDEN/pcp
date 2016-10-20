@@ -7,6 +7,7 @@ extern "C" {
 
 #include "pcp/config.h"
 #include "pcp/buffer.h"
+#include "pcp/config.h"
 #include "pcp/context.h"
 #include "pcp/crypto.h"
 #include "pcp/defines.h"

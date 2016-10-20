@@ -253,96 +253,77 @@ byte *pcpkey_getchecksum(pcp_key_t *k) {
 }
 
 
-pcp_key_t * key2be(pcp_key_t *k) {
-#ifdef __CPU_IS_BIG_ENDIAN
-  return k;
-#else
-  uint32_t version = k->version;
-  byte* p = (byte*)&version;
-  if(p[0] != 0) {
-    k->version = htobe32(k->version);
-    k->serial  = htobe32(k->serial);
-    k->ctime   = htobe64(k->ctime);
-  }
-  return k;
-#endif
-}
-
-pcp_key_t *key2native(pcp_key_t *k) {
-#ifdef __CPU_IS_BIG_ENDIAN
-  return k;
-#else
-  k->version = be32toh(k->version);
-  k->serial  = be32toh(k->serial);
-  k->ctime   = be64toh(k->ctime);
-  return k;
-#endif
-}
-
-pcp_pubkey_t * pubkey2be(pcp_pubkey_t *k) {
-#ifdef __CPU_IS_BIG_ENDIAN
-  return k;
-#else
-  uint32_t version = k->version;
-  byte* p = (byte*)&version;
-  if(p[0] != 0) {
-    k->version = htobe32(k->version);
-    k->serial  = htobe32(k->serial);
-    k->ctime   = htobe64(k->ctime);
-  }
-  return k;
-#endif
-}
-
-pcp_pubkey_t *pubkey2native(pcp_pubkey_t *k) {
-#ifdef __CPU_IS_BIG_ENDIAN
-  return k;
-#else
-  k->version = be32toh(k->version);
-  k->serial  = be32toh(k->serial);
-  k->ctime   = be64toh(k->ctime);
-  return k;
-#endif
+void pcp_pubkeyblob(Buffer *b, pcp_pubkey_t *k) {
+  buffer_add(b, k->masterpub, LEDPUB);
+  buffer_add(b, k->pub, LBOXPUB);
+  buffer_add(b, k->edpub, LEDPUB);
+  buffer_add(b, k->owner, 255);
+  buffer_add(b, k->mail, 255);
+  buffer_add(b, k->id, 17);
+  buffer_add8(b, k->type);
+  buffer_add64be(b, k->ctime);
+  buffer_add32be(b, k->version);
+  buffer_add32be(b, k->serial);
+  buffer_add8(b, k->valid);
 }
 
 void pcp_seckeyblob(Buffer *b, pcp_key_t *k) {
   buffer_add(b, k->masterpub, LEDPUB);
   buffer_add(b, k->mastersecret, LEDSEC);
-
   buffer_add(b, k->pub, LBOXPUB);
   buffer_add(b, k->secret, LBOXPUB);
-
   buffer_add(b, k->edpub, LEDPUB);
   buffer_add(b, k->edsecret, LEDSEC);
-
   buffer_add(b, k->nonce, LNONCE);
-
   buffer_add(b, k->encrypted, LSEC);
-
   buffer_add(b, k->owner, 255);
   buffer_add(b, k->mail, 255);
   buffer_add(b, k->id, 17);
-
   buffer_add8(b, k->type);
-  buffer_add64(b, k->ctime);
-  buffer_add32(b, k->version);
-  buffer_add32(b, k->serial);
+  buffer_add64be(b, k->ctime);
+  buffer_add32be(b, k->version);
+  buffer_add32be(b, k->serial);
 }
 
-void pcp_pubkeyblob(Buffer *b, pcp_pubkey_t *k) {
-  buffer_add(b, k->masterpub, LEDPUB);
-  buffer_add(b, k->pub, LBOXPUB);
-  buffer_add(b, k->edpub, LEDPUB);
+pcp_key_t *pcp_blob2key(Buffer *b) {
+  pcp_key_t *k    = ucmalloc(sizeof(pcp_key_t));
+  
+  buffer_get_chunk(b, k->masterpub, LEDPUB);
+  buffer_get_chunk(b, k->mastersecret, LEDSEC);
+  buffer_get_chunk(b, k->pub, LBOXPUB);
+  buffer_get_chunk(b, k->secret, LBOXPUB);
+  buffer_get_chunk(b, k->edpub, LEDPUB);
+  buffer_get_chunk(b, k->edsecret, LEDSEC);
+  buffer_get_chunk(b, k->nonce, LNONCE);
+  buffer_get_chunk(b, k->encrypted, LSEC);
+  buffer_get_chunk(b, k->owner, 255);
+  buffer_get_chunk(b, k->mail, 255);
+  buffer_get_chunk(b, k->id, 17);
 
-  buffer_add(b, k->owner, 255);
-  buffer_add(b, k->mail, 255);
-  buffer_add(b, k->id, 17);
+  k->type         = buffer_get8(b);
+  k->ctime        = buffer_get64na(b);
+  k->version      = buffer_get32na(b);
+  k->serial       = buffer_get32na(b);
 
-  buffer_add8(b, k->type);
-  buffer_add64(b, k->ctime);
-  buffer_add32(b, k->version);
-  buffer_add32(b, k->serial);
-  buffer_add8(b, k->valid);
+  return k;
+}
+
+pcp_pubkey_t *pcp_blob2pubkey(Buffer *b) {
+  pcp_pubkey_t *k    = ucmalloc(sizeof(pcp_key_t));
+  
+  buffer_get_chunk(b, k->masterpub, LEDPUB);
+  buffer_get_chunk(b, k->pub, LBOXPUB);
+  buffer_get_chunk(b, k->edpub, LEDPUB);
+  buffer_get_chunk(b, k->owner, 255);
+  buffer_get_chunk(b, k->mail, 255);
+  buffer_get_chunk(b, k->id, 17);
+
+  k->type         = buffer_get8(b);
+  k->ctime        = buffer_get64na(b);
+  k->version      = buffer_get32na(b);
+  k->serial       = buffer_get32na(b);
+  k->valid        = buffer_get8(b);
+  return k;
 }
 
 Buffer *pcp_keyblob(void *k, int type) {

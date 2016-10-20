@@ -164,11 +164,10 @@ int pcpvault_addkey(PCPCTX *ptx, vault_t *vault, void *item, uint8_t type) {
     itemsize = PCP_RAW_PUBKEYSIZE;
     saveitem = ucmalloc(sizeof(pcp_pubkey_t));
     memcpy(saveitem, item, sizeof(pcp_pubkey_t));
-    pubkey2be((pcp_pubkey_t *)item);
-    blob = buffer_new(PCP_RAW_KEYSIZE, "bs");
-    pcp_pubkeyblob(blob, (pcp_pubkey_t *)item);
+    blob = pcp_keyblob(item, type);
   }
   else if(type == PCP_KEYSIG_NATIVE || type == PCP_KEYSIG_PBP) {
+    /* FIXME: handle the same way as keys */
     saveitem = ucmalloc(sizeof(pcp_keysig_t));
     pcp_keysig_t *ksin = (pcp_keysig_t *)item;
     pcp_keysig_t *ksout = (pcp_keysig_t *)saveitem;
@@ -183,9 +182,7 @@ int pcpvault_addkey(PCPCTX *ptx, vault_t *vault, void *item, uint8_t type) {
     itemsize = PCP_RAW_KEYSIZE;
     saveitem = ucmalloc(sizeof(pcp_key_t));
     memcpy(saveitem, item, sizeof(pcp_key_t));
-    key2be((pcp_key_t *)item);
     blob = pcp_keyblob(item, type);
-    pcp_seckeyblob(blob, (pcp_key_t *)item);
   }
 
   if(tmp != NULL) {
@@ -295,23 +292,19 @@ byte *pcpvault_create_checksum(PCPCTX *ptx) {
   byte *checksum = ucmalloc(LSHA);
 
   pcphash_iterate(ptx, k) {
-    key2be(k);
     pcp_seckeyblob(blob, (pcp_key_t *)k);
-    memcpy(&data[datapos], buffer_get(blob), PCP_RAW_KEYSIZE);
+    memcpy(&data[datapos], buffer_get(blob), buffer_size(blob));
     buffer_clear(blob);
-    key2native(k);
-    datapos += PCP_RAW_KEYSIZE;
+    datapos += buffer_size(blob);
   }
 
   pcp_pubkey_t *p = NULL;
   pcphash_iteratepub(ptx, p) {
     /* pcp_dumppubkey(p); */
-    pubkey2be(p);
     pcp_pubkeyblob(blob, (pcp_pubkey_t *)p);
-    memcpy(&data[datapos], buffer_get(blob), PCP_RAW_PUBKEYSIZE);
+    memcpy(&data[datapos], buffer_get(blob), buffer_size(blob));
     buffer_clear(blob);
-    pubkey2native(p);
-    datapos += PCP_RAW_PUBKEYSIZE;
+    datapos += PCP_RAW_KEYSIZE;
   }
 
   buffer_free(blob);
@@ -390,41 +383,25 @@ void pcpvault_free(vault_t *vault) {
 }
 
 vault_header_t * vh2be(vault_header_t *h) {
-#ifdef __CPU_IS_BIG_ENDIAN
+  _32towire(h->version, (byte *)&h->version);
   return h;
-#else
-  h->version = htobe32(h->version);
-  return h;
-#endif
 }
 
 vault_header_t * vh2native(vault_header_t *h) {
-#ifdef __CPU_IS_BIG_ENDIAN
+  h->version = _wireto32((byte *)&h->version);
   return h;
-#else
-  h->version = be32toh(h->version);
-  return h;
-#endif
 }
 
 vault_item_header_t * ih2be(vault_item_header_t *h) {
-#ifdef __CPU_IS_BIG_ENDIAN
+  _32towire(h->version, (byte *)&h->version);
+  _32towire(h->size, (byte *)&h->size);
   return h;
-#else
-  h->version = htobe32(h->version);
-  h->size    = htobe32(h->size);
-  return h;
-#endif
 }
 
 vault_item_header_t * ih2native(vault_item_header_t *h) {
-#ifdef __CPU_IS_BIG_ENDIAN
+  h->version = _wireto32((byte *)&h->version);
+  h->size = _wireto32((byte *)&h->size);
   return h;
-#else
-  h->version = be32toh(h->version);
-  h->size = be32toh(h->size);
-  return h;
-#endif
 }
 
 
@@ -449,7 +426,8 @@ int pcpvault_fetchall(PCPCTX *ptx, vault_t *vault) {
     pcp_pubkey_t *pubkey;
     int bytesleft = 0;
     int ksize =  PCP_RAW_KEYSIGSIZE; /*  smallest possbile item */
-
+    Buffer *raw = buffer_new(256, "rawin");
+    
     vault->version = header->version;
     memcpy(vault->checksum, header->checksum, LSHA);
 
@@ -469,24 +447,23 @@ int pcpvault_fetchall(PCPCTX *ptx, vault_t *vault) {
             if(item->type == PCP_KEY_TYPE_MAINSECRET ||
                item->type == PCP_KEY_TYPE_SECRET) {
               /*  read a secret key */
-              key = ucmalloc(sizeof(pcp_key_t));
-              got = fread(key, PCP_RAW_KEYSIZE, 1, vault->fd);
-              key2native(key);
+              buffer_fd_read(raw, vault->fd, item->size);
+              key = pcp_blob2key(raw);
               pcphash_add(ptx, (void *)key, item->type);
+              buffer_clear(raw);
             }
             else if(item->type == PCP_KEY_TYPE_PUBLIC) {
               /*  read a public key */
-              pubkey = ucmalloc(sizeof(pcp_pubkey_t));
-              got = fread(pubkey, PCP_RAW_PUBKEYSIZE, 1, vault->fd);
-              pubkey2native(pubkey);
+              buffer_fd_read(raw, vault->fd, item->size);
+              pubkey = pcp_blob2pubkey(raw);
               pcphash_add(ptx, (void *)pubkey, item->type);
+              buffer_clear(raw);
             }
             else if(item->type == PCP_KEYSIG_NATIVE || item->type == PCP_KEYSIG_PBP) {
-              Buffer *rawks = buffer_new(256, "keysig");
-              buffer_fd_read(rawks, vault->fd, item->size);
-              pcp_keysig_t *s = pcp_keysig_new(rawks);
+              buffer_fd_read(raw, vault->fd, item->size);
+              pcp_keysig_t *s = pcp_keysig_new(raw);
               pcphash_add(ptx, (void *)s, item->type);
-              buffer_free(rawks);
+              buffer_clear(raw);
             }
             else {
               fatal(ptx, "Failed to read vault - invalid key type: %02X! at %d\n",

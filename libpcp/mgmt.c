@@ -36,9 +36,9 @@ int _get_pk(Buffer *blob, pcp_pubkey_t *p) {
 
 int _check_keysig_h(PCPCTX *ptx, Buffer *blob, rfc_pub_sig_h *h) {
   if(buffer_left(blob) >= sizeof(rfc_pub_sig_h)) {
-    buffer_get_chunk(blob, h, sizeof(rfc_pub_sig_h));
+    buffer_get_chunk(blob, h, sizeof(rfc_pub_sig_h)); /* FIXME: blog 2 struct? thafck */
 
-    h->numsubs = be16toh(h->numsubs);
+    h->numsubs = _wireto16((byte *)&h->numsubs);
 
     if(h->version != EXP_SIG_VERSION) {
       fatal(ptx, "Unsupported pubkey signature version %d, expected %d\n",
@@ -800,7 +800,7 @@ pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphras
                            cipherlen, nonce, symkey) != 0) {
 
     fatal(ptx, "failed to decrypt the secret key file\n");
-    goto impserr1;
+    goto impserr2;
   }
 
   /* prepare the extraction buffer */
@@ -817,7 +817,8 @@ pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphras
 
   notationlen = buffer_get16na(blob);
   if(notationlen > 255) {
-    fatal(ptx, "Invalid notation value size for owner\n");
+    fatal(ptx, "Invalid notation value size for owner (got: %ld, expected: 255)\n",
+          notationlen);
     goto impserr2;
   }
   else if(notationlen > 0)
@@ -825,7 +826,8 @@ pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphras
 
   notationlen = buffer_get16na(blob);
   if(notationlen > 255) {
-    fatal(ptx, "Invalid notation value size for mail\n");
+    fatal(ptx, "Invalid notation value size for mail (got: %ld, expected: 255)\n",
+          notationlen);
     goto impserr2;
   }
   else if(notationlen > 0)
@@ -862,8 +864,6 @@ pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphras
   buffer_free(blob);
   if(symkey != NULL)
     sfree(symkey);
-  if(clear != NULL)
-    free(clear);
   return NULL;
 }
 

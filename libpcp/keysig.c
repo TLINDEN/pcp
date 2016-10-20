@@ -23,25 +23,13 @@
 #include "keysig.h"
 
 pcp_keysig_t * keysig2be(pcp_keysig_t *s) {
-#ifdef __CPU_IS_BIG_ENDIAN
+  _32towire(s->size, (byte *)&s->size);
   return s;
-#else
-  uint32_t size = s->size;
-  byte* p = (byte*)&size;
-  if(p[0] != 0) {
-    s->size = htobe32(s->size);
-  }
-  return s;
-#endif
 }
 
 pcp_keysig_t *keysig2native(pcp_keysig_t *s) {
-#ifdef __CPU_IS_BIG_ENDIAN
+  s->size = _wireto32((byte *)&s->size);
   return s;
-#else
-  s->size = be32toh(s->size);
-  return s;
-#endif
 }
 
 Buffer *pcp_keysig2blob(pcp_keysig_t *s) {

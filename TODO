@@ -1,5 +1,3 @@
-keysig to vault: use sig2blog and blog2sig, just like we do with keys
-
 pcpstream.c: use static tmp buffers, avoid alloc mem during each iteration
 
 detach keysig generation from pub key export, so that an existing
@@ -12,8 +10,6 @@ allow signing using an alternate secret key, like in pcpdecrypt()
 malloc() new pointers in functions only if not NULL, e.g. pcp_gennonce()
 
 check pub key count in pcp.c before calling verify signature, croak if count==0
-
-vault checksum: add keysigs as well
 
 Add newlines to headers in define.h, so strlen() later catches the whole length.
 

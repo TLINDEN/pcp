@@ -30,6 +30,7 @@
 
 	Removed endian conversion stuff. see util.c for details.
 
+	Fixed: use key signatures for vault checksum calc as well.
 
 0.3.0
 	Changed publuc key signature storage, previously

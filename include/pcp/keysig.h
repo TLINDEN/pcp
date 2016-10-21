@@ -36,7 +36,10 @@
 #define PCP_RAW_KEYSIGSIZE sizeof(pcp_keysig_t) - sizeof(UT_hash_handle)
 
 /* put a keysig into a buffer, convert to big endian while at it */
-Buffer *pcp_keysig2blob(pcp_keysig_t *s);
+void pcp_keysig2blob(Buffer *b, pcp_keysig_t *s);
+
+/* same, but allocs buffer */
+Buffer *pcp_keysigblob(pcp_keysig_t *s);
 
 /* fetch a keysig from a buffer, usually loaded from vault */
 pcp_keysig_t *pcp_blob2keysig(Buffer *blob);

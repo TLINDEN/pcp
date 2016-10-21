@@ -22,16 +22,19 @@
 
 #include "keysig.h"
 
-Buffer *pcp_keysig2blob(pcp_keysig_t *s) {
-  Buffer *b = buffer_new(256, "keysig2blob");
+void pcp_keysig2blob(Buffer *b, pcp_keysig_t *s) {
   buffer_add8(b, s->type);
   buffer_add32be(b, s->size);
   buffer_add(b, s->id, 17);
   buffer_add(b, s->checksum, LSHA);
   buffer_add(b, s->blob, s->size);
-  return b;
 }
 
+Buffer *pcp_keysigblob(pcp_keysig_t *s) {
+  Buffer *b = buffer_new(256, "keysig2blob");
+  pcp_keysig2blob(b, s);
+  return b;
+}
 
 pcp_keysig_t *pcp_blob2keysig(Buffer *blob) {
   pcp_keysig_t *sk = ucmalloc(sizeof(pcp_keysig_t));

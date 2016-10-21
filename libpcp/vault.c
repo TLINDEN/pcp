@@ -167,7 +167,6 @@ int pcpvault_addkey(PCPCTX *ptx, vault_t *vault, void *item, uint8_t type) {
     blob = pcp_keyblob(item, type);
   }
   else if(type == PCP_KEYSIG_NATIVE || type == PCP_KEYSIG_PBP) {
-    /* FIXME: handle the same way as keys */
     saveitem = ucmalloc(sizeof(pcp_keysig_t));
     pcp_keysig_t *ksin = (pcp_keysig_t *)item;
     pcp_keysig_t *ksout = (pcp_keysig_t *)saveitem;
@@ -175,7 +174,7 @@ int pcpvault_addkey(PCPCTX *ptx, vault_t *vault, void *item, uint8_t type) {
     memcpy(ksout, ksin, sizeof(pcp_keysig_t));
     ksout->blob = ucmalloc(ksin->size);
     memcpy(ksout->blob, ksin->blob, ksin->size);
-    blob = pcp_keysig2blob(item);
+    pcp_keysig2blob(blob, item);
     itemsize = buffer_size(blob);
   }
   else {
@@ -224,7 +223,8 @@ int pcpvault_writeall(PCPCTX *ptx, vault_t *vault) {
       Buffer *blob = buffer_new(PCP_RAW_PUBKEYSIZE, "bs");
       pcphash_iterate(ptx, k) {
         pcp_seckeyblob(blob, k);
-        if(pcpvault_additem(ptx, tmp, buffer_get(blob), PCP_RAW_KEYSIZE, PCP_KEY_TYPE_SECRET) != 0) {
+        if(pcpvault_additem(ptx, tmp, buffer_get(blob), PCP_RAW_KEYSIZE,
+                            PCP_KEY_TYPE_SECRET) != 0) {
           buffer_free(blob);
           goto errwa;
         }
@@ -233,7 +233,8 @@ int pcpvault_writeall(PCPCTX *ptx, vault_t *vault) {
       pcp_pubkey_t *p = NULL;
       pcphash_iteratepub(ptx, p) {
         pcp_pubkeyblob(blob, p);
-        if(pcpvault_additem(ptx, tmp, buffer_get(blob), PCP_RAW_PUBKEYSIZE, PCP_KEY_TYPE_PUBLIC) != 0) {
+        if(pcpvault_additem(ptx, tmp, buffer_get(blob), PCP_RAW_PUBKEYSIZE,
+                            PCP_KEY_TYPE_PUBLIC) != 0) {
           buffer_free(blob);
           goto errwa;
         }
@@ -300,13 +301,20 @@ byte *pcpvault_create_checksum(PCPCTX *ptx) {
 
   pcp_pubkey_t *p = NULL;
   pcphash_iteratepub(ptx, p) {
-    /* pcp_dumppubkey(p); */
     pcp_pubkeyblob(blob, (pcp_pubkey_t *)p);
     memcpy(&data[datapos], buffer_get(blob), buffer_size(blob));
     buffer_clear(blob);
-    datapos += PCP_RAW_KEYSIZE;
+    datapos += buffer_size(blob);
   }
 
+  pcp_keysig_t *s = NULL;
+  pcphash_iteratekeysig(ptx, s) {
+    pcp_keysig2blob(blob, (pcp_keysig_t *)s);
+    memcpy(&data[datapos], buffer_get(blob), buffer_size(blob));
+    buffer_clear(blob);
+    datapos += buffer_size(blob);
+  }
+  
   buffer_free(blob);
 
   crypto_hash_sha256(checksum, data, datasize);
@@ -461,7 +469,7 @@ int pcpvault_fetchall(PCPCTX *ptx, vault_t *vault) {
             }
             else if(item->type == PCP_KEYSIG_NATIVE || item->type == PCP_KEYSIG_PBP) {
               buffer_fd_read(raw, vault->fd, item->size);
-              pcp_keysig_t *s = pcp_keysig_new(raw);
+              pcp_keysig_t *s = pcp_blob2keysig(raw);
               pcphash_add(ptx, (void *)s, item->type);
               buffer_clear(raw);
             }

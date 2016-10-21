@@ -1,7 +1,7 @@
 /*
     This file is part of Pretty Curved Privacy (pcp1).
 
-    Copyright (C) 2013-2014 T.v.Dein.
+    Copyright (C) 2013-2016 T.v.Dein.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -35,16 +35,11 @@
 
 #define PCP_RAW_KEYSIGSIZE sizeof(pcp_keysig_t) - sizeof(UT_hash_handle)
 
-
-
-pcp_keysig_t *keysig2be(pcp_keysig_t *s);
-pcp_keysig_t *keysig2native(pcp_keysig_t *s);
-
 /* put a keysig into a buffer, convert to big endian while at it */
 Buffer *pcp_keysig2blob(pcp_keysig_t *s);
 
 /* fetch a keysig from a buffer, usually loaded from vault */
-pcp_keysig_t *pcp_keysig_new(Buffer *blob);
+pcp_keysig_t *pcp_blob2keysig(Buffer *blob);
 
 /* debug print a keysig */
 void pcp_dumpkeysig(pcp_keysig_t *s);

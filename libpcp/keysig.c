@@ -22,16 +22,6 @@
 
 #include "keysig.h"
 
-pcp_keysig_t * keysig2be(pcp_keysig_t *s) {
-  _32towire(s->size, (byte *)&s->size);
-  return s;
-}
-
-pcp_keysig_t *keysig2native(pcp_keysig_t *s) {
-  s->size = _wireto32((byte *)&s->size);
-  return s;
-}
-
 Buffer *pcp_keysig2blob(pcp_keysig_t *s) {
   Buffer *b = buffer_new(256, "keysig2blob");
   buffer_add8(b, s->type);
@@ -42,7 +32,8 @@ Buffer *pcp_keysig2blob(pcp_keysig_t *s) {
   return b;
 }
 
-pcp_keysig_t *pcp_keysig_new(Buffer *blob) {
+
+pcp_keysig_t *pcp_blob2keysig(Buffer *blob) {
   pcp_keysig_t *sk = ucmalloc(sizeof(pcp_keysig_t));
 
   uint8_t type = buffer_get8(blob);

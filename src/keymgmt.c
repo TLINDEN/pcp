@@ -25,7 +25,7 @@
 
 char *pcp_getstdin(const char *prompt) {
   char line[255];
-  char *out;
+  char *out = NULL;
 
   fprintf(stderr, "%s: ", prompt);
 
@@ -67,10 +67,12 @@ void pcp_keygen(char *passwd) {
   pcp_key_t *key = NULL;
 
   char *owner =  pcp_getstdin("Enter the name of the key owner");
-  memcpy(k->owner, owner, strlen(owner) + 1);
+  if(owner != NULL)
+    memcpy(k->owner, owner, strlen(owner) + 1);
 
   char *mail = pcp_getstdin("Enter the email address of the key owner");
-  memcpy(k->mail, _lc(mail), strlen(mail) + 1);
+  if(mail != NULL)
+    memcpy(k->mail, _lc(mail), strlen(mail) + 1);
 
   if(debug)
       pcp_dumpkey(k);

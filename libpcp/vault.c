@@ -220,7 +220,10 @@ int pcpvault_writeall(PCPCTX *ptx, vault_t *vault) {
   if(tmp != NULL) {
     if(pcpvault_create(ptx, tmp) == 0) {
       pcp_key_t *k = NULL;
+      pcp_pubkey_t *p = NULL;
+      pcp_keysig_t *s = NULL;
       Buffer *blob = buffer_new(PCP_RAW_PUBKEYSIZE, "bs");
+
       pcphash_iterate(ptx, k) {
         pcp_seckeyblob(blob, k);
         if(pcpvault_additem(ptx, tmp, buffer_get(blob), PCP_RAW_KEYSIZE,
@@ -230,7 +233,7 @@ int pcpvault_writeall(PCPCTX *ptx, vault_t *vault) {
         }
         buffer_clear(blob);
       }
-      pcp_pubkey_t *p = NULL;
+
       pcphash_iteratepub(ptx, p) {
         pcp_pubkeyblob(blob, p);
         if(pcpvault_additem(ptx, tmp, buffer_get(blob), PCP_RAW_PUBKEYSIZE,
@@ -240,6 +243,17 @@ int pcpvault_writeall(PCPCTX *ptx, vault_t *vault) {
         }
         buffer_clear(blob);
       }
+
+      pcphash_iteratekeysig(ptx, s) {
+        pcp_keysig2blob(blob, s);
+        if(pcpvault_additem(ptx, tmp, buffer_get(blob), buffer_size(blob),
+                            PCP_KEYSIG_NATIVE) != 0) {
+          buffer_free(blob);
+          goto errwa;
+        }
+        buffer_clear(blob);
+      }
+
       pcpvault_update_checksum(ptx, tmp);
       if(pcpvault_copy(ptx, tmp, vault) == 0) {
         pcpvault_unlink(tmp);

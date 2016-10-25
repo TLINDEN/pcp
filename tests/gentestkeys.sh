@@ -43,12 +43,12 @@ $pcp1 -V unknown3 -l
 echo hallo | $pcp -e -x a -z | egrep -v "^ " | egrep -v -- "----"  | grep . > unknown4
 echo blah | $pcp -V vxxxBart -g -x a | egrep -v "^ " | egrep -v -- "----"  | grep . > unknown5
 
-echo "bartid = $ids
-bartserial = $ser
-idbobby  = $idb
-idalicia = $ida
-mailbobby = bobby@local
-mailalicia = alicia@local" > keys.cfg
+echo "bartid=$ids
+bartserial=$ser
+idbobby=$idb
+idalicia=$ida
+mailbobby=bobby@local
+mailalicia=alicia@local" > keys.cfg
 
 ./gencheader > static.h
 

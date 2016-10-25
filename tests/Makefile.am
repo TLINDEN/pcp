@@ -94,17 +94,17 @@ test: check ctest $(MAYPY) $(MAYCPP) $(MAYJSON)
 
 ctest:
 	rm -f test* v* stresstest/*
-	./unittests.pl unittests.cfg $(CHECK)
+	./unittests.sh unittests.cfg $(CHECK)
 	@echo "To run a single test only, type: 'make test CHECK=testname'"
 
 pytest:
-	./unittests.pl pyunittests.cfg $(CHECK)
+	./unittests.sh pyunittests.cfg $(CHECK)
 
 docpptest:
-	./unittests.pl cppunittests.cfg $(CHECK)
+	./unittests.sh cppunittests.cfg $(CHECK)
 
 jsontest:
-	./unittests.pl jsonunittests.cfg $(CHECK)
+	./unittests.sh jsonunittests.cfg $(CHECK)
 
 stresstest: check
 	./unittests.pl stresstests.cfg

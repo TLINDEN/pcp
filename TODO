@@ -1,3 +1,5 @@
+JSON output has \0 always appended check from where this comes
+
 pcpstream.c: use static tmp buffers, avoid alloc mem during each iteration
 
 detach keysig generation from pub key export, so that an existing

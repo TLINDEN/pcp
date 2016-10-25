@@ -1,24 +1,24 @@
 #!/bin/sh
 
 errout () {
-    log="$1"
+    logout="$1"
     expect="$2"
     echo "  EXPECTED: $expect"
     echo -n "       GOT: "
-    cat $log | head -1
-    cat $log | tail +2 | sed 's/^/            /'
+    cat $logout | head -1
+    cat $logout | tail -n +2 | sed 's/^/            /'
 }
 
 
 lookup () {
-    log="$1"
+    logfile="$1"
     expect="$2"
 
     if echo "$expect" | grep '!' > /dev/null 2>&2; then
         # negate
         expect=`echo "$expect" | sed -e 's/^\!//' -e 's#^/##' -e 's#/$##'`
-        if cat $log | grep "$expect" > /dev/null 2>&1; then
-            errout "$log" "NOT $expect"
+        if cat $logfile | grep -i "$expect" > /dev/null 2>&1; then
+            errout "$logfile" "NOT $expect"
             return 1
         else
            echo "  OK"
@@ -26,11 +26,11 @@ lookup () {
         fi  
     else
         expect=`echo "$expect" | sed -e 's#^/##' -e 's#/$##'`
-        if cat $log | grep "$expect" > /dev/null 2>&1; then
+        if cat $logfile | grep -i "$expect" > /dev/null 2>&1; then
             echo "  OK"
             return 0
         else
-            errout "$log" "$expect"
+            errout "$logfile" "$expect"
             return 1
         fi
     fi
@@ -52,7 +52,7 @@ check() {
         # ignore result, check output file
         if test -n "$expect"; then
             # look for string in output
-            if ! lookup "$log" "$expect"; then
+            if ! lookup "$file" "$expect"; then
                 fail=y
             fi
         else
@@ -116,16 +116,16 @@ if ! test -e "$cfg"; then
     exit 1
 fi
 
-. $cfg
+. ./$cfg
 
-count=`grep -E -- "^check-" "$cfg" | wc -l`
+count=`grep -E -- "^check_" "$cfg" | wc -l`
 
 callcheck prepare
 
 if test -n "$check"; then
     callcheck $check
 else
-    for F in `grep -E -- "^check-" "$cfg" | cut -d' ' -f1`; do
+    for F in `grep -E -- "^check_" "$cfg" | cut -d' ' -f1`; do
         callcheck $F
     done
     echo "All Tests OK"

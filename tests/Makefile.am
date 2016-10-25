@@ -107,8 +107,8 @@ jsontest:
 	./unittests.sh jsonunittests.cfg $(CHECK)
 
 stresstest: check
-	./unittests.pl stresstests.cfg
+	./unittests.sh stresstests.cfg
 
 iotest: check
-	./unittests.pl iotests.cfg
+	./unittests.sh iotests.cfg
 	sudo umount -f env

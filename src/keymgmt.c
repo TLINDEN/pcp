@@ -415,6 +415,11 @@ void pcpdelete_key(char *keyid) {
   
   if(p != NULL) {
     /*  delete public */
+    pcp_keysig_t *sig = pcphash_keysigexists(ptx, keyid);
+    if(sig != NULL) {
+      /* also delete associted sig, if any */
+      pcphash_del(ptx, sig, sig->type);
+    }
     pcphash_del(ptx, p, p->type);
     vault->unsafed = 1;
     fprintf(stderr, "Public key deleted.\n");

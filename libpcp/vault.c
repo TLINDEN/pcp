@@ -428,6 +428,7 @@ vault_item_header_t * ih2native(vault_item_header_t *h) {
 
 
 int pcpvault_fetchall(PCPCTX *ptx, vault_t *vault) {
+  Buffer *raw = NULL;
   size_t got = 0;
   fseek(vault->fd, 0, SEEK_SET);
 
@@ -448,7 +449,7 @@ int pcpvault_fetchall(PCPCTX *ptx, vault_t *vault) {
     pcp_pubkey_t *pubkey;
     int bytesleft = 0;
     int ksize =  PCP_RAW_KEYSIGSIZE; /*  smallest possbile item */
-    Buffer *raw = buffer_new(256, "rawin");
+    raw = buffer_new(256, "rawin");
     
     vault->version = header->version;
     memcpy(vault->checksum, header->checksum, LSHA);
@@ -530,11 +531,13 @@ int pcpvault_fetchall(PCPCTX *ptx, vault_t *vault) {
   free(checksum);
   free(item);
   free(header);
+  buffer_free(raw);
   return 0;
 
  err:
   free(item);
   free(header);
+  buffer_free(raw);
   /* pcphash_clean(); */
 
   return -1;

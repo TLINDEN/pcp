@@ -174,7 +174,7 @@ int pcpvault_addkey(PCPCTX *ptx, vault_t *vault, void *item, uint8_t type) {
     memcpy(ksout, ksin, sizeof(pcp_keysig_t));
     ksout->blob = ucmalloc(ksin->size);
     memcpy(ksout->blob, ksin->blob, ksin->size);
-    pcp_keysig2blob(blob, item);
+    blob = pcp_keysigblob(ksin);
     itemsize = buffer_size(blob);
   }
   else {

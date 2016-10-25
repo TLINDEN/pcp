@@ -109,64 +109,66 @@ void pcptext_key(char *keyid) {
 }
 
 void pcptext_vault(vault_t *vault) {
+  if(vault != NULL) {
 #ifdef HAVE_JSON
   
-  if(ptx->json) {
-    json_t *jout, *jkeys, *jtmp;
-    char *checksum, *jdump;
-    pcp_key_t *k;
-    pcp_pubkey_t *p;
+    if(ptx->json) {
+      json_t *jout, *jkeys, *jtmp;
+      char *checksum, *jdump;
+      pcp_key_t *k;
+      pcp_pubkey_t *p;
     
-    checksum = _bin2hex(vault->checksum, LSHA);
-    jout = json_pack("{sssisssisi}",
-                     "keyvaultfile" , vault->filename,
-                     "version"      , vault->version,
-                     "checksum"     , checksum,
-                     "secretkeys"   , pcphash_count(ptx),
-                     "publickey"    , pcphash_countpub(ptx));
+      checksum = _bin2hex(vault->checksum, LSHA);
+      jout = json_pack("{sssisssisi}",
+                       "keyvaultfile" , vault->filename,
+                       "version"      , vault->version,
+                       "checksum"     , checksum,
+                       "secretkeys"   , pcphash_count(ptx),
+                       "publickey"    , pcphash_countpub(ptx));
 
-    jkeys = json_array();
+      jkeys = json_array();
     
-    pcphash_iterate(ptx, k) {
-      jtmp = pcp_sk2json(k, NULL, 0);
-      json_object_set(jtmp, "type", json_string("secret"));
-      json_array_append(jkeys, jtmp);
+      pcphash_iterate(ptx, k) {
+        jtmp = pcp_sk2json(k, NULL, 0);
+        json_object_set(jtmp, "type", json_string("secret"));
+        json_array_append(jkeys, jtmp);
+      }
+
+      pcphash_iteratepub(ptx, p) {
+        jtmp = pcp_pk2json(p);
+        json_array_append(jkeys, jtmp);
+      }
+
+      json_object_set(jout, "keys", jkeys);
+    
+      jdump  = json_dumps(jout, JSON_INDENT(4) | JSON_PRESERVE_ORDER);
+      printf("%s\n", jdump);
+      json_decref(jout);
+      free(jdump);
     }
-
-    pcphash_iteratepub(ptx, p) {
-      jtmp = pcp_pk2json(p);
-      json_array_append(jkeys, jtmp);
-    }
-
-    json_object_set(jout, "keys", jkeys);
-    
-    jdump  = json_dumps(jout, JSON_INDENT(4) | JSON_PRESERVE_ORDER);
-    printf("%s\n", jdump);
-    json_decref(jout);
-    free(jdump);
-  }
-  else {
+    else {
     
 #endif
 
-  printf("    Key vault: %s\n", vault->filename);
-  printf("Vault version: %08X\n", vault->version);
-  printf("     Checksum: ");
+      printf("    Key vault: %s\n", vault->filename);
+      printf("Vault version: %08X\n", vault->version);
+      printf("     Checksum: ");
 
-  int i;
-  for ( i = 0;i <15 ;++i) printf("%02X:",(unsigned int) vault->checksum[i]);
-  printf("%02X", vault->checksum[15]);
-  printf("\n               ");
-  for ( i = 16;i <31 ;++i) printf("%02X:",(unsigned int) vault->checksum[i]);
-  printf("%02X", vault->checksum[31]);
-  printf("\n");
+      int i;
+      for ( i = 0;i <15 ;++i) printf("%02X:",(unsigned int) vault->checksum[i]);
+      printf("%02X", vault->checksum[15]);
+      printf("\n               ");
+      for ( i = 16;i <31 ;++i) printf("%02X:",(unsigned int) vault->checksum[i]);
+      printf("%02X", vault->checksum[31]);
+      printf("\n");
 
-  printf("  Secret keys: %d\n", pcphash_count(ptx));
-  printf("  Public keys: %d\n", pcphash_countpub(ptx) );
+      printf("  Secret keys: %d\n", pcphash_count(ptx));
+      printf("  Public keys: %d\n", pcphash_countpub(ptx) );
   
 #ifdef HAVE_JSON
-  }
+    }
 #endif
+  }
 }
 
 void pcpkey_printlineinfo(pcp_key_t *key) {

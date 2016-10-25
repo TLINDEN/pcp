@@ -12,7 +12,7 @@ gen() {
     pub=$5
     sec=$6
 
-    (echo $owner; echo $mail) | $pcp -V vxxx$owner -k -x $pass > /dev/null 2>&1
+    (echo $owner; echo $mail; echo yes) | $pcp -V vxxx$owner -k -x $pass > /dev/null 2>&1
 
     id=`$pcp -V vxxx$owner -l | grep $owner | awk '{print $1}'`
 
@@ -41,7 +41,7 @@ ser=`$pcp -V vxxxBart -t -i $ids | grep Serial | awk '{print $3}'`
 gen Niemand niemand@local n y unknown1 unknown2
 $pcp1 -V unknown3 -l
 echo hallo | $pcp -e -x a -z | egrep -v "^ " | egrep -v -- "----"  | grep . > unknown4
-echo blah | $pcp -g -x a | egrep -v "^ " | egrep -v -- "----"  | grep . > unknown5
+echo blah | $pcp -V vxxxBart -g -x a | egrep -v "^ " | egrep -v -- "----"  | grep . > unknown5
 
 echo "bartid = $ids
 bartserial = $ser

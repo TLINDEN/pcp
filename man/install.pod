@@ -14,7 +14,20 @@ First, you will need libsodium:
  sudo ldconfig
  cd ..
 
-Next, pcp:
+If you want to have JSON support, you'll need to install the
+Jansson library (optional):
+
+ git clone git://github.com/akheron/jansson.git
+ cd jansson
+ autoreconf -i
+ ./configure && make
+ sudo make install
+ cd ..
+
+In order to use the python binding, you need to install the
+B<cffi> python package.
+
+Next, build pcp:
 
  git clone git://github.com/tlinden/pcp.git
  cd pcp

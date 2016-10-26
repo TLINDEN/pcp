@@ -95,7 +95,7 @@ void buffer_add_str(Buffer *b, const char * fmt, ...) {
   if(vasprintf(&dst, fmt, ap) >= 0) {
     if(b->end > 0)
       b->end--;
-    buffer_add(b, dst, strlen(dst)+1);
+    buffer_add(b, dst, strlen(dst));
   }
   va_end(ap);
   free(dst);

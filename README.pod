@@ -163,7 +163,7 @@ To learn how to use B<pcp>, read the manpage:
 
 =head1 COPYRIGHT
 
-Copyright (c) 2013-2016 by T.v.Dein <tom AT vondein DOT org>
+Copyright (c) 2013-2015 by T.v.Dein <tom AT vondein DOT org>
 
 =head1 ADDITIONAL COPYRIGHTS
 

@@ -635,7 +635,7 @@ Buffer *pcp_export_rfc_pub (PCPCTX *ptx, pcp_key_t *sk) {
 
     Buffer *jout = pcp_export_json_pub(ptx, sk, jsig, siglen);
     buffer_free(out);
-    
+    ucfree(jsig, siglen);
     out = jout;
   }
 #endif
@@ -965,7 +965,6 @@ Buffer *pcp_export_json_secret(PCPCTX *ptx, pcp_key_t *sk, byte *nonce, byte *ci
   json_object_set(jout, "nonce", json_string(xnonce));
 
   jdump  = json_dumps(jout, JSON_INDENT(4) | JSON_PRESERVE_ORDER);
-
   if(jdump != NULL) {
     buffer_add(b, jdump, strlen(jdump));
     free(jdump);
@@ -991,7 +990,7 @@ Buffer *pcp_export_json_pub(PCPCTX *ptx, pcp_key_t *sk, byte *sig, size_t siglen
   jdump  = json_dumps(jout, JSON_INDENT(4) | JSON_PRESERVE_ORDER);
 
   if(jdump != NULL) {
-    buffer_add_str(b, jdump);
+    buffer_add(b, jdump, strlen(jdump));
     free(jdump);
   }
   else {

@@ -1,3 +1,12 @@
+0.4.1
+    Merged upstream patch:
+    https://github.com/zeromq/libzmq/pull/2322,
+    which fixes:
+    https://github.com/zeromq/libzmq/issues/903:
+    Problem: zmq_z85_decode does not validate its
+    input. Solution: added checks for invalid
+    characters and overflows.
+
 0.4.0
 	Changed -C again: doesnt support a key argument
 	anymore, instead I use the facilities I already

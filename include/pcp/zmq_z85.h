@@ -20,12 +20,15 @@
 #ifndef __ZMQ_Z85_H_INCLUDED__
 #define __ZMQ_Z85_H_INCLUDED__
 
+#define __STDC_LIMIT_MACROS
+
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <errno.h>
 
-uint8_t *zmq_z85_decode (uint8_t *dest, char *string);
-char *zmq_z85_encode (char *dest, uint8_t *data, size_t size);
+uint8_t *zmq_z85_decode (uint8_t *dest, const char *string);
+char *zmq_z85_encode (char *dest, const uint8_t *data, size_t size);
 
 #endif

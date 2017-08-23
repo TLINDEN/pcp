@@ -231,6 +231,9 @@ char *pcp_z85_encode(byte *raw, size_t srclen, size_t *dstlen, int doblock) {
   zlen = (outlen * 5 / 4) + 1;
   z85 = ucmalloc(zlen + 5); /* plus space for pad blob */
   z85 = zmq_z85_encode(z85, padded, outlen);
+  if (z85 == NULL) {
+    perror("zmq_z85_encode *z85 failed!");
+  }
 
   if(srclen %4 != 0)
     free(padded);
@@ -239,7 +242,9 @@ char *pcp_z85_encode(byte *raw, size_t srclen, size_t *dstlen, int doblock) {
   padblob = ucmalloc(6);
   rpad = urmalloc(4);
   rpad[3] = (int)padlen;
-  zmq_z85_encode(padblob, rpad, 4);
+  if(zmq_z85_encode(padblob, rpad, 4) == NULL) {
+    perror("zmq_z85_encode *padblob failed!");
+  }
 
   /* append pad blob to encoded output */
   memcpy(&z85[zlen-1], padblob, 5);

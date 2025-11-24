@@ -1,5 +1,8 @@
 # Pretty Curved Privacy
 
+> [!IMPORTANT]
+> PCP is now being maintained on [Codeberg](https://codeberg.org/scip/pcp/).
+
 Pretty Curved Privacy (pcp1) is a commandline utility which can be used
 to encrypt files. pcp1 uses eliptc curve cryptography for encryption
 (CURVE25519 by Dan J. Bernstein). While CURVE25519 is no worldwide

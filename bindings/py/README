@@ -1,3 +1,0 @@
-Re-generate raw.py CFFI code:
-
-./gencffi.pl ../../include/pcp/*.h > pypcp/raw.py

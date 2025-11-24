@@ -1,5 +1,0 @@
-#!/bin/sh
-file=$1
-../pcp -C $file | awk '{print $4}'
-
-

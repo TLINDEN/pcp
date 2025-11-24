@@ -1,5 +1,5 @@
 #!/bin/sh
 file=$1
-../src/pcp1 -C $file | awk '{print $4}'
+../pcp -C $file | awk '{print $4}'
 
 

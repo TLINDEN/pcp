@@ -1,0 +1,17 @@
+/* platform.h.in.  Generated from configure.ac by autoheader.  */
+
+#mesondefine HAVE_SODIUM
+#mesondefine HAVE_JSON
+
+#mesondefine HAVE_GETOPT
+#mesondefine HAVE_GETOPT_LONG
+#mesondefine HAVE_SETRLIMIT
+#mesondefine HAVE_VASPRINTF
+#mesondefine HAVE_STRNLEN
+
+#define PACKAGE "pcp"
+
+#define VERSION "@VERSION@"
+
+/* Define to empty if `const' does not conform to ANSI C. */
+#undef const

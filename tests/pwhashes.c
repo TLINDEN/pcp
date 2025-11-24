@@ -1,13 +1,13 @@
-#include <unistd.h>
+#include <limits.h>
+#include <sodium.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sodium.h>
-#include <limits.h>
+#include <unistd.h>
 
-#include "mem.h"
 #include "defines.h"
-#include "keyprint.h"
 #include "key.h"
+#include "keyprint.h"
+#include "mem.h"
 
 struct _pw_t {
   char hash[65];
@@ -24,28 +24,29 @@ int main() {
   pw *list = NULL;
   pw *have = NULL;
   unsigned char nonce[32] = {1};
+  PCPCTX *ptx = ptx_new();
 
-  if(sodium_init() == -1) return 1;
+  if (sodium_init() == -1)
+    return 1;
 
-  for(i=97; i<126; ++i) {
+  for (i = 97; i < 126; ++i) {
     pass[0] = i;
     pass[1] = 0;
-    h = pcp_derivekey(pass, nonce);
+    h = pcp_derivekey(ptx, pass, nonce);
 
-    p =0;
-    for(t=0; t<32; ++t) {
+    p = 0;
+    for (t = 0; t < 32; ++t) {
       sprintf(&tmp[p], "%02x", h[t]);
       p += 2;
     }
 
     have = NULL;
     HASH_FIND_STR(list, tmp, have);
-    if(have == NULL) {
+    if (have == NULL) {
       item = ucmalloc(sizeof(pw));
       memcpy(item->hash, tmp, 65);
-      HASH_ADD_STR( list, hash, item ); 
-    }
-    else {
+      HASH_ADD_STR(list, hash, item);
+    } else {
       fprintf(stderr, "Error: collision found: %s!\n", have->hash);
       return 1;
     }

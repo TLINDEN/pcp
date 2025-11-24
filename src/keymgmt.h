@@ -19,44 +19,44 @@
     You can contact me by mail: <tlinden AT cpan DOT org>.
 */
 
-
 #ifndef _HAVE_KEYMGMT_H
 #define _HAVE_KEYMGMT_H
 
-#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 #include <wctype.h>
 
-#include "randomart.h"
-#include "key.h"
-#include "pcp.h"
-#include "vault.h"
-#include "defines.h"
-#include "readpass.h"
-#include "keyprint.h"
-#include "keyhash.h"
-#include "util.h"
 #include "buffer.h"
-#include "mgmt.h"
 #include "context.h"
+#include "defines.h"
+#include "key.h"
+#include "keyhash.h"
+#include "keyprint.h"
+#include "mgmt.h"
+#include "randomart.h"
+#include "readpass.h"
+#include "util.h"
+#include "vault.h"
 
 #define _WITH_GETLINE
 
 char *pcp_getstdin(const char *prompt);
-int pcp_storekey (pcp_key_t *key);
+int pcp_storekey(pcp_key_t *key);
 void pcp_keygen(char *passwd);
 void pcp_listkeys();
 
-void pcp_exportsecret(char *keyid, int useid, char *outfile, int armor, char *passwd);
-void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format, int armor);
+void pcp_exportsecret(char *keyid, int useid, char *outfile, int armor,
+                      char *passwd);
+void pcp_exportpublic(char *keyid, char *passwd, char *outfile, int format,
+                      int armor);
 
 pcp_key_t *pcp_getrsk(pcp_key_t *s, char *recipient, char *passwd);
 char *pcp_normalize_id(char *keyid);
 pcp_key_t *pcp_find_primary_secret();
 
-int pcp_import (vault_t *vault, FILE *in, char *passwd);
+int pcp_import(vault_t *vault, FILE *in, char *passwd);
 
 void pcpdelete_key(char *keyid);
 char *pcp_find_id_byrec(char *recipient);

@@ -26,11 +26,9 @@
 #ifndef MY_GETOPT_H_INCLUDED
 #define MY_GETOPT_H_INCLUDED
 
-#ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
 
-#if defined(HAVE_GETOPT_H) && defined(HAVE_GETOPT_LONG)
+#if defined(HAVE_GETOPT) && defined(HAVE_GETOPT_LONG)
 #include <getopt.h>
 #else
 
@@ -51,7 +49,7 @@ extern "C" {
 #define optarg my_optarg
 
 /* UNIX-style short-argument parser */
-extern int my_getopt(int argc, char * argv[], const char *opts);
+extern int my_getopt(int argc, char *argv[], const char *opts);
 
 extern int my_optind, my_opterr, my_optopt;
 extern char *my_optarg;
@@ -72,15 +70,15 @@ struct option {
 #define optional_argument 2
 
 /* GNU-style long-argument parsers */
-extern int my_getopt_long(int argc, char * argv[], const char *shortopts,
-                       const struct option *longopts, int *longind);
+extern int my_getopt_long(int argc, char *argv[], const char *shortopts,
+                          const struct option *longopts, int *longind);
 
-extern int my_getopt_long_only(int argc, char * argv[], const char *shortopts,
-                            const struct option *longopts, int *longind);
+extern int my_getopt_long_only(int argc, char *argv[], const char *shortopts,
+                               const struct option *longopts, int *longind);
 
-extern int _my_getopt_internal(int argc, char * argv[], const char *shortopts,
-                            const struct option *longopts, int *longind,
-                            int long_only);
+extern int _my_getopt_internal(int argc, char *argv[], const char *shortopts,
+                               const struct option *longopts, int *longind,
+                               int long_only);
 
 #ifdef __cplusplus
 }

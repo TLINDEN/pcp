@@ -106,13 +106,23 @@ callcheck () {
 cfg="$1"
 check="$2"
 
+pwd=$(pwd)
+base=$(basename "$pwd")
+
+if test "$base" != "test"; then
+    cd tests
+fi
+
+
+echo "PWD: $(pwd)"
+
 if test -z "$cfg"; then
     echo "Usage: $0 <config> [check]"
     exit 1
 fi
 
 if ! test -e "$cfg"; then
-    echo "$cfg doesn't exist!"
+    echo "$cfg doesn't exist ($(pwd))!"
     exit 1
 fi
 

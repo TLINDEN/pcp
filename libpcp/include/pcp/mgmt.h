@@ -27,48 +27,48 @@
 #define _HAVE_PCP_MGMT_H
 
 #if defined __linux__ || defined __GNU__ || defined __GLIBC__
-#  ifndef _DEFAULT_SOURCE
-#    define _DEFAULT_SOURCE 1
-#  endif
+#ifndef _DEFAULT_SOURCE
+#define _DEFAULT_SOURCE 1
+#endif
 #
-#  ifndef _XOPEN_SOURCE
-#    define _XOPEN_SOURCE 1
-#  endif
+#ifndef _XOPEN_SOURCE
+#define _XOPEN_SOURCE 1
+#endif
 #
-#  ifndef _GNU_SOURCE
-#    define _GNU_SOURCE 1
-#  endif
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE 1
+#endif
 #
-#  ifndef __USE_XOPEN
-#    define __USE_XOPEN 1
-#  endif
+#ifndef __USE_XOPEN
+#define __USE_XOPEN 1
+#endif
 #
 #else
-#  define _BSD_SOURCE 1
+#define _BSD_SOURCE 1
 #endif
 
 #include <sodium.h>
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 
-#ifdef HAVE_JSON
+// #ifdef HAVE_JSON
+#ifndef JANSSON_H
 #include <jansson.h>
 #endif
 
+#include "buffer.h"
+#include "context.h"
 #include "defines.h"
-#include "platform.h"
-#include "structs.h"
-#include "mem.h"
 #include "ed.h"
 #include "key.h"
 #include "keysig.h"
-#include "buffer.h"
+#include "mem.h"
+#include "platform.h"
 #include "scrypt.h"
-#include "context.h"
+#include "structs.h"
 
 /* key management api, export, import, and stuff */
-
 
 /**
  * \defgroup PubKeyExport KEYEXPORT
@@ -76,10 +76,6 @@
 
  Functions to export and import keys in various formats.
  */
-
-
-
-
 
 /** RFC4880 alike public key export with some modifications.
 
@@ -90,11 +86,9 @@
 
 \return the function returns a Buffer object containing the binary
         blob in the format described above.
-  
+
 */
-Buffer *pcp_export_rfc_pub (PCPCTX *ptx, pcp_key_t *sk);
-
-
+Buffer *pcp_export_rfc_pub(PCPCTX *ptx, pcp_key_t *sk);
 
 /** Export a public key in PBP format.
   Export a public key in the format described at
@@ -110,7 +104,8 @@ Buffer *pcp_export_pbp_pub(pcp_key_t *sk);
 
 /** Export secret key.
 
-   Export a secret key. (refer to the INTERNALS section of the pcp(1) manual page for details).
+   Export a secret key. (refer to the INTERNALS section of the pcp(1) manual
+   page for details).
 
    \param[in] ptx context.
 
@@ -135,7 +130,8 @@ Buffer *pcp_export_secret(PCPCTX *ptx, pcp_key_t *sk, char *passphrase);
     \return the function returns a Buffer object containing the binary
             blob containing a JSON string.
  */
-Buffer *pcp_export_json_pub(PCPCTX *ptx, pcp_key_t *sk, byte *sig, size_t siglen);
+Buffer *pcp_export_json_pub(PCPCTX *ptx, pcp_key_t *sk, byte *sig,
+                            size_t siglen);
 
 /** Export secret key in JSON format
 
@@ -148,7 +144,8 @@ Buffer *pcp_export_json_pub(PCPCTX *ptx, pcp_key_t *sk, byte *sig, size_t siglen
     \return the function returns a Buffer object containing the binary
             blob containing a JSON string.
  */
-Buffer *pcp_export_json_secret(PCPCTX *ptx, pcp_key_t *sk, byte *nonce, byte *cipher, size_t clen);
+Buffer *pcp_export_json_secret(PCPCTX *ptx, pcp_key_t *sk, byte *nonce,
+                               byte *cipher, size_t clen);
 
 /** Convert secret key struct into JSON struct
 
@@ -157,7 +154,7 @@ Buffer *pcp_export_json_secret(PCPCTX *ptx, pcp_key_t *sk, byte *nonce, byte *ci
 
     \return returns a json_t structure (see libjansson docs for details)
 */
-json_t *pcp_sk2json(pcp_key_t *sk, byte *sig,size_t siglen);
+json_t *pcp_sk2json(pcp_key_t *sk, byte *sig, size_t siglen);
 
 /** Convert public key struct into JSON struct
 
@@ -179,14 +176,19 @@ pcp_ks_bundle_t *pcp_import_pub_rfc(PCPCTX *ptx, Buffer *blob);
 pcp_ks_bundle_t *pcp_import_pub_pbp(PCPCTX *ptx, Buffer *blob);
 
 /* import secret key */
-pcp_key_t *pcp_import_binsecret(PCPCTX *ptx, byte *raw, size_t rawsize, char *passphrase);
-pcp_key_t *pcp_import_secret(PCPCTX *ptx, byte *raw, size_t rawsize, char *passphrase);
-pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphrase);
+pcp_key_t *pcp_import_binsecret(PCPCTX *ptx, byte *raw, size_t rawsize,
+                                char *passphrase);
+pcp_key_t *pcp_import_secret(PCPCTX *ptx, byte *raw, size_t rawsize,
+                             char *passphrase);
+pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher,
+                                    char *passphrase);
 
 /* helpers */
 int _check_keysig_h(PCPCTX *ptx, Buffer *blob, rfc_pub_sig_h *h);
-int _check_hash_keysig(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, pcp_keysig_t *sk);
-int _check_sigsubs(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, rfc_pub_sig_s *subheader);
+int _check_hash_keysig(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p,
+                       pcp_keysig_t *sk);
+int _check_sigsubs(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p,
+                   rfc_pub_sig_s *subheader);
 
 #endif // _HAVE_PCP_MGMT_H
 

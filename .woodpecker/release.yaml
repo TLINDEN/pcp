@@ -1,0 +1,28 @@
+# build release
+
+labels:
+  platform: linux/amd64
+    
+steps:
+  dist:
+    when:
+      event: [tag,manual]
+    image: alpine:latest
+    commands:
+      - apk update
+      - apk add --no-cache bash build-base gdb perl libsodium libsodium-dev libbsd libbsd-dev jansson jansson-dev db db-dev pkgconfig meson ninja git
+      - meson setup --reconfigure --buildtype=release build
+      - meson dist -C build --formats xztar,gztar,zip --no-tests
+      - mv build/meson-dist/* .
+
+  release:
+    image: alpine:latest
+    when:
+      event: [tag,manual]
+    environment:
+      DEPLOY_TOKEN:
+        from_secret: DEPLOY_TOKEN
+    commands:
+      - apk update
+      - apk add --no-cache bash httpie jq git
+      - .woodpecker/release.sh pcp-*

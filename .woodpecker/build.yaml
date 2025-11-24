@@ -1,0 +1,29 @@
+matrix:
+  platform:
+    - linux/amd64
+
+labels:
+  platform: ${platform}
+    
+steps:
+  build:
+    when:
+      event: [push]
+    image: alpine:latest
+    commands:
+      - apk update
+      - apk add --no-cache bash build-base gdb perl libsodium libsodium-dev libbsd libbsd-dev jansson jansson-dev db db-dev pkgconfig meson ninja
+      - meson setup --reconfigure build
+      - ninja -C build
+
+  test:
+    when:
+      event: [push]
+    image: alpine:latest
+    commands:
+      - apk update
+      - apk add --no-cache bash build-base gdb perl libsodium libsodium-dev libbsd libbsd-dev jansson jansson-dev db db-dev pkgconfig meson ninja
+      - meson setup --reconfigure build
+      - ninja -C build test
+
+

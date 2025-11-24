@@ -19,143 +19,151 @@
     You can contact me by mail: <tom AT vondein DOT org>.
 */
 
-/* #define _XOPEN_SOURCE strptime, linux glibc*/ 
+/* #define _XOPEN_SOURCE strptime, linux glibc*/
 
 #include "mgmt.h"
 
 int _get_pk(Buffer *blob, pcp_pubkey_t *p) {
-  if(buffer_left(blob) >= 96) {
+  if (buffer_left(blob) >= 96) {
     buffer_get_chunk(blob, p->masterpub, LEDPUB);
     buffer_get_chunk(blob, p->edpub, LEDPUB);
     buffer_get_chunk(blob, p->pub, LBOXPUB);
     return 0;
-  }
-  else
+  } else
     return 1;
 }
 
 int _check_keysig_h(PCPCTX *ptx, Buffer *blob, rfc_pub_sig_h *h) {
-  if(buffer_left(blob) >= sizeof(rfc_pub_sig_h)) {
-    buffer_get_chunk(blob, h, sizeof(rfc_pub_sig_h)); /* FIXME: blog 2 struct? thafck */
+  if (buffer_left(blob) >= sizeof(rfc_pub_sig_h)) {
+    buffer_get_chunk(blob, h,
+                     sizeof(rfc_pub_sig_h)); /* FIXME: blog 2 struct? thafck */
 
     h->numsubs = _wireto16((byte *)&h->numsubs);
 
-    if(h->version != EXP_SIG_VERSION) {
+    if (h->version != EXP_SIG_VERSION) {
       fatal(ptx, "Unsupported pubkey signature version %d, expected %d\n",
             h->version, EXP_SIG_VERSION);
       return 1;
     }
-    if(h->type != EXP_SIG_TYPE) {
-      fatal(ptx, "Unsupported pubkey signature type %d, expected %d\n",
-            h->type, EXP_SIG_TYPE);
+    if (h->type != EXP_SIG_TYPE) {
+      fatal(ptx, "Unsupported pubkey signature type %d, expected %d\n", h->type,
+            EXP_SIG_TYPE);
       return 1;
     }
-    if(h->pkcipher != EXP_SIG_CIPHER) {
+    if (h->pkcipher != EXP_SIG_CIPHER) {
       fatal(ptx, "Unsupported pubkey signature cipher %d, expected %d\n",
             h->pkcipher, EXP_SIG_CIPHER);
       return 1;
     }
-    if(h->hashcipher != EXP_HASH_CIPHER) {
-      fatal(ptx, "Unsupported pubkey signature hash cipher %d, expected %d\n", h->hashcipher, EXP_HASH_CIPHER);
+    if (h->hashcipher != EXP_HASH_CIPHER) {
+      fatal(ptx, "Unsupported pubkey signature hash cipher %d, expected %d\n",
+            h->hashcipher, EXP_HASH_CIPHER);
       return 1;
     }
-    if(h->numsubs > 0 && buffer_left(blob) < sizeof(rfc_pub_sig_s) * h->numsubs) {
-      fatal(ptx, "Signature size specification invalid (sig: %ld, bytes left: %ld, numsubs: %ld\n",
+    if (h->numsubs > 0 &&
+        buffer_left(blob) < sizeof(rfc_pub_sig_s) * h->numsubs) {
+      fatal(ptx,
+            "Signature size specification invalid (sig: %ld, bytes left: %ld, "
+            "numsubs: %ld\n",
             sizeof(rfc_pub_sig_s) * h->numsubs, buffer_left(blob), h->numsubs);
       return 1;
     }
     return 0;
-  }
-  else {
+  } else {
     fatal(ptx, "Error: input data too small, import failed\n");
     return 1;
   }
 }
 
-int _check_sigsubs(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, rfc_pub_sig_s *subheader) {
+int _check_sigsubs(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p,
+                   rfc_pub_sig_s *subheader) {
   uint16_t nsize, vsize;
   char *notation = NULL;
-  
-  if(subheader->size > buffer_left(blob)) {
-    fatal(ptx, "Invalid header size %ld specified in source\n", subheader->size);
+
+  if (subheader->size > buffer_left(blob)) {
+    fatal(ptx, "Invalid header size %ld specified in source\n",
+          subheader->size);
     return 1;
   }
 
-  if(subheader->type == EXP_SIG_SUB_NOTATION) {
+  if (subheader->type == EXP_SIG_SUB_NOTATION) {
     /* mail or owner */
     nsize = buffer_get16na(blob);
     vsize = buffer_get16na(blob);
 
-    if(nsize >  buffer_left(blob)) {
+    if (nsize > buffer_left(blob)) {
       fatal(ptx, "Invalid notation size %ld specified in source\n", nsize);
       return 1;
     }
 
-    notation = ucmalloc(nsize+1);
+    notation = ucmalloc(nsize + 1);
 
-    if(buffer_get_chunk(blob, notation, nsize) == 0) {
-      fatal(ptx, "Invalid notation size, expected %ld bytes, but got 0\n", nsize);
+    if (buffer_get_chunk(blob, notation, nsize) == 0) {
+      fatal(ptx, "Invalid notation size, expected %ld bytes, but got 0\n",
+            nsize);
       goto sgcerr;
     }
 
     notation[nsize] = '\0';
 
-    if(vsize >  buffer_left(blob) || vsize > 255) {
-      fatal(ptx, "Invalid notation value size %ld specified in source\n", vsize);
+    if (vsize > buffer_left(blob) || vsize > 255) {
+      fatal(ptx, "Invalid notation value size %ld specified in source\n",
+            vsize);
       goto sgcerr;
     }
 
-    if(strncmp(notation, "owner", 5) == 0) {
-      if(buffer_get_chunk(blob, p->owner, vsize) == 0) {
-        fatal(ptx, "Invalid 'owner' notation, expected %ld bytes, but got 0\n", vsize);
+    if (strncmp(notation, "owner", 5) == 0) {
+      if (buffer_get_chunk(blob, p->owner, vsize) == 0) {
+        fatal(ptx, "Invalid 'owner' notation, expected %ld bytes, but got 0\n",
+              vsize);
         goto sgcerr;
       }
-    }
-    else if(strncmp(notation, "mail", 4) == 0) {
-      if(buffer_get_chunk(blob, p->mail, vsize) == 0) {
-        fatal(ptx, "Invalid 'mail' notation, expected %ld bytes, but got 0\n", vsize);
+    } else if (strncmp(notation, "mail", 4) == 0) {
+      if (buffer_get_chunk(blob, p->mail, vsize) == 0) {
+        fatal(ptx, "Invalid 'mail' notation, expected %ld bytes, but got 0\n",
+              vsize);
         goto sgcerr;
       }
-    }
-    else if(strncmp(notation, "serial", 6) == 0) {
+    } else if (strncmp(notation, "serial", 6) == 0) {
       p->serial = buffer_get32na(blob);
     }
-    ucfree(notation, nsize+1);
-  }
-  else {
+    ucfree(notation, nsize + 1);
+  } else {
     /* unsupported or ignored sig subs:
        we (currently) ignore sig ctime, expire and keyexpire,
        since the ctime - which is the only one we need internally -
        is already known from the key ctime. This may change in
        the future though.
      */
-    if(buffer_fwd_offset(blob, subheader->size) == 0) {
-      fatal(ptx, "Invalid 'unsupported' notation, expected %ld bytes, but got 0\n", subheader->size);
+    if (buffer_fwd_offset(blob, subheader->size) == 0) {
+      fatal(ptx,
+            "Invalid 'unsupported' notation, expected %ld bytes, but got 0\n",
+            subheader->size);
       return 1;
     }
   }
 
   return 0;
 
- sgcerr:
-  ucfree(notation, nsize+1);
+sgcerr:
+  ucfree(notation, nsize + 1);
   return 1;
 }
 
-
-int _check_hash_keysig(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, pcp_keysig_t *sk) {
+int _check_hash_keysig(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p,
+                       pcp_keysig_t *sk) {
   // read hash + sig
   size_t blobstop = blob->offset; /* key header + mp,sp,cp */
   size_t sigsize = crypto_sign_BYTES + crypto_generichash_BYTES_MAX;
   size_t phead = (2 * sizeof(uint8_t)) + sizeof(uint64_t); /* rfc_pub_h */
 
   byte *signature = ucmalloc(sigsize);
-  if(buffer_get_chunk(blob, signature, sigsize) == 0)
+  if (buffer_get_chunk(blob, signature, sigsize) == 0)
     goto chker1;
 
   /* fill the keysig */
   sk->type = PCP_KEYSIG_NATIVE;
-  
+
   /* everything minus version, ctime and cipher, 1st 3 fields */
   sk->size = blobstop - phead;
 
@@ -169,7 +177,7 @@ int _check_hash_keysig(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, pcp_keysig_t 
 
   /* verify the signature */
   byte *verifyhash = pcp_ed_verify_key(ptx, signature, sigsize, p);
-  if(verifyhash == NULL) {
+  if (verifyhash == NULL) {
     goto chker1;
   }
 
@@ -181,21 +189,22 @@ int _check_hash_keysig(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, pcp_keysig_t 
   crypto_generichash_final(st, hash, crypto_generichash_BYTES_MAX);
 
   /* compare them */
-  if(cst_time_memcmp(hash, verifyhash, crypto_generichash_BYTES_MAX) != 0) {
-    fatal(ptx, "Signature verifies but signed hash doesn't match signature contents\n");
+  if (cst_time_memcmp(hash, verifyhash, crypto_generichash_BYTES_MAX) != 0) {
+    fatal(ptx, "Signature verifies but signed hash doesn't match signature "
+               "contents\n");
     goto chker2;
   }
 
   /* calculate the checksum */
   crypto_hash_sha256(sk->checksum, sk->blob, sk->size);
-  
+
   /* we got here, so everything is good */
   p->valid = 1;
 
   /* append the sig */
   memcpy(&sk->blob[sk->size], signature, sigsize);
   sk->size += sigsize;
-  
+
   ucfree(verifyhash, crypto_generichash_BYTES_MAX);
   ucfree(hash, crypto_generichash_BYTES_MAX);
   free(st);
@@ -203,25 +212,23 @@ int _check_hash_keysig(PCPCTX *ptx, Buffer *blob, pcp_pubkey_t *p, pcp_keysig_t 
 
   return 0;
 
- chker2:
+chker2:
   ucfree(verifyhash, crypto_generichash_BYTES_MAX);
   ucfree(hash, crypto_generichash_BYTES_MAX);
   free(st);
 
- chker1:
+chker1:
   ucfree(signature, sigsize);
 
   return 1;
-  
 }
-
 
 pcp_ks_bundle_t *pcp_import_pub(PCPCTX *ptx, byte *raw, size_t rawsize) {
   size_t clen;
   byte *bin = NULL;
   char *z85 = NULL;
 
-  if(rawsize == 0) {
+  if (rawsize == 0) {
     fatal(ptx, "Input file is empty!\n");
     return NULL;
   }
@@ -231,15 +238,14 @@ pcp_ks_bundle_t *pcp_import_pub(PCPCTX *ptx, byte *raw, size_t rawsize) {
   /* first, try to decode the input */
   z85 = pcp_readz85string(ptx, raw, rawsize);
 
-  if(z85 != NULL)
+  if (z85 != NULL)
     bin = pcp_z85_decode(ptx, z85, &clen);
 
-  if(bin == NULL) {
+  if (bin == NULL) {
     /* treat as binary blob */
     fatals_reset(ptx);
     buffer_add(blob, raw, rawsize);
-  }
-  else {
+  } else {
     /* use decoded */
     buffer_add(blob, bin, clen);
     ucfree(bin, clen);
@@ -248,11 +254,10 @@ pcp_ks_bundle_t *pcp_import_pub(PCPCTX *ptx, byte *raw, size_t rawsize) {
   /* now, try to disassemble, if it fails, assume pbp format */
   uint8_t version = buffer_get8(blob);
 
-  if(version == PCP_KEY_VERSION) {
+  if (version == PCP_KEY_VERSION) {
     /* ah, homerun */
     return pcp_import_pub_rfc(ptx, blob);
-  }
-  else {
+  } else {
     /* nope, it's probably pbp */
     return pcp_import_pub_pbp(ptx, blob);
   }
@@ -263,22 +268,20 @@ pcp_ks_bundle_t *pcp_import_binpub(PCPCTX *ptx, byte *raw, size_t rawsize) {
   pcp_ks_bundle_t *bundle = NULL;
 
 #ifdef HAVE_JSON
-  if(ptx->json) {
+  if (ptx->json) {
     bundle = pcp_import_pub_json(ptx, raw, rawsize);
-  }
-  else {
+  } else {
 #endif
-   
+
     buffer_add(blob, raw, rawsize);
 
     /* now, try to disassemble, if it fails, assume pbp format */
     uint8_t version = buffer_get8(blob);
 
-    if(version == PCP_KEY_VERSION) {
+    if (version == PCP_KEY_VERSION) {
       /* ah, homerun */
       bundle = pcp_import_pub_rfc(ptx, blob);
-    }
-    else {
+    } else {
       /* nope, it's probably pbp */
       bundle = pcp_import_pub_pbp(ptx, blob);
     }
@@ -286,10 +289,9 @@ pcp_ks_bundle_t *pcp_import_binpub(PCPCTX *ptx, byte *raw, size_t rawsize) {
 #ifdef HAVE_JSON
   }
 #endif
-  
+
   buffer_free(blob);
   return bundle;
-
 }
 
 pcp_ks_bundle_t *pcp_import_pub_rfc(PCPCTX *ptx, Buffer *blob) {
@@ -299,31 +301,34 @@ pcp_ks_bundle_t *pcp_import_pub_rfc(PCPCTX *ptx, Buffer *blob) {
   rfc_pub_sig_s *subheader = ucmalloc(sizeof(rfc_pub_sig_s));
   pcp_pubkey_t *p = ucmalloc(sizeof(pcp_pubkey_t));
 
-  if(buffer_done(blob)) goto be;
+  if (buffer_done(blob))
+    goto be;
   p->ctime = buffer_get64na(blob);
 
   uint8_t pkcipher = buffer_get8(blob);
-  if(buffer_done(blob)) goto be;
+  if (buffer_done(blob))
+    goto be;
 
-  if(pkcipher != EXP_PK_CIPHER) {
-    fatal(ptx, "Unsupported pk cipher %d, expected %d\n", pkcipher, EXP_PK_CIPHER);
+  if (pkcipher != EXP_PK_CIPHER) {
+    fatal(ptx, "Unsupported pk cipher %d, expected %d\n", pkcipher,
+          EXP_PK_CIPHER);
     goto bef;
   }
 
   /* fetch pk material */
-  if(_get_pk(blob, p) != 0)
+  if (_get_pk(blob, p) != 0)
     goto be;
 
   /* check sig header */
-  if(_check_keysig_h(ptx, blob, sigheader) != 0)
+  if (_check_keysig_h(ptx, blob, sigheader) != 0)
     goto bef;
 
   /* iterate over subs, if any */
   int i;
-  for (i=0; i<sigheader->numsubs; i++) {
+  for (i = 0; i < sigheader->numsubs; i++) {
     subheader->size = buffer_get32na(blob);
     subheader->type = buffer_get8(blob);
-    if(_check_sigsubs(ptx, blob, p, subheader) != 0)
+    if (_check_sigsubs(ptx, blob, p, subheader) != 0)
       goto bes;
   }
   ucfree(sigheader, sizeof(rfc_pub_sig_h));
@@ -342,24 +347,22 @@ pcp_ks_bundle_t *pcp_import_pub_rfc(PCPCTX *ptx, Buffer *blob) {
   b = ucmalloc(sizeof(pcp_ks_bundle_t));
   sk = ucmalloc(sizeof(pcp_keysig_t));
 
-  if(_check_hash_keysig(ptx, blob, p, sk) != 0) {
+  if (_check_hash_keysig(ptx, blob, p, sk) != 0) {
     b->p = p;
     b->s = NULL;
-  }
-  else {
+  } else {
     b->p = p;
     b->s = sk;
   }
 
   return b;
 
-
- be:
+be:
   fatal(ptx, "Error: input data too small, import failed\n");
 
- bes:
+bes:
 
- bef:
+bef:
   ucfree(sigheader, sizeof(rfc_pub_sig_h));
   ucfree(subheader, sizeof(rfc_pub_sig_s));
   ucfree(p, sizeof(pcp_pubkey_t));
@@ -367,7 +370,7 @@ pcp_ks_bundle_t *pcp_import_pub_rfc(PCPCTX *ptx, Buffer *blob) {
 }
 
 pcp_ks_bundle_t *pcp_import_pub_pbp(PCPCTX *ptx, Buffer *blob) {
-  char *date  = ucmalloc(20);
+  char *date = ucmalloc(20);
   char *parts = NULL;
   byte *sig = ucmalloc(crypto_sign_BYTES);
   int pnum;
@@ -378,7 +381,7 @@ pcp_ks_bundle_t *pcp_import_pub_pbp(PCPCTX *ptx, Buffer *blob) {
   buffer_get_chunk(blob, sig, crypto_sign_BYTES);
 
   /* make sure it's a pbp */
-  if(_buffer_is_binary(sig, crypto_sign_BYTES) == 0) {
+  if (_buffer_is_binary(sig, crypto_sign_BYTES) == 0) {
     fatal(ptx, "failed to recognize input, that's probably no key\n");
     goto errimp2;
   }
@@ -392,10 +395,10 @@ pcp_ks_bundle_t *pcp_import_pub_pbp(PCPCTX *ptx, Buffer *blob) {
   date[19] = '\0';
   struct tm c;
   c.tm_isdst = -1;
-  int tmok = sscanf(date, "%4d-%2d-%2dT%2d:%2d:%2d",
-            &c.tm_year, &c.tm_mon, &c.tm_mday, &c.tm_hour, &c.tm_min, &c.tm_sec);
-  
-  if(tmok <= 0 || c.tm_hour >= 24 || c.tm_mon >= 59 || c.tm_sec >= 59) {
+  int tmok = sscanf(date, "%4d-%2d-%2dT%2d:%2d:%2d", &c.tm_year, &c.tm_mon,
+                    &c.tm_mday, &c.tm_hour, &c.tm_min, &c.tm_sec);
+
+  if (tmok <= 0 || c.tm_hour >= 24 || c.tm_mon >= 59 || c.tm_sec >= 59) {
     /* check returned tm values, which will look like this when input
        was no string: 30867--12305-0 4229688:8:21790784
        or: sscanf failed altogether.
@@ -408,13 +411,13 @@ pcp_ks_bundle_t *pcp_import_pub_pbp(PCPCTX *ptx, Buffer *blob) {
 
   c.tm_mon -= 1;
   c.tm_year -= 1900;
-  
+
   /*  parse the name */
-  parts = strtok (b->name, "<>");
+  parts = strtok(b->name, "<>");
   pnum = 0;
   pub = ucmalloc(sizeof(pcp_pubkey_t));
   while (parts != NULL) {
-    if(pnum == 0)
+    if (pnum == 0)
       memcpy(pub->owner, parts, strlen(parts));
     else if (pnum == 1)
       memcpy(pub->mail, parts, strlen(parts));
@@ -423,7 +426,7 @@ pcp_ks_bundle_t *pcp_import_pub_pbp(PCPCTX *ptx, Buffer *blob) {
   }
   free(parts);
 
-  if(strlen(b->name) == 0) {
+  if (strlen(b->name) == 0) {
     memcpy(pub->owner, "N/A", 3);
   }
 
@@ -431,7 +434,7 @@ pcp_ks_bundle_t *pcp_import_pub_pbp(PCPCTX *ptx, Buffer *blob) {
   pub->ctime = (long)mktime(&c);
   pub->type = PCP_KEY_TYPE_PUBLIC;
   pub->version = PCP_KEY_VERSION;
-  pub->serial  = arc4random();
+  pub->serial = arc4random();
   memcpy(pub->pub, b->pub, crypto_box_PUBLICKEYBYTES);
   memcpy(pub->edpub, b->edpub, crypto_sign_PUBLICKEYBYTES);
   memcpy(pub->id, pcp_getpubkeyid(pub), 17);
@@ -447,12 +450,11 @@ pcp_ks_bundle_t *pcp_import_pub_pbp(PCPCTX *ptx, Buffer *blob) {
 
   pcp_ks_bundle_t *bundle = ucmalloc(sizeof(pcp_ks_bundle_t));
   bundle->p = pub;
-  
-  if(verify == NULL) {
+
+  if (verify == NULL) {
     bundle->p = pub;
     bundle->s = NULL;
-  }
-  else {
+  } else {
     pcp_keysig_t *sk = ucmalloc(sizeof(pcp_keysig_t));
     sk->type = PCP_KEYSIG_PBP;
     sk->size = buffer_size(blob);
@@ -465,15 +467,14 @@ pcp_ks_bundle_t *pcp_import_pub_pbp(PCPCTX *ptx, Buffer *blob) {
     bundle->p = pub;
     free(verify);
   }
-  
+
   free(sig);
   return bundle;
 
- errimp2:
+errimp2:
   free(sig);
   return NULL;
 }
-
 
 Buffer *pcp_export_pbp_pub(pcp_key_t *sk) {
   struct tm *v, *c;
@@ -494,11 +495,12 @@ Buffer *pcp_export_pbp_pub(pcp_key_t *sk) {
   time_t vt = t + 31536000;
   v = localtime(&vt);
   date = ucmalloc(65);
-  sprintf(date, "%04d-%02d-%02dT%02d:%02d:%02d.000000      %04d-%02d-%02dT%02d:%02d:%02d.000000      ",
-          c->tm_year+1900-1, c->tm_mon+1, c->tm_mday, // wtf? why -1?
-          c->tm_hour, c->tm_min, c->tm_sec,
-          v->tm_year+1900-1, v->tm_mon+1, v->tm_mday,
-          v->tm_hour, v->tm_min, v->tm_sec);
+  sprintf(date,
+          "%04d-%02d-%02dT%02d:%02d:%02d.000000      "
+          "%04d-%02d-%02dT%02d:%02d:%02d.000000      ",
+          c->tm_year + 1900 - 1, c->tm_mon + 1, c->tm_mday, // wtf? why -1?
+          c->tm_hour, c->tm_min, c->tm_sec, v->tm_year + 1900 - 1,
+          v->tm_mon + 1, v->tm_mday, v->tm_hour, v->tm_min, v->tm_sec);
   buffer_add(sig, date, 64);
 
   /* add owner */
@@ -507,7 +509,7 @@ Buffer *pcp_export_pbp_pub(pcp_key_t *sk) {
   /* calculate the signed key blob */
   signature = pcp_ed_sign(buffer_get(sig), buffer_size(sig), sk);
 
-  if(signature == NULL)
+  if (signature == NULL)
     goto exppbperr01;
 
   /* put it out */
@@ -516,9 +518,8 @@ Buffer *pcp_export_pbp_pub(pcp_key_t *sk) {
   free(date);
   buffer_free(sig);
   return out;
-  
 
- exppbperr01:
+exppbperr01:
   buffer_free(sig);
   buffer_free(out);
   free(date);
@@ -526,11 +527,10 @@ Buffer *pcp_export_pbp_pub(pcp_key_t *sk) {
   return NULL;
 }
 
-
-Buffer *pcp_export_rfc_pub (PCPCTX *ptx, pcp_key_t *sk) {
+Buffer *pcp_export_rfc_pub(PCPCTX *ptx, pcp_key_t *sk) {
   Buffer *out = buffer_new(320, "exportbuf");
   Buffer *raw = buffer_new(256, "keysigbuf");
-  
+
   /* add the header */
   buffer_add8(out, PCP_KEY_VERSION);
   buffer_add64be(out, sk->ctime);
@@ -551,9 +551,9 @@ Buffer *pcp_export_rfc_pub (PCPCTX *ptx, pcp_key_t *sk) {
      ctime, sigexpire, keyexpire, serial, keyflags
      optional: owner, mail */
   uint16_t nsubs = 5;
-  if(strlen(sk->owner) > 0)
+  if (strlen(sk->owner) > 0)
     nsubs++;
-  if(strlen(sk->mail) > 0)
+  if (strlen(sk->mail) > 0)
     nsubs++;
   buffer_add16be(raw, nsubs);
 
@@ -583,7 +583,7 @@ Buffer *pcp_export_rfc_pub (PCPCTX *ptx, pcp_key_t *sk) {
   buffer_add32be(raw, sk->serial);
 
   /* add name notation sub*/
-  if(strlen(sk->owner) > 0) {
+  if (strlen(sk->owner) > 0) {
     size_t notation_size = strlen(sk->owner) + 4 + 5;
     buffer_add32be(raw, notation_size);
     buffer_add8(raw, EXP_SIG_SUB_NOTATION);
@@ -594,7 +594,7 @@ Buffer *pcp_export_rfc_pub (PCPCTX *ptx, pcp_key_t *sk) {
   }
 
   /* add mail notation sub */
-  if(strlen(sk->mail) > 0) {
+  if (strlen(sk->mail) > 0) {
     notation_size = strlen(sk->mail) + 4 + 4;
     buffer_add32be(raw, notation_size);
     buffer_add8(raw, EXP_SIG_SUB_NOTATION);
@@ -603,7 +603,7 @@ Buffer *pcp_export_rfc_pub (PCPCTX *ptx, pcp_key_t *sk) {
     buffer_add(raw, "mail", 4);
     buffer_add(raw, sk->mail, strlen(sk->mail));
   }
- 
+
   /* add key flags */
   buffer_add32be(raw, 1);
   buffer_add8(raw, EXP_SIG_SUB_KEYFLAGS);
@@ -627,8 +627,8 @@ Buffer *pcp_export_rfc_pub (PCPCTX *ptx, pcp_key_t *sk) {
   buffer_add(out, sig, crypto_sign_BYTES + crypto_generichash_BYTES_MAX);
 
 #ifdef HAVE_JSON
-  if(ptx->json) {
-    size_t siglen =  buffer_size(out) - 10;
+  if (ptx->json) {
+    size_t siglen = buffer_size(out) - 10;
     byte *jsig = ucmalloc(siglen);
 
     buffer_extract(out, jsig, 10, siglen);
@@ -639,7 +639,7 @@ Buffer *pcp_export_rfc_pub (PCPCTX *ptx, pcp_key_t *sk) {
     out = jout;
   }
 #endif
-  
+
   /* and that's it. wasn't that easy? :) */
   buffer_free(raw);
   memset(hash, 0, crypto_generichash_BYTES_MAX);
@@ -648,7 +648,7 @@ Buffer *pcp_export_rfc_pub (PCPCTX *ptx, pcp_key_t *sk) {
   free(sig);
   free(st);
 
-  if(out->end < 32)
+  if (out->end < 32)
     fatal(ptx, "failed to export public key");
 
   return out;
@@ -671,37 +671,35 @@ Buffer *pcp_export_secret(PCPCTX *ptx, pcp_key_t *sk, char *passphrase) {
   buffer_add(raw, sk->pub, LBOXPUB);
   buffer_add(raw, sk->edpub, LEDPUB);
 
-  if(strlen(sk->owner) > 0) {
+  if (strlen(sk->owner) > 0) {
     buffer_add16be(raw, strlen(sk->owner));
-    buffer_add(raw, sk->owner,  strlen(sk->owner));
-  }
-  else
+    buffer_add(raw, sk->owner, strlen(sk->owner));
+  } else
     buffer_add16be(raw, 0);
-  
-  if(strlen(sk->mail) > 0) {
+
+  if (strlen(sk->mail) > 0) {
     buffer_add16be(raw, strlen(sk->mail));
     buffer_add(raw, sk->mail, strlen(sk->mail));
-  }
-  else
+  } else
     buffer_add16be(raw, 0);
-  
+
   buffer_add64be(raw, sk->ctime);
   buffer_add32be(raw, sk->version);
   buffer_add32be(raw, sk->serial);
-  
+
   nonce = ucmalloc(LNONCE);
   arc4random_buf(nonce, LNONCE);
   symkey = pcp_scrypt(ptx, passphrase, strlen(passphrase), nonce, LNONCE);
 
-  es = pcp_sodium_mac(&cipher, buffer_get(raw), buffer_size(raw), nonce, symkey);
+  es =
+      pcp_sodium_mac(&cipher, buffer_get(raw), buffer_size(raw), nonce, symkey);
 
 #ifdef HAVE_JSON
-  if(ptx->json) {
+  if (ptx->json) {
     Buffer *jout = pcp_export_json_secret(ptx, sk, nonce, cipher, es);
     buffer_free(out);
     out = jout;
-  }
-  else {
+  } else {
 #endif
 
     buffer_add(out, nonce, LNONCE);
@@ -709,8 +707,8 @@ Buffer *pcp_export_secret(PCPCTX *ptx, pcp_key_t *sk, char *passphrase) {
 
 #ifdef HAVE_JSON
   }
-#endif 
-  
+#endif
+
   buffer_free(raw);
   ucfree(nonce, LNONCE);
   sfree(symkey);
@@ -719,19 +717,20 @@ Buffer *pcp_export_secret(PCPCTX *ptx, pcp_key_t *sk, char *passphrase) {
   return out;
 }
 
-pcp_key_t *pcp_import_binsecret(PCPCTX *ptx, byte *raw, size_t rawsize, char *passphrase) {
+pcp_key_t *pcp_import_binsecret(PCPCTX *ptx, byte *raw, size_t rawsize,
+                                char *passphrase) {
   Buffer *blob = buffer_new(512, "importskblob");
   buffer_add(blob, raw, rawsize);
   return pcp_import_secret_native(ptx, blob, passphrase);
 }
 
-
-pcp_key_t *pcp_import_secret(PCPCTX *ptx, byte *raw, size_t rawsize, char *passphrase) {
+pcp_key_t *pcp_import_secret(PCPCTX *ptx, byte *raw, size_t rawsize,
+                             char *passphrase) {
   size_t clen;
   byte *bin = NULL;
   char *z85 = NULL;
 
-  if(rawsize == 0) {
+  if (rawsize == 0) {
     fatal(ptx, "Input file is empty!\n");
     return NULL;
   }
@@ -740,15 +739,14 @@ pcp_key_t *pcp_import_secret(PCPCTX *ptx, byte *raw, size_t rawsize, char *passp
 
   /* first, try to decode the input */
   z85 = pcp_readz85string(ptx, raw, rawsize);
-  if(z85 != NULL)
+  if (z85 != NULL)
     bin = pcp_z85_decode(ptx, z85, &clen);
 
-  if(bin == NULL) {
+  if (bin == NULL) {
     /* treat as binary blob */
     fatals_reset(ptx);
     buffer_add(blob, raw, rawsize);
-  }
-  else {
+  } else {
     /* use decoded */
     buffer_add(blob, bin, clen);
     ucfree(bin, clen);
@@ -761,44 +759,48 @@ pcp_key_t *pcp_import_secret(PCPCTX *ptx, byte *raw, size_t rawsize, char *passp
   return sk;
 }
 
-pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphrase) {
+pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher,
+                                    char *passphrase) {
   pcp_key_t *sk = ucmalloc(sizeof(pcp_key_t));
   byte *nonce = ucmalloc(LNONCE);
   byte *symkey = NULL;
   byte *clear = NULL;
   size_t cipherlen = 0;
-  size_t minlen = (LEDSEC * 2) + (LBOXPUB * 2) + (LEDPUB * 2) + 8 + 4 + 4; /* key material and mandatory field sizes */
+  size_t minlen = (LEDSEC * 2) + (LBOXPUB * 2) + (LEDPUB * 2) + 8 + 4 +
+                  4; /* key material and mandatory field sizes */
   uint16_t notationlen = 0;
 
   Buffer *blob = buffer_new(512, "secretdecryptbuf");
-  
+
 #ifdef HAVE_JSON
-  if(ptx->json) {
+  if (ptx->json) {
     Buffer *parsed = pcp_import_secret_json(ptx, cipher);
-    if(parsed == NULL) {
+    if (parsed == NULL) {
       goto impserr1;
     }
     cipher = parsed; /* re-used */
   }
 #endif
 
-  if(buffer_get_chunk(cipher, nonce, LNONCE) == 0)
+  if (buffer_get_chunk(cipher, nonce, LNONCE) == 0)
     goto impserr1;
 
   symkey = pcp_scrypt(ptx, passphrase, strlen(passphrase), nonce, LNONCE);
 
   cipherlen = buffer_left(cipher);
-  if(cipherlen < minlen) {
-    fatal(ptx, "failed to decrypt the secret key file:\n"
-          "expected encrypted secret key size %ld is less than minimum len %ld\n",
-          cipherlen, minlen);
+  if (cipherlen < minlen) {
+    fatal(
+        ptx,
+        "failed to decrypt the secret key file:\n"
+        "expected encrypted secret key size %ld is less than minimum len %ld\n",
+        cipherlen, minlen);
     goto impserr1;
   }
 
   /* decrypt the blob */
   clear = ucmalloc(cipherlen - LMAC);
-  if(pcp_sodium_verify_mac(&clear, buffer_get_remainder(cipher),
-                           cipherlen, nonce, symkey) != 0) {
+  if (pcp_sodium_verify_mac(&clear, buffer_get_remainder(cipher), cipherlen,
+                            nonce, symkey) != 0) {
 
     fatal(ptx, "failed to decrypt the secret key file\n");
     goto impserr2;
@@ -817,34 +819,33 @@ pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphras
   buffer_get_chunk(blob, sk->edpub, LEDPUB);
 
   notationlen = buffer_get16na(blob);
-  if(notationlen > 255) {
-    fatal(ptx, "Invalid notation value size for owner (got: %ld, expected: 255)\n",
+  if (notationlen > 255) {
+    fatal(ptx,
+          "Invalid notation value size for owner (got: %ld, expected: 255)\n",
           notationlen);
     goto impserr2;
-  }
-  else if(notationlen > 0)
+  } else if (notationlen > 0)
     buffer_get_chunk(blob, sk->owner, notationlen);
 
   notationlen = buffer_get16na(blob);
-  if(notationlen > 255) {
-    fatal(ptx, "Invalid notation value size for mail (got: %ld, expected: 255)\n",
+  if (notationlen > 255) {
+    fatal(ptx,
+          "Invalid notation value size for mail (got: %ld, expected: 255)\n",
           notationlen);
     goto impserr2;
-  }
-  else if(notationlen > 0)
+  } else if (notationlen > 0)
     buffer_get_chunk(blob, sk->mail, notationlen);
 
-  if(buffer_done(blob) == 1)
+  if (buffer_done(blob) == 1)
     goto impserr2;
 
   sk->ctime = buffer_get64na(blob);
   sk->version = buffer_get32na(blob);
   sk->serial = buffer_get32na(blob);
 
-
   /* fill in the calculated fields */
   char *id = pcp_getkeyid(sk);
-  memcpy (sk->id, id, 17);
+  memcpy(sk->id, id, 17);
   sk->type = PCP_KEY_TYPE_SECRET;
 
   /* ready */
@@ -856,24 +857,17 @@ pcp_key_t *pcp_import_secret_native(PCPCTX *ptx, Buffer *cipher, char *passphras
 
   return sk;
 
- impserr2:
+impserr2:
   ucfree(clear, cipherlen - LMAC);
 
- impserr1:
+impserr1:
   ucfree(nonce, LNONCE);
   ucfree(sk, sizeof(pcp_key_t));
   buffer_free(blob);
-  if(symkey != NULL)
+  if (symkey != NULL)
     sfree(symkey);
   return NULL;
 }
-
-
-
-
-
-
-
 
 #ifdef HAVE_JSON
 
@@ -883,7 +877,7 @@ json_t *pcp_pk2json(pcp_pubkey_t *pk) {
      for both key types. FIXME: 'd be better to have just 1
      struct for both types... */
   json_t *out;
-  
+
   pcp_key_t *sk = malloc(sizeof(pcp_key_t));
 
   memcpy(sk->masterpub, pk->masterpub, LEDPUB);
@@ -906,99 +900,89 @@ json_t *pcp_pk2json(pcp_pubkey_t *pk) {
 json_t *pcp_sk2json(pcp_key_t *sk, byte *sig, size_t siglen) {
   json_t *jout;
   char *cryptpub, *sigpub, *masterpub, *ssig;
- 
+
   char *jformat = "{sssssssIsIsIsIssssssssssss}";
 
   cryptpub = _bin2hex(sk->pub, LBOXPUB);
-  sigpub   = _bin2hex(sk->edpub, LEDPUB);
-  masterpub= _bin2hex(sk->masterpub, LEDPUB);
-  
-  if(sig != NULL) {
-    ssig     = _bin2hex(sig, siglen);
-  }
-  else {
+  sigpub = _bin2hex(sk->edpub, LEDPUB);
+  masterpub = _bin2hex(sk->masterpub, LEDPUB);
+
+  if (sig != NULL) {
+    ssig = _bin2hex(sig, siglen);
+  } else {
     ssig = malloc(1);
     ssig[0] = '\0';
     jformat = "{sssssssIsIsIsIssssssssss}";
   }
 
-  jout = json_pack(jformat,
-                   "id"        , sk->id,
-                   "owner"     , sk->owner,
-                   "mail"      , sk->mail,
-                   "ctime"     , (json_int_t)sk->ctime,
-                   "expire"    , (json_int_t)sk->ctime+31536000,
-                   "version"   , (json_int_t)sk->version,
-                   "serial"    , (json_int_t)sk->serial,
-                   "type"      , "public",
-                   "cipher"    , EXP_PK_CIPHER_NAME,
-                   "cryptpub"  , cryptpub,
-                   "sigpub"    , sigpub,
-                   "masterpub" , masterpub,
-                   "signature" , ssig
-                   );
+  jout = json_pack(
+      jformat, "id", sk->id, "owner", sk->owner, "mail", sk->mail, "ctime",
+      (json_int_t)sk->ctime, "expire", (json_int_t)sk->ctime + 31536000,
+      "version", (json_int_t)sk->version, "serial", (json_int_t)sk->serial,
+      "type", "public", "cipher", EXP_PK_CIPHER_NAME, "cryptpub", cryptpub,
+      "sigpub", sigpub, "masterpub", masterpub, "signature", ssig);
 
   free(cryptpub);
   free(sigpub);
   free(masterpub);
-  if(sig != NULL)
+  if (sig != NULL)
     free(ssig);
 
   return jout;
 }
 
-Buffer *pcp_export_json_secret(PCPCTX *ptx, pcp_key_t *sk, byte *nonce, byte *cipher, size_t clen) {
+Buffer *pcp_export_json_secret(PCPCTX *ptx, pcp_key_t *sk, byte *nonce,
+                               byte *cipher, size_t clen) {
   Buffer *b = buffer_new_str("jsonbuf");
   char *jdump, *xcipher, *xnonce;
   json_t *jout;
   json_error_t jerror;
-  
+
   assert(ptx->json);
 
   jout = pcp_sk2json(sk, NULL, 0);
 
   xcipher = _bin2hex(cipher, clen);
-  xnonce  = _bin2hex(nonce, LNONCE);
+  xnonce = _bin2hex(nonce, LNONCE);
 
   json_object_set(jout, "type", json_string("secret"));
   json_object_set(jout, "secrets", json_string(xcipher));
   json_object_set(jout, "nonce", json_string(xnonce));
 
-  jdump  = json_dumps(jout, JSON_INDENT(4) | JSON_PRESERVE_ORDER);
-  if(jdump != NULL) {
+  jdump = json_dumps(jout, JSON_INDENT(4) | JSON_PRESERVE_ORDER);
+  if (jdump != NULL) {
     buffer_add(b, jdump, strlen(jdump));
     free(jdump);
-  }
-  else {
+  } else {
     fatal(ptx, "JSON encoding error: %s", jerror.text);
   }
-  
+
   json_decref(jout);
-  
+
   return b;
 }
 
-Buffer *pcp_export_json_pub(PCPCTX *ptx, pcp_key_t *sk, byte *sig, size_t siglen) {
+Buffer *pcp_export_json_pub(PCPCTX *ptx, pcp_key_t *sk, byte *sig,
+                            size_t siglen) {
   Buffer *b = buffer_new_str("jsonbuf");
   char *jdump;
   json_t *jout;
   json_error_t jerror;
-  
+
   assert(ptx->json);
 
   jout = pcp_sk2json(sk, sig, siglen);
-  jdump  = json_dumps(jout, JSON_INDENT(4) | JSON_PRESERVE_ORDER);
+  jdump = json_dumps(jout, JSON_INDENT(4) | JSON_PRESERVE_ORDER);
 
-  if(jdump != NULL) {
+  if (jdump != NULL) {
     buffer_add(b, jdump, strlen(jdump));
     free(jdump);
-  }
-  else {
+  } else {
     fatal(ptx, "JSON encoding error: %s", jerror.text);
   }
-  
+
   json_decref(jout);
-  
+
   return b;
 }
 
@@ -1008,9 +992,10 @@ Buffer *pcp_import_secret_json(PCPCTX *ptx, Buffer *json) {
   size_t maxblob = 2048;
   size_t binlen;
   char *hexerr = "failed to decode hex string";
-  
-  jin = json_loadb((char *)buffer_get(json), buffer_size(json), JSON_DISABLE_EOF_CHECK, &jerror);
-  if(jin == NULL)
+
+  jin = json_loadb((char *)buffer_get(json), buffer_size(json),
+                   JSON_DISABLE_EOF_CHECK, &jerror);
+  if (jin == NULL)
     goto jirr1;
 
   byte *blob = ucmalloc(maxblob);
@@ -1019,36 +1004,36 @@ Buffer *pcp_import_secret_json(PCPCTX *ptx, Buffer *json) {
   json->offset = 0;
 
   jtmp = json_object_get(jin, "nonce");
-  if(jtmp == NULL)
+  if (jtmp == NULL)
     goto jirr2;
   binlen = _hex2bin(json_string_value(jtmp), blob, maxblob);
-  if(binlen > 1)
+  if (binlen > 1)
     buffer_add(json, blob, binlen);
   else {
     strcpy(jerror.text, hexerr);
     goto jirr2;
   }
-  
+
   jtmp = json_object_get(jin, "secrets");
-  if(jtmp == NULL)
+  if (jtmp == NULL)
     goto jirr2;
   binlen = _hex2bin(json_string_value(jtmp), blob, maxblob);
-  if(binlen > 1)
+  if (binlen > 1)
     buffer_add(json, blob, binlen);
   else {
     strcpy(jerror.text, hexerr);
     goto jirr2;
   }
-  
+
   json_decref(jin);
   ucfree(blob, maxblob);
   return json;
-  
- jirr2:
+
+jirr2:
   ucfree(blob, maxblob);
   json_decref(jin);
-  
- jirr1:
+
+jirr1:
   fatal(ptx, "JSON decoding error: %s", jerror.text);
   return NULL;
 }
@@ -1063,25 +1048,25 @@ pcp_ks_bundle_t *pcp_import_pub_json(PCPCTX *ptx, byte *raw, size_t rawsize) {
   size_t maxblob = 2048;
   const char *stmp;
   char *hexerr = "failed to decode hex string";
-  
+
   jin = json_loadb((char *)raw, rawsize, JSON_DISABLE_EOF_CHECK, &jerror);
-  if(jin == NULL)
+  if (jin == NULL)
     goto jerr1;
-  
+
   p = ucmalloc(sizeof(pcp_pubkey_t));
-  s =  ucmalloc(sizeof(pcp_keysig_t));
-  b =  ucmalloc(sizeof(pcp_ks_bundle_t));
+  s = ucmalloc(sizeof(pcp_keysig_t));
+  b = ucmalloc(sizeof(pcp_ks_bundle_t));
   blob = ucmalloc(maxblob);
-  
+
   jtmp = json_object_get(jin, "id");
-  if(jtmp == NULL)
+  if (jtmp == NULL)
     goto jerr2;
   memcpy(p->id, json_string_value(jtmp), 17);
 
   jtmp = json_object_get(jin, "cryptpub");
-  if(jtmp == NULL)
+  if (jtmp == NULL)
     goto jerr2;
-  if(_hex2bin(json_string_value(jtmp), blob, maxblob) == LBOXPUB)
+  if (_hex2bin(json_string_value(jtmp), blob, maxblob) == LBOXPUB)
     memcpy(p->pub, blob, LBOXPUB);
   else {
     strcpy(jerror.text, hexerr);
@@ -1089,9 +1074,9 @@ pcp_ks_bundle_t *pcp_import_pub_json(PCPCTX *ptx, byte *raw, size_t rawsize) {
   }
 
   jtmp = json_object_get(jin, "sigpub");
-  if(jtmp == NULL)
+  if (jtmp == NULL)
     goto jerr2;
-  if(_hex2bin(json_string_value(jtmp), blob, maxblob) == LEDPUB)
+  if (_hex2bin(json_string_value(jtmp), blob, maxblob) == LEDPUB)
     memcpy(p->edpub, blob, LEDPUB);
   else {
     strcpy(jerror.text, hexerr);
@@ -1099,9 +1084,9 @@ pcp_ks_bundle_t *pcp_import_pub_json(PCPCTX *ptx, byte *raw, size_t rawsize) {
   }
 
   jtmp = json_object_get(jin, "masterpub");
-  if(jtmp == NULL)
+  if (jtmp == NULL)
     goto jerr2;
-  if(_hex2bin(json_string_value(jtmp), blob, maxblob) == LEDPUB)
+  if (_hex2bin(json_string_value(jtmp), blob, maxblob) == LEDPUB)
     memcpy(p->masterpub, blob, LEDPUB);
   else {
     strcpy(jerror.text, hexerr);
@@ -1109,42 +1094,42 @@ pcp_ks_bundle_t *pcp_import_pub_json(PCPCTX *ptx, byte *raw, size_t rawsize) {
   }
 
   jtmp = json_object_get(jin, "owner");
-  if(jtmp == NULL)
+  if (jtmp == NULL)
     goto jerr2;
   stmp = json_string_value(jtmp);
-  if(stmp != NULL)
+  if (stmp != NULL)
     strcpy(p->owner, stmp);
   else
     goto jerr2;
-  
+
   jtmp = json_object_get(jin, "mail");
-  if(jtmp == NULL)
+  if (jtmp == NULL)
     goto jerr2;
   stmp = json_string_value(jtmp);
-  if(stmp != NULL)
+  if (stmp != NULL)
     strcpy(p->mail, stmp);
   else
     goto jerr2;
 
   jtmp = json_object_get(jin, "ctime");
-  if(jtmp == NULL)
+  if (jtmp == NULL)
     goto jerr2;
   p->ctime = (uint64_t)json_integer_value(jtmp);
 
   jtmp = json_object_get(jin, "version");
-  if(jtmp == NULL)
+  if (jtmp == NULL)
     goto jerr2;
   p->version = (uint32_t)json_integer_value(jtmp);
 
   jtmp = json_object_get(jin, "serial");
-  if(jtmp == NULL)
+  if (jtmp == NULL)
     goto jerr2;
   p->serial = (uint32_t)json_integer_value(jtmp);
-  
+
   jtmp = json_object_get(jin, "type");
-  if(jtmp == NULL)
+  if (jtmp == NULL)
     goto jerr2;
-  if(json_string_value(jtmp)[0] == 'p')
+  if (json_string_value(jtmp)[0] == 'p')
     p->type = PCP_KEY_TYPE_PUBLIC;
   else {
     strcpy(jerror.text, "key type is not public");
@@ -1162,43 +1147,42 @@ pcp_ks_bundle_t *pcp_import_pub_json(PCPCTX *ptx, byte *raw, size_t rawsize) {
    */
 
   jtmp = json_object_get(jin, "signature");
-  if(jtmp == NULL)
+  if (jtmp == NULL)
     goto jerr2;
   size_t siglen = _hex2bin(json_string_value(jtmp), blob, maxblob);
-  if(siglen > 1) {
+  if (siglen > 1) {
     /* we're fakin' an rfc blob here, so that _check_hash_keysig()
        get's what it expects and we don't have to implement it twice */
     Buffer *btmp = buffer_new(128, "btmp");
-    byte fake[10] = { 0x00 };
+    byte fake[10] = {0x00};
     buffer_add(btmp, fake, 10);
     buffer_add(btmp, blob, siglen);
 
     btmp->offset = buffer_size(btmp) -
-      (crypto_sign_BYTES + crypto_generichash_BYTES_MAX); /* 32*3 keys + 10 header */
+                   (crypto_sign_BYTES +
+                    crypto_generichash_BYTES_MAX); /* 32*3 keys + 10 header */
 
-    if(_check_hash_keysig(ptx, btmp, p, s) != 0) {
+    if (_check_hash_keysig(ptx, btmp, p, s) != 0) {
       b->s = NULL;
-    }
-    else {
+    } else {
       b->s = s;
     }
     buffer_free(btmp);
-  }
-  else {
+  } else {
     strcpy(jerror.text, "sigerr");
     goto jerr2;
   }
 
-    return b;
+  return b;
 
- jerr2:
+jerr2:
   free(p);
   free(s);
   free(b);
   free(blob);
   json_decref(jin);
-  
- jerr1:
+
+jerr1:
   fatal(ptx, "JSON decoding error: %s", jerror.text);
   return NULL;
 }

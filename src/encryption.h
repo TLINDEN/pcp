@@ -19,27 +19,28 @@
     You can contact me by mail: <tlinden AT cpan DOT org>.
 */
 
-
 #ifndef _HAVE_ENCRYPTION_H
 #define _HAVE_ENCRYPTION_H
 
 #include <stdio.h>
 #include <string.h>
 
+#include "context.h"
+#include "crypto.h"
 #include "defines.h"
 #include "key.h"
-#include "crypto.h"
+#include "keyhash.h"
+#include "keyprint.h"
 #include "pcp.h"
+#include "pcpstream.h"
+#include "plist.h"
 #include "uthash.h"
 #include "z85.h"
-#include "keyprint.h"
-#include "keyhash.h"
-#include "plist.h"
-#include "pcpstream.h"
-#include "context.h"
 
-int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd, int verify);
-int pcpencrypt(char *id, char *infile, char *outfile, char *passwd, plist_t *recipient, int signcrypt, int armor, int anon);
+int pcpdecrypt(char *id, int useid, char *infile, char *outfile, char *passwd,
+               int verify);
+int pcpencrypt(char *id, char *infile, char *outfile, char *passwd,
+               plist_t *recipient, int signcrypt, int armor, int anon);
 void pcpchecksum(char **files, int filenum, char *key);
 
 #endif /*  _HAVE_ENCRYPTION_H */
